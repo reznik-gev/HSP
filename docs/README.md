@@ -26,3 +26,11 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0016 | 2026-10-08 | [Edit concurrency: exclusive lock per floor](0016-2026-10-08-edit-concurrency.md) | Accepted |
 | 0017 | 2026-10-08 | [People data: sync from AD/LDAP via Keycloak](0017-2026-10-08-people-data-source.md) | Accepted |
 | 0018 | 2026-10-08 | [Repository layout: monorepo](0018-2026-10-08-repository-layout.md)       | Accepted |
+| 0019 | 2026-10-08 | [Org-unit tree: derived from AD groups](0019-2026-10-08-org-unit-source.md) | Accepted |
+| 0020 | 2026-10-08 | [Space hierarchy: fixed core + nestable zones](0020-2026-10-08-space-hierarchy.md) | Accepted |
+| 0021 | 2026-10-08 | [Catalog: built-in + parametric items](0021-2026-10-08-object-catalog.md) | Accepted |
+| 0022 | 2026-10-08 | [Device assets: light asset fields](0022-2026-10-08-device-asset-data.md)  | Accepted |
+| 0023 | 2026-10-08 | [Primary unit: deepest unit wins](0023-2026-10-08-primary-unit-rule.md)   | Accepted |
+| 0024 | 2026-10-08 | [Unit managers: assigned in HSM only](0024-2026-10-08-unit-managers.md)   | Accepted |
+| 0025 | 2026-10-08 | [v1 scope: space modeling + seat assignment](0025-2026-10-08-v1-scope.md) | Accepted |
+| 0026 | 2026-10-08 | [Line endings: normalize to LF](0026-2026-10-08-line-endings.md)          | Accepted |
