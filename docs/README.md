@@ -41,4 +41,4 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0031 | 2026-10-08 | [Seat assignment: current-only, person or unit](0031-2026-10-08-seat-assignment-rules.md) | Accepted |
 | 0032 | 2026-10-08 | [Architecture: walls, doors/windows, columns](0032-2026-10-08-architectural-elements.md) | Accepted |
 | 0033 | 2026-10-08 | [Audit: app-level audit table](0033-2026-10-08-audit-logging.md)          | Accepted |
-| 0034 | 2026-10-08 | [v1 data model (baseline)](0034-2026-10-08-v1-data-model.md)              | Proposed |
+| 0034 | 2026-10-08 | [v1 data model (baseline)](0034-2026-10-08-v1-data-model.md)              | Accepted |
