@@ -35,3 +35,10 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0025 | 2026-10-08 | [v1 scope: space modeling + seat assignment](0025-2026-10-08-v1-scope.md) | Accepted |
 | 0026 | 2026-10-08 | [Line endings: normalize to LF](0026-2026-10-08-line-endings.md)          | Accepted |
 | 0027 | 2026-10-08 | [v1 interim: CSV import, admin-only editing, Keycloak login](0027-2026-10-08-v1-interim-people-and-access.md) | Accepted |
+| 0028 | 2026-10-08 | [Floor version storage: version-range rows](0028-2026-10-08-floor-version-storage.md) | Accepted |
+| 0029 | 2026-10-08 | [Geometry: PostGIS on mm grid, yaw in 0.1°](0029-2026-10-08-geometry-representation.md) | Accepted |
+| 0030 | 2026-10-08 | [Primary keys: UUIDv7](0030-2026-10-08-primary-keys.md)                    | Accepted |
+| 0031 | 2026-10-08 | [Seat assignment: current-only, person or unit](0031-2026-10-08-seat-assignment-rules.md) | Accepted |
+| 0032 | 2026-10-08 | [Architecture: walls, doors/windows, columns](0032-2026-10-08-architectural-elements.md) | Accepted |
+| 0033 | 2026-10-08 | [Audit: app-level audit table](0033-2026-10-08-audit-logging.md)          | Accepted |
+| 0034 | 2026-10-08 | [v1 data model (baseline)](0034-2026-10-08-v1-data-model.md)              | Proposed |
