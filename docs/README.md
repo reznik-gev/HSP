@@ -34,3 +34,4 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0024 | 2026-10-08 | [Unit managers: assigned in HSM only](0024-2026-10-08-unit-managers.md)   | Accepted |
 | 0025 | 2026-10-08 | [v1 scope: space modeling + seat assignment](0025-2026-10-08-v1-scope.md) | Accepted |
 | 0026 | 2026-10-08 | [Line endings: normalize to LF](0026-2026-10-08-line-endings.md)          | Accepted |
+| 0027 | 2026-10-08 | [v1 interim: CSV import, admin-only editing, Keycloak login](0027-2026-10-08-v1-interim-people-and-access.md) | Accepted |
