@@ -87,3 +87,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0076 | 2026-10-08 | [Backend delivery plan: login first, then the floor API, in small PRs](0076-2026-10-08-backend-delivery-plan.md) | Accepted |
 | 0077 | 2026-10-08 | [Login implementation: Authlib, encrypted sessions, Keycloak-driven lifetime](0077-2026-10-08-login-implementation.md) | Accepted |
 | 0078 | 2026-10-08 | [Archive semantics: DELETE archives, restore endpoint, block on active children](0078-2026-10-08-archive-semantics.md) | Accepted |
+| 0079 | 2026-10-08 | [Stacked PR workflow: parent-based PRs, auto-retarget, restack script](0079-2026-10-08-stacked-pr-workflow.md) | Accepted |
