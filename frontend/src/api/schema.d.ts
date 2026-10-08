@@ -144,6 +144,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/floors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Floors */
+        get: operations["list_floors_api_v1_floors_get"];
+        put?: never;
+        /** Create Floor */
+        post: operations["create_floor_api_v1_floors_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/floors/{floor_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Floor */
+        get: operations["get_floor_api_v1_floors__floor_id__get"];
+        put?: never;
+        post?: never;
+        /** Archive Floor */
+        delete: operations["archive_floor_api_v1_floors__floor_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Floor */
+        patch: operations["update_floor_api_v1_floors__floor_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/floors/{floor_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Floor
+         * @description Refused with 409 while the building is archived: restore top-down (docs/0078).
+         */
+        post: operations["restore_floor_api_v1_floors__floor_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites": {
         parameters: {
             query?: never;
@@ -298,6 +355,102 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /** FloorIn */
+        FloorIn: {
+            /**
+             * Building Id
+             * Format: uuid
+             */
+            building_id: string;
+            /**
+             * Default Wall Height Mm
+             * @description Millimetres
+             * @default 2800
+             */
+            default_wall_height_mm: number;
+            /**
+             * Elevation Mm
+             * @description Millimetres (docs/0029)
+             * @default 0
+             */
+            elevation_mm: number;
+            /**
+             * Level Index
+             * @description 0 = ground; negative = basement
+             */
+            level_index: number;
+            /** Name */
+            name: string;
+            /**
+             * Origin X Mm
+             * @description Millimetres (docs/0029)
+             * @default 0
+             */
+            origin_x_mm: number;
+            /**
+             * Origin Y Mm
+             * @description Millimetres (docs/0029)
+             * @default 0
+             */
+            origin_y_mm: number;
+        };
+        /** FloorOut */
+        FloorOut: {
+            /** Archived At */
+            archived_at: string | null;
+            /**
+             * Building Id
+             * Format: uuid
+             */
+            building_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Default Wall Height Mm */
+            default_wall_height_mm: number;
+            /** Elevation Mm */
+            elevation_mm: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Level Index */
+            level_index: number;
+            /** Name */
+            name: string;
+            /** Origin X Mm */
+            origin_x_mm: number;
+            /** Origin Y Mm */
+            origin_y_mm: number;
+            /**
+             * Published Version
+             * @description Null until the first publish (docs/0015)
+             */
+            published_version: number | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** FloorPatch */
+        FloorPatch: {
+            /** Default Wall Height Mm */
+            default_wall_height_mm?: number | null;
+            /** Elevation Mm */
+            elevation_mm?: number | null;
+            /** Level Index */
+            level_index?: number | null;
+            /** Name */
+            name?: string | null;
+            /** Origin X Mm */
+            origin_x_mm?: number | null;
+            /** Origin Y Mm */
+            origin_y_mm?: number | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -334,6 +487,13 @@ export interface components {
         Page_BuildingOut_: {
             /** Items */
             items: components["schemas"]["BuildingOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** Page[FloorOut] */
+        Page_FloorOut_: {
+            /** Items */
+            items: components["schemas"]["FloorOut"][];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -697,6 +857,201 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BuildingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_floors_api_v1_floors_get: {
+        parameters: {
+            query?: {
+                building_id?: string | null;
+                include_archived?: boolean;
+                /** @description Page size */
+                limit?: number;
+                /** @description `next_cursor` from the previous page */
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_FloorOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_floor_api_v1_floors_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FloorIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FloorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_floor_api_v1_floors__floor_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FloorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_floor_api_v1_floors__floor_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_floor_api_v1_floors__floor_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FloorPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FloorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_floor_api_v1_floors__floor_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FloorOut"];
                 };
             };
             /** @description Validation Error */
