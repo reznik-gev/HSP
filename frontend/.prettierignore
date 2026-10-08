@@ -1,3 +1,5 @@
 dist
+dist-bench
+bench/results
 pnpm-lock.yaml
 src/api/schema.d.ts

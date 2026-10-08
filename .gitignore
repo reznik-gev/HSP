@@ -9,6 +9,7 @@ __pycache__/
 # Node
 node_modules/
 dist/
+dist-bench/
 *.tsbuildinfo
 
 # Environment and secrets

@@ -1,6 +1,13 @@
 /** Code-based route tree (docs/0067). */
 import { useQuery } from "@tanstack/react-query";
-import { createRootRoute, createRoute, createRouter, Link, Outlet } from "@tanstack/react-router";
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+  Link,
+  Outlet,
+} from "@tanstack/react-router";
 
 import { api } from "@/api/client";
 
@@ -48,7 +55,22 @@ function Home() {
 
 const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: Home });
 
-export const router = createRouter({ routeTree: rootRoute.addChildren([indexRoute]) });
+// Dev-only benchmark routes (docs/0073): present in `pnpm dev` and `vite build --mode bench`,
+// tree-shaken out of production builds because the condition is a build-time constant.
+const benchRoutes =
+  import.meta.env.DEV || import.meta.env.VITE_BENCH === "1"
+    ? [
+        createRoute({
+          getParentRoute: () => rootRoute,
+          path: "/bench/svg",
+          component: lazyRouteComponent(() => import("./bench/SvgBench"), "SvgBench"),
+        }),
+      ]
+    : [];
+
+export const router = createRouter({
+  routeTree: rootRoute.addChildren([indexRoute, ...benchRoutes]),
+});
 
 declare module "@tanstack/react-router" {
   interface Register {
