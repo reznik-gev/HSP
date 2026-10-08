@@ -38,6 +38,12 @@ src/
 - Lengths are integer **mm** everywhere except on screen. Use `parseLength` and `formatLength` from `editor/core/units.ts` ([0046](../docs/0046-2026-10-08-display-units.md)).
 - Server data lives in TanStack Query. Editor state lives in the Zustand store ([0066](../docs/0066-2026-10-08-frontend-state-and-ui-components.md)).
 
+## SVG performance bench ([0052](../docs/0052-2026-10-08-svg-commitment-and-performance-gate.md), [0073](../docs/0073-2026-10-08-svg-performance-test-setup.md), [0074](../docs/0074-2026-10-08-svg-gate-results-and-v1-bounds.md))
+
+- **Play with it:** run `pnpm dev`, then open http://localhost:5173/bench/svg. It shows a synthetic 1,500-seat floor with a live FPS overlay. Drag empty space or middle-drag to pan, use the wheel to zoom, click a desk to select it (its monitors come along), shift-click to add, and drag to move (5 cm grid). The side panel changes the seat count and toggles labels, hatching, door arcs, zone fills and level of detail. Add `?seats=3000` to the URL to try other sizes.
+- **Measure:** `pnpm bench:svg` (add `-- --seats 3000` for other sizes) builds in `bench` mode, opens the installed Google Chrome, drives the page with real mouse input, and writes `bench/results/*.{json,md}`. Don't touch the mouse while it runs. The pass limits are the v1 values from 0074.
+- The bench route exists only in the dev server and `vite build --mode bench`. Production builds don't contain it.
+
 ## Version pins
 
 - **TypeScript is pinned to 5.x** (currently 5.9.3). TypeScript 7 (the native compiler) is out, but `typescript-eslint` (requires < 6.1) and `openapi-typescript` (requires 5.x) don't support it yet. Dependabot ignores TypeScript major updates. Lift the pin once both tools support TS 7.
