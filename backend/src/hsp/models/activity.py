@@ -62,9 +62,7 @@ class AuditEvent(IdMixin, TenantMixin, Base):
 
 class UserSession(IdMixin, TenantMixin, Base):
     """Server-side BFF session (docs/0038). The cookie carries an opaque token; only its hash
-    is stored here.
-
-    TODO: encrypt token columns at rest before the first production release.
+    is stored here. Token columns hold Fernet ciphertext, never plaintext (docs/0077).
     """
 
     __tablename__ = "user_session"
