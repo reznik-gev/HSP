@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-08
 - **Status:** Accepted
+- **Partially superseded by:** [0068](0068-2026-10-08-public-repository.md) (visibility); **refined by** [0070](0070-2026-10-08-ci-gate-job.md) (workflow structure)
 
 ## Options considered
 - **GitHub + Actions** ✅
