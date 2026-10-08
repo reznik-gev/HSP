@@ -60,7 +60,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0049 | 2026-10-08 | [Bulk tools: array, auto-numbering, cross-floor paste](0049-2026-10-08-bulk-layout-tools.md) | Accepted |
 | 0050 | 2026-10-08 | [Undo/redo: per editing session](0050-2026-10-08-undo-redo.md)            | Accepted |
 | 0051 | 2026-10-08 | [Validation: instant client preview, server authoritative](0051-2026-10-08-validation-feedback.md) | Accepted |
-| 0052 | 2026-10-08 | [SVG commitment: renderer-agnostic core + performance gate](0052-2026-10-08-svg-commitment-and-performance-gate.md) | Accepted |
+| 0052 | 2026-10-08 | [SVG commitment: renderer-agnostic core + performance gate](0052-2026-10-08-svg-commitment-and-performance-gate.md) | Accepted (v1 bounds lowered by 0074) |
 | 0053 | 2026-10-08 | [Code hosting & CI: GitHub + Actions](0053-2026-10-08-code-hosting-and-ci.md) | Accepted (partially superseded by 0068; refined by 0070) |
 | 0054 | 2026-10-08 | [Release distribution: offline bundle only](0054-2026-10-08-release-distribution.md) | Accepted |
 | 0055 | 2026-10-08 | [Deployment target: Docker Compose, single host](0055-2026-10-08-deployment-target.md) | Accepted |
@@ -81,3 +81,5 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0070 | 2026-10-08 | [CI structure: single workflow with gate job](0070-2026-10-08-ci-gate-job.md) | Accepted |
 | 0071 | 2026-10-08 | [License: proprietary (source-visible); no external contributions](0071-2026-10-08-license-and-contributions.md) | Accepted |
 | 0072 | 2026-10-08 | [Rename the product from HSM to HSP (Human-Space Program)](0072-2026-10-08-rename-hsm-to-hsp.md) | Accepted |
+| 0073 | 2026-10-08 | [SVG performance test setup](0073-2026-10-08-svg-performance-test-setup.md) | Accepted |
+| 0074 | 2026-10-08 | [SVG gate results; lowered performance bounds for v1](0074-2026-10-08-svg-gate-results-and-v1-bounds.md) | Accepted (temporary) |

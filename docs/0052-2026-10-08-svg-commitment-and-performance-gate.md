@@ -3,6 +3,7 @@
 - **Date:** 2026-10-08
 - **Status:** Accepted
 - **Refines:** [0042](0042-2026-10-08-2d-renderer.md)
+- **Refined by:** [0073](0073-2026-10-08-svg-performance-test-setup.md) (test setup), [0074](0074-2026-10-08-svg-gate-results-and-v1-bounds.md) (results; lowered v1 bounds)
 
 ## Context
 [0042](0042-2026-10-08-2d-renderer.md) chose SVG for the 2D editor. A follow-up review established these points:
