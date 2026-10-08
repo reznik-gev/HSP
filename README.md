@@ -27,4 +27,4 @@ pnpm install && pnpm dev                            # http://localhost:5173
 ```
 
 ## Contributing ([0064](docs/0064-2026-10-08-branching-workflow.md))
-Trunk-based: short-lived branches and pull requests into `main`, with required CI checks and squash merges. Optional local hooks: `uv tool install pre-commit && pre-commit install`.
+Trunk-based: short-lived branches and pull requests into `main`. The required check is `ci-ok` ([0070](docs/0070-2026-10-08-ci-gate-job.md)), and merges are **rebase-only** with linear history ([0069](docs/0069-2026-10-08-rebase-merges.md)), so keep commits clean and meaningful. Optional local hooks: `uv tool install pre-commit && pre-commit install`.
