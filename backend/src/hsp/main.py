@@ -9,6 +9,7 @@ from fastapi import FastAPI, Request, Response
 
 from hsp import __version__
 from hsp.api import health, v1
+from hsp.auth.oidc import OidcClient
 from hsp.config import get_settings
 from hsp.db import dispose_engine
 from hsp.logging import configure_logging
@@ -32,6 +33,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     install_problem_handlers(app)
+    app.state.oidc = OidcClient(settings)
 
     @app.middleware("http")
     async def request_id(

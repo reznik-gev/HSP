@@ -37,8 +37,9 @@ class TokenCipher:
     def encrypt(self, plaintext: str) -> str:
         return self._fernet.encrypt(plaintext.encode()).decode()
 
-    def decrypt(self, ciphertext: str) -> str:
+    def decrypt(self, ciphertext: str, ttl: int | None = None) -> str:
+        """Decrypt; with `ttl`, also reject ciphertext older than `ttl` seconds."""
         try:
-            return self._fernet.decrypt(ciphertext.encode()).decode()
+            return self._fernet.decrypt(ciphertext.encode(), ttl=ttl).decode()
         except InvalidToken as exc:
             raise TokenDecryptError from exc
