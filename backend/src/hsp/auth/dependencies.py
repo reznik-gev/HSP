@@ -37,9 +37,10 @@ async def get_session_store(
     yield SqlSessionStore(db, TokenCipher(settings.session_key()))
 
 
-async def get_token_refresher() -> TokenRefresher | None:
-    """Overridden once the OIDC client exists (docs/0077); until then nothing can refresh."""
-    return None
+async def get_token_refresher(request: Request) -> TokenRefresher | None:
+    """The app's OIDC client refreshes tokens (docs/0077)."""
+    refresher: TokenRefresher | None = getattr(request.app.state, "oidc", None)
+    return refresher
 
 
 def _unauthenticated(detail: str) -> ProblemException:

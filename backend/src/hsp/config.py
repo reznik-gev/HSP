@@ -29,9 +29,15 @@ class Settings(BaseSettings):
     oidc_issuer_url: str = "http://localhost:8080/auth/realms/hsp"
     oidc_client_id: str = "hsp-api"
     oidc_client_secret: SecretStr = SecretStr("dev-secret-change-me")
+    oidc_scopes: str = "openid profile email"
+    # Allowed clock skew when validating ID tokens.
+    oidc_leeway_s: int = 60
 
     # Sessions (docs/0077)
     session_cookie_name: str = "hsp_session"
+    # Short-lived cookie carrying state/nonce/PKCE verifier between /login and /callback.
+    login_cookie_name: str = "hsp_login"
+    login_max_age_s: int = 600
     session_encryption_key: SecretStr | None = None
     # Refresh the access token when it expires within this many seconds.
     access_token_refresh_margin_s: int = 30
@@ -39,6 +45,10 @@ class Settings(BaseSettings):
     @property
     def is_development(self) -> bool:
         return self.environment == "development"
+
+    @property
+    def oidc_redirect_uri(self) -> str:
+        return f"{self.public_url.rstrip('/')}/api/v1/auth/callback"
 
     @property
     def session_cookie_secure(self) -> bool:
