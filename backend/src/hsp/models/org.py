@@ -6,7 +6,7 @@ import uuid
 from sqlalchemy import Boolean, ForeignKey, Index, String, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from hsm.models.base import (
+from hsp.models.base import (
     ArchivableMixin,
     Base,
     IdMixin,

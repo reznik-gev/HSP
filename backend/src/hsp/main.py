@@ -7,12 +7,12 @@ import structlog
 import uuid_utils
 from fastapi import FastAPI, Request, Response
 
-from hsm import __version__
-from hsm.api import health, v1
-from hsm.config import get_settings
-from hsm.db import dispose_engine
-from hsm.logging import configure_logging
-from hsm.problems import install_problem_handlers
+from hsp import __version__
+from hsp.api import health, v1
+from hsp.config import get_settings
+from hsp.db import dispose_engine
+from hsp.logging import configure_logging
+from hsp.problems import install_problem_handlers
 
 
 @asynccontextmanager
@@ -26,9 +26,9 @@ def create_app() -> FastAPI:
     configure_logging(settings.log_level, settings.log_json)
 
     app = FastAPI(
-        title="HSM API",
+        title="HSP API",
         version=__version__,
-        description="Human-Space Management: spaces, people and seats.",
+        description="Human-Space Program: spaces, people and seats.",
         lifespan=lifespan,
     )
     install_problem_handlers(app)
@@ -55,4 +55,4 @@ def create_app() -> FastAPI:
 def run() -> None:
     import uvicorn
 
-    uvicorn.run("hsm.main:create_app", factory=True, host="0.0.0.0", port=8000)
+    uvicorn.run("hsp.main:create_app", factory=True, host="0.0.0.0", port=8000)

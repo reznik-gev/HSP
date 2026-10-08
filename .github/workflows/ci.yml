@@ -54,16 +54,16 @@ jobs:
       postgres:
         image: postgis/postgis:18-3.6
         env:
-          POSTGRES_USER: hsm
-          POSTGRES_PASSWORD: hsm
-          POSTGRES_DB: hsm_test
+          POSTGRES_USER: hsp
+          POSTGRES_PASSWORD: hsp
+          POSTGRES_DB: hsp_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U hsm -d hsm_test"
+          --health-cmd "pg_isready -U hsp -d hsp_test"
           --health-interval 5s --health-timeout 3s --health-retries 20
     env:
-      HSM_TEST_DATABASE_URL: postgresql+asyncpg://hsm:hsm@localhost:5432/hsm_test
-      HSM_DATABASE_URL: postgresql+asyncpg://hsm:hsm@localhost:5432/hsm_test
+      HSP_TEST_DATABASE_URL: postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test
+      HSP_DATABASE_URL: postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
@@ -82,9 +82,9 @@ jobs:
         run: uv run alembic check
       - name: OpenAPI schema is up to date
         run: |
-          uv run hsm-export-openapi openapi.json
+          uv run hsp-export-openapi openapi.json
           git diff --exit-code -- openapi.json || {
-            echo "::error::backend/openapi.json is stale. Run 'uv run hsm-export-openapi openapi.json' and commit."
+            echo "::error::backend/openapi.json is stale. Run 'uv run hsp-export-openapi openapi.json' and commit."
             exit 1
           }
 

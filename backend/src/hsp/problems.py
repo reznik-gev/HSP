@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 PROBLEM_JSON = "application/problem+json"
-PROBLEM_BASE = "https://hsm.example/problems/"
+PROBLEM_BASE = "https://hsp.example/problems/"
 
 
 class ProblemError(BaseModel):

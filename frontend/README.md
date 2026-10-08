@@ -1,4 +1,4 @@
-# HSM frontend
+# HSP frontend
 
 React + TypeScript single-page app ([0011](../docs/0011-2026-10-08-frontend-stack.md),
 [0066](../docs/0066-2026-10-08-frontend-state-and-ui-components.md),

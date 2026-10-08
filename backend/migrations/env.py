@@ -1,6 +1,6 @@
 """Alembic environment (docs/0014, docs/0056).
 
-The database URL comes from HSM settings (HSM_DATABASE_URL), never from alembic.ini.
+The database URL comes from HSP settings (HSP_DATABASE_URL), never from alembic.ini.
 Migrations run as a one-shot job, never from the API process.
 """
 
@@ -13,9 +13,9 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
-import hsm.models  # noqa: F401  (registers all tables)
-from hsm.config import get_settings
-from hsm.models import Base
+import hsp.models  # noqa: F401  (registers all tables)
+from hsp.config import get_settings
+from hsp.models import Base
 
 config = context.config
 if config.config_file_name is not None:
