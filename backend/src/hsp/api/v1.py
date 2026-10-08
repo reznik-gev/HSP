@@ -2,7 +2,8 @@
 
 from fastapi import APIRouter
 
-from hsp.api import auth
+from hsp.api import auth, sites
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(auth.router)
+router.include_router(sites.router)
