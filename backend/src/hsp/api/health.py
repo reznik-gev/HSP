@@ -4,9 +4,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from hsm import __version__
-from hsm.db import get_engine
-from hsm.problems import ProblemException
+from hsp import __version__
+from hsp.db import get_engine
+from hsp.problems import ProblemException
 
 router = APIRouter(tags=["health"])
 

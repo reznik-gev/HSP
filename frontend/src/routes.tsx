@@ -9,9 +9,9 @@ const rootRoute = createRootRoute({
     <div className="min-h-screen">
       <header className="flex items-center gap-6 border-b border-border px-6 py-3">
         <Link to="/" className="font-semibold">
-          HSM
+          HSP
         </Link>
-        <span className="text-sm text-muted-foreground">Human-Space Management</span>
+        <span className="text-sm text-muted-foreground">Human-Space Program</span>
       </header>
       <main className="p-6">
         <Outlet />
@@ -33,7 +33,7 @@ function Home() {
 
   return (
     <section className="space-y-2">
-      <h1 className="text-2xl font-semibold">Welcome to HSM</h1>
+      <h1 className="text-2xl font-semibold">Welcome to HSP</h1>
       <p className="text-muted-foreground">
         API:{" "}
         {health.isPending

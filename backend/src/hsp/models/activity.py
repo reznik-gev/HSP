@@ -8,7 +8,7 @@ from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, String, Tex
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from hsm.models.base import Base, IdMixin, TenantMixin, TimestampMixin
+from hsp.models.base import Base, IdMixin, TenantMixin, TimestampMixin
 
 
 class SeatAssignment(IdMixin, TenantMixin, Base):

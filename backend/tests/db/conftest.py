@@ -1,7 +1,7 @@
 """Fixtures for DB integration tests (docs/0061).
 
-Requires HSM_TEST_DATABASE_URL, e.g.
-    postgresql+asyncpg://hsm:hsm@localhost:5432/hsm_test
+Requires HSP_TEST_DATABASE_URL, e.g.
+    postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test
 The schema is dropped and rebuilt with Alembic once per session, so every run also tests that the
 migrations apply to an empty database. Each test runs inside a transaction that is rolled back.
 """
@@ -18,7 +18,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
-TEST_DB_URL = os.environ.get("HSM_TEST_DATABASE_URL")
+TEST_DB_URL = os.environ.get("HSP_TEST_DATABASE_URL")
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -26,7 +26,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         if "tests/db/" in item.nodeid.replace("\\", "/"):
             item.add_marker(pytest.mark.db)
             if not TEST_DB_URL:
-                item.add_marker(pytest.mark.skip(reason="HSM_TEST_DATABASE_URL not set"))
+                item.add_marker(pytest.mark.skip(reason="HSP_TEST_DATABASE_URL not set"))
 
 
 @pytest.fixture(scope="session")
@@ -41,7 +41,7 @@ async def engine() -> AsyncIterator[AsyncEngine]:
         subprocess.run,
         [sys.executable, "-m", "alembic", "upgrade", "head"],
         cwd=BACKEND_DIR,
-        env={**os.environ, "HSM_DATABASE_URL": TEST_DB_URL},
+        env={**os.environ, "HSP_DATABASE_URL": TEST_DB_URL},
         check=True,
     )
     yield eng

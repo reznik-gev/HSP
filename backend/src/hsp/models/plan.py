@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 from sqlalchemy.sql import literal_column
 
-from hsm.models.base import Base, IdMixin, TenantMixin, str_enum
+from hsp.models.base import Base, IdMixin, TenantMixin, str_enum
 
 
 # Whole-millimetre grid checks (docs/0029).

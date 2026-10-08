@@ -7,8 +7,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
-from hsm.main import create_app
-from hsm.problems import PROBLEM_JSON, ProblemError, ProblemException
+from hsp.main import create_app
+from hsp.problems import PROBLEM_JSON, ProblemError, ProblemException
 
 
 class Payload(BaseModel):
@@ -82,5 +82,5 @@ def test_domain_problem(client: TestClient) -> None:
 
 def test_openapi_is_versioned_and_generates() -> None:
     schema = create_app().openapi()
-    assert schema["info"]["title"] == "HSM API"
+    assert schema["info"]["title"] == "HSP API"
     assert "/healthz" in schema["paths"]

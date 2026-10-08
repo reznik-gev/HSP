@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from hsm.main import create_app
+from hsp.main import create_app
 
 
 def main() -> None:

@@ -4,22 +4,22 @@
 #   docker compose -f deploy/compose.dev.yml up -d
 #
 # Production compose (nginx, api, backup, migrate job; docs/0055) is built separately.
-name: hsm-dev
+name: hsp-dev
 
 services:
   postgres:
     image: postgis/postgis:18-3.6
     environment:
-      POSTGRES_USER: hsm
-      POSTGRES_PASSWORD: hsm
-      POSTGRES_DB: hsm
+      POSTGRES_USER: hsp
+      POSTGRES_PASSWORD: hsp
+      POSTGRES_DB: hsp
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql
       - ./dev/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hsm -d hsm"]
+      test: ["CMD-SHELL", "pg_isready -U hsp -d hsp"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -32,14 +32,14 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: hsm
-      KC_DB_PASSWORD: hsm
+      KC_DB_USERNAME: hsp
+      KC_DB_PASSWORD: hsp
       KC_HTTP_RELATIVE_PATH: /auth
       KC_HEALTH_ENABLED: "true"
     ports:
       - "8080:8080"
     volumes:
-      - ./dev/keycloak/hsm-realm.json:/opt/keycloak/data/import/hsm-realm.json:ro
+      - ./dev/keycloak/hsp-realm.json:/opt/keycloak/data/import/hsp-realm.json:ro
     depends_on:
       postgres:
         condition: service_healthy
