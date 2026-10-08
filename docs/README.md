@@ -59,3 +59,4 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0049 | 2026-10-08 | [Bulk tools: array, auto-numbering, cross-floor paste](0049-2026-10-08-bulk-layout-tools.md) | Accepted |
 | 0050 | 2026-10-08 | [Undo/redo: per editing session](0050-2026-10-08-undo-redo.md)            | Accepted |
 | 0051 | 2026-10-08 | [Validation: instant client preview, server authoritative](0051-2026-10-08-validation-feedback.md) | Accepted |
+| 0052 | 2026-10-08 | [SVG commitment: renderer-agnostic core + performance gate](0052-2026-10-08-svg-commitment-and-performance-gate.md) | Accepted |
