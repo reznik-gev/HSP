@@ -42,3 +42,10 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0032 | 2026-10-08 | [Architecture: walls, doors/windows, columns](0032-2026-10-08-architectural-elements.md) | Accepted |
 | 0033 | 2026-10-08 | [Audit: app-level audit table](0033-2026-10-08-audit-logging.md)          | Accepted |
 | 0034 | 2026-10-08 | [v1 data model (baseline)](0034-2026-10-08-v1-data-model.md)              | Accepted |
+| 0035 | 2026-10-08 | [API style: REST + OpenAPI under /api/v1](0035-2026-10-08-api-style.md)   | Accepted |
+| 0036 | 2026-10-08 | [Floor-plan I/O: load whole, save changesets](0036-2026-10-08-floor-plan-io.md) | Accepted |
+| 0037 | 2026-10-08 | [API errors: RFC 9457 Problem Details](0037-2026-10-08-api-errors.md)     | Accepted |
+| 0038 | 2026-10-08 | [API auth: BFF with HttpOnly session cookies](0038-2026-10-08-api-authentication.md) | Accepted |
+| 0039 | 2026-10-08 | [Frontend client: openapi-typescript + openapi-fetch](0039-2026-10-08-frontend-api-client.md) | Accepted |
+| 0040 | 2026-10-08 | [Pagination: cursor-based](0040-2026-10-08-pagination.md)                 | Accepted |
+| 0041 | 2026-10-08 | [Live updates in v1: polling](0041-2026-10-08-live-updates.md)            | Accepted |
