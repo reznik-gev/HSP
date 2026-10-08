@@ -47,6 +47,24 @@ class LocationsRepository(Protocol):
 
     async def active_floors(self, tenant_id: uuid.UUID, building_id: uuid.UUID) -> list[Floor]: ...
 
+    async def list_floors(
+        self,
+        tenant_id: uuid.UUID,
+        *,
+        building_id: uuid.UUID | None,
+        include_archived: bool,
+        after: uuid.UUID | None,
+        limit: int,
+    ) -> list[Floor]: ...
+
+    async def get_floor(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> Floor | None: ...
+
+    async def floor_at_level(
+        self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int
+    ) -> Floor | None:
+        """Any floor (archived included) at `level_index`: levels are unique per building."""
+        ...
+
     def add(self, entity: Entity) -> None: ...
 
     def record(self, event: AuditEvent) -> None: ...
@@ -120,6 +138,40 @@ class SqlLocationsRepository:
             Floor.archived_at.is_(None),
         )
         return list(await self._db.scalars(q.order_by(Floor.level_index)))
+
+    async def list_floors(
+        self,
+        tenant_id: uuid.UUID,
+        *,
+        building_id: uuid.UUID | None,
+        include_archived: bool,
+        after: uuid.UUID | None,
+        limit: int,
+    ) -> list[Floor]:
+        q = select(Floor).where(Floor.tenant_id == tenant_id)
+        if building_id is not None:
+            q = q.where(Floor.building_id == building_id)
+        if not include_archived:
+            q = q.where(Floor.archived_at.is_(None))
+        if after is not None:
+            q = q.where(Floor.id > after)
+        return list(await self._db.scalars(q.order_by(Floor.id).limit(limit)))
+
+    async def get_floor(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> Floor | None:
+        return await self._db.scalar(
+            select(Floor).where(Floor.tenant_id == tenant_id, Floor.id == floor_id)
+        )
+
+    async def floor_at_level(
+        self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int
+    ) -> Floor | None:
+        return await self._db.scalar(
+            select(Floor).where(
+                Floor.tenant_id == tenant_id,
+                Floor.building_id == building_id,
+                Floor.level_index == level_index,
+            )
+        )
 
     def add(self, entity: Entity) -> None:
         self._db.add(entity)

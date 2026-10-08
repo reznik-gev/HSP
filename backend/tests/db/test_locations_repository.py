@@ -112,3 +112,55 @@ async def test_buildings_filter_and_code_lookup(conn: AsyncConnection) -> None:
     archived_b = await repo.building_with_code(tenant, s1.id, "B")
     assert archived_b is not None and archived_b.archived_at is not None  # archived still owns code
     assert await repo.building_with_code(tenant, s2.id, "B") is None
+
+
+async def test_floors_filter_and_level_lookup(conn: AsyncConnection) -> None:
+    from hsp.models import Floor
+
+    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+    repo = SqlLocationsRepository(db)
+    tenant = await _tenant(db, "default")
+    s = _site(tenant, "HQ")
+    repo.add(s)
+    await repo.commit()
+    now = datetime.now(UTC)
+    b = Building(
+        id=new_id(),
+        tenant_id=tenant,
+        site_id=s.id,
+        name="Main",
+        code="A",
+        created_at=now,
+        updated_at=now,
+        archived_at=None,
+    )
+    repo.add(b)
+    await repo.commit()
+    for level, archived in ((-1, False), (0, False), (1, True)):
+        repo.add(
+            Floor(
+                id=new_id(),
+                tenant_id=tenant,
+                building_id=b.id,
+                name=f"L{level}",
+                level_index=level,
+                elevation_mm=level * 3500,
+                default_wall_height_mm=2800,
+                origin_x_mm=0,
+                origin_y_mm=0,
+                published_version=None,
+                created_at=now,
+                updated_at=now,
+                archived_at=now if archived else None,
+            )
+        )
+    await repo.commit()
+
+    active = await repo.list_floors(
+        tenant, building_id=b.id, include_archived=False, after=None, limit=10
+    )
+    assert sorted(f.level_index for f in active) == [-1, 0]
+    assert [f.level_index for f in await repo.active_floors(tenant, b.id)] == [-1, 0]
+    archived = await repo.floor_at_level(tenant, b.id, 1)
+    assert archived is not None and archived.archived_at is not None
+    assert await repo.floor_at_level(tenant, b.id, 5) is None

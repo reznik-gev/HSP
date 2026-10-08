@@ -108,6 +108,41 @@ class InMemoryLocationsRepository:
             if f.tenant_id == tenant_id and f.building_id == building_id and f.archived_at is None
         ]
 
+    async def list_floors(
+        self,
+        tenant_id: uuid.UUID,
+        *,
+        building_id: uuid.UUID | None,
+        include_archived: bool,
+        after: uuid.UUID | None,
+        limit: int,
+    ) -> list[Floor]:
+        rows = sorted(
+            (f for f in self.floors.values() if f.tenant_id == tenant_id), key=lambda f: f.id
+        )
+        rows = [f for f in rows if building_id is None or f.building_id == building_id]
+        rows = [f for f in rows if include_archived or f.archived_at is None]
+        rows = [f for f in rows if after is None or f.id > after]
+        return rows[:limit]
+
+    async def get_floor(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> Floor | None:
+        f = self.floors.get(floor_id)
+        return f if f and f.tenant_id == tenant_id else None
+
+    async def floor_at_level(
+        self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int
+    ) -> Floor | None:
+        return next(
+            (
+                f
+                for f in self.floors.values()
+                if f.tenant_id == tenant_id
+                and f.building_id == building_id
+                and f.level_index == level_index
+            ),
+            None,
+        )
+
     def add(self, entity: Site | Building | Floor) -> None:
         self._pending.append(entity)
 
