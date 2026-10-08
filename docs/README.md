@@ -49,3 +49,13 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0039 | 2026-10-08 | [Frontend client: openapi-typescript + openapi-fetch](0039-2026-10-08-frontend-api-client.md) | Accepted |
 | 0040 | 2026-10-08 | [Pagination: cursor-based](0040-2026-10-08-pagination.md)                 | Accepted |
 | 0041 | 2026-10-08 | [Live updates in v1: polling](0041-2026-10-08-live-updates.md)            | Accepted |
+| 0042 | 2026-10-08 | [2D renderer: SVG](0042-2026-10-08-2d-renderer.md)                        | Accepted |
+| 0043 | 2026-10-08 | [Editor layout: 2D main, 3D toggle/split](0043-2026-10-08-editor-view-layout.md) | Accepted |
+| 0044 | 2026-10-08 | [Wall joins: linked endpoints](0044-2026-10-08-wall-joins.md)             | Accepted |
+| 0045 | 2026-10-08 | [Dimension entry: inline typing + properties panel](0045-2026-10-08-dimension-entry.md) | Accepted |
+| 0046 | 2026-10-08 | [Display units: cm default, per-user](0046-2026-10-08-display-units.md)   | Accepted |
+| 0047 | 2026-10-08 | [Snapping: grid + object/wall](0047-2026-10-08-snapping.md)               | Accepted |
+| 0048 | 2026-10-08 | [Plan underlay: not in v1](0048-2026-10-08-no-plan-underlay.md)           | Accepted |
+| 0049 | 2026-10-08 | [Bulk tools: array, auto-numbering, cross-floor paste](0049-2026-10-08-bulk-layout-tools.md) | Accepted |
+| 0050 | 2026-10-08 | [Undo/redo: per editing session](0050-2026-10-08-undo-redo.md)            | Accepted |
+| 0051 | 2026-10-08 | [Validation: instant client preview, server authoritative](0051-2026-10-08-validation-feedback.md) | Accepted |
