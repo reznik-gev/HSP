@@ -6,17 +6,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from hsp.api.common import WRITE, get_locations_repository
 from hsp.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
-from hsp.auth.dependencies import CurrentPrincipal, require_admin, require_csrf
-from hsp.db import get_session
-from hsp.locations.repository import LocationsRepository, SqlLocationsRepository
+from hsp.auth.dependencies import CurrentPrincipal
+from hsp.locations.repository import LocationsRepository
 from hsp.locations.sites import SitesService
 from hsp.models import Site
 
 router = APIRouter(prefix="/sites", tags=["sites"])
-WRITE = [Depends(require_csrf), Depends(require_admin)]
 
 
 class SiteIn(BaseModel):
@@ -43,14 +41,10 @@ class SiteOut(BaseModel):
     updated_at: datetime
 
 
-def get_repository(db: Annotated[AsyncSession, Depends(get_session)]) -> LocationsRepository:
-    return SqlLocationsRepository(db)
-
-
 def get_service(
     request: Request,
     principal: CurrentPrincipal,
-    repo: Annotated[LocationsRepository, Depends(get_repository)],
+    repo: Annotated[LocationsRepository, Depends(get_locations_repository)],
 ) -> SitesService:
     return SitesService(repo, principal, getattr(request.state, "request_id", None))
 

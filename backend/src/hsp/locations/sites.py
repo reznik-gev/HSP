@@ -6,11 +6,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from hsp.audit import audit_event, changed_fields
+from hsp.audit import changed_fields
 from hsp.auth.principal import Principal
+from hsp.locations import common
 from hsp.locations.repository import LocationsRepository
 from hsp.models import Site, new_id
-from hsp.problems import ProblemError, ProblemException
 
 EDITABLE = ("name", "address", "time_zone")
 
@@ -19,27 +19,14 @@ def validate_time_zone(tz: str) -> str:
     try:
         zoneinfo.ZoneInfo(tz)
     except (zoneinfo.ZoneInfoNotFoundError, ValueError):
-        raise ProblemException(
-            422,
-            "request-invalid",
-            "Request validation failed",
-            errors=[
-                ProblemError(
-                    code="time_zone_unknown",
-                    message=f"Unknown IANA time zone: {tz}",
-                    pointer="/time_zone",
-                )
-            ],
+        raise common.invalid_field(
+            "time_zone_unknown", f"Unknown IANA time zone: {tz}", "/time_zone"
         ) from None
     return tz
 
 
 def snapshot(site: Site) -> dict[str, Any]:
     return {k: getattr(site, k) for k in (*EDITABLE, "archived_at")}
-
-
-def not_found(site_id: uuid.UUID) -> ProblemException:
-    return ProblemException(404, "not-found", "Not found", f"Site {site_id} does not exist.")
 
 
 @dataclass
@@ -58,7 +45,7 @@ class SitesService:
     async def get(self, site_id: uuid.UUID) -> Site:
         site = await self.repo.get_site(self.principal.tenant_id, site_id)
         if site is None:
-            raise not_found(site_id)
+            raise common.not_found("site", site_id)
         return site
 
     async def create(self, *, name: str, address: str | None, time_zone: str) -> Site:
@@ -81,9 +68,7 @@ class SitesService:
     async def update(self, site_id: uuid.UUID, changes: dict[str, Any]) -> Site:
         site = await self.get(site_id)
         if site.archived_at is not None:
-            raise ProblemException(
-                409, "archived", "Archived", "Restore the site before editing it (docs/0078)."
-            )
+            raise common.archived_read_only("site")
         if "time_zone" in changes:
             validate_time_zone(changes["time_zone"])
         before = snapshot(site)
@@ -103,19 +88,8 @@ class SitesService:
             return  # idempotent (docs/0078)
         blocking = await self.repo.active_buildings(self.principal.tenant_id, site_id)
         if blocking:
-            raise ProblemException(
-                409,
-                "has-active-children",
-                "Site has active buildings",
-                "Archive its buildings first (docs/0078).",
-                errors=[
-                    ProblemError(
-                        code="active_child",
-                        message=f"Building {b.code} ({b.name})",
-                        element_id=str(b.id),
-                    )
-                    for b in blocking
-                ],
+            raise common.has_active_children(
+                "site", "building", [(b.id, f"Building {b.code} ({b.name})") for b in blocking]
             )
         site.archived_at = site.updated_at = datetime.now(UTC)
         self._audit("site.archived", site, after={"archived_at": site.archived_at})
@@ -142,14 +116,13 @@ class SitesService:
         before: dict[str, Any] | None = None,
         after: dict[str, Any] | None = None,
     ) -> None:
-        self.repo.record(
-            audit_event(
-                self.principal,
-                action=action,
-                entity_type="site",
-                entity_id=site.id,
-                before=before,
-                after=after,
-                request_id=self.request_id,
-            )
+        common.record(
+            self.repo,
+            self.principal,
+            self.request_id,
+            action=action,
+            entity_type="site",
+            entity_id=site.id,
+            before=before,
+            after=after,
         )
