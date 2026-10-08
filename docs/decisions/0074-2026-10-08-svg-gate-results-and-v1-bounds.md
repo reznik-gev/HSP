@@ -5,7 +5,7 @@
 - **Refines:** [0052](0052-2026-10-08-svg-commitment-and-performance-gate.md), [0073](0073-2026-10-08-svg-performance-test-setup.md)
 
 ## Results
-The first run of the performance gate (`pnpm bench:svg`, raw data in [`frontend/bench/results/2026-10-08-svg-1500seats-gvr.md`](../frontend/bench/results/2026-10-08-svg-1500seats-gvr.md)):
+The first run of the performance gate (`pnpm bench:svg`, raw data in [`frontend/bench/results/2026-10-08-svg-1500seats-gvr.md`](../../frontend/bench/results/2026-10-08-svg-1500seats-gvr.md)):
 
 - **Machine:** Dell Latitude 5430, i7-1265U, Intel UHD, on AC power. Chrome 154, viewport 1600×900.
 - **Floor:** 1,500 seats, 6,000 objects, 264 zones, 14 doors, 31 walls, **7,861 SVG nodes**. All labels, hatching, door arcs and zone fills were on, and level of detail was off (0052's worst case).

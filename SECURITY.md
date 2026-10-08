@@ -4,7 +4,7 @@
 
 HSP is **pre-release** (0.1.0) and has no published releases yet, so there is no supported version to patch.
 
-Once 1.0 ships, security fixes are expected to go to the latest MINOR release, with hotfix branches for older versions as described in [0064](docs/0064-2026-10-08-branching-workflow.md). The exact supported-versions policy will be defined before the first release.
+Once 1.0 ships, security fixes are expected to go to the latest MINOR release, with hotfix branches for older versions as described in [0064](docs/decisions/0064-2026-10-08-branching-workflow.md). The exact supported-versions policy will be defined before the first release.
 
 ## Reporting a vulnerability
 
@@ -42,14 +42,14 @@ Misconfiguration that HSP ships, such as an insecure default in a bundled nginx 
 **Out of scope**:
 
 - Vulnerabilities in third-party components themselves (Keycloak, PostgreSQL/PostGIS, nginx, Python or npm dependencies). Please report those upstream. If HSP needs to update or reconfigure a component in response, we'll still want to hear about it.
-- The **development-only credentials** in [`deploy/dev/`](deploy/dev/), such as `admin/admin`, `viewer/viewer` and the client secret `dev-secret-change-me` in [`hsp-realm.json`](deploy/dev/keycloak/hsp-realm.json). They are intentionally public throwaway values for local development and are never used in production. Production secrets live only in the `.env` file on the host and are never committed ([0054](docs/0054-2026-10-08-release-distribution.md), [0068](docs/0068-2026-10-08-public-repository.md)).
+- The **development-only credentials** in [`deploy/dev/`](deploy/dev/), such as `admin/admin`, `viewer/viewer` and the client secret `dev-secret-change-me` in [`hsp-realm.json`](deploy/dev/keycloak/hsp-realm.json). They are intentionally public throwaway values for local development and are never used in production. Production secrets live only in the `.env` file on the host and are never committed ([0054](docs/decisions/0054-2026-10-08-release-distribution.md), [0068](docs/decisions/0068-2026-10-08-public-repository.md)).
 - Issues that require an already compromised host or administrator access to it.
 
 ## Notes for operators
 
 HSP is self-hosted on-premise software. The operator of each installation is responsible for:
 
-- **TLS**: replacing the self-signed certificate generated at install time with a proper certificate, and renewing it ([0060](docs/0060-2026-10-08-reverse-proxy.md));
+- **TLS**: replacing the self-signed certificate generated at install time with a proper certificate, and renewing it ([0060](docs/decisions/0060-2026-10-08-reverse-proxy.md));
 - **Host hardening**: OS patching, firewalling, Docker access and protecting the `.env` file;
-- **Backup encryption**: backups contain personal data, so the backup target must be encrypted ([0058](docs/0058-2026-10-08-backups.md));
+- **Backup encryption**: backups contain personal data, so the backup target must be encrypted ([0058](docs/decisions/0058-2026-10-08-backups.md));
 - **Upgrades**: applying HSP releases that contain security fixes.
