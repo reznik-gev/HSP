@@ -1,0 +1,142 @@
+# Single CI workflow with a gate job (docs/0070).
+#
+# Always runs on every PR. `changes` decides which areas need checking; area jobs are skipped
+# when untouched; `ci-ok` is the ONLY required status check in the `main` ruleset. It fails if
+# any area job failed or was cancelled, and passes if they succeeded or were skipped. This keeps
+# docs-only PRs mergeable and new jobs never require ruleset changes.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            backend:
+              - "backend/**"
+              - "shared/**"
+              - ".github/workflows/ci.yml"
+            frontend:
+              - "frontend/**"
+              - "shared/**"
+              - "backend/openapi.json"
+              - ".github/workflows/ci.yml"
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_USER: hsm
+          POSTGRES_PASSWORD: hsm
+          POSTGRES_DB: hsm_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hsm -d hsm_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      HSM_TEST_DATABASE_URL: postgresql+asyncpg://hsm:hsm@localhost:5432/hsm_test
+      HSM_DATABASE_URL: postgresql+asyncpg://hsm:hsm@localhost:5432/hsm_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Types
+        run: uv run mypy
+      - name: Tests (unit + DB integration; also applies all migrations to an empty DB)
+        run: uv run pytest
+      - name: Models match migrations
+        run: uv run alembic check
+      - name: OpenAPI schema is up to date
+        run: |
+          uv run hsm-export-openapi openapi.json
+          git diff --exit-code -- openapi.json || {
+            echo "::error::backend/openapi.json is stale. Run 'uv run hsm-export-openapi openapi.json' and commit."
+            exit 1
+          }
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: API types match backend/openapi.json
+        run: |
+          pnpm api:types
+          git diff --exit-code -- src/api/schema.d.ts || {
+            echo "::error::src/api/schema.d.ts is stale. Run 'pnpm api:types' and commit."
+            exit 1
+          }
+      - name: Lint
+        run: pnpm lint
+      - name: Format
+        run: pnpm format:check
+      - name: Types
+        run: pnpm typecheck
+      - name: Tests
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+  ci-ok:
+    if: always()
+    needs: [changes, backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All required jobs passed or were skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "::error::a CI job ended with '$r'"; exit 1 ;;
+            esac
+          done
