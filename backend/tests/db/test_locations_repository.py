@@ -75,3 +75,40 @@ async def test_active_buildings(conn: AsyncConnection) -> None:
         )
     await repo.commit()
     assert [b.code for b in await repo.active_buildings(tenant, site.id)] == ["A"]
+
+
+async def test_buildings_filter_and_code_lookup(conn: AsyncConnection) -> None:
+    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+    repo = SqlLocationsRepository(db)
+    tenant = await _tenant(db, "default")
+    s1, s2 = _site(tenant, "One"), _site(tenant, "Two")
+    repo.add(s1)
+    repo.add(s2)
+    await repo.commit()
+    now = datetime.now(UTC)
+    for s, code, archived in ((s1, "A", False), (s1, "B", True), (s2, "A", False)):
+        repo.add(
+            Building(
+                id=new_id(),
+                tenant_id=tenant,
+                site_id=s.id,
+                name=code,
+                code=code,
+                created_at=now,
+                updated_at=now,
+                archived_at=now if archived else None,
+            )
+        )
+    await repo.commit()
+
+    in_s1 = await repo.list_buildings(
+        tenant, site_id=s1.id, include_archived=False, after=None, limit=10
+    )
+    assert [b.code for b in in_s1] == ["A"]
+    everything = await repo.list_buildings(
+        tenant, site_id=None, include_archived=True, after=None, limit=10
+    )
+    assert len(everything) == 3
+    archived_b = await repo.building_with_code(tenant, s1.id, "B")
+    assert archived_b is not None and archived_b.archived_at is not None  # archived still owns code
+    assert await repo.building_with_code(tenant, s2.id, "B") is None

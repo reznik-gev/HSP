@@ -3,7 +3,7 @@
 import uuid
 
 from hsp.auth.sessions import Session, SessionTokens, with_tokens
-from hsp.models import AuditEvent, Building, Site, new_id
+from hsp.models import AuditEvent, Building, Floor, Site, new_id
 
 
 class InMemorySessionStore:
@@ -41,8 +41,9 @@ class InMemoryLocationsRepository:
     def __init__(self) -> None:
         self.sites: dict[uuid.UUID, Site] = {}
         self.buildings: dict[uuid.UUID, Building] = {}
+        self.floors: dict[uuid.UUID, Floor] = {}
         self.events: list[AuditEvent] = []
-        self._pending: list[Site | Building | AuditEvent] = []
+        self._pending: list[Site | Building | Floor | AuditEvent] = []
         self.committed = 0
 
     async def list_sites(
@@ -67,7 +68,47 @@ class InMemoryLocationsRepository:
             if b.tenant_id == tenant_id and b.site_id == site_id and b.archived_at is None
         ]
 
-    def add(self, entity: Site | Building) -> None:
+    async def list_buildings(
+        self,
+        tenant_id: uuid.UUID,
+        *,
+        site_id: uuid.UUID | None,
+        include_archived: bool,
+        after: uuid.UUID | None,
+        limit: int,
+    ) -> list[Building]:
+        rows = sorted(
+            (b for b in self.buildings.values() if b.tenant_id == tenant_id), key=lambda b: b.id
+        )
+        rows = [b for b in rows if site_id is None or b.site_id == site_id]
+        rows = [b for b in rows if include_archived or b.archived_at is None]
+        rows = [b for b in rows if after is None or b.id > after]
+        return rows[:limit]
+
+    async def get_building(self, tenant_id: uuid.UUID, building_id: uuid.UUID) -> Building | None:
+        b = self.buildings.get(building_id)
+        return b if b and b.tenant_id == tenant_id else None
+
+    async def building_with_code(
+        self, tenant_id: uuid.UUID, site_id: uuid.UUID, code: str
+    ) -> Building | None:
+        return next(
+            (
+                b
+                for b in self.buildings.values()
+                if b.tenant_id == tenant_id and b.site_id == site_id and b.code == code
+            ),
+            None,
+        )
+
+    async def active_floors(self, tenant_id: uuid.UUID, building_id: uuid.UUID) -> list[Floor]:
+        return [
+            f
+            for f in self.floors.values()
+            if f.tenant_id == tenant_id and f.building_id == building_id and f.archived_at is None
+        ]
+
+    def add(self, entity: Site | Building | Floor) -> None:
         self._pending.append(entity)
 
     def record(self, event: AuditEvent) -> None:
@@ -79,6 +120,8 @@ class InMemoryLocationsRepository:
                 self.sites[item.id] = item
             elif isinstance(item, Building):
                 self.buildings[item.id] = item
+            elif isinstance(item, Floor):
+                self.floors[item.id] = item
             else:
                 self.events.append(item)
         self._pending.clear()

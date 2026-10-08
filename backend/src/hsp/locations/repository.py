@@ -7,7 +7,9 @@ from typing import Protocol
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp.models import AuditEvent, Building, Site
+from hsp.models import AuditEvent, Building, Floor, Site
+
+Entity = Site | Building | Floor
 
 
 class LocationsRepository(Protocol):
@@ -19,11 +21,33 @@ class LocationsRepository(Protocol):
 
     async def get_site(self, tenant_id: uuid.UUID, site_id: uuid.UUID) -> Site | None: ...
 
+    async def list_buildings(
+        self,
+        tenant_id: uuid.UUID,
+        *,
+        site_id: uuid.UUID | None,
+        include_archived: bool,
+        after: uuid.UUID | None,
+        limit: int,
+    ) -> list[Building]: ...
+
+    async def get_building(
+        self, tenant_id: uuid.UUID, building_id: uuid.UUID
+    ) -> Building | None: ...
+
+    async def building_with_code(
+        self, tenant_id: uuid.UUID, site_id: uuid.UUID, code: str
+    ) -> Building | None:
+        """Any building (archived included) using `code` in the site: codes are unique per site."""
+        ...
+
     async def active_buildings(
         self, tenant_id: uuid.UUID, site_id: uuid.UUID
     ) -> list[Building]: ...
 
-    def add(self, entity: Site | Building) -> None: ...
+    async def active_floors(self, tenant_id: uuid.UUID, building_id: uuid.UUID) -> list[Floor]: ...
+
+    def add(self, entity: Entity) -> None: ...
 
     def record(self, event: AuditEvent) -> None: ...
 
@@ -49,6 +73,38 @@ class SqlLocationsRepository:
             select(Site).where(Site.tenant_id == tenant_id, Site.id == site_id)
         )
 
+    async def list_buildings(
+        self,
+        tenant_id: uuid.UUID,
+        *,
+        site_id: uuid.UUID | None,
+        include_archived: bool,
+        after: uuid.UUID | None,
+        limit: int,
+    ) -> list[Building]:
+        q = select(Building).where(Building.tenant_id == tenant_id)
+        if site_id is not None:
+            q = q.where(Building.site_id == site_id)
+        if not include_archived:
+            q = q.where(Building.archived_at.is_(None))
+        if after is not None:
+            q = q.where(Building.id > after)
+        return list(await self._db.scalars(q.order_by(Building.id).limit(limit)))
+
+    async def get_building(self, tenant_id: uuid.UUID, building_id: uuid.UUID) -> Building | None:
+        return await self._db.scalar(
+            select(Building).where(Building.tenant_id == tenant_id, Building.id == building_id)
+        )
+
+    async def building_with_code(
+        self, tenant_id: uuid.UUID, site_id: uuid.UUID, code: str
+    ) -> Building | None:
+        return await self._db.scalar(
+            select(Building).where(
+                Building.tenant_id == tenant_id, Building.site_id == site_id, Building.code == code
+            )
+        )
+
     async def active_buildings(self, tenant_id: uuid.UUID, site_id: uuid.UUID) -> list[Building]:
         q = select(Building).where(
             Building.tenant_id == tenant_id,
@@ -57,7 +113,15 @@ class SqlLocationsRepository:
         )
         return list(await self._db.scalars(q.order_by(Building.id)))
 
-    def add(self, entity: Site | Building) -> None:
+    async def active_floors(self, tenant_id: uuid.UUID, building_id: uuid.UUID) -> list[Floor]:
+        q = select(Floor).where(
+            Floor.tenant_id == tenant_id,
+            Floor.building_id == building_id,
+            Floor.archived_at.is_(None),
+        )
+        return list(await self._db.scalars(q.order_by(Floor.level_index)))
+
+    def add(self, entity: Entity) -> None:
         self._db.add(entity)
 
     def record(self, event: AuditEvent) -> None:

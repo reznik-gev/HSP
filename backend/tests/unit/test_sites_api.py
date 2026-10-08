@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from hsp.api.sites import get_repository
+from hsp.api.common import get_locations_repository
 from hsp.auth.dependencies import get_principal
 from hsp.auth.principal import ADMIN_ROLE, Principal
 from hsp.main import create_app
@@ -46,7 +46,7 @@ def client(
     repo: InMemoryLocationsRepository, as_user: dict[str, Principal]
 ) -> Iterator[TestClient]:
     app = create_app()
-    app.dependency_overrides[get_repository] = lambda: repo
+    app.dependency_overrides[get_locations_repository] = lambda: repo
     app.dependency_overrides[get_principal] = lambda: as_user["p"]
     with TestClient(app) as c:
         yield c
