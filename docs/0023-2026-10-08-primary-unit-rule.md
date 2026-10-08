@@ -5,14 +5,14 @@
 - **Resolves:** open question in [0019](0019-2026-10-08-org-unit-source.md)
 
 ## Options considered
-- AD attribute, with an HSM fallback
+- AD attribute, with an HSP fallback
 - **Deepest unit wins** ✅
-- HSM admin chooses
+- HSP admin chooses
 
 ## Decision
 When a person is a member of several unit groups, their **primary** unit ([0006](0006-2026-10-07-org-hierarchy-model.md)) is the one **deepest in the unit tree**. All other memberships are secondary.
 
-**Tie-break:** if several candidate units are equally deep, the person is flagged **"primary unit ambiguous"** in the admin console. Until it's resolved, the unit whose AD group ID sorts first is used, so results are deterministic. An admin can then set an **HSM-side override**, which persists until the person's memberships change.
+**Tie-break:** if several candidate units are equally deep, the person is flagged **"primary unit ambiguous"** in the admin console. Until it's resolved, the unit whose AD group ID sorts first is used, so results are deterministic. An admin can then set an **HSP-side override**, which persists until the person's memberships change.
 
 ## Consequences
 - No AD schema or attribute changes are required.

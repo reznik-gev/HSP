@@ -1,10 +1,11 @@
-# HSM Decision Log
+# HSP Decision Log
 
-HSM (Human-Space Management) design decisions, one document per decision.
+HSP (Human-Space Program) design decisions, one document per decision.
 
 **Naming:** `NNNN-YYYY-MM-DD-short-slug.md` — a sequential number plus the date the decision was made.
 **Status values:** `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
 A decision is never edited after it is accepted. To change it, add a new document that supersedes it and update the old one's status line.
+Exception: **pure renames** (no change to any decision) may be applied in place, recorded in their own document (see [0072](0072-2026-10-08-rename-hsm-to-hsp.md)).
 
 | #    | Date       | Decision                                                                 | Status   |
 |------|------------|--------------------------------------------------------------------------|----------|
@@ -31,7 +32,7 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0021 | 2026-10-08 | [Catalog: built-in + parametric items](0021-2026-10-08-object-catalog.md) | Accepted |
 | 0022 | 2026-10-08 | [Device assets: light asset fields](0022-2026-10-08-device-asset-data.md)  | Accepted |
 | 0023 | 2026-10-08 | [Primary unit: deepest unit wins](0023-2026-10-08-primary-unit-rule.md)   | Accepted |
-| 0024 | 2026-10-08 | [Unit managers: assigned in HSM only](0024-2026-10-08-unit-managers.md)   | Accepted |
+| 0024 | 2026-10-08 | [Unit managers: assigned in HSP only](0024-2026-10-08-unit-managers.md)   | Accepted |
 | 0025 | 2026-10-08 | [v1 scope: space modeling + seat assignment](0025-2026-10-08-v1-scope.md) | Accepted |
 | 0026 | 2026-10-08 | [Line endings: normalize to LF](0026-2026-10-08-line-endings.md)          | Accepted |
 | 0027 | 2026-10-08 | [v1 interim: CSV import, admin-only editing, Keycloak login](0027-2026-10-08-v1-interim-people-and-access.md) | Accepted |
@@ -79,3 +80,4 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0069 | 2026-10-08 | [Merge method: rebase only, linear history](0069-2026-10-08-rebase-merges.md) | Accepted |
 | 0070 | 2026-10-08 | [CI structure: single workflow with gate job](0070-2026-10-08-ci-gate-job.md) | Accepted |
 | 0071 | 2026-10-08 | [License: proprietary (source-visible); no external contributions](0071-2026-10-08-license-and-contributions.md) | Accepted |
+| 0072 | 2026-10-08 | [Rename the product from HSM to HSP (Human-Space Program)](0072-2026-10-08-rename-hsm-to-hsp.md) | Accepted |

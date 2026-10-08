@@ -12,11 +12,11 @@
 - **Keep it public** ✅
 
 ## Decision
-The HSM repository `reznik-gev/HSP` is **public**.
+The HSP repository `reznik-gev/HSP` is **public**.
 
 ## Consequences
 - Anyone can read the code, the decision records and the issue/PR history. **No secrets, customer data or customer names** may ever be committed.
-  - The dev-only Keycloak realm (`deploy/dev/keycloak/hsm-realm.json`) contains intentionally public throwaway credentials (`admin/admin`, `dev-secret-change-me`). Production secrets come from `.env` on the host and are never committed ([0054](0054-2026-10-08-release-distribution.md)).
+  - The dev-only Keycloak realm (`deploy/dev/keycloak/hsp-realm.json`) contains intentionally public throwaway credentials (`admin/admin`, `dev-secret-change-me`). Production secrets come from `.env` on the host and are never committed ([0054](0054-2026-10-08-release-distribution.md)).
   - GitHub **secret scanning and push protection** are enabled and must stay on.
 - GitHub Actions minutes are free and unlimited for public repositories. This also makes it feasible to run every CI job on every PR ([0070](0070-2026-10-08-ci-gate-job.md)).
 - **There is no license yet,** so by default the code is "all rights reserved": visible, but not usable by others. Choosing a license is a separate, open decision.

@@ -1,6 +1,6 @@
-# Contributing to HSM
+# Contributing to HSP
 
-Thanks for your interest. HSM is **proprietary, source-visible software** (see [LICENSE](LICENSE) and [decision 0071](docs/0071-2026-10-08-license-and-contributions.md)).
+Thanks for your interest. HSP is **proprietary, source-visible software** (see [LICENSE](LICENSE) and [decision 0071](docs/0071-2026-10-08-license-and-contributions.md)).
 
 ## Pull requests from outside contributors
 **External pull requests are not accepted at this time.** They'll be closed without review. This keeps copyright ownership in one place while the licensing model may still evolve. The policy will be revisited if a community forms.

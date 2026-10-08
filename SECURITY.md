@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-HSM is **pre-release** (0.1.0) and has no published releases yet, so there is no supported version to patch.
+HSP is **pre-release** (0.1.0) and has no published releases yet, so there is no supported version to patch.
 
 Once 1.0 ships, security fixes are expected to go to the latest MINOR release, with hotfix branches for older versions as described in [0064](docs/0064-2026-10-08-branching-workflow.md). The exact supported-versions policy will be defined before the first release.
 
@@ -30,26 +30,26 @@ Please don't access, modify or delete data that isn't yours, and don't test agai
 
 ## Scope
 
-**In scope**: the HSM code and configuration in this repository:
+**In scope**: the HSP code and configuration in this repository:
 
 - `backend/`: the FastAPI service, including authentication and authorization handling;
 - `frontend/`: the React application;
 - `deploy/` and the release bundle: Compose files, nginx and Keycloak configuration templates, and the operator CLI;
 - database migrations.
 
-Misconfiguration that HSM ships, such as an insecure default in a bundled nginx or Keycloak config, **is** in scope.
+Misconfiguration that HSP ships, such as an insecure default in a bundled nginx or Keycloak config, **is** in scope.
 
 **Out of scope**:
 
-- Vulnerabilities in third-party components themselves (Keycloak, PostgreSQL/PostGIS, nginx, Python or npm dependencies). Please report those upstream. If HSM needs to update or reconfigure a component in response, we'll still want to hear about it.
-- The **development-only credentials** in [`deploy/dev/`](deploy/dev/), such as `admin/admin`, `viewer/viewer` and the client secret `dev-secret-change-me` in [`hsm-realm.json`](deploy/dev/keycloak/hsm-realm.json). They are intentionally public throwaway values for local development and are never used in production. Production secrets live only in the `.env` file on the host and are never committed ([0054](docs/0054-2026-10-08-release-distribution.md), [0068](docs/0068-2026-10-08-public-repository.md)).
+- Vulnerabilities in third-party components themselves (Keycloak, PostgreSQL/PostGIS, nginx, Python or npm dependencies). Please report those upstream. If HSP needs to update or reconfigure a component in response, we'll still want to hear about it.
+- The **development-only credentials** in [`deploy/dev/`](deploy/dev/), such as `admin/admin`, `viewer/viewer` and the client secret `dev-secret-change-me` in [`hsp-realm.json`](deploy/dev/keycloak/hsp-realm.json). They are intentionally public throwaway values for local development and are never used in production. Production secrets live only in the `.env` file on the host and are never committed ([0054](docs/0054-2026-10-08-release-distribution.md), [0068](docs/0068-2026-10-08-public-repository.md)).
 - Issues that require an already compromised host or administrator access to it.
 
 ## Notes for operators
 
-HSM is self-hosted on-premise software. The operator of each installation is responsible for:
+HSP is self-hosted on-premise software. The operator of each installation is responsible for:
 
 - **TLS**: replacing the self-signed certificate generated at install time with a proper certificate, and renewing it ([0060](docs/0060-2026-10-08-reverse-proxy.md));
 - **Host hardening**: OS patching, firewalling, Docker access and protecting the `.env` file;
 - **Backup encryption**: backups contain personal data, so the backup target must be encrypted ([0058](docs/0058-2026-10-08-backups.md));
-- **Upgrades**: applying HSM releases that contain security fixes.
+- **Upgrades**: applying HSP releases that contain security fixes.

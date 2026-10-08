@@ -20,4 +20,4 @@ A single git repository:
 ## Consequences
 - An API change and its regenerated TypeScript client land in the same commit.
 - One CI pipeline with path-based jobs: backend lint, type checks and tests; frontend build and tests; OpenFGA model tests; image builds.
-- Releases are versioned together as a single HSM version, which keeps on-prem upgrades simple.
+- Releases are versioned together as a single HSP version, which keeps on-prem upgrades simple.

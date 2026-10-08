@@ -8,12 +8,12 @@
 - CalVer
 
 ## Decision
-HSM releases use **MAJOR.MINOR.PATCH**, applied to the whole product (one version for the bundle, [0018](0018-2026-10-08-repository-layout.md), [0054](0054-2026-10-08-release-distribution.md)):
+HSP releases use **MAJOR.MINOR.PATCH**, applied to the whole product (one version for the bundle, [0018](0018-2026-10-08-repository-layout.md), [0054](0054-2026-10-08-release-distribution.md)):
 
 | Bump | Meaning for operators |
 |---|---|
 | **MAJOR** | Breaking: removal of `/api/vN` ([0035](0035-2026-10-08-api-style.md)), required manual upgrade steps, a dropped host OS or Postgres version, or config format changes |
-| **MINOR** | New features. Migrations may run, and upgrades go through the standard `hsm upgrade` |
+| **MINOR** | New features. Migrations may run, and upgrades go through the standard `hsp upgrade` |
 | **PATCH** | Fixes only. Migrations only if a fix requires one |
 
 - Pre-releases: `1.2.0-rc.1`.
