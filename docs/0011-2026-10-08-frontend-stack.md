@@ -4,7 +4,7 @@
 - **Status:** Accepted
 
 ## Context
-The 2D-plan-to-3D editor ([0004](0004-2026-10-07-space-authoring-model.md)) is the most demanding UI in HSM.
+The 2D-plan-to-3D editor ([0004](0004-2026-10-07-space-authoring-model.md)) is the most demanding UI in HSP.
 
 ## Options considered
 - **React + react-three-fiber (R3F)** ✅

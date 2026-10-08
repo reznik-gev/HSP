@@ -4,7 +4,7 @@
 - **Status:** Accepted
 
 ## Context
-HSM could run in a managed cloud, on-premise, or both.
+HSP could run in a managed cloud, on-premise, or both.
 
 ## Options considered
 - Cloud (managed services)
@@ -12,7 +12,7 @@ HSM could run in a managed cloud, on-premise, or both.
 - Both (containerized, cloud-agnostic)
 
 ## Decision
-HSM is deployed **on-premise in the organization's own infrastructure**.
+HSP is deployed **on-premise in the organization's own infrastructure**.
 
 ## Consequences
 - Every component must be self-hostable and redistributable. No dependency on proprietary cloud services (managed queues, cloud-only databases, SaaS auth).

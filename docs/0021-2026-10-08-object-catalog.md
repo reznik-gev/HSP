@@ -9,7 +9,7 @@
 - Parametric only
 
 ## Decision
-- HSM ships a **built-in catalog** of common items (desks of standard sizes, chairs, monitors, docking stations, phones, printers, cabinets, plants…), each with exact dimensions in mm and a bundled low-poly 3D model.
+- HSP ships a **built-in catalog** of common items (desks of standard sizes, chairs, monitors, docking stations, phones, printers, cabinets, plants…), each with exact dimensions in mm and a bundled low-poly 3D model.
 - Admins can define **parametric catalog items**: a primitive shape (box, cylinder, L-shape), W × D × H in cm, color, icon, category and flags.
 - Each catalog item declares **capabilities** that drive behavior:
   - `is_seat`: can be assigned or booked ([0009](0009-2026-10-07-seat-assignment-model.md))

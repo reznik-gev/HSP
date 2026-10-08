@@ -11,7 +11,7 @@
 
 ## Decision
 - The supported v1 deployment is **one Linux host (VM or bare metal)** running Docker Engine with the Compose plugin.
-- Services: `nginx` ([0060](0060-2026-10-08-reverse-proxy.md)), `frontend` (static assets served by nginx), `api` (FastAPI, multiple uvicorn workers), `keycloak`, `postgres` (PostGIS; separate databases for HSM and Keycloak), `backup` ([0058](0058-2026-10-08-backups.md)), plus a one-shot `migrate` job ([0056](0056-2026-10-08-upgrades-and-migrations.md)).
+- Services: `nginx` ([0060](0060-2026-10-08-reverse-proxy.md)), `frontend` (static assets served by nginx), `api` (FastAPI, multiple uvicorn workers), `keycloak`, `postgres` (PostGIS; separate databases for HSP and Keycloak), `backup` ([0058](0058-2026-10-08-backups.md)), plus a one-shot `migrate` job ([0056](0056-2026-10-08-upgrades-and-migrations.md)).
 - Optional compose profile: `monitoring` ([0057](0057-2026-10-08-observability.md)).
 - Reference sizing (to be validated): 4 vCPU, 8 GB RAM, 50 GB disk for one org with up to roughly 5,000 people.
 

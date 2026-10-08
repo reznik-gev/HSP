@@ -1,6 +1,6 @@
-# HSM: Human-Space Management
+# HSP: Human-Space Program
 
-HSM lets managers model workspaces in 3D with exact measurements (down to 1 cm): floors, walls, zones, seats and devices. It also manages the people in an organization's hierarchy and who sits where.
+HSP lets managers model workspaces in 3D with exact measurements (down to 1 cm): floors, walls, zones, seats and devices. It also manages the people in an organization's hierarchy and who sits where.
 
 Every design decision is recorded in **[docs/](docs/README.md)**, one numbered and dated record per decision.
 
@@ -20,7 +20,7 @@ docker compose -f deploy/compose.dev.yml up -d     # PostGIS + Keycloak (admin/a
 
 cd backend
 uv sync && uv run alembic upgrade head
-uv run uvicorn hsm.main:create_app --factory --reload   # http://localhost:8000/docs
+uv run uvicorn hsp.main:create_app --factory --reload   # http://localhost:8000/docs
 
 cd ../frontend
 pnpm install && pnpm dev                            # http://localhost:5173

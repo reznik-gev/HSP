@@ -4,7 +4,7 @@
 - **Status:** Accepted
 
 ## Context
-HSM could be built as a plugin on an existing CRM/HRIS, on top of embedded draw.io, or as a standalone application.
+HSP could be built as a plugin on an existing CRM/HRIS, on top of embedded draw.io, or as a standalone application.
 
 ## Options considered
 | Option | Pros | Cons |
@@ -15,7 +15,7 @@ HSM could be built as a plugin on an existing CRM/HRIS, on top of embedded draw.
 | Hybrid core + adapters | Flexible long-term. | More architecture up front. |
 
 ## Decision
-Build HSM as a **standalone application from scratch**.
+Build HSP as a **standalone application from scratch**.
 
 ## Consequences
 - We own the domain model, editor and APIs end to end.
