@@ -28,3 +28,6 @@ pnpm install && pnpm dev                            # http://localhost:5173
 
 ## Contributing ([0064](docs/0064-2026-10-08-branching-workflow.md))
 Trunk-based: short-lived branches and pull requests into `main`. The required check is `ci-ok` ([0070](docs/0070-2026-10-08-ci-gate-job.md)), and merges are **rebase-only** with linear history ([0069](docs/0069-2026-10-08-rebase-merges.md)), so keep commits clean and meaningful. Optional local hooks: `uv tool install pre-commit && pre-commit install`.
+
+## License
+Proprietary, source-visible: **all rights reserved** ([LICENSE](LICENSE), [0071](docs/0071-2026-10-08-license-and-contributions.md)). You may read the code, but you may not use, modify or deploy it without written permission. External pull requests are not accepted ([CONTRIBUTING.md](CONTRIBUTING.md)).
