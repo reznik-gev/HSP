@@ -1,0 +1,186 @@
+{
+  "env": {
+    "date": "2026-10-08T11:48:32.132Z",
+    "host": "GVR",
+    "cpu": "12th Gen Intel(R) Core(TM) i7-1265U",
+    "cores": 12,
+    "memoryGb": 17,
+    "power": "AC",
+    "browser": "Google Chrome 154.0.8037.98",
+    "viewport": "1600x900 @1x",
+    "seats": 1500,
+    "floor": {
+      "seats": 1500,
+      "objects": 6000,
+      "walls": 31,
+      "openings": 14,
+      "zones": 264,
+      "width_mm": 98400,
+      "depth_mm": 101000
+    },
+    "svgNodes": 7861
+  },
+  "checks": [
+    {
+      "name": "Drag 1 object, overview (fit)",
+      "value": 51.9,
+      "unit": "fps",
+      "limit": "≥ 50",
+      "pass": true,
+      "detail": "p95 49.9 ms, worst 83.3 ms, 338 frames"
+    },
+    {
+      "name": "Drag 20 objects, overview (fit)",
+      "value": 52.8,
+      "unit": "fps",
+      "limit": "≥ 50",
+      "pass": true,
+      "detail": "p95 33.3 ms, worst 50.2 ms, 323 frames"
+    },
+    {
+      "name": "Pan, overview (fit)",
+      "value": 43.5,
+      "unit": "fps",
+      "limit": "≥ 45",
+      "pass": false,
+      "detail": "p95 50 ms, worst 66.7 ms, 150 frames"
+    },
+    {
+      "name": "Wheel zoom, overview (fit)",
+      "value": 41.1,
+      "unit": "fps",
+      "limit": "≥ 45",
+      "pass": false,
+      "detail": "p95 50 ms, worst 83.2 ms, 98 frames"
+    },
+    {
+      "name": "Drag 1 object, working zoom (15 mm/px)",
+      "value": 51.4,
+      "unit": "fps",
+      "limit": "≥ 50",
+      "pass": true,
+      "detail": "p95 33.4 ms, worst 50.2 ms, 354 frames"
+    },
+    {
+      "name": "Drag 20 objects, working zoom (15 mm/px)",
+      "value": 59.1,
+      "unit": "fps",
+      "limit": "≥ 50",
+      "pass": true,
+      "detail": "p95 16.9 ms, worst 33.5 ms, 342 frames"
+    },
+    {
+      "name": "Pan, working zoom (15 mm/px)",
+      "value": 51.7,
+      "unit": "fps",
+      "limit": "≥ 45",
+      "pass": true,
+      "detail": "p95 33.4 ms, worst 50.2 ms, 163 frames"
+    },
+    {
+      "name": "Wheel zoom, working zoom (15 mm/px)",
+      "value": 39.7,
+      "unit": "fps",
+      "limit": "≥ 45",
+      "pass": false,
+      "detail": "p95 66.6 ms, worst 83.5 ms, 110 frames"
+    },
+    {
+      "name": "Initial render (median of 3)",
+      "value": 158,
+      "unit": "ms",
+      "limit": "≤ 1500",
+      "pass": true,
+      "detail": "runs: 156, 199, 158 ms"
+    },
+    {
+      "name": "Click → selection painted (median)",
+      "value": 35.3,
+      "unit": "ms",
+      "limit": "≤ 50",
+      "pass": true,
+      "detail": "max 66.8 ms over 12 clicks"
+    }
+  ],
+  "raw": {
+    "fit": {
+      "drag1": {
+        "frames": 338,
+        "durationMs": 6518,
+        "avgFps": 51.9,
+        "p95FrameMs": 49.9,
+        "worstFrameMs": 83.3
+      },
+      "drag20": {
+        "frames": 323,
+        "durationMs": 6117.7,
+        "avgFps": 52.8,
+        "p95FrameMs": 33.3,
+        "worstFrameMs": 50.2
+      },
+      "pan": {
+        "frames": 150,
+        "durationMs": 3450.7,
+        "avgFps": 43.5,
+        "p95FrameMs": 50,
+        "worstFrameMs": 66.7
+      },
+      "zoom": {
+        "frames": 98,
+        "durationMs": 2383.8,
+        "avgFps": 41.1,
+        "p95FrameMs": 50,
+        "worstFrameMs": 83.2
+      }
+    },
+    "working": {
+      "drag1": {
+        "frames": 354,
+        "durationMs": 6884.7,
+        "avgFps": 51.4,
+        "p95FrameMs": 33.4,
+        "worstFrameMs": 50.2
+      },
+      "drag20": {
+        "frames": 342,
+        "durationMs": 5784.5,
+        "avgFps": 59.1,
+        "p95FrameMs": 16.9,
+        "worstFrameMs": 33.5
+      },
+      "pan": {
+        "frames": 163,
+        "durationMs": 3150.6,
+        "avgFps": 51.7,
+        "p95FrameMs": 33.4,
+        "worstFrameMs": 50.2
+      },
+      "zoom": {
+        "frames": 110,
+        "durationMs": 2767.4,
+        "avgFps": 39.7,
+        "p95FrameMs": 66.6,
+        "worstFrameMs": 83.5
+      }
+    },
+    "initial": [
+      156,
+      199,
+      158
+    ],
+    "select": [
+      66.8,
+      51.3,
+      27.1,
+      38,
+      35.3,
+      37.4,
+      35.3,
+      22.2,
+      33.1,
+      35.9,
+      34.1,
+      23.2
+    ]
+  }
+}
