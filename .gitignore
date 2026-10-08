@@ -22,3 +22,6 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Claude Code: temporary git worktrees created for background agents
+.claude/worktrees/
