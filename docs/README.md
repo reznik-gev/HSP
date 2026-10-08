@@ -72,3 +72,6 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0062 | 2026-10-08 | [Tooling: Ruff + mypy, ESLint + Prettier](0062-2026-10-08-code-quality-tooling.md) | Accepted |
 | 0063 | 2026-10-08 | [Release versioning: SemVer](0063-2026-10-08-release-versioning.md)       | Accepted |
 | 0064 | 2026-10-08 | [Branching: trunk-based with PRs](0064-2026-10-08-branching-workflow.md)  | Accepted |
+| 0065 | 2026-10-08 | [Python 3.13 & dev tooling (uv, Node LTS, pnpm)](0065-2026-10-08-python-version-and-dev-tooling.md) | Accepted |
+| 0066 | 2026-10-08 | [Frontend state & UI: Zustand + shadcn/ui](0066-2026-10-08-frontend-state-and-ui-components.md) | Accepted (lower confidence) |
+| 0067 | 2026-10-08 | [Frontend: pnpm + Vite + TanStack Router](0067-2026-10-08-frontend-package-manager-and-router.md) | Accepted |
