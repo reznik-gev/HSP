@@ -6,8 +6,13 @@ import { defineConfig } from "vitest/config";
 
 // In development the browser talks to Vite only; /api and /auth are proxied so that
 // frontend, API and Keycloak share one origin, as nginx does in production (docs/0038, 0060).
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
+  define: {
+    // `vite build --mode bench` includes the /bench routes (docs/0073).
+    "import.meta.env.VITE_BENCH": JSON.stringify(mode === "bench" ? "1" : ""),
+  },
+  build: mode === "bench" ? { outDir: "dist-bench" } : {},
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
@@ -24,4 +29,4 @@ export default defineConfig({
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
   },
-});
+}));
