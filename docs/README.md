@@ -78,3 +78,4 @@ A decision is never edited after it is accepted. To change it, add a new documen
 | 0068 | 2026-10-08 | [Repository visibility: public](0068-2026-10-08-public-repository.md)       | Accepted |
 | 0069 | 2026-10-08 | [Merge method: rebase only, linear history](0069-2026-10-08-rebase-merges.md) | Accepted |
 | 0070 | 2026-10-08 | [CI structure: single workflow with gate job](0070-2026-10-08-ci-gate-job.md) | Accepted |
+| 0071 | 2026-10-08 | [License: proprietary (source-visible); no external contributions](0071-2026-10-08-license-and-contributions.md) | Accepted |
