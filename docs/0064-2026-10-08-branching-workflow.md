@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-08
 - **Status:** Accepted
+- **Partially superseded by:** [0069](0069-2026-10-08-rebase-merges.md) (rebase-only instead of squash)
 
 ## Options considered
 - **Trunk-based + PRs** ✅
