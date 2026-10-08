@@ -1,0 +1,52 @@
+{
+  "realm": "hsm",
+  "enabled": true,
+  "displayName": "HSM (development)",
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      { "name": "hsm-admin", "description": "Full access in v1 (docs/0027)" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "hsm-api",
+      "name": "HSM API (BFF)",
+      "description": "Confidential OIDC client used by the FastAPI backend-for-frontend (docs/0038)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "dev-secret-change-me",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:5173/*", "http://localhost:8000/*"],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@hsm.local",
+      "firstName": "Dev",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
+      "realmRoles": ["hsm-admin", "default-roles-hsm"]
+    },
+    {
+      "username": "viewer",
+      "email": "viewer@hsm.local",
+      "firstName": "Dev",
+      "lastName": "Viewer",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "viewer", "temporary": false }],
+      "realmRoles": ["default-roles-hsm"]
+    }
+  ]
+}

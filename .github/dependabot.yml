@@ -1,0 +1,33 @@
+# Weekly grouped dependency updates (docs/0059).
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /backend
+    schedule: { interval: weekly }
+    groups:
+      python: { patterns: ["*"] }
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly }
+    groups:
+      npm: { patterns: ["*"] }
+    ignore:
+      # Pinned to 5.x until typescript-eslint and openapi-typescript support TS 7
+      # (see frontend/README.md).
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: docker
+    directory: /backend
+    schedule: { interval: weekly }
+
+  - package-ecosystem: docker-compose
+    directory: /deploy
+    schedule: { interval: weekly }
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    groups:
+      actions: { patterns: ["*"] }
