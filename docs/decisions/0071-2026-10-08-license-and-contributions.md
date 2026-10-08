@@ -23,7 +23,7 @@ The repository is public ([0068](0068-2026-10-08-public-repository.md)) but had 
 ## Decision
 - `LICENSE` at the repo root states **"All rights reserved"**. The only rights granted are those GitHub's Terms of Service require for public repositories (viewing and forking on GitHub). It includes a warranty disclaimer and notes that third-party components keep their own licenses.
 - Package metadata declares the license as proprietary: `backend/pyproject.toml` has `license = "LicenseRef-Proprietary"`, and `frontend/package.json` has `"license": "UNLICENSED"` (npm's convention for "not licensed for use").
-- `CONTRIBUTING.md` states that **external pull requests are not accepted**. Issues, security reports ([SECURITY.md](../SECURITY.md)) and licensing inquiries are welcome.
+- `CONTRIBUTING.md` states that **external pull requests are not accepted**. Issues, security reports ([SECURITY.md](../../SECURITY.md)) and licensing inquiries are welcome.
 
 ## Consequences
 - Every commercial option stays open: selling on-prem licenses, or later moving to FSL, AGPL with dual licensing, or permissive. A later change is easy because **all copyright stays with one holder**, which is why external contributions are closed.
