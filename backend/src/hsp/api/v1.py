@@ -9,6 +9,7 @@ from hsp.api import (
     devices,
     drafts,
     floors,
+    imports,
     locks,
     org_units,
     people,
@@ -28,3 +29,4 @@ router.include_router(catalog.router)
 router.include_router(devices.router)
 router.include_router(org_units.router)
 router.include_router(people.router)
+router.include_router(imports.router)
