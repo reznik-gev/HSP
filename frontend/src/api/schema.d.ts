@@ -199,7 +199,11 @@ export interface paths {
          * @description Start a draft explicitly. Usually unnecessary: the first changeset starts one (docs/0081).
          */
         post: operations["create_draft_api_v1_floors__floor_id__draft_post"];
-        delete?: never;
+        /**
+         * Discard Draft
+         * @description Throw the draft away (docs/0028, 0081). Idempotent.
+         */
+        delete: operations["discard_draft_api_v1_floors__floor_id__draft_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -222,6 +226,47 @@ export interface paths {
          *     without the edit lock, 422 changeset-invalid with per-operation errors.
          */
         post: operations["apply_changeset_api_v1_floors__floor_id__draft_changesets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/floors/{floor_id}/draft/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish Draft
+         * @description Make the draft the published version (docs/0082). `base_revision` must be the revision
+         *     you reviewed. 409 publish-conflicts lists seat-label, device and assignment problems.
+         */
+        post: operations["publish_draft_api_v1_floors__floor_id__draft_publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/floors/{floor_id}/draft/restore/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Version
+         * @description Start a draft whose content is exactly an older published version (docs/0082).
+         */
+        post: operations["restore_version_api_v1_floors__floor_id__draft_restore__version__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1067,6 +1112,25 @@ export interface components {
              */
             zones: components["schemas"]["KindDiff"];
         };
+        /** PublishIn */
+        PublishIn: {
+            /** Base Revision */
+            base_revision: number;
+            /** Note */
+            note?: string | null;
+        };
+        /** PublishResult */
+        PublishResult: {
+            /**
+             * Floor Id
+             * Format: uuid
+             */
+            floor_id: string;
+            /** Published Version */
+            published_version: number;
+            /** Superseded Version */
+            superseded_version: number | null;
+        };
         /** SiteIn */
         SiteIn: {
             /** Address */
@@ -1731,6 +1795,35 @@ export interface operations {
             };
         };
     };
+    discard_draft_api_v1_floors__floor_id__draft_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     apply_changeset_api_v1_floors__floor_id__draft_changesets_post: {
         parameters: {
             query?: never;
@@ -1753,6 +1846,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChangesetResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_draft_api_v1_floors__floor_id__draft_publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_version_api_v1_floors__floor_id__draft_restore__version__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plan"];
                 };
             };
             /** @description Validation Error */

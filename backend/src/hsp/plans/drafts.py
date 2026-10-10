@@ -415,7 +415,7 @@ class DraftsService:
     def _tenant(self) -> uuid.UUID:
         return self.principal.tenant_id
 
-    async def _require_editable(self, floor_id: uuid.UUID) -> int | None:
+    async def require_editable(self, floor_id: uuid.UUID) -> int | None:
         """Floor exists, is active and the caller holds its edit lock. Returns published version."""
         info = await self.repo.floor_info(self._tenant, floor_id)
         if info is None:
@@ -458,7 +458,7 @@ class DraftsService:
         return draft
 
     async def create_draft(self, floor_id: uuid.UUID) -> int:
-        published = await self._require_editable(floor_id)
+        published = await self.require_editable(floor_id)
         if await self.repo.draft_for_update(self._tenant, floor_id) is not None:
             raise ProblemException(
                 409, "draft-exists", "Draft exists", "This floor already has a draft."
@@ -468,7 +468,7 @@ class DraftsService:
         return draft.version
 
     async def apply(self, floor_id: uuid.UUID, changeset: ChangesetIn) -> ChangesetResult:
-        published = await self._require_editable(floor_id)
+        published = await self.require_editable(floor_id)
         draft = await self.repo.draft_for_update(self._tenant, floor_id)
         if draft is None:
             if changeset.base_revision != 0:
