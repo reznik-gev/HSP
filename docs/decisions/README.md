@@ -88,3 +88,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0077 | 2026-10-08 | [Login implementation: Authlib, encrypted sessions, Keycloak-driven lifetime](0077-2026-10-08-login-implementation.md) | Accepted |
 | 0078 | 2026-10-08 | [Archive semantics: DELETE archives, restore endpoint, block on active children](0078-2026-10-08-archive-semantics.md) | Accepted |
 | 0079 | 2026-10-08 | [Stacked PR workflow: parent-based PRs, auto-retarget, restack script](0079-2026-10-08-stacked-pr-workflow.md) | Accepted |
+| 0080 | 2026-10-10 | [Floor-plan read access and diff format](0080-2026-10-10-plan-read-access-and-diff.md) | Accepted |
