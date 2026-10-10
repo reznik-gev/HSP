@@ -3,27 +3,20 @@
 from typing import Any
 
 import pytest
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from hsp.auth.principal import ADMIN_ROLE, Principal
 from hsp.models import new_id
 from hsp.org.units import PositionIn, UnitIn, UnitsService
 from hsp.problems import ProblemException
+from tests.db.plan_helpers import new_tenant
 
 
 @pytest.fixture
 async def svc(conn: AsyncConnection) -> UnitsService:
     db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
     # A fresh tenant per test: the single-root rule is per tenant.
-    tenant = new_id()
-    await db.execute(
-        text(
-            "INSERT INTO tenant (id, name, slug, created_at, updated_at) "
-            "VALUES (:id, 'T', :s, now(), now())"
-        ),
-        {"id": tenant, "s": f"t-{tenant.hex[:8]}"},
-    )
+    tenant = await new_tenant(db)
     return UnitsService(
         db, Principal("a", "A", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c")
     )

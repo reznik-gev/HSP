@@ -612,6 +612,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List People */
+        get: operations["list_people_api_v1_people_get"];
+        put?: never;
+        /** Create Person */
+        post: operations["create_person_api_v1_people_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/people/{person_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Person */
+        get: operations["get_person_api_v1_people__person_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Deactivate Person
+         * @description Deactivate (people are never deleted, docs/0017).
+         */
+        delete: operations["deactivate_person_api_v1_people__person_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Person */
+        patch: operations["update_person_api_v1_people__person_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/people/{person_id}/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Memberships
+         * @description Replace all memberships at once. Without an explicit primary, the deepest unit is primary
+         *     (docs/0023).
+         */
+        put: operations["set_memberships_api_v1_people__person_id__memberships_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/people/{person_id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivate Person */
+        post: operations["reactivate_person_api_v1_people__person_id__reactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/positions/{position_id}": {
         parameters: {
             query?: never;
@@ -1317,6 +1395,38 @@ export interface components {
             /** Subject */
             subject: string;
         };
+        /** MembershipIn */
+        MembershipIn: {
+            /**
+             * Is Primary
+             * @default false
+             */
+            is_primary: boolean;
+            /** Position Id */
+            position_id?: string | null;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+        };
+        /** MembershipOut */
+        MembershipOut: {
+            /** Is Primary */
+            is_primary: boolean;
+            /** Position Id */
+            position_id: string | null;
+            /**
+             * Primary Override
+             * @description Primary chosen explicitly, not by the deepest-unit rule
+             */
+            primary_override: boolean;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+        };
         /** Opening */
         Opening: {
             /** Height Mm */
@@ -1386,6 +1496,13 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** Page[PersonOut] */
+        Page_PersonOut_: {
+            /** Items */
+            items: components["schemas"]["PersonOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** Page[PositionOut] */
         Page_PositionOut_: {
             /** Items */
@@ -1420,6 +1537,55 @@ export interface components {
             items: components["schemas"]["ZoneTypeOut"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** PersonIn */
+        PersonIn: {
+            /** Display Name */
+            display_name: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** External Id */
+            external_id?: string | null;
+            /** Title */
+            title?: string | null;
+        };
+        /** PersonOut */
+        PersonOut: {
+            /** Active */
+            active: boolean;
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /** External Id */
+            external_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Memberships */
+            memberships: components["schemas"]["MembershipOut"][];
+            /** Primary Unit Id */
+            primary_unit_id: string | null;
+            /** Source */
+            source: string;
+            /** Title */
+            title: string | null;
+        };
+        /** PersonPatch */
+        PersonPatch: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Email */
+            email?: string | null;
+            /** External Id */
+            external_id?: string | null;
+            /** Title */
+            title?: string | null;
         };
         /** PlacedObject */
         PlacedObject: {
@@ -3410,6 +3576,241 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UnitOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_people_api_v1_people_get: {
+        parameters: {
+            query?: {
+                /** @description Search name or email */
+                q?: string | null;
+                /** @description Members of this unit */
+                unit_id?: string | null;
+                include_inactive?: boolean;
+                /** @description Page size */
+                limit?: number;
+                /** @description `next_cursor` from the previous page */
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PersonOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_person_api_v1_people_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_person_api_v1_people__person_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deactivate_person_api_v1_people__person_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_person_api_v1_people__person_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_memberships_api_v1_people__person_id__memberships_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MembershipIn"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactivate_person_api_v1_people__person_id__reactivate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonOut"];
                 };
             };
             /** @description Validation Error */

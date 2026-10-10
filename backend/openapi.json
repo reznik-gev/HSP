@@ -1450,6 +1450,75 @@
         "title": "Me",
         "type": "object"
       },
+      "MembershipIn": {
+        "properties": {
+          "is_primary": {
+            "default": false,
+            "title": "Is Primary",
+            "type": "boolean"
+          },
+          "position_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Id"
+          },
+          "unit_id": {
+            "format": "uuid",
+            "title": "Unit Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit_id"
+        ],
+        "title": "MembershipIn",
+        "type": "object"
+      },
+      "MembershipOut": {
+        "properties": {
+          "is_primary": {
+            "title": "Is Primary",
+            "type": "boolean"
+          },
+          "position_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Id"
+          },
+          "primary_override": {
+            "description": "Primary chosen explicitly, not by the deepest-unit rule",
+            "title": "Primary Override",
+            "type": "boolean"
+          },
+          "unit_id": {
+            "format": "uuid",
+            "title": "Unit Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit_id",
+          "position_id",
+          "is_primary",
+          "primary_override"
+        ],
+        "title": "MembershipOut",
+        "type": "object"
+      },
       "Opening": {
         "properties": {
           "height_mm": {
@@ -1660,6 +1729,34 @@
         "title": "Page[FloorVersion]",
         "type": "object"
       },
+      "Page_PersonOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PersonOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "Page[PersonOut]",
+        "type": "object"
+      },
       "Page_PositionOut_": {
         "properties": {
           "items": {
@@ -1798,6 +1895,185 @@
           "next_cursor"
         ],
         "title": "Page[ZoneTypeOut]",
+        "type": "object"
+      },
+      "PersonIn": {
+        "properties": {
+          "display_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "display_name",
+          "email"
+        ],
+        "title": "PersonIn",
+        "type": "object"
+      },
+      "PersonOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "memberships": {
+            "items": {
+              "$ref": "#/components/schemas/MembershipOut"
+            },
+            "title": "Memberships",
+            "type": "array"
+          },
+          "primary_unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Unit Id"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "email",
+          "title",
+          "external_id",
+          "active",
+          "source",
+          "primary_unit_id",
+          "memberships"
+        ],
+        "title": "PersonOut",
+        "type": "object"
+      },
+      "PersonPatch": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "PersonPatch",
         "type": "object"
       },
       "PlacedObject": {
@@ -5324,6 +5600,394 @@
           }
         },
         "summary": "Restore Unit",
+        "tags": [
+          "organization"
+        ]
+      }
+    },
+    "/api/v1/people": {
+      "get": {
+        "operationId": "list_people_api_v1_people_get",
+        "parameters": [
+          {
+            "description": "Search name or email",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search name or email",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Members of this unit",
+            "in": "query",
+            "name": "unit_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Members of this unit",
+              "title": "Unit Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_inactive",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Inactive",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Page size",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "`next_cursor` from the previous page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`next_cursor` from the previous page",
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_PersonOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List People",
+        "tags": [
+          "organization"
+        ]
+      },
+      "post": {
+        "operationId": "create_person_api_v1_people_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Person",
+        "tags": [
+          "organization"
+        ]
+      }
+    },
+    "/api/v1/people/{person_id}": {
+      "delete": {
+        "description": "Deactivate (people are never deleted, docs/0017).",
+        "operationId": "deactivate_person_api_v1_people__person_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Deactivate Person",
+        "tags": [
+          "organization"
+        ]
+      },
+      "get": {
+        "operationId": "get_person_api_v1_people__person_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Person",
+        "tags": [
+          "organization"
+        ]
+      },
+      "patch": {
+        "operationId": "update_person_api_v1_people__person_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Person",
+        "tags": [
+          "organization"
+        ]
+      }
+    },
+    "/api/v1/people/{person_id}/memberships": {
+      "put": {
+        "description": "Replace all memberships at once. Without an explicit primary, the deepest unit is primary\n(docs/0023).",
+        "operationId": "set_memberships_api_v1_people__person_id__memberships_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/MembershipIn"
+                },
+                "title": "Body",
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Memberships",
+        "tags": [
+          "organization"
+        ]
+      }
+    },
+    "/api/v1/people/{person_id}/reactivate": {
+      "post": {
+        "operationId": "reactivate_person_api_v1_people__person_id__reactivate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reactivate Person",
         "tags": [
           "organization"
         ]
