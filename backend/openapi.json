@@ -1,6 +1,45 @@
 {
   "components": {
     "schemas": {
+      "AddOp": {
+        "properties": {
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "id": {
+            "description": "Client-generated UUIDv7 (docs/0035)",
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "wall",
+              "opening",
+              "column",
+              "zone",
+              "object"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "op": {
+            "const": "add",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "kind",
+          "id",
+          "data"
+        ],
+        "title": "AddOp",
+        "type": "object"
+      },
       "BuildingIn": {
         "properties": {
           "code": {
@@ -217,6 +256,91 @@
         "title": "CatalogItem",
         "type": "object"
       },
+      "ChangesetIn": {
+        "properties": {
+          "base_revision": {
+            "description": "The draft revision the client edited (0 = new)",
+            "minimum": 0.0,
+            "title": "Base Revision",
+            "type": "integer"
+          },
+          "ops": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "add": "#/components/schemas/AddOp",
+                  "delete": "#/components/schemas/DeleteOp",
+                  "update": "#/components/schemas/UpdateOp"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AddOp"
+                },
+                {
+                  "$ref": "#/components/schemas/UpdateOp"
+                },
+                {
+                  "$ref": "#/components/schemas/DeleteOp"
+                }
+              ]
+            },
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Ops",
+            "type": "array"
+          }
+        },
+        "required": [
+          "base_revision",
+          "ops"
+        ],
+        "title": "ChangesetIn",
+        "type": "object"
+      },
+      "ChangesetResult": {
+        "properties": {
+          "cascaded": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Cascaded",
+            "type": "array"
+          },
+          "floor_id": {
+            "format": "uuid",
+            "title": "Floor Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "floor_id",
+          "version",
+          "revision",
+          "cascaded"
+        ],
+        "title": "ChangesetResult",
+        "type": "object"
+      },
       "Column": {
         "properties": {
           "footprint": {
@@ -258,6 +382,38 @@
           "height_mm"
         ],
         "title": "Column",
+        "type": "object"
+      },
+      "DeleteOp": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "wall",
+              "opening",
+              "column",
+              "zone",
+              "object"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "op": {
+            "const": "delete",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "kind",
+          "id"
+        ],
+        "title": "DeleteOp",
         "type": "object"
       },
       "ElementChange": {
@@ -1381,6 +1537,45 @@
         "title": "SitePatch",
         "type": "object"
       },
+      "UpdateOp": {
+        "properties": {
+          "data": {
+            "additionalProperties": true,
+            "description": "Only the fields that change",
+            "title": "Data",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "wall",
+              "opening",
+              "column",
+              "zone",
+              "object"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "op": {
+            "const": "update",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "kind",
+          "id",
+          "data"
+        ],
+        "title": "UpdateOp",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2340,6 +2535,102 @@
           }
         },
         "summary": "Get Draft",
+        "tags": [
+          "floor plans"
+        ]
+      },
+      "post": {
+        "description": "Start a draft explicitly. Usually unnecessary: the first changeset starts one (docs/0081).",
+        "operationId": "create_draft_api_v1_floors__floor_id__draft_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Draft",
+        "tags": [
+          "floor plans"
+        ]
+      }
+    },
+    "/api/v1/floors/{floor_id}/draft/changesets": {
+      "post": {
+        "description": "Apply a batch of add/update/delete operations to the draft, all or nothing.\n\n409 stale-revision if `base_revision` is outdated, 409 lock-required / 423 floor-locked\nwithout the edit lock, 422 changeset-invalid with per-operation errors.",
+        "operationId": "apply_changeset_api_v1_floors__floor_id__draft_changesets_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangesetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangesetResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Changeset",
         "tags": [
           "floor plans"
         ]
