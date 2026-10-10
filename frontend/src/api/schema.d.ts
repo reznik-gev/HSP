@@ -144,6 +144,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Catalog Items
+         * @description Built-in and custom items, each with its current revision.
+         */
+        get: operations["list_catalog_items_api_v1_catalog_items_get"];
+        put?: never;
+        /**
+         * Create Catalog Item
+         * @description A custom parametric item (docs/0021), created with revision 1.
+         */
+        post: operations["create_catalog_item_api_v1_catalog_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog-items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Catalog Item */
+        get: operations["get_catalog_item_api_v1_catalog_items__item_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Archive Catalog Item
+         * @description Archive: hidden from the picker; existing placements are unaffected.
+         */
+        delete: operations["archive_catalog_item_api_v1_catalog_items__item_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Catalog Item
+         * @description Name/category edit the item; shape, dimension and flag changes add a revision, so existing
+         *     placements keep theirs (docs/0021). Built-ins are read-only (409).
+         */
+        patch: operations["update_catalog_item_api_v1_catalog_items__item_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/catalog-items/{item_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Catalog Item */
+        post: operations["restore_catalog_item_api_v1_catalog_items__item_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog-items/{item_id}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Catalog Item Revisions */
+        get: operations["list_catalog_item_revisions_api_v1_catalog_items__item_id__revisions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/floors": {
         parameters: {
             query?: never;
@@ -461,6 +545,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/zone-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Zone Types
+         * @description All zone types (a small list: one page, docs/0040).
+         */
+        get: operations["list_zone_types_api_v1_zone_types_get"];
+        put?: never;
+        /** Create Zone Type */
+        post: operations["create_zone_type_api_v1_zone_types_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/zone-types/{zone_type_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Zone Type
+         * @description Only when no zone in any floor-plan version uses it (409 in-use).
+         */
+        delete: operations["delete_zone_type_api_v1_zone_types__zone_type_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Zone Type */
+        patch: operations["update_zone_type_api_v1_zone_types__zone_type_id__patch"];
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -624,6 +750,96 @@ export interface components {
             shape: "box" | "cylinder" | "l_shape" | "model";
             /** Width Mm */
             width_mm: number;
+        };
+        /** CatalogItemIn */
+        CatalogItemIn: {
+            /**
+             * Attaches To Categories
+             * @default []
+             */
+            attaches_to_categories: string[];
+            /** Category */
+            category: string;
+            /** Color */
+            color?: string | null;
+            /** Depth Mm */
+            depth_mm: number;
+            /**
+             * Footprint Blocks
+             * @default true
+             */
+            footprint_blocks: boolean;
+            /** Height Mm */
+            height_mm: number;
+            /**
+             * Is Seat
+             * @default false
+             */
+            is_seat: boolean;
+            /** Key */
+            key: string;
+            /**
+             * Mountable
+             * @default false
+             */
+            mountable: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Shape
+             * @default box
+             * @enum {string}
+             */
+            shape: "box" | "cylinder" | "l_shape";
+            /** Width Mm */
+            width_mm: number;
+        };
+        /** CatalogItemOut */
+        CatalogItemOut: {
+            /** Archived At */
+            archived_at: string | null;
+            /**
+             * Builtin
+             * @description Shipped with HSP; read-only (docs/0083)
+             */
+            builtin: boolean;
+            /** Category */
+            category: string;
+            current_revision: components["schemas"]["RevisionOut"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+        };
+        /** CatalogItemPatch */
+        CatalogItemPatch: {
+            /** Attaches To Categories */
+            attaches_to_categories?: string[] | null;
+            /** Category */
+            category?: string | null;
+            /** Color */
+            color?: string | null;
+            /** Depth Mm */
+            depth_mm?: number | null;
+            /** Footprint Blocks */
+            footprint_blocks?: boolean | null;
+            /** Height Mm */
+            height_mm?: number | null;
+            /** Is Seat */
+            is_seat?: boolean | null;
+            /** Mountable */
+            mountable?: boolean | null;
+            /** Name */
+            name?: string | null;
+            /** Shape */
+            shape?: ("box" | "cylinder" | "l_shape") | null;
+            /** Width Mm */
+            width_mm?: number | null;
         };
         /** ChangesetIn */
         ChangesetIn: {
@@ -957,6 +1173,13 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** Page[CatalogItemOut] */
+        Page_CatalogItemOut_: {
+            /** Items */
+            items: components["schemas"]["CatalogItemOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** Page[FloorOut] */
         Page_FloorOut_: {
             /** Items */
@@ -971,10 +1194,24 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** Page[RevisionOut] */
+        Page_RevisionOut_: {
+            /** Items */
+            items: components["schemas"]["RevisionOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** Page[SiteOut] */
         Page_SiteOut_: {
             /** Items */
             items: components["schemas"]["SiteOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** Page[ZoneTypeOut] */
+        Page_ZoneTypeOut_: {
+            /** Items */
+            items: components["schemas"]["ZoneTypeOut"][];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -1131,6 +1368,36 @@ export interface components {
             /** Superseded Version */
             superseded_version: number | null;
         };
+        /** RevisionOut */
+        RevisionOut: {
+            /** Attaches To Categories */
+            attaches_to_categories: string[];
+            /** Color */
+            color: string | null;
+            /** Depth Mm */
+            depth_mm: number;
+            /** Footprint Blocks */
+            footprint_blocks: boolean;
+            /** Height Mm */
+            height_mm: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Seat */
+            is_seat: boolean;
+            /** Model Key */
+            model_key: string | null;
+            /** Mountable */
+            mountable: boolean;
+            /** Rev No */
+            rev_no: number;
+            /** Shape */
+            shape: string;
+            /** Width Mm */
+            width_mm: number;
+        };
         /** SiteIn */
         SiteIn: {
             /** Address */
@@ -1262,6 +1529,41 @@ export interface components {
              * Format: uuid
              */
             zone_type_id: string;
+        };
+        /** ZoneTypeIn */
+        ZoneTypeIn: {
+            /** Color */
+            color?: string | null;
+            /**
+             * Is Enclosed
+             * @default false
+             */
+            is_enclosed: boolean;
+            /** Name */
+            name: string;
+        };
+        /** ZoneTypeOut */
+        ZoneTypeOut: {
+            /** Color */
+            color: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Enclosed */
+            is_enclosed: boolean;
+            /** Name */
+            name: string;
+        };
+        /** ZoneTypePatch */
+        ZoneTypePatch: {
+            /** Color */
+            color?: string | null;
+            /** Is Enclosed */
+            is_enclosed?: boolean | null;
+            /** Name */
+            name?: string | null;
         };
     };
     responses: never;
@@ -1556,6 +1858,232 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BuildingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_catalog_items_api_v1_catalog_items_get: {
+        parameters: {
+            query?: {
+                category?: string | null;
+                include_archived?: boolean;
+                /** @description Page size */
+                limit?: number;
+                /** @description `next_cursor` from the previous page */
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CatalogItemOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_catalog_item_api_v1_catalog_items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogItemIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_catalog_item_api_v1_catalog_items__item_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_catalog_item_api_v1_catalog_items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_catalog_item_api_v1_catalog_items__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogItemPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_catalog_item_api_v1_catalog_items__item_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_catalog_item_revisions_api_v1_catalog_items__item_id__revisions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_RevisionOut_"];
                 };
             };
             /** @description Validation Error */
@@ -2354,6 +2882,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SiteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_zone_types_api_v1_zone_types_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ZoneTypeOut_"];
+                };
+            };
+        };
+    };
+    create_zone_type_api_v1_zone_types_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZoneTypeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTypeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_zone_type_api_v1_zone_types__zone_type_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                zone_type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_zone_type_api_v1_zone_types__zone_type_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                zone_type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZoneTypePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTypeOut"];
                 };
             };
             /** @description Validation Error */

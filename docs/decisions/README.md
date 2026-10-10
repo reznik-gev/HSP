@@ -91,3 +91,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0080 | 2026-10-10 | [Floor-plan read access and diff format](0080-2026-10-10-plan-read-access-and-diff.md) | Accepted |
 | 0081 | 2026-10-10 | [Drafts and changesets: numbering, auto-create, rules](0081-2026-10-10-drafts-and-changesets.md) | Accepted |
 | 0082 | 2026-10-10 | [Publish, discard and restore](0082-2026-10-10-publish-discard-restore.md) | Proposed (owner review pending) |
+| 0083 | 2026-10-10 | [Catalog, zone type and device API](0083-2026-10-10-catalog-and-device-api.md) | Proposed (owner review pending) |
