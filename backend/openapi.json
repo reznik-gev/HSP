@@ -663,6 +663,76 @@
         "title": "KindDiff",
         "type": "object"
       },
+      "LockStatus": {
+        "properties": {
+          "acquired_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquired At"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "floor_id": {
+            "format": "uuid",
+            "title": "Floor Id",
+            "type": "string"
+          },
+          "holder_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holder Name"
+          },
+          "holder_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holder Subject"
+          },
+          "is_mine": {
+            "default": false,
+            "title": "Is Mine",
+            "type": "boolean"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "floor_id",
+          "locked"
+        ],
+        "title": "LockStatus",
+        "type": "object"
+      },
       "LogoutResult": {
         "properties": {
           "logout_url": {
@@ -2235,6 +2305,164 @@
         "summary": "Get Draft",
         "tags": [
           "floor plans"
+        ]
+      }
+    },
+    "/api/v1/floors/{floor_id}/lock": {
+      "delete": {
+        "description": "Release your own lock. Idempotent; 409 if someone else holds it.",
+        "operationId": "release_lock_api_v1_floors__floor_id__lock_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Release Lock",
+        "tags": [
+          "edit lock"
+        ]
+      },
+      "get": {
+        "description": "Who is editing this floor, if anyone.",
+        "operationId": "lock_status_api_v1_floors__floor_id__lock_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LockStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Lock Status",
+        "tags": [
+          "edit lock"
+        ]
+      },
+      "post": {
+        "description": "Acquire the lock, or extend your own (heartbeat). 423 if someone else is editing.",
+        "operationId": "acquire_lock_api_v1_floors__floor_id__lock_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LockStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Acquire Lock",
+        "tags": [
+          "edit lock"
+        ]
+      }
+    },
+    "/api/v1/floors/{floor_id}/lock/force-release": {
+      "post": {
+        "description": "Admin override: remove whoever's lock. Their draft is kept. Audited.",
+        "operationId": "force_release_lock_api_v1_floors__floor_id__lock_force_release_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Force Release Lock",
+        "tags": [
+          "edit lock"
         ]
       }
     },

@@ -43,6 +43,7 @@ class InMemoryLocationsRepository:
         self.sites: dict[uuid.UUID, Site] = {}
         self.buildings: dict[uuid.UUID, Building] = {}
         self.floors: dict[uuid.UUID, Floor] = {}
+        self.lock_holders: dict[uuid.UUID, str] = {}  # floor id -> holder name
         self.events: list[AuditEvent] = []
         self._pending: list[Site | Building | Floor | AuditEvent] = []
         self.committed = 0
@@ -144,6 +145,9 @@ class InMemoryLocationsRepository:
             None,
         )
 
+    async def lock_holder(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: Any) -> str | None:
+        return self.lock_holders.get(floor_id)
+
     def add(self, entity: Site | Building | Floor) -> None:
         self._pending.append(entity)
 
@@ -184,3 +188,58 @@ class InMemoryPlanRepository:
         from hsp.plans.schema import PlanContent
 
         return self.content.get((floor_id, version), PlanContent())
+
+
+class InMemoryLockRepository:
+    """Fake LockRepository with the same acquire semantics as the SQL upsert."""
+
+    def __init__(self, tenant_id: uuid.UUID) -> None:
+        from hsp.plans.locks import Lock
+
+        self.tenant_id = tenant_id
+        self.floors: dict[uuid.UUID, str] = {}  # floor id -> "active" | "archived"
+        self.locks: dict[uuid.UUID, Lock] = {}
+        self.events: list[AuditEvent] = []
+        self._pending: list[AuditEvent] = []
+
+    async def floor_state(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> str | None:
+        return self.floors.get(floor_id) if tenant_id == self.tenant_id else None
+
+    async def get(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> Any:
+        return self.locks.get(floor_id)
+
+    async def try_acquire(
+        self,
+        tenant_id: uuid.UUID,
+        floor_id: uuid.UUID,
+        *,
+        subject: str,
+        name: str | None,
+        now: Any,
+        expires_at: Any,
+    ) -> Any:
+        from hsp.plans.locks import Lock
+
+        current = self.locks.get(floor_id)
+        if current and current.expires_at > now and current.holder_subject != subject:
+            return None
+        keep_start = current and current.holder_subject == subject and current.expires_at > now
+        lock = Lock(
+            floor_id,
+            subject,
+            name,
+            current.acquired_at if keep_start and current else now,
+            expires_at,
+        )
+        self.locks[floor_id] = lock
+        return lock
+
+    async def delete(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> None:
+        self.locks.pop(floor_id, None)
+
+    def record(self, event: AuditEvent) -> None:
+        self._pending.append(event)
+
+    async def commit(self) -> None:
+        self.events.extend(self._pending)
+        self._pending.clear()

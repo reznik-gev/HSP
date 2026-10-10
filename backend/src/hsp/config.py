@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # Refresh the access token when it expires within this many seconds.
     access_token_refresh_margin_s: int = 30
 
+    # Floor edit lock (docs/0016): expires unless the editor sends heartbeats.
+    edit_lock_ttl_s: int = 900
+
     @property
     def is_development(self) -> bool:
         return self.environment == "development"
