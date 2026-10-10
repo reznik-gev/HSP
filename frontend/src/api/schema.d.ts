@@ -531,6 +531,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/imports/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import People
+         * @description Columns: email*, display_name*, external_id, title, primary_unit_external_id,
+         *     secondary_unit_external_ids (';'-separated), position (docs/0084).
+         */
+        post: operations["import_people_api_v1_imports_people_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Units
+         * @description Columns: external_id*, name*, parent_external_id, level_label (docs/0084).
+         */
+        post: operations["import_units_api_v1_imports_units_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/org-units": {
         parameters: {
             query?: never;
@@ -878,6 +919,16 @@ export interface components {
              * @enum {string}
              */
             op: "add";
+        };
+        /** Body_import_people_api_v1_imports_people_post */
+        Body_import_people_api_v1_imports_people_post: {
+            /** File */
+            file: string;
+        };
+        /** Body_import_units_api_v1_imports_units_post */
+        Body_import_units_api_v1_imports_units_post: {
+            /** File */
+            file: string;
         };
         /** BuildingIn */
         BuildingIn: {
@@ -1327,6 +1378,50 @@ export interface components {
             status: string;
             /** Version */
             version: string;
+        };
+        /** ImportReport */
+        ImportReport: {
+            /** Applied */
+            applied: boolean;
+            /**
+             * Created
+             * @default 0
+             */
+            created: number;
+            /**
+             * Errors
+             * @default []
+             */
+            errors: components["schemas"]["RowError"][];
+            /** Kind */
+            kind: string;
+            /**
+             * Positions Created
+             * @default 0
+             */
+            positions_created: number;
+            /**
+             * Reactivated
+             * @default 0
+             */
+            reactivated: number;
+            /** Rows */
+            rows: number;
+            /**
+             * Unchanged
+             * @default 0
+             */
+            unchanged: number;
+            /**
+             * Updated
+             * @default 0
+             */
+            updated: number;
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: string[];
         };
         /** KindDiff */
         KindDiff: {
@@ -1809,6 +1904,17 @@ export interface components {
             shape: string;
             /** Width Mm */
             width_mm: number;
+        };
+        /** RowError */
+        RowError: {
+            /** Code */
+            code: string;
+            /** Column */
+            column?: string | null;
+            /** Message */
+            message: string;
+            /** Row */
+            row: number;
         };
         /** SiteIn */
         SiteIn: {
@@ -3316,6 +3422,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Plan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_people_api_v1_imports_people_post: {
+        parameters: {
+            query?: {
+                /** @description false = dry run (report only); true = commit */
+                apply?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_people_api_v1_imports_people_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_units_api_v1_imports_units_post: {
+        parameters: {
+            query?: {
+                /** @description false = dry run (report only); true = commit */
+                apply?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_units_api_v1_imports_units_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportReport"];
                 };
             };
             /** @description Validation Error */

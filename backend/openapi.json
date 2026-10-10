@@ -40,6 +40,34 @@
         "title": "AddOp",
         "type": "object"
       },
+      "Body_import_people_api_v1_imports_people_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_people_api_v1_imports_people_post",
+        "type": "object"
+      },
+      "Body_import_units_api_v1_imports_units_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_units_api_v1_imports_units_post",
+        "type": "object"
+      },
       "BuildingIn": {
         "properties": {
           "code": {
@@ -1269,6 +1297,70 @@
           "version"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "ImportReport": {
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "boolean"
+          },
+          "created": {
+            "default": 0,
+            "title": "Created",
+            "type": "integer"
+          },
+          "errors": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RowError"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "positions_created": {
+            "default": 0,
+            "title": "Positions Created",
+            "type": "integer"
+          },
+          "reactivated": {
+            "default": 0,
+            "title": "Reactivated",
+            "type": "integer"
+          },
+          "rows": {
+            "title": "Rows",
+            "type": "integer"
+          },
+          "unchanged": {
+            "default": 0,
+            "title": "Unchanged",
+            "type": "integer"
+          },
+          "updated": {
+            "default": 0,
+            "title": "Updated",
+            "type": "integer"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "applied",
+          "rows"
+        ],
+        "title": "ImportReport",
         "type": "object"
       },
       "KindDiff": {
@@ -2537,6 +2629,40 @@
           "footprint_blocks"
         ],
         "title": "RevisionOut",
+        "type": "object"
+      },
+      "RowError": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "row": {
+            "title": "Row",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "row",
+          "code",
+          "message"
+        ],
+        "title": "RowError",
         "type": "object"
       },
       "SiteIn": {
@@ -5220,6 +5346,118 @@
         "summary": "Get Version",
         "tags": [
           "floor plans"
+        ]
+      }
+    },
+    "/api/v1/imports/people": {
+      "post": {
+        "description": "Columns: email*, display_name*, external_id, title, primary_unit_external_id,\nsecondary_unit_external_ids (';'-separated), position (docs/0084).",
+        "operationId": "import_people_api_v1_imports_people_post",
+        "parameters": [
+          {
+            "description": "false = dry run (report only); true = commit",
+            "in": "query",
+            "name": "apply",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "false = dry run (report only); true = commit",
+              "title": "Apply",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_people_api_v1_imports_people_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import People",
+        "tags": [
+          "organization"
+        ]
+      }
+    },
+    "/api/v1/imports/units": {
+      "post": {
+        "description": "Columns: external_id*, name*, parent_external_id, level_label (docs/0084).",
+        "operationId": "import_units_api_v1_imports_units_post",
+        "parameters": [
+          {
+            "description": "false = dry run (report only); true = commit",
+            "in": "query",
+            "name": "apply",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "false = dry run (report only); true = commit",
+              "title": "Apply",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_units_api_v1_imports_units_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import Units",
+        "tags": [
+          "organization"
         ]
       }
     },

@@ -18,7 +18,9 @@ dependencies = [
     "geoalchemy2>=0.20.0",
     "httpx2>=2.13.1",
     "joserfc>=1.7.5",
+    "openpyxl>=3.1.5",
     "pydantic-settings>=2.15.0",
+    "python-multipart>=0.0.32",
     "shapely>=2.2.0",
     "sqlalchemy[asyncio]>=2.1.4",
     "structlog>=26.1.0",
@@ -41,6 +43,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "ruff>=0.16.10",
+    "types-openpyxl>=3.1.5.20260827",
 ]
 
 # --- Tooling (docs/0062) -----------------------------------------------------
