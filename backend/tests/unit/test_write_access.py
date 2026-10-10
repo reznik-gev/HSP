@@ -1,4 +1,4 @@
-"""Catalog writes are admin + CSRF only (docs/0027, docs/0038, docs/0083)."""
+"""Catalog and organization writes are admin + CSRF only (docs/0027, 0038, 0083, 0084)."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -20,6 +20,13 @@ WRITES = [
     ("post", "/api/v1/devices"),
     ("patch", f"/api/v1/devices/{ID}"),
     ("delete", f"/api/v1/devices/{ID}"),
+    ("post", "/api/v1/org-units"),
+    ("patch", f"/api/v1/org-units/{ID}"),
+    ("delete", f"/api/v1/org-units/{ID}"),
+    ("post", f"/api/v1/org-units/{ID}/restore"),
+    ("post", f"/api/v1/org-units/{ID}/positions"),
+    ("patch", f"/api/v1/positions/{ID}"),
+    ("delete", f"/api/v1/positions/{ID}"),
 ]
 
 
