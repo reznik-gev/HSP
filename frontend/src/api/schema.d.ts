@@ -194,7 +194,34 @@ export interface paths {
          */
         get: operations["get_draft_api_v1_floors__floor_id__draft_get"];
         put?: never;
-        post?: never;
+        /**
+         * Create Draft
+         * @description Start a draft explicitly. Usually unnecessary: the first changeset starts one (docs/0081).
+         */
+        post: operations["create_draft_api_v1_floors__floor_id__draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/floors/{floor_id}/draft/changesets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply Changeset
+         * @description Apply a batch of add/update/delete operations to the draft, all or nothing.
+         *
+         *     409 stale-revision if `base_revision` is outdated, 409 lock-required / 423 floor-locked
+         *     without the edit lock, 422 changeset-invalid with per-operation errors.
+         */
+        post: operations["apply_changeset_api_v1_floors__floor_id__draft_changesets_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -435,6 +462,29 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AddOp */
+        AddOp: {
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /**
+             * Id
+             * Format: uuid
+             * @description Client-generated UUIDv7 (docs/0035)
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "wall" | "opening" | "column" | "zone" | "object";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "add";
+        };
         /** BuildingIn */
         BuildingIn: {
             /**
@@ -530,6 +580,39 @@ export interface components {
             /** Width Mm */
             width_mm: number;
         };
+        /** ChangesetIn */
+        ChangesetIn: {
+            /**
+             * Base Revision
+             * @description The draft revision the client edited (0 = new)
+             */
+            base_revision: number;
+            /** Ops */
+            ops: (components["schemas"]["AddOp"] | components["schemas"]["UpdateOp"] | components["schemas"]["DeleteOp"])[];
+        };
+        /** ChangesetResult */
+        ChangesetResult: {
+            /** Cascaded */
+            cascaded: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Floor Id
+             * Format: uuid
+             */
+            floor_id: string;
+            /** Revision */
+            revision: number;
+            /** Version */
+            version: number;
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: {
+                [key: string]: unknown;
+            }[];
+        };
         /** Column */
         Column: {
             /** Footprint */
@@ -544,6 +627,24 @@ export interface components {
              * Format: uuid
              */
             id: string;
+        };
+        /** DeleteOp */
+        DeleteOp: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "wall" | "opening" | "column" | "zone" | "object";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "delete";
         };
         /** ElementChange */
         ElementChange: {
@@ -1012,6 +1113,31 @@ export interface components {
             name?: string | null;
             /** Time Zone */
             time_zone?: string | null;
+        };
+        /** UpdateOp */
+        UpdateOp: {
+            /**
+             * Data
+             * @description Only the fields that change
+             */
+            data: {
+                [key: string]: unknown;
+            };
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "wall" | "opening" | "column" | "zone" | "object";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "update";
         };
         /** ValidationError */
         ValidationError: {
@@ -1561,6 +1687,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Plan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_draft_api_v1_floors__floor_id__draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_changeset_api_v1_floors__floor_id__draft_changesets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangesetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangesetResult"];
                 };
             };
             /** @description Validation Error */
