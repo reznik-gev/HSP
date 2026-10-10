@@ -256,6 +256,303 @@
         "title": "CatalogItem",
         "type": "object"
       },
+      "CatalogItemIn": {
+        "properties": {
+          "attaches_to_categories": {
+            "default": [],
+            "items": {
+              "maxLength": 50,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            },
+            "title": "Attaches To Categories",
+            "type": "array"
+          },
+          "category": {
+            "maxLength": 50,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Category",
+            "type": "string"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "depth_mm": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000.0,
+            "title": "Depth Mm",
+            "type": "integer"
+          },
+          "footprint_blocks": {
+            "default": true,
+            "title": "Footprint Blocks",
+            "type": "boolean"
+          },
+          "height_mm": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000.0,
+            "title": "Height Mm",
+            "type": "integer"
+          },
+          "is_seat": {
+            "default": false,
+            "title": "Is Seat",
+            "type": "boolean"
+          },
+          "key": {
+            "maxLength": 50,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "type": "string"
+          },
+          "mountable": {
+            "default": false,
+            "title": "Mountable",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "shape": {
+            "default": "box",
+            "enum": [
+              "box",
+              "cylinder",
+              "l_shape"
+            ],
+            "title": "Shape",
+            "type": "string"
+          },
+          "width_mm": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000.0,
+            "title": "Width Mm",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "category",
+          "name",
+          "width_mm",
+          "depth_mm",
+          "height_mm"
+        ],
+        "title": "CatalogItemIn",
+        "type": "object"
+      },
+      "CatalogItemOut": {
+        "properties": {
+          "archived_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived At"
+          },
+          "builtin": {
+            "description": "Shipped with HSP; read-only (docs/0083)",
+            "title": "Builtin",
+            "type": "boolean"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "current_revision": {
+            "$ref": "#/components/schemas/RevisionOut"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "category",
+          "name",
+          "builtin",
+          "archived_at",
+          "current_revision"
+        ],
+        "title": "CatalogItemOut",
+        "type": "object"
+      },
+      "CatalogItemPatch": {
+        "properties": {
+          "attaches_to_categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 50,
+                  "pattern": "^[a-z][a-z0-9_]*$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attaches To Categories"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "depth_mm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 100000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depth Mm"
+          },
+          "footprint_blocks": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Footprint Blocks"
+          },
+          "height_mm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 100000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height Mm"
+          },
+          "is_seat": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Seat"
+          },
+          "mountable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mountable"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "shape": {
+            "anyOf": [
+              {
+                "enum": [
+                  "box",
+                  "cylinder",
+                  "l_shape"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shape"
+          },
+          "width_mm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 100000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width Mm"
+          }
+        },
+        "title": "CatalogItemPatch",
+        "type": "object"
+      },
       "ChangesetIn": {
         "properties": {
           "base_revision": {
@@ -1068,6 +1365,34 @@
         "title": "Page[BuildingOut]",
         "type": "object"
       },
+      "Page_CatalogItemOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "Page[CatalogItemOut]",
+        "type": "object"
+      },
       "Page_FloorOut_": {
         "properties": {
           "items": {
@@ -1124,6 +1449,34 @@
         "title": "Page[FloorVersion]",
         "type": "object"
       },
+      "Page_RevisionOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RevisionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "Page[RevisionOut]",
+        "type": "object"
+      },
       "Page_SiteOut_": {
         "properties": {
           "items": {
@@ -1150,6 +1503,34 @@
           "next_cursor"
         ],
         "title": "Page[SiteOut]",
+        "type": "object"
+      },
+      "Page_ZoneTypeOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ZoneTypeOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "Page[ZoneTypeOut]",
         "type": "object"
       },
       "PlacedObject": {
@@ -1456,6 +1837,92 @@
           "superseded_version"
         ],
         "title": "PublishResult",
+        "type": "object"
+      },
+      "RevisionOut": {
+        "properties": {
+          "attaches_to_categories": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Attaches To Categories",
+            "type": "array"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "depth_mm": {
+            "title": "Depth Mm",
+            "type": "integer"
+          },
+          "footprint_blocks": {
+            "title": "Footprint Blocks",
+            "type": "boolean"
+          },
+          "height_mm": {
+            "title": "Height Mm",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_seat": {
+            "title": "Is Seat",
+            "type": "boolean"
+          },
+          "model_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Key"
+          },
+          "mountable": {
+            "title": "Mountable",
+            "type": "boolean"
+          },
+          "rev_no": {
+            "title": "Rev No",
+            "type": "integer"
+          },
+          "shape": {
+            "title": "Shape",
+            "type": "string"
+          },
+          "width_mm": {
+            "title": "Width Mm",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "rev_no",
+          "shape",
+          "width_mm",
+          "depth_mm",
+          "height_mm",
+          "color",
+          "model_key",
+          "is_seat",
+          "mountable",
+          "attaches_to_categories",
+          "footprint_blocks"
+        ],
+        "title": "RevisionOut",
         "type": "object"
       },
       "SiteIn": {
@@ -1797,6 +2264,116 @@
           "boundary"
         ],
         "title": "Zone",
+        "type": "object"
+      },
+      "ZoneTypeIn": {
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "is_enclosed": {
+            "default": false,
+            "title": "Is Enclosed",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ZoneTypeIn",
+        "type": "object"
+      },
+      "ZoneTypeOut": {
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_enclosed": {
+            "title": "Is Enclosed",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "is_enclosed",
+          "color"
+        ],
+        "title": "ZoneTypeOut",
+        "type": "object"
+      },
+      "ZoneTypePatch": {
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "is_enclosed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Enclosed"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "ZoneTypePatch",
         "type": "object"
       }
     }
@@ -2289,6 +2866,354 @@
         "summary": "Restore Building",
         "tags": [
           "buildings"
+        ]
+      }
+    },
+    "/api/v1/catalog-items": {
+      "get": {
+        "description": "Built-in and custom items, each with its current revision.",
+        "operationId": "list_catalog_items_api_v1_catalog_items_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_archived",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Archived",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Page size",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "`next_cursor` from the previous page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`next_cursor` from the previous page",
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_CatalogItemOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Catalog Items",
+        "tags": [
+          "catalog"
+        ]
+      },
+      "post": {
+        "description": "A custom parametric item (docs/0021), created with revision 1.",
+        "operationId": "create_catalog_item_api_v1_catalog_items_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogItemIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Catalog Item",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog-items/{item_id}": {
+      "delete": {
+        "description": "Archive: hidden from the picker; existing placements are unaffected.",
+        "operationId": "archive_catalog_item_api_v1_catalog_items__item_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Archive Catalog Item",
+        "tags": [
+          "catalog"
+        ]
+      },
+      "get": {
+        "operationId": "get_catalog_item_api_v1_catalog_items__item_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Catalog Item",
+        "tags": [
+          "catalog"
+        ]
+      },
+      "patch": {
+        "description": "Name/category edit the item; shape, dimension and flag changes add a revision, so existing\nplacements keep theirs (docs/0021). Built-ins are read-only (409).",
+        "operationId": "update_catalog_item_api_v1_catalog_items__item_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogItemPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Catalog Item",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog-items/{item_id}/restore": {
+      "post": {
+        "operationId": "restore_catalog_item_api_v1_catalog_items__item_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Catalog Item",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog-items/{item_id}/revisions": {
+      "get": {
+        "operationId": "list_catalog_item_revisions_api_v1_catalog_items__item_id__revisions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_RevisionOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Catalog Item Revisions",
+        "tags": [
+          "catalog"
         ]
       }
     },
@@ -3481,6 +4406,155 @@
         "summary": "Restore Site",
         "tags": [
           "sites"
+        ]
+      }
+    },
+    "/api/v1/zone-types": {
+      "get": {
+        "description": "All zone types (a small list: one page, docs/0040).",
+        "operationId": "list_zone_types_api_v1_zone_types_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ZoneTypeOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Zone Types",
+        "tags": [
+          "catalog"
+        ]
+      },
+      "post": {
+        "operationId": "create_zone_type_api_v1_zone_types_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZoneTypeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZoneTypeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Zone Type",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/zone-types/{zone_type_id}": {
+      "delete": {
+        "description": "Only when no zone in any floor-plan version uses it (409 in-use).",
+        "operationId": "delete_zone_type_api_v1_zone_types__zone_type_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "zone_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Zone Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Zone Type",
+        "tags": [
+          "catalog"
+        ]
+      },
+      "patch": {
+        "operationId": "update_zone_type_api_v1_zone_types__zone_type_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "zone_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Zone Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZoneTypePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZoneTypeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Zone Type",
+        "tags": [
+          "catalog"
         ]
       }
     },
