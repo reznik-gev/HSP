@@ -2,12 +2,13 @@
 use an in-memory fake (docs/0061). Every query is tenant-scoped (docs/0003)."""
 
 import uuid
+from datetime import datetime
 from typing import Protocol
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp.models import AuditEvent, Building, Floor, Site
+from hsp.models import AuditEvent, Building, Floor, FloorEditLock, Site
 
 Entity = Site | Building | Floor
 
@@ -63,6 +64,12 @@ class LocationsRepository(Protocol):
         self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int
     ) -> Floor | None:
         """Any floor (archived included) at `level_index`: levels are unique per building."""
+        ...
+
+    async def lock_holder(
+        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime
+    ) -> str | None:
+        """Display name (or subject) of whoever holds a valid edit lock, if anyone."""
         ...
 
     def add(self, entity: Entity) -> None: ...
@@ -172,6 +179,18 @@ class SqlLocationsRepository:
                 Floor.level_index == level_index,
             )
         )
+
+    async def lock_holder(
+        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime
+    ) -> str | None:
+        lock = await self._db.scalar(
+            select(FloorEditLock).where(
+                FloorEditLock.tenant_id == tenant_id,
+                FloorEditLock.floor_id == floor_id,
+                FloorEditLock.expires_at > now,
+            )
+        )
+        return (lock.holder_name or lock.holder_subject) if lock else None
 
     def add(self, entity: Entity) -> None:
         self._db.add(entity)

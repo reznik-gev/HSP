@@ -126,11 +126,19 @@ class FloorsService:
         return floor
 
     async def archive(self, floor_id: uuid.UUID) -> None:
-        # TODO(seat assignments, edit lock): once those APIs exist, refuse archiving a floor that
-        # has assigned seats or is locked for editing (docs/0031, docs/0016).
+        # TODO(seat assignments): once that API exists, also refuse archiving a floor that has
+        # assigned seats (docs/0031).
         floor = await self.get(floor_id)
         if floor.archived_at is not None:
             return
+        holder = await self.repo.lock_holder(self._tenant, floor_id, datetime.now(UTC))
+        if holder is not None:
+            raise ProblemException(
+                409,
+                "floor-locked",
+                "Floor is being edited",
+                f"{holder} is editing this floor. Ask them to finish, or force-release the lock.",
+            )
         floor.archived_at = floor.updated_at = datetime.now(UTC)
         self._audit("floor.archived", floor, after={"archived_at": floor.archived_at})
         await self.repo.commit()

@@ -201,6 +201,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/floors/{floor_id}/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lock Status
+         * @description Who is editing this floor, if anyone.
+         */
+        get: operations["lock_status_api_v1_floors__floor_id__lock_get"];
+        put?: never;
+        /**
+         * Acquire Lock
+         * @description Acquire the lock, or extend your own (heartbeat). 423 if someone else is editing.
+         */
+        post: operations["acquire_lock_api_v1_floors__floor_id__lock_post"];
+        /**
+         * Release Lock
+         * @description Release your own lock. Idempotent; 409 if someone else holds it.
+         */
+        delete: operations["release_lock_api_v1_floors__floor_id__lock_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/floors/{floor_id}/lock/force-release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Force Release Lock
+         * @description Admin override: remove whoever's lock. Their draft is kept. Audited.
+         */
+        post: operations["force_release_lock_api_v1_floors__floor_id__lock_force_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/floors/{floor_id}/restore": {
         parameters: {
             query?: never;
@@ -678,6 +726,29 @@ export interface components {
             removed: {
                 [key: string]: unknown;
             }[];
+        };
+        /** LockStatus */
+        LockStatus: {
+            /** Acquired At */
+            acquired_at?: string | null;
+            /** Expires At */
+            expires_at?: string | null;
+            /**
+             * Floor Id
+             * Format: uuid
+             */
+            floor_id: string;
+            /** Holder Name */
+            holder_name?: string | null;
+            /** Holder Subject */
+            holder_subject?: string | null;
+            /**
+             * Is Mine
+             * @default false
+             */
+            is_mine: boolean;
+            /** Locked */
+            locked: boolean;
         };
         /** LogoutResult */
         LogoutResult: {
@@ -1484,6 +1555,126 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Plan"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lock_status_api_v1_floors__floor_id__lock_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LockStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    acquire_lock_api_v1_floors__floor_id__lock_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LockStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    release_lock_api_v1_floors__floor_id__lock_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    force_release_lock_api_v1_floors__floor_id__lock_force_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

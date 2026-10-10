@@ -98,5 +98,7 @@ class FloorEditLock(TenantMixin, Base):
 
     floor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("floor.id"), primary_key=True)
     holder_subject: Mapped[str] = mapped_column(String(255))
+    # Display name at acquire time, so others see "Being edited by <name>" (docs/0016).
+    holder_name: Mapped[str | None] = mapped_column(String(200))
     acquired_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

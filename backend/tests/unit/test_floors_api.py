@@ -140,3 +140,16 @@ def test_list_by_building(client: TestClient, building_id: str) -> None:
         floor(client, building_id, level)
     items = client.get("/api/v1/floors", params={"building_id": building_id}).json()["items"]
     assert sorted(f["level_index"] for f in items) == [0, 1, 2]
+
+
+def test_archive_refused_while_floor_is_being_edited(
+    client: TestClient, building_id: str, repo: InMemoryLocationsRepository
+) -> None:
+    import uuid
+
+    f = floor(client, building_id, 0)
+    repo.lock_holders[uuid.UUID(f["id"])] = "Alice"
+    r = client.delete(f"/api/v1/floors/{f['id']}", headers=CSRF)
+    assert r.status_code == 409
+    assert r.json()["type"].endswith("/floor-locked")
+    assert "Alice is editing" in r.json()["detail"]
