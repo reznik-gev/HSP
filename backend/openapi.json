@@ -119,6 +119,169 @@
         "title": "BuildingPatch",
         "type": "object"
       },
+      "CatalogItem": {
+        "description": "A catalog item revision used by the plan, embedded so the editor needs no extra calls.",
+        "properties": {
+          "attaches_to_categories": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Attaches To Categories",
+            "type": "array"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "depth_mm": {
+            "title": "Depth Mm",
+            "type": "integer"
+          },
+          "footprint_blocks": {
+            "title": "Footprint Blocks",
+            "type": "boolean"
+          },
+          "height_mm": {
+            "title": "Height Mm",
+            "type": "integer"
+          },
+          "id": {
+            "description": "catalog_item_rev id (what objects reference)",
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_seat": {
+            "title": "Is Seat",
+            "type": "boolean"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "mountable": {
+            "title": "Mountable",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "shape": {
+            "enum": [
+              "box",
+              "cylinder",
+              "l_shape",
+              "model"
+            ],
+            "title": "Shape",
+            "type": "string"
+          },
+          "width_mm": {
+            "title": "Width Mm",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "item_id",
+          "key",
+          "category",
+          "name",
+          "shape",
+          "width_mm",
+          "depth_mm",
+          "height_mm",
+          "color",
+          "is_seat",
+          "mountable",
+          "attaches_to_categories",
+          "footprint_blocks"
+        ],
+        "title": "CatalogItem",
+        "type": "object"
+      },
+      "Column": {
+        "properties": {
+          "footprint": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Footprint",
+            "type": "array"
+          },
+          "height_mm": {
+            "title": "Height Mm",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "footprint",
+          "height_mm"
+        ],
+        "title": "Column",
+        "type": "object"
+      },
+      "ElementChange": {
+        "properties": {
+          "after": {
+            "additionalProperties": true,
+            "description": "The same fields, as in version b",
+            "title": "After",
+            "type": "object"
+          },
+          "before": {
+            "additionalProperties": true,
+            "description": "Only the fields that differ, as in version a",
+            "title": "Before",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "before",
+          "after"
+        ],
+        "title": "ElementChange",
+        "type": "object"
+      },
       "FloorIn": {
         "properties": {
           "building_id": {
@@ -357,6 +520,84 @@
         "title": "FloorPatch",
         "type": "object"
       },
+      "FloorVersion": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "published_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By"
+          },
+          "revision": {
+            "description": "Draft revision counter, bumped per changeset (docs/0036)",
+            "title": "Revision",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "draft",
+              "published",
+              "superseded",
+              "discarded"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "state",
+          "revision",
+          "created_by",
+          "created_at",
+          "published_by",
+          "published_at",
+          "note"
+        ],
+        "title": "FloorVersion",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -386,6 +627,40 @@
           "version"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "KindDiff": {
+        "properties": {
+          "added": {
+            "default": [],
+            "description": "Full elements present only in b",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Added",
+            "type": "array"
+          },
+          "changed": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ElementChange"
+            },
+            "title": "Changed",
+            "type": "array"
+          },
+          "removed": {
+            "default": [],
+            "description": "Full elements present only in a",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Removed",
+            "type": "array"
+          }
+        },
+        "title": "KindDiff",
         "type": "object"
       },
       "LogoutResult": {
@@ -463,6 +738,68 @@
         "title": "Me",
         "type": "object"
       },
+      "Opening": {
+        "properties": {
+          "height_mm": {
+            "title": "Height Mm",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "offset_mm": {
+            "title": "Offset Mm",
+            "type": "integer"
+          },
+          "sill_mm": {
+            "title": "Sill Mm",
+            "type": "integer"
+          },
+          "swing": {
+            "enum": [
+              "left_in",
+              "left_out",
+              "right_in",
+              "right_out",
+              "sliding",
+              "none"
+            ],
+            "title": "Swing",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "door",
+              "window"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "wall_id": {
+            "format": "uuid",
+            "title": "Wall Id",
+            "type": "string"
+          },
+          "width_mm": {
+            "title": "Width Mm",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "wall_id",
+          "type",
+          "offset_mm",
+          "width_mm",
+          "height_mm",
+          "sill_mm",
+          "swing"
+        ],
+        "title": "Opening",
+        "type": "object"
+      },
       "Page_BuildingOut_": {
         "properties": {
           "items": {
@@ -519,6 +856,34 @@
         "title": "Page[FloorOut]",
         "type": "object"
       },
+      "Page_FloorVersion_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FloorVersion"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "Page[FloorVersion]",
+        "type": "object"
+      },
       "Page_SiteOut_": {
         "properties": {
           "items": {
@@ -545,6 +910,251 @@
           "next_cursor"
         ],
         "title": "Page[SiteOut]",
+        "type": "object"
+      },
+      "PlacedObject": {
+        "properties": {
+          "allocation_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "assigned",
+                  "bookable",
+                  "unavailable"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allocation Mode"
+          },
+          "attached_to": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attached To"
+          },
+          "catalog_item_rev_id": {
+            "format": "uuid",
+            "title": "Catalog Item Rev Id",
+            "type": "string"
+          },
+          "device_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          },
+          "rotation_ddeg": {
+            "title": "Rotation Ddeg",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "catalog_item_rev_id",
+          "position",
+          "rotation_ddeg",
+          "label",
+          "attached_to",
+          "device_id",
+          "allocation_mode"
+        ],
+        "title": "PlacedObject",
+        "type": "object"
+      },
+      "Plan": {
+        "properties": {
+          "catalog": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CatalogItem"
+            },
+            "default": {},
+            "title": "Catalog",
+            "type": "object"
+          },
+          "columns": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Column"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "floor_id": {
+            "format": "uuid",
+            "title": "Floor Id",
+            "type": "string"
+          },
+          "objects": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PlacedObject"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "openings": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Opening"
+            },
+            "title": "Openings",
+            "type": "array"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "draft",
+              "published",
+              "superseded",
+              "discarded"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "walls": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Wall"
+            },
+            "title": "Walls",
+            "type": "array"
+          },
+          "zones": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Zone"
+            },
+            "title": "Zones",
+            "type": "array"
+          }
+        },
+        "required": [
+          "floor_id",
+          "version",
+          "state",
+          "revision"
+        ],
+        "title": "Plan",
+        "type": "object"
+      },
+      "PlanDiff": {
+        "properties": {
+          "columns": {
+            "$ref": "#/components/schemas/KindDiff",
+            "default": {
+              "added": [],
+              "changed": [],
+              "removed": []
+            }
+          },
+          "floor_id": {
+            "format": "uuid",
+            "title": "Floor Id",
+            "type": "string"
+          },
+          "from_version": {
+            "title": "From Version",
+            "type": "integer"
+          },
+          "objects": {
+            "$ref": "#/components/schemas/KindDiff",
+            "default": {
+              "added": [],
+              "changed": [],
+              "removed": []
+            }
+          },
+          "openings": {
+            "$ref": "#/components/schemas/KindDiff",
+            "default": {
+              "added": [],
+              "changed": [],
+              "removed": []
+            }
+          },
+          "to_version": {
+            "title": "To Version",
+            "type": "integer"
+          },
+          "walls": {
+            "$ref": "#/components/schemas/KindDiff",
+            "default": {
+              "added": [],
+              "changed": [],
+              "removed": []
+            }
+          },
+          "zones": {
+            "$ref": "#/components/schemas/KindDiff",
+            "default": {
+              "added": [],
+              "changed": [],
+              "removed": []
+            }
+          }
+        },
+        "required": [
+          "floor_id",
+          "from_version",
+          "to_version"
+        ],
+        "title": "PlanDiff",
         "type": "object"
       },
       "SiteIn": {
@@ -719,6 +1329,117 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "Wall": {
+        "properties": {
+          "a": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "A",
+            "type": "array"
+          },
+          "b": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "B",
+            "type": "array"
+          },
+          "height_mm": {
+            "title": "Height Mm",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "thickness_mm": {
+            "title": "Thickness Mm",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "a",
+          "b",
+          "thickness_mm",
+          "height_mm"
+        ],
+        "title": "Wall",
+        "type": "object"
+      },
+      "Zone": {
+        "properties": {
+          "boundary": {
+            "description": "Polygon vertices, not repeating the first point",
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Boundary",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_zone_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Zone Id"
+          },
+          "zone_type_id": {
+            "format": "uuid",
+            "title": "Zone Type Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "zone_type_id",
+          "parent_zone_id",
+          "boundary"
+        ],
+        "title": "Zone",
         "type": "object"
       }
     }
@@ -1473,6 +2194,50 @@
         ]
       }
     },
+    "/api/v1/floors/{floor_id}/draft": {
+      "get": {
+        "description": "The current draft plan with its revision counter (admins only, docs/0080).",
+        "operationId": "get_draft_api_v1_floors__floor_id__draft_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Draft",
+        "tags": [
+          "floor plans"
+        ]
+      }
+    },
     "/api/v1/floors/{floor_id}/restore": {
       "post": {
         "description": "Refused with 409 while the building is archived: restore top-down (docs/0078).",
@@ -1514,6 +2279,168 @@
         "summary": "Restore Floor",
         "tags": [
           "floors"
+        ]
+      }
+    },
+    "/api/v1/floors/{floor_id}/versions": {
+      "get": {
+        "description": "Version history, oldest first. Viewers see published and superseded versions only.\n\nUses the standard list envelope (docs/0040); history is returned in one page for now\n(`next_cursor` is always null), so cursor paging can be added without breaking clients.",
+        "operationId": "list_versions_api_v1_floors__floor_id__versions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_FloorVersion_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Versions",
+        "tags": [
+          "floor plans"
+        ]
+      }
+    },
+    "/api/v1/floors/{floor_id}/versions/{a}/diff/{b}": {
+      "get": {
+        "description": "What changed from version a to version b: added, removed, and changed fields.",
+        "operationId": "diff_versions_api_v1_floors__floor_id__versions__a__diff__b__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "a",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "A",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "b",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "B",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanDiff"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Diff Versions",
+        "tags": [
+          "floor plans"
+        ]
+      }
+    },
+    "/api/v1/floors/{floor_id}/versions/{version}": {
+      "get": {
+        "description": "The complete plan of one version (docs/0036), with the catalog items it uses.",
+        "operationId": "get_version_api_v1_floors__floor_id__versions__version__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Version",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Version",
+        "tags": [
+          "floor plans"
         ]
       }
     },

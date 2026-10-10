@@ -181,6 +181,26 @@ export interface paths {
         patch: operations["update_floor_api_v1_floors__floor_id__patch"];
         trace?: never;
     };
+    "/api/v1/floors/{floor_id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Draft
+         * @description The current draft plan with its revision counter (admins only, docs/0080).
+         */
+        get: operations["get_draft_api_v1_floors__floor_id__draft_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/floors/{floor_id}/restore": {
         parameters: {
             query?: never;
@@ -195,6 +215,69 @@ export interface paths {
          * @description Refused with 409 while the building is archived: restore top-down (docs/0078).
          */
         post: operations["restore_floor_api_v1_floors__floor_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/floors/{floor_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Versions
+         * @description Version history, oldest first. Viewers see published and superseded versions only.
+         *
+         *     Uses the standard list envelope (docs/0040); history is returned in one page for now
+         *     (`next_cursor` is always null), so cursor paging can be added without breaking clients.
+         */
+        get: operations["list_versions_api_v1_floors__floor_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/floors/{floor_id}/versions/{a}/diff/{b}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Diff Versions
+         * @description What changed from version a to version b: added, removed, and changed fields.
+         */
+        get: operations["diff_versions_api_v1_floors__floor_id__versions__a__diff__b__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/floors/{floor_id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Version
+         * @description The complete plan of one version (docs/0036), with the catalog items it uses.
+         */
+        get: operations["get_version_api_v1_floors__floor_id__versions__version__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -355,6 +438,87 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /**
+         * CatalogItem
+         * @description A catalog item revision used by the plan, embedded so the editor needs no extra calls.
+         */
+        CatalogItem: {
+            /** Attaches To Categories */
+            attaches_to_categories: string[];
+            /** Category */
+            category: string;
+            /** Color */
+            color: string | null;
+            /** Depth Mm */
+            depth_mm: number;
+            /** Footprint Blocks */
+            footprint_blocks: boolean;
+            /** Height Mm */
+            height_mm: number;
+            /**
+             * Id
+             * Format: uuid
+             * @description catalog_item_rev id (what objects reference)
+             */
+            id: string;
+            /** Is Seat */
+            is_seat: boolean;
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** Key */
+            key: string;
+            /** Mountable */
+            mountable: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Shape
+             * @enum {string}
+             */
+            shape: "box" | "cylinder" | "l_shape" | "model";
+            /** Width Mm */
+            width_mm: number;
+        };
+        /** Column */
+        Column: {
+            /** Footprint */
+            footprint: [
+                number,
+                number
+            ][];
+            /** Height Mm */
+            height_mm: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** ElementChange */
+        ElementChange: {
+            /**
+             * After
+             * @description The same fields, as in version b
+             */
+            after: {
+                [key: string]: unknown;
+            };
+            /**
+             * Before
+             * @description Only the fields that differ, as in version a
+             */
+            before: {
+                [key: string]: unknown;
+            };
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
         /** FloorIn */
         FloorIn: {
             /**
@@ -451,6 +615,34 @@ export interface components {
             /** Origin Y Mm */
             origin_y_mm?: number | null;
         };
+        /** FloorVersion */
+        FloorVersion: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /** Note */
+            note: string | null;
+            /** Published At */
+            published_at: string | null;
+            /** Published By */
+            published_by: string | null;
+            /**
+             * Revision
+             * @description Draft revision counter, bumped per changeset (docs/0036)
+             */
+            revision: number;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "draft" | "published" | "superseded" | "discarded";
+            /** Version */
+            version: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -462,6 +654,30 @@ export interface components {
             status: string;
             /** Version */
             version: string;
+        };
+        /** KindDiff */
+        KindDiff: {
+            /**
+             * Added
+             * @description Full elements present only in b
+             * @default []
+             */
+            added: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Changed
+             * @default []
+             */
+            changed: components["schemas"]["ElementChange"][];
+            /**
+             * Removed
+             * @description Full elements present only in a
+             * @default []
+             */
+            removed: {
+                [key: string]: unknown;
+            }[];
         };
         /** LogoutResult */
         LogoutResult: {
@@ -483,6 +699,37 @@ export interface components {
             /** Subject */
             subject: string;
         };
+        /** Opening */
+        Opening: {
+            /** Height Mm */
+            height_mm: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Offset Mm */
+            offset_mm: number;
+            /** Sill Mm */
+            sill_mm: number;
+            /**
+             * Swing
+             * @enum {string}
+             */
+            swing: "left_in" | "left_out" | "right_in" | "right_out" | "sliding" | "none";
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "door" | "window";
+            /**
+             * Wall Id
+             * Format: uuid
+             */
+            wall_id: string;
+            /** Width Mm */
+            width_mm: number;
+        };
         /** Page[BuildingOut] */
         Page_BuildingOut_: {
             /** Items */
@@ -497,12 +744,149 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** Page[FloorVersion] */
+        Page_FloorVersion_: {
+            /** Items */
+            items: components["schemas"]["FloorVersion"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** Page[SiteOut] */
         Page_SiteOut_: {
             /** Items */
             items: components["schemas"]["SiteOut"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** PlacedObject */
+        PlacedObject: {
+            /** Allocation Mode */
+            allocation_mode: ("assigned" | "bookable" | "unavailable") | null;
+            /** Attached To */
+            attached_to: string | null;
+            /**
+             * Catalog Item Rev Id
+             * Format: uuid
+             */
+            catalog_item_rev_id: string;
+            /** Device Id */
+            device_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            /** Position */
+            position: [
+                number,
+                number,
+                number
+            ];
+            /** Rotation Ddeg */
+            rotation_ddeg: number;
+        };
+        /** Plan */
+        Plan: {
+            /**
+             * Catalog
+             * @default {}
+             */
+            catalog: {
+                [key: string]: components["schemas"]["CatalogItem"];
+            };
+            /**
+             * Columns
+             * @default []
+             */
+            columns: components["schemas"]["Column"][];
+            /**
+             * Floor Id
+             * Format: uuid
+             */
+            floor_id: string;
+            /**
+             * Objects
+             * @default []
+             */
+            objects: components["schemas"]["PlacedObject"][];
+            /**
+             * Openings
+             * @default []
+             */
+            openings: components["schemas"]["Opening"][];
+            /** Revision */
+            revision: number;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "draft" | "published" | "superseded" | "discarded";
+            /** Version */
+            version: number;
+            /**
+             * Walls
+             * @default []
+             */
+            walls: components["schemas"]["Wall"][];
+            /**
+             * Zones
+             * @default []
+             */
+            zones: components["schemas"]["Zone"][];
+        };
+        /** PlanDiff */
+        PlanDiff: {
+            /**
+             * @default {
+             *       "added": [],
+             *       "changed": [],
+             *       "removed": []
+             *     }
+             */
+            columns: components["schemas"]["KindDiff"];
+            /**
+             * Floor Id
+             * Format: uuid
+             */
+            floor_id: string;
+            /** From Version */
+            from_version: number;
+            /**
+             * @default {
+             *       "added": [],
+             *       "changed": [],
+             *       "removed": []
+             *     }
+             */
+            objects: components["schemas"]["KindDiff"];
+            /**
+             * @default {
+             *       "added": [],
+             *       "changed": [],
+             *       "removed": []
+             *     }
+             */
+            openings: components["schemas"]["KindDiff"];
+            /** To Version */
+            to_version: number;
+            /**
+             * @default {
+             *       "added": [],
+             *       "changed": [],
+             *       "removed": []
+             *     }
+             */
+            walls: components["schemas"]["KindDiff"];
+            /**
+             * @default {
+             *       "added": [],
+             *       "changed": [],
+             *       "removed": []
+             *     }
+             */
+            zones: components["schemas"]["KindDiff"];
         };
         /** SiteIn */
         SiteIn: {
@@ -563,6 +947,53 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** Wall */
+        Wall: {
+            /** A */
+            a: [
+                number,
+                number
+            ];
+            /** B */
+            b: [
+                number,
+                number
+            ];
+            /** Height Mm */
+            height_mm: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Thickness Mm */
+            thickness_mm: number;
+        };
+        /** Zone */
+        Zone: {
+            /**
+             * Boundary
+             * @description Polygon vertices, not repeating the first point
+             */
+            boundary: [
+                number,
+                number
+            ][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Parent Zone Id */
+            parent_zone_id: string | null;
+            /**
+             * Zone Type Id
+             * Format: uuid
+             */
+            zone_type_id: string;
         };
     };
     responses: never;
@@ -1034,6 +1465,37 @@ export interface operations {
             };
         };
     };
+    get_draft_api_v1_floors__floor_id__draft_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     restore_floor_api_v1_floors__floor_id__restore_post: {
         parameters: {
             query?: never;
@@ -1052,6 +1514,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FloorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_versions_api_v1_floors__floor_id__versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_FloorVersion_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    diff_versions_api_v1_floors__floor_id__versions__a__diff__b__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+                a: number;
+                b: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDiff"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_version_api_v1_floors__floor_id__versions__version__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plan"];
                 };
             };
             /** @description Validation Error */
