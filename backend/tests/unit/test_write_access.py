@@ -27,6 +27,11 @@ WRITES = [
     ("post", f"/api/v1/org-units/{ID}/positions"),
     ("patch", f"/api/v1/positions/{ID}"),
     ("delete", f"/api/v1/positions/{ID}"),
+    ("post", "/api/v1/people"),
+    ("patch", f"/api/v1/people/{ID}"),
+    ("delete", f"/api/v1/people/{ID}"),
+    ("post", f"/api/v1/people/{ID}/reactivate"),
+    ("put", f"/api/v1/people/{ID}/memberships"),
 ]
 
 

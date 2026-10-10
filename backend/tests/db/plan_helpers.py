@@ -19,6 +19,19 @@ from hsp.plans.repository import SqlPlanRepository
 changeset = TypeAdapter(ChangesetIn)
 
 
+async def new_tenant(db: AsyncSession) -> uuid.UUID:
+    """A fresh tenant, for tests whose rules are per tenant (e.g. the single root unit)."""
+    tenant = new_id()
+    await db.execute(
+        text(
+            "INSERT INTO tenant (id, name, slug, created_at, updated_at) "
+            "VALUES (:id, 'T', :s, now(), now())"
+        ),
+        {"id": tenant, "s": f"t-{tenant.hex[:8]}"},
+    )
+    return tenant
+
+
 async def make_floor(
     db: AsyncSession, tenant: uuid.UUID, building_id: uuid.UUID | None = None, level: int = 0
 ) -> tuple[uuid.UUID, uuid.UUID]:
