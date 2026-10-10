@@ -1,6 +1,7 @@
 """In-memory fakes of repository interfaces for unit tests (docs/0061)."""
 
 import uuid
+from typing import Any
 
 from hsp.auth.sessions import Session, SessionTokens, with_tokens
 from hsp.models import AuditEvent, Building, Floor, Site, new_id
@@ -161,3 +162,25 @@ class InMemoryLocationsRepository:
                 self.events.append(item)
         self._pending.clear()
         self.committed += 1
+
+
+class InMemoryPlanRepository:
+    """Fake PlanRepository: versions and per-version content keyed by floor (docs/0061)."""
+
+    def __init__(self, tenant_id: uuid.UUID) -> None:
+        from hsp.plans.schema import FloorVersion, PlanContent
+
+        self.tenant_id = tenant_id
+        self.versions: dict[uuid.UUID, list[FloorVersion]] = {}
+        self.content: dict[tuple[uuid.UUID, int], PlanContent] = {}
+
+    async def floor_exists(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> bool:
+        return tenant_id == self.tenant_id and floor_id in self.versions
+
+    async def list_versions(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> list[Any]:
+        return list(self.versions.get(floor_id, [])) if tenant_id == self.tenant_id else []
+
+    async def load_content(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int) -> Any:
+        from hsp.plans.schema import PlanContent
+
+        return self.content.get((floor_id, version), PlanContent())
