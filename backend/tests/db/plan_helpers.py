@@ -29,6 +29,9 @@ async def new_tenant(db: AsyncSession) -> uuid.UUID:
         ),
         {"id": tenant, "s": f"t-{tenant.hex[:8]}"},
     )
+    # Release the savepoint: services that roll back (e.g. an import dry run) must not take the
+    # tenant with them. The outer test transaction still rolls everything back at the end.
+    await db.commit()
     return tenant
 
 
