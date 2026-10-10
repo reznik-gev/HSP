@@ -90,3 +90,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0079 | 2026-10-08 | [Stacked PR workflow: parent-based PRs, auto-retarget, restack script](0079-2026-10-08-stacked-pr-workflow.md) | Accepted |
 | 0080 | 2026-10-10 | [Floor-plan read access and diff format](0080-2026-10-10-plan-read-access-and-diff.md) | Accepted |
 | 0081 | 2026-10-10 | [Drafts and changesets: numbering, auto-create, rules](0081-2026-10-10-drafts-and-changesets.md) | Accepted |
+| 0082 | 2026-10-10 | [Publish, discard and restore](0082-2026-10-10-publish-discard-restore.md) | Proposed (owner review pending) |

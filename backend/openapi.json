@@ -1403,6 +1403,61 @@
         "title": "PlanDiff",
         "type": "object"
       },
+      "PublishIn": {
+        "properties": {
+          "base_revision": {
+            "title": "Base Revision",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "base_revision"
+        ],
+        "title": "PublishIn",
+        "type": "object"
+      },
+      "PublishResult": {
+        "properties": {
+          "floor_id": {
+            "format": "uuid",
+            "title": "Floor Id",
+            "type": "string"
+          },
+          "published_version": {
+            "title": "Published Version",
+            "type": "integer"
+          },
+          "superseded_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded Version"
+          }
+        },
+        "required": [
+          "floor_id",
+          "published_version",
+          "superseded_version"
+        ],
+        "title": "PublishResult",
+        "type": "object"
+      },
       "SiteIn": {
         "properties": {
           "address": {
@@ -2497,6 +2552,41 @@
       }
     },
     "/api/v1/floors/{floor_id}/draft": {
+      "delete": {
+        "description": "Throw the draft away (docs/0028, 0081). Idempotent.",
+        "operationId": "discard_draft_api_v1_floors__floor_id__draft_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discard Draft",
+        "tags": [
+          "floor plans"
+        ]
+      },
       "get": {
         "description": "The current draft plan with its revision counter (admins only, docs/0080).",
         "operationId": "get_draft_api_v1_floors__floor_id__draft_get",
@@ -2631,6 +2721,114 @@
           }
         },
         "summary": "Apply Changeset",
+        "tags": [
+          "floor plans"
+        ]
+      }
+    },
+    "/api/v1/floors/{floor_id}/draft/publish": {
+      "post": {
+        "description": "Make the draft the published version (docs/0082). `base_revision` must be the revision\nyou reviewed. 409 publish-conflicts lists seat-label, device and assignment problems.",
+        "operationId": "publish_draft_api_v1_floors__floor_id__draft_publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish Draft",
+        "tags": [
+          "floor plans"
+        ]
+      }
+    },
+    "/api/v1/floors/{floor_id}/draft/restore/{version}": {
+      "post": {
+        "description": "Start a draft whose content is exactly an older published version (docs/0082).",
+        "operationId": "restore_version_api_v1_floors__floor_id__draft_restore__version__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Version",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Version",
         "tags": [
           "floor plans"
         ]
