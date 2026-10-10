@@ -17,6 +17,9 @@ WRITES = [
     ("patch", f"/api/v1/catalog-items/{ID}"),
     ("delete", f"/api/v1/catalog-items/{ID}"),
     ("post", f"/api/v1/catalog-items/{ID}/restore"),
+    ("post", "/api/v1/devices"),
+    ("patch", f"/api/v1/devices/{ID}"),
+    ("delete", f"/api/v1/devices/{ID}"),
 ]
 
 

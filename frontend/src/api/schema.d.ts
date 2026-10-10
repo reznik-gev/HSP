@@ -228,6 +228,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Devices
+         * @description Devices with their current placement ("where is MON-0412?").
+         */
+        get: operations["list_devices_api_v1_devices_get"];
+        put?: never;
+        /** Create Device */
+        post: operations["create_device_api_v1_devices_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/devices/{device_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Device */
+        get: operations["get_device_api_v1_devices__device_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Device
+         * @description Only for devices never placed in any floor-plan version (409 in-use).
+         */
+        delete: operations["delete_device_api_v1_devices__device_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Device */
+        patch: operations["update_device_api_v1_devices__device_id__patch"];
+        trace?: never;
+    };
     "/api/v1/floors": {
         parameters: {
             query?: never;
@@ -907,6 +950,46 @@ export interface components {
              */
             op: "delete";
         };
+        /** DeviceIn */
+        DeviceIn: {
+            /** Asset Tag */
+            asset_tag?: string | null;
+            /** Assigned Person Id */
+            assigned_person_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Serial Number */
+            serial_number?: string | null;
+        };
+        /** DeviceOut */
+        DeviceOut: {
+            /** Asset Tag */
+            asset_tag: string | null;
+            /** Assigned Person Id */
+            assigned_person_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes: string | null;
+            /** @description Where it is in the published floor plans */
+            placement: components["schemas"]["Placement"] | null;
+            /** Serial Number */
+            serial_number: string | null;
+        };
+        /** DevicePatch */
+        DevicePatch: {
+            /** Asset Tag */
+            asset_tag?: string | null;
+            /** Assigned Person Id */
+            assigned_person_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Serial Number */
+            serial_number?: string | null;
+        };
         /** ElementChange */
         ElementChange: {
             /**
@@ -1180,6 +1263,13 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** Page[DeviceOut] */
+        Page_DeviceOut_: {
+            /** Items */
+            items: components["schemas"]["DeviceOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** Page[FloorOut] */
         Page_FloorOut_: {
             /** Items */
@@ -1247,6 +1337,26 @@ export interface components {
              * @default 0
              */
             rotation_ddeg: number;
+        };
+        /** Placement */
+        Placement: {
+            /**
+             * Element Id
+             * Format: uuid
+             */
+            element_id: string;
+            /**
+             * Floor Id
+             * Format: uuid
+             */
+            floor_id: string;
+            /** Floor Name */
+            floor_name: string;
+            /**
+             * Version
+             * @description The published version the placement is in
+             */
+            version: number;
         };
         /** Plan */
         Plan: {
@@ -2084,6 +2194,171 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Page_RevisionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_devices_api_v1_devices_get: {
+        parameters: {
+            query?: {
+                /** @description Search asset tag or serial number */
+                q?: string | null;
+                assigned_person_id?: string | null;
+                /** @description Page size */
+                limit?: number;
+                /** @description `next_cursor` from the previous page */
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_DeviceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_device_api_v1_devices_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_device_api_v1_devices__device_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_device_api_v1_devices__device_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_device_api_v1_devices__device_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DevicePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceOut"];
                 };
             };
             /** @description Validation Error */
