@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from hsp.api import auth, buildings, catalog, drafts, floors, locks, plans, sites
+from hsp.api import auth, buildings, catalog, devices, drafts, floors, locks, plans, sites
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(auth.router)
@@ -13,3 +13,4 @@ router.include_router(plans.router)
 router.include_router(locks.router)
 router.include_router(drafts.router)
 router.include_router(catalog.router)
+router.include_router(devices.router)
