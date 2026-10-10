@@ -5,44 +5,51 @@ Element `id`s are the stable element ids that survive across versions (docs/0028
 
 import uuid
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field
 
-Point2 = tuple[int, int]
-Point3 = tuple[int, int, int]
+# Integer millimetres (docs/0029). Bounds keep values sane: +/- 10 km in plan, 100 m tall.
+Coord = Annotated[int, Field(ge=-10_000_000, le=10_000_000)]
+Height = Annotated[int, Field(ge=0, le=100_000)]
+PositiveMm = Annotated[int, Field(gt=0, le=100_000)]
+NonNegativeMm = Annotated[int, Field(ge=0, le=100_000)]
+Rotation = Annotated[int, Field(ge=0, le=3599, description="Decidegrees, counter-clockwise")]
+
+Point2 = tuple[Coord, Coord]
+Point3 = tuple[Coord, Coord, Height]
 
 
 class Wall(BaseModel):
     id: uuid.UUID
     a: Point2
     b: Point2
-    thickness_mm: int
-    height_mm: int
+    thickness_mm: PositiveMm
+    height_mm: PositiveMm
 
 
 class Opening(BaseModel):
     id: uuid.UUID
     wall_id: uuid.UUID
     type: Literal["door", "window"]
-    offset_mm: int
-    width_mm: int
-    height_mm: int
-    sill_mm: int
+    offset_mm: NonNegativeMm
+    width_mm: PositiveMm
+    height_mm: PositiveMm
+    sill_mm: NonNegativeMm = 0
     swing: Literal["left_in", "left_out", "right_in", "right_out", "sliding", "none"]
 
 
 class Column(BaseModel):
     id: uuid.UUID
     footprint: list[Point2]
-    height_mm: int
+    height_mm: PositiveMm
 
 
 class Zone(BaseModel):
     id: uuid.UUID
-    name: str
+    name: str = Field(min_length=1, max_length=200)
     zone_type_id: uuid.UUID
-    parent_zone_id: uuid.UUID | None
+    parent_zone_id: uuid.UUID | None = None
     boundary: list[Point2] = Field(description="Polygon vertices, not repeating the first point")
 
 
@@ -50,11 +57,11 @@ class PlacedObject(BaseModel):
     id: uuid.UUID
     catalog_item_rev_id: uuid.UUID
     position: Point3
-    rotation_ddeg: int
-    label: str | None
-    attached_to: uuid.UUID | None
-    device_id: uuid.UUID | None
-    allocation_mode: Literal["assigned", "bookable", "unavailable"] | None
+    rotation_ddeg: Rotation = 0
+    label: str | None = Field(default=None, max_length=64)
+    attached_to: uuid.UUID | None = None
+    device_id: uuid.UUID | None = None
+    allocation_mode: Literal["assigned", "bookable", "unavailable"] | None = None
 
 
 class CatalogItem(BaseModel):

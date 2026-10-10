@@ -781,7 +781,10 @@ export interface components {
             id: string;
             /** Offset Mm */
             offset_mm: number;
-            /** Sill Mm */
+            /**
+             * Sill Mm
+             * @default 0
+             */
             sill_mm: number;
             /**
              * Swing
@@ -832,30 +835,34 @@ export interface components {
         /** PlacedObject */
         PlacedObject: {
             /** Allocation Mode */
-            allocation_mode: ("assigned" | "bookable" | "unavailable") | null;
+            allocation_mode?: ("assigned" | "bookable" | "unavailable") | null;
             /** Attached To */
-            attached_to: string | null;
+            attached_to?: string | null;
             /**
              * Catalog Item Rev Id
              * Format: uuid
              */
             catalog_item_rev_id: string;
             /** Device Id */
-            device_id: string | null;
+            device_id?: string | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
             /** Label */
-            label: string | null;
+            label?: string | null;
             /** Position */
             position: [
                 number,
                 number,
                 number
             ];
-            /** Rotation Ddeg */
+            /**
+             * Rotation Ddeg
+             * @description Decidegrees, counter-clockwise
+             * @default 0
+             */
             rotation_ddeg: number;
         };
         /** Plan */
@@ -1059,7 +1066,7 @@ export interface components {
             /** Name */
             name: string;
             /** Parent Zone Id */
-            parent_zone_id: string | null;
+            parent_zone_id?: string | null;
             /**
              * Zone Type Id
              * Format: uuid

@@ -225,9 +225,13 @@
               "minItems": 2,
               "prefixItems": [
                 {
+                  "maximum": 10000000.0,
+                  "minimum": -10000000.0,
                   "type": "integer"
                 },
                 {
+                  "maximum": 10000000.0,
+                  "minimum": -10000000.0,
                   "type": "integer"
                 }
               ],
@@ -237,6 +241,8 @@
             "type": "array"
           },
           "height_mm": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000.0,
             "title": "Height Mm",
             "type": "integer"
           },
@@ -811,6 +817,8 @@
       "Opening": {
         "properties": {
           "height_mm": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000.0,
             "title": "Height Mm",
             "type": "integer"
           },
@@ -820,10 +828,15 @@
             "type": "string"
           },
           "offset_mm": {
+            "maximum": 100000.0,
+            "minimum": 0.0,
             "title": "Offset Mm",
             "type": "integer"
           },
           "sill_mm": {
+            "default": 0,
+            "maximum": 100000.0,
+            "minimum": 0.0,
             "title": "Sill Mm",
             "type": "integer"
           },
@@ -853,6 +866,8 @@
             "type": "string"
           },
           "width_mm": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000.0,
             "title": "Width Mm",
             "type": "integer"
           }
@@ -864,7 +879,6 @@
           "offset_mm",
           "width_mm",
           "height_mm",
-          "sill_mm",
           "swing"
         ],
         "title": "Opening",
@@ -1037,6 +1051,7 @@
           "label": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1050,12 +1065,18 @@
             "minItems": 3,
             "prefixItems": [
               {
+                "maximum": 10000000.0,
+                "minimum": -10000000.0,
                 "type": "integer"
               },
               {
+                "maximum": 10000000.0,
+                "minimum": -10000000.0,
                 "type": "integer"
               },
               {
+                "maximum": 100000.0,
+                "minimum": 0.0,
                 "type": "integer"
               }
             ],
@@ -1063,6 +1084,10 @@
             "type": "array"
           },
           "rotation_ddeg": {
+            "default": 0,
+            "description": "Decidegrees, counter-clockwise",
+            "maximum": 3599.0,
+            "minimum": 0.0,
             "title": "Rotation Ddeg",
             "type": "integer"
           }
@@ -1070,12 +1095,7 @@
         "required": [
           "id",
           "catalog_item_rev_id",
-          "position",
-          "rotation_ddeg",
-          "label",
-          "attached_to",
-          "device_id",
-          "allocation_mode"
+          "position"
         ],
         "title": "PlacedObject",
         "type": "object"
@@ -1408,9 +1428,13 @@
             "minItems": 2,
             "prefixItems": [
               {
+                "maximum": 10000000.0,
+                "minimum": -10000000.0,
                 "type": "integer"
               },
               {
+                "maximum": 10000000.0,
+                "minimum": -10000000.0,
                 "type": "integer"
               }
             ],
@@ -1422,9 +1446,13 @@
             "minItems": 2,
             "prefixItems": [
               {
+                "maximum": 10000000.0,
+                "minimum": -10000000.0,
                 "type": "integer"
               },
               {
+                "maximum": 10000000.0,
+                "minimum": -10000000.0,
                 "type": "integer"
               }
             ],
@@ -1432,6 +1460,8 @@
             "type": "array"
           },
           "height_mm": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000.0,
             "title": "Height Mm",
             "type": "integer"
           },
@@ -1441,6 +1471,8 @@
             "type": "string"
           },
           "thickness_mm": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000.0,
             "title": "Thickness Mm",
             "type": "integer"
           }
@@ -1464,9 +1496,13 @@
               "minItems": 2,
               "prefixItems": [
                 {
+                  "maximum": 10000000.0,
+                  "minimum": -10000000.0,
                   "type": "integer"
                 },
                 {
+                  "maximum": 10000000.0,
+                  "minimum": -10000000.0,
                   "type": "integer"
                 }
               ],
@@ -1481,6 +1517,8 @@
             "type": "string"
           },
           "name": {
+            "maxLength": 200,
+            "minLength": 1,
             "title": "Name",
             "type": "string"
           },
@@ -1506,7 +1544,6 @@
           "id",
           "name",
           "zone_type_id",
-          "parent_zone_id",
           "boundary"
         ],
         "title": "Zone",
