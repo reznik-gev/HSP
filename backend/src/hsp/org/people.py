@@ -1,8 +1,8 @@
 """People and their unit memberships (docs/0006, 0017, 0023, 0084).
 
 `DELETE` deactivates (people are never deleted, docs/0017). Memberships are replaced as a whole
-list so "at most one primary" can never be violated half-way. Without an explicit primary, the
-deepest unit is primary (docs/0023); an explicit choice is stored as an override.
+list so "exactly one primary" can never be violated half-way. Someone in several units must
+have their primary marked; a single membership is primary by itself (docs/0084).
 """
 
 import uuid
@@ -47,7 +47,7 @@ class MembershipOut(BaseModel):
     position_id: uuid.UUID | None
     is_primary: bool
     primary_override: bool = Field(
-        description="Primary chosen explicitly, not by the deepest-unit rule"
+        description="Primary was marked explicitly (false only for a lone membership)"
     )
 
 
@@ -256,27 +256,6 @@ class PeopleService:
             await self.db.commit()
         return (await self._out([p]))[0]
 
-    async def _unit_depths(self) -> dict[uuid.UUID, int]:
-        rows = (
-            await self.db.execute(
-                select(models.OrgUnit.id, models.OrgUnit.parent_id).where(
-                    models.OrgUnit.tenant_id == self._tenant
-                )
-            )
-        ).all()
-        parent = {uid: pid for uid, pid in rows}
-        depth: dict[uuid.UUID, int] = {}
-
-        def d(uid: uuid.UUID) -> int:
-            if uid not in depth:
-                p = parent.get(uid)
-                depth[uid] = 0 if p is None else d(p) + 1
-            return depth[uid]
-
-        for uid in parent:
-            d(uid)
-        return depth
-
     async def set_memberships(self, person_id: uuid.UUID, wanted: list[MembershipIn]) -> PersonOut:
         p = await self.get_person(person_id)
         errors: list[ProblemError] = []
@@ -286,6 +265,13 @@ class PeopleService:
         if sum(m.is_primary for m in wanted) > 1:
             errors.append(
                 ProblemError(code="multiple_primary", message="Only one membership can be primary.")
+            )
+        elif len(wanted) > 1 and not any(m.is_primary for m in wanted):
+            errors.append(
+                ProblemError(
+                    code="primary_required",
+                    message="Mark which unit is primary when someone belongs to several units.",
+                )
             )
         units = (
             {
@@ -345,10 +331,7 @@ class PeopleService:
             raise ProblemException(422, "request-invalid", "Invalid memberships", errors=errors)
 
         explicit = next((m.unit_id for m in wanted if m.is_primary), None)
-        primary = explicit
-        if primary is None and wanted:  # docs/0023: deepest unit; ties -> lowest id
-            depths = await self._unit_depths()
-            primary = max(unit_ids, key=lambda u: (depths.get(u, 0), -u.int))
+        primary = explicit or (unit_ids[0] if unit_ids else None)  # a lone membership
         before = [m.model_dump(mode="json") for m in (await self._memberships([p.id]))[p.id]]
         await self.db.execute(
             delete(models.UnitMembership).where(models.UnitMembership.person_id == p.id)
