@@ -3,12 +3,13 @@
 - **Date:** 2026-10-08
 - **Status:** Accepted
 - **Refines:** [0034](0034-2026-10-08-v1-data-model.md) (`archived_at` columns), [0035](0035-2026-10-08-api-style.md)
+- **Amended by:** [0086](0086-2026-10-12-automatic-release.md) (archiving a parent cascades to its active children)
 
 ## Decisions
 | Question | Options considered | Decision |
 |---|---|---|
 | What `DELETE` does | **DELETE archives + restore endpoint** ✅ / explicit archive, with DELETE hard-deleting unused items / hard delete only | **`DELETE /{resource}/{id}` archives** (sets `archived_at`) and **`POST /{resource}/{id}/restore`** undoes it. The API never hard-deletes. |
-| Archiving a parent that has active children | **Block with 409** ✅ / cascade archive | **Refused with `409`** while active children exist (a site with active buildings, a building with active floors). The Problem Details response lists the blocking children ([0037](0037-2026-10-08-api-errors.md)). Admins archive bottom-up. |
+| Archiving a parent that has active children | **Block with 409** ✅ / cascade archive | **Refused with `409`** while active children exist (a site with active buildings, a building with active floors). The Problem Details response lists the blocking children ([0037](0037-2026-10-08-api-errors.md)). Admins archive bottom-up. *Now: archiving cascades to active children ([0086](0086-2026-10-12-automatic-release.md)).* |
 
 ## Details
 - Lists hide archived items unless `?include_archived=true`. `GET /{id}` still returns an archived item, with `archived_at` set.

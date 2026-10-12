@@ -4,12 +4,13 @@
 - **Status:** Accepted. Proposed by Claude while the product owner was away, then reviewed by the owner choice by choice on 2026-10-12. Eight choices were approved as proposed, and two (primary unit, positions) were changed.
 - **Supersedes:** [0023](0023-2026-10-08-primary-unit-rule.md) (deepest unit wins)
 - **Refines:** [0006](0006-2026-10-07-org-hierarchy-model.md), [0017](0017-2026-10-08-people-data-source.md), [0027](0027-2026-10-08-v1-interim-people-and-access.md), [0078](0078-2026-10-08-archive-semantics.md)
+- **Amended by:** [0086](0086-2026-10-12-automatic-release.md) (unit archiving cascades and moves members up)
 
 ## Decisions
 | Question | Chosen | Why |
 |---|---|---|
 | Org tree shape | **One root per tenant.** Units can be moved (`parent_id`), and cycles are refused (`409 unit-cycle`). | [0006](0006-2026-10-07-org-hierarchy-model.md). The single root is already a database constraint. |
-| Archiving a unit | **Blocked while it has active child units** (`409`). Members and seats held by the unit don't block it. | Same as locations ([0078](0078-2026-10-08-archive-semantics.md)). [0031](0031-2026-10-08-seat-assignment-rules.md) says the unit's seats are flagged for reallocation, not blocked. |
+| Archiving a unit | **Blocked while it has active child units** (`409`). Members and seats held by the unit don't block it. *Now: cascades to sub-units, members move up to the nearest active ancestor, and unit-held seats are freed ([0086](0086-2026-10-12-automatic-release.md), [0085](0085-2026-10-12-seat-assignment-api.md)).* | Same as locations ([0078](0078-2026-10-08-archive-semantics.md)). |
 | Removing a person | **`DELETE` deactivates** (`active = false`), and `POST …/reactivate` undoes it | [0017](0017-2026-10-08-people-data-source.md): inactive, never deleted. History and assignments stay intact. |
 | Email handling | **Stored lowercase, unique per tenant** | Login linking ([0027](0027-2026-10-08-v1-interim-people-and-access.md)) and import matching compare emails, so case must not matter. The owner considered case-sensitive emails and kept lowercase, because Keycloak lowercases emails and case-sensitive login linking would fail. |
 | Editing memberships | **`PUT /people/{id}/memberships` replaces the whole list atomically** | One request keeps "exactly one primary" consistent. There are no partial states. |

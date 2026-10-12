@@ -3,6 +3,7 @@
 - **Date:** 2026-10-10
 - **Status:** Accepted. Proposed by Claude while the product owner was away, then reviewed by the owner choice by choice on 2026-10-12. Six choices were approved as proposed, and one (assigned seats) was changed.
 - **Refines:** [0015](0015-2026-10-08-floor-plan-versioning.md), [0028](0028-2026-10-08-floor-version-storage.md), [0031](0031-2026-10-08-seat-assignment-rules.md), [0034](0034-2026-10-08-v1-data-model.md), [0081](0081-2026-10-10-drafts-and-changesets.md)
+- **Amended by:** [0086](0086-2026-10-12-automatic-release.md) (choice 6: assigned seats are freed on publish without confirmation)
 
 ## Decisions
 | Question | Options | Chosen | Why |
@@ -12,7 +13,7 @@
 | What happens to the lock after publishing? | **Kept** / released | **Kept** | The editor can keep working. The next changeset starts a new draft ([0081](0081-2026-10-10-drafts-and-changesets.md)). The client releases the lock explicitly when the user closes the editor. |
 | Restore while a draft exists | **Refused (409)** / overwrite the draft | **Refused** | Never silently throws away unsaved work. Discard first. |
 | Validate a restored version? | **No (exact copy); publish re-checks** / yes | **No** | An old version should always be restorable, even if a rule changed since. The editor's checks and the publish checks still apply before it goes live. |
-| Seats with assignments removed or switched away from `assigned` | Block publish (409) / unassign automatically / **warn, and the publisher confirms** | **Warn and confirm** (owner's choice; Claude had proposed blocking) | Publish is refused with a list of the affected seats. Sending the same publish with those seats in `unassign_seats` unassigns them in the same transaction. Each one is audited as `seat.unassigned`. Big re-layouts don't need a reassignment pass first, and nobody loses a seat without a person explicitly confirming it. This refines [0031](0031-2026-10-08-seat-assignment-rules.md), which required unassigning first. |
+| Seats with assignments removed or switched away from `assigned` | Block publish (409) / unassign automatically / **warn, and the publisher confirms** | **Warn and confirm** (owner's choice; Claude had proposed blocking). *Now: seats are freed automatically, with no confirmation ([0086](0086-2026-10-12-automatic-release.md)).* | Publish is refused with a list of the affected seats. Sending the same publish with those seats in `unassign_seats` unassigns them in the same transaction. Each one is audited as `seat.unassigned`. Big re-layouts don't need a reassignment pass first, and nobody loses a seat without a person explicitly confirming it. This refines [0031](0031-2026-10-08-seat-assignment-rules.md), which required unassigning first. |
 | Archived floors in label uniqueness | **Excluded** / included | **Excluded** | Archived floors are out of use ([0078](0078-2026-10-08-archive-semantics.md)). They're checked again when a floor is restored and republished. |
 
 ## Endpoints
@@ -31,4 +32,4 @@ They return `409 publish-conflicts`, listing every problem ([0037](0037-2026-10-
 |---|---|
 | `seat_label_duplicate` | Seat labels are unique among seats in the **building**. The check covers this draft plus the published versions of the building's other active floors ([0034](0034-2026-10-08-v1-data-model.md) invariant 4). |
 | `device_on_other_floor` | A device is placed on at most one floor: this draft against every other published floor of the tenant (invariant 5). |
-| `assigned_seat_removed` / `assigned_seat_not_assignable` | A seat that has an assignment is removed or switched away from `assigned`. This blocks only until the publisher confirms the seat in `unassign_seats`. Confirmed ids that don't need unassigning are ignored. |
+| `assigned_seat_removed` / `assigned_seat_not_assignable` | A seat that has an assignment is removed or switched away from `assigned`. ~~This blocks only until the publisher confirms the seat in `unassign_seats`.~~ No longer a conflict: the seat is freed on publish ([0086](0086-2026-10-12-automatic-release.md)). |
