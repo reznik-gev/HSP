@@ -1,7 +1,7 @@
 # 0023 — Primary unit rule: deepest unit wins
 
 - **Date:** 2026-10-08
-- **Status:** Accepted
+- **Status:** Superseded by [0084](0084-2026-10-10-people-org-api-and-import.md): the primary unit must be marked explicitly when a person belongs to several units.
 - **Resolves:** open question in [0019](0019-2026-10-08-org-unit-source.md)
 
 ## Options considered
