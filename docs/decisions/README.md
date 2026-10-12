@@ -93,3 +93,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0082 | 2026-10-10 | [Publish, discard and restore](0082-2026-10-10-publish-discard-restore.md) | Accepted |
 | 0083 | 2026-10-10 | [Catalog, zone type and device API](0083-2026-10-10-catalog-and-device-api.md) | Accepted |
 | 0084 | 2026-10-10 | [People, org units and the CSV/Excel import](0084-2026-10-10-people-org-api-and-import.md) | Accepted |
+| 0085 | 2026-10-12 | [Seat assignment API, search, occupancy and bulk assignment](0085-2026-10-12-seat-assignment-api.md) | Accepted |

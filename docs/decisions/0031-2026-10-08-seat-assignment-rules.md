@@ -3,7 +3,7 @@
 - **Date:** 2026-10-08
 - **Status:** Accepted
 - **Refines:** [0009](0009-2026-10-07-seat-assignment-model.md)
-- **Refined by:** [0082](0082-2026-10-10-publish-discard-restore.md) (the publisher may confirm unassigning seats instead of unassigning first)
+- **Refined by:** [0082](0082-2026-10-10-publish-discard-restore.md) (the publisher may confirm unassigning seats instead of unassigning first), [0085](0085-2026-10-12-seat-assignment-api.md) (deactivated people, archived units and archived floors free their seats instead of flagging them)
 
 ## Options considered
 **Time model:**
