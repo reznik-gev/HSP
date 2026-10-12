@@ -1500,7 +1500,7 @@
             "title": "Position Id"
           },
           "primary_override": {
-            "description": "Primary chosen explicitly, not by the deepest-unit rule",
+            "description": "Primary was marked explicitly (false only for a lone membership)",
             "title": "Primary Override",
             "type": "boolean"
           },
@@ -5913,7 +5913,7 @@
     },
     "/api/v1/people/{person_id}/memberships": {
       "put": {
-        "description": "Replace all memberships at once. Without an explicit primary, the deepest unit is primary\n(docs/0023).",
+        "description": "Replace all memberships at once. With several units, exactly one must be marked primary\n(422 primary_required otherwise); a single membership is primary by itself (docs/0084).",
         "operationId": "set_memberships_api_v1_people__person_id__memberships_put",
         "parameters": [
           {

@@ -74,6 +74,6 @@ async def reactivate_person(person_id: uuid.UUID, service: Service) -> PersonOut
 async def set_memberships(
     person_id: uuid.UUID, body: list[MembershipIn], service: Service
 ) -> PersonOut:
-    """Replace all memberships at once. Without an explicit primary, the deepest unit is primary
-    (docs/0023)."""
+    """Replace all memberships at once. With several units, exactly one must be marked primary
+    (422 primary_required otherwise); a single membership is primary by itself (docs/0084)."""
     return await service.set_memberships(person_id, body)

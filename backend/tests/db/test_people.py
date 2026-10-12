@@ -56,14 +56,17 @@ async def test_deactivate_hides_and_reactivate_returns(ctx: dict[str, Any]) -> N
     assert (await s.set_active(p.id, True)).active is True
 
 
-async def test_deepest_unit_is_primary_unless_chosen(ctx: dict[str, Any]) -> None:
+async def test_primary_must_be_marked_with_several_units(ctx: dict[str, Any]) -> None:
     s: PeopleService = ctx["people"]
     p = await s.create(PersonIn(display_name="Noa", email="noa@example.com"))
-    auto = await s.set_memberships(
-        p.id, [MembershipIn(unit_id=ctx["root"].id), MembershipIn(unit_id=ctx["web"].id)]
-    )
-    assert auto.primary_unit_id == ctx["web"].id  # deepest wins (docs/0023)
-    assert not any(m.primary_override for m in auto.memberships)
+    with pytest.raises(ProblemException) as exc:
+        await s.set_memberships(
+            p.id, [MembershipIn(unit_id=ctx["root"].id), MembershipIn(unit_id=ctx["web"].id)]
+        )
+    assert [e.code for e in exc.value.errors or []] == ["primary_required"]  # docs/0084
+    alone = await s.set_memberships(p.id, [MembershipIn(unit_id=ctx["web"].id)])
+    assert alone.primary_unit_id == ctx["web"].id  # a lone membership is primary by itself
+    assert not any(m.primary_override for m in alone.memberships)
     chosen = await s.set_memberships(
         p.id,
         [

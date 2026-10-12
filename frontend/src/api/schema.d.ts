@@ -664,8 +664,8 @@ export interface paths {
         get?: never;
         /**
          * Set Memberships
-         * @description Replace all memberships at once. Without an explicit primary, the deepest unit is primary
-         *     (docs/0023).
+         * @description Replace all memberships at once. With several units, exactly one must be marked primary
+         *     (422 primary_required otherwise); a single membership is primary by itself (docs/0084).
          */
         put: operations["set_memberships_api_v1_people__person_id__memberships_put"];
         post?: never;
@@ -1420,7 +1420,7 @@ export interface components {
             position_id: string | null;
             /**
              * Primary Override
-             * @description Primary chosen explicitly, not by the deepest-unit rule
+             * @description Primary was marked explicitly (false only for a lone membership)
              */
             primary_override: boolean;
             /**
