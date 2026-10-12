@@ -169,3 +169,25 @@ async def test_assigned_seat_cannot_be_removed_by_publishing(ctx: dict[str, Any]
     with pytest.raises(ProblemException) as exc:
         await publish(ctx, 1)
     assert [e.code for e in exc.value.errors or []] == ["assigned_seat_removed"]
+
+    # The publisher confirms: the seat is unassigned in the same transaction, and audited.
+    result = await publishing(ctx).publish(
+        ctx["floor"], PublishIn(base_revision=1, unassign_seats=[seat, new_id()])
+    )
+    assert (result.published_version, result.unassigned_seats) == (2, [seat])
+    db = ctx["db"]
+    assert (
+        await db.scalar(
+            select(models.SeatAssignment).where(models.SeatAssignment.seat_element_id == seat)
+        )
+        is None
+    )
+    event = await db.scalar(
+        select(models.AuditEvent).where(
+            models.AuditEvent.action == "seat.unassigned", models.AuditEvent.entity_id == seat
+        )
+    )
+    assert event is not None and event.before == {
+        "holder_person_id": str(person),
+        "holder_unit_id": None,
+    }

@@ -1419,6 +1419,16 @@
               }
             ],
             "title": "Note"
+          },
+          "unassign_seats": {
+            "default": [],
+            "description": "Assigned seats the publisher confirms may be unassigned because the draft removes them or makes them non-assignable (docs/0082). Taken from the assigned_seat_* errors of a refused publish.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Unassign Seats",
+            "type": "array"
           }
         },
         "required": [
@@ -1448,6 +1458,15 @@
               }
             ],
             "title": "Superseded Version"
+          },
+          "unassigned_seats": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Unassigned Seats",
+            "type": "array"
           }
         },
         "required": [
@@ -2728,7 +2747,7 @@
     },
     "/api/v1/floors/{floor_id}/draft/publish": {
       "post": {
-        "description": "Make the draft the published version (docs/0082). `base_revision` must be the revision\nyou reviewed. 409 publish-conflicts lists seat-label, device and assignment problems.",
+        "description": "Make the draft the published version (docs/0082). `base_revision` must be the revision\nyou reviewed. 409 publish-conflicts lists seat-label, device and assignment problems.\nAssigned seats that the draft removes or makes non-assignable are unassigned only when\nlisted in `unassign_seats` (docs/0082).",
         "operationId": "publish_draft_api_v1_floors__floor_id__draft_publish_post",
         "parameters": [
           {

@@ -3,6 +3,7 @@
 - **Date:** 2026-10-08
 - **Status:** Accepted
 - **Refines:** [0009](0009-2026-10-07-seat-assignment-model.md)
+- **Refined by:** [0082](0082-2026-10-10-publish-discard-restore.md) (the publisher may confirm unassigning seats instead of unassigning first)
 
 ## Options considered
 **Time model:**

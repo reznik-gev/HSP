@@ -73,3 +73,14 @@ def test_assigned_seats_must_stay_assignable() -> None:
         "assigned_seat_not_assignable",
         "assigned_seat_removed",
     ]
+
+
+def test_confirmed_seats_no_longer_block() -> None:
+    kept, removed = seat("A-01"), seat("A-02")
+    assigned = {kept.id, removed.id}
+    assert publish_conflicts(plan(kept), plan(kept, removed), {}, {}, assigned, {removed.id}) == []
+    # Confirmation never excuses a label clash.
+    problems = publish_conflicts(
+        plan(kept), plan(kept, removed), {"A-01": "Level 2"}, {}, assigned, {removed.id, kept.id}
+    )
+    assert [p.code for p in problems] == ["seat_label_duplicate"]

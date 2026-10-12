@@ -82,7 +82,9 @@ async def publish_draft(
     floor_id: uuid.UUID, body: PublishIn, publishing: Publishing
 ) -> PublishResult:
     """Make the draft the published version (docs/0082). `base_revision` must be the revision
-    you reviewed. 409 publish-conflicts lists seat-label, device and assignment problems."""
+    you reviewed. 409 publish-conflicts lists seat-label, device and assignment problems.
+    Assigned seats that the draft removes or makes non-assignable are unassigned only when
+    listed in `unassign_seats` (docs/0082)."""
     return await publishing.publish(floor_id, body)
 
 

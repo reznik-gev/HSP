@@ -245,6 +245,8 @@ export interface paths {
          * Publish Draft
          * @description Make the draft the published version (docs/0082). `base_revision` must be the revision
          *     you reviewed. 409 publish-conflicts lists seat-label, device and assignment problems.
+         *     Assigned seats that the draft removes or makes non-assignable are unassigned only when
+         *     listed in `unassign_seats` (docs/0082).
          */
         post: operations["publish_draft_api_v1_floors__floor_id__draft_publish_post"];
         delete?: never;
@@ -1118,6 +1120,12 @@ export interface components {
             base_revision: number;
             /** Note */
             note?: string | null;
+            /**
+             * Unassign Seats
+             * @description Assigned seats the publisher confirms may be unassigned because the draft removes them or makes them non-assignable (docs/0082). Taken from the assigned_seat_* errors of a refused publish.
+             * @default []
+             */
+            unassign_seats: string[];
         };
         /** PublishResult */
         PublishResult: {
@@ -1130,6 +1138,11 @@ export interface components {
             published_version: number;
             /** Superseded Version */
             superseded_version: number | null;
+            /**
+             * Unassigned Seats
+             * @default []
+             */
+            unassigned_seats: string[];
         };
         /** SiteIn */
         SiteIn: {
