@@ -545,7 +545,7 @@ export interface paths {
         /**
          * Import People
          * @description Columns: email*, display_name*, external_id, title, primary_unit_external_id,
-         *     secondary_unit_external_ids (';'-separated), position (docs/0084).
+         *     secondary_unit_external_ids (";"-separated, needs a primary), position (docs/0084).
          */
         post: operations["import_people_api_v1_imports_people_post"];
         delete?: never;
