@@ -94,6 +94,6 @@ async def rename_position(
 
 @router.delete("/positions/{position_id}", status_code=204, dependencies=WRITE)
 async def delete_position(position_id: uuid.UUID, service: Service) -> Response:
-    """Only while nobody holds the position (409 in-use)."""
+    """People holding the position keep their unit membership, without a position (docs/0084)."""
     await service.delete_position(position_id)
     return Response(status_code=204)

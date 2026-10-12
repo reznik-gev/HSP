@@ -88,5 +88,28 @@ async def test_positions(svc: UnitsService) -> None:
     await svc.create_position(t["web"].id, PositionIn(title="Engineer"))
     assert [p.title for p in await svc.positions(t["web"].id)] == ["Engineer", "Team Lead"]
     assert (await svc.rename_position(lead.id, PositionIn(title="Tech Lead"))).title == "Tech Lead"
+    # Deleting a held position keeps the holder in the unit, without a position (docs/0084).
+    person = new_id()
+    await svc.db.execute(
+        text(
+            "INSERT INTO person (id, tenant_id, display_name, email, source, active, "
+            "created_at, updated_at) VALUES (:id, :t, 'Dana', :e, 'manual', true, now(), now())"
+        ),
+        {"id": person, "t": svc.principal.tenant_id, "e": f"dana-{person.hex[:6]}@hsp.local"},
+    )
+    await svc.db.execute(
+        text(
+            "INSERT INTO unit_membership (person_id, unit_id, tenant_id, position_id, is_primary, "
+            "primary_override) VALUES (:p, :u, :t, :pos, true, false)"
+        ),
+        {"p": person, "u": t["web"].id, "t": svc.principal.tenant_id, "pos": lead.id},
+    )
     await svc.delete_position(lead.id)
     assert [p.title for p in await svc.positions(t["web"].id)] == ["Engineer"]
+    membership = (
+        await svc.db.execute(
+            text("SELECT unit_id, position_id FROM unit_membership WHERE person_id = :p"),
+            {"p": person},
+        )
+    ).one()
+    assert tuple(membership) == (t["web"].id, None)
