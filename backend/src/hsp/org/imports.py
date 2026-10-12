@@ -355,6 +355,13 @@ class ImportService:
                     "position needs primary_unit_external_id.",
                     "position",
                 )
+            if secondary and not primary:  # docs/0084: the primary unit is never guessed
+                run.error(
+                    i,
+                    "primary_required",
+                    "secondary_unit_external_ids needs primary_unit_external_id.",
+                    "primary_unit_external_id",
+                )
             match_ext, match_email = by_ext.get(ext) if ext else None, by_email.get(email)
             if match_ext and match_email and match_ext.id != match_email.id:
                 run.error(

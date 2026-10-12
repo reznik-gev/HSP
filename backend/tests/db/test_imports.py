@@ -135,6 +135,7 @@ async def test_people_errors_and_reactivation(svc: ImportService) -> None:
             ["not-an-email", "X", "", "", "", ""],
             ["z@example.com", "Z", "", "MARS", "", "Boss"],
             ["dana@example.com", "Dana", "E2", "", "", ""],
+            ["y@example.com", "Y", "", "", "ENG", ""],
         ]
     )
     report = await svc.import_people(read_table("bad.xlsx", bad), apply=True)
@@ -142,6 +143,7 @@ async def test_people_errors_and_reactivation(svc: ImportService) -> None:
     assert sorted(e.code for e in report.errors) == [
         "identity_conflict",
         "invalid_email",
+        "primary_required",
         "unit_not_found",
     ]
     assert report.applied is False

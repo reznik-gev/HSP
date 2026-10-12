@@ -47,5 +47,5 @@ async def import_units(file: UploadFile, service: Service, apply: Apply = False)
 @router.post("/people", dependencies=WRITE)
 async def import_people(file: UploadFile, service: Service, apply: Apply = False) -> ImportReport:
     """Columns: email*, display_name*, external_id, title, primary_unit_external_id,
-    secondary_unit_external_ids (';'-separated), position (docs/0084)."""
+    secondary_unit_external_ids (";"-separated, needs a primary), position (docs/0084)."""
     return await service.import_people(await _rows(file), apply)
