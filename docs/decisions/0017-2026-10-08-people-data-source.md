@@ -3,6 +3,7 @@
 - **Date:** 2026-10-08
 - **Status:** Accepted
 - **Builds on:** [0006](0006-2026-10-07-org-hierarchy-model.md), [0008](0008-2026-10-07-identity-provider.md)
+- **Amended by:** [0086](0086-2026-10-12-automatic-release.md) (seats are freed, not flagged)
 
 ## Options considered
 - Managed in HSP + CSV import
@@ -17,6 +18,6 @@
 - **Positions, secondary memberships and space ownership stay in HSP** and are never overwritten by the sync.
 
 ## Consequences
-- A person disabled in AD is marked **inactive** in HSP, not deleted. Their seat assignments are flagged for reallocation.
+- A person disabled in AD is marked **inactive** in HSP, not deleted. Their seats are freed ([0086](0086-2026-10-12-automatic-release.md); originally "flagged for reallocation").
 - Synced fields are read-only in the HSP UI. HSP-owned fields are editable.
 - **Open question (next decision):** whether the **org-unit tree** is also derived from AD (OUs, groups or the `manager`/`department` attributes) or maintained in HSP. That decision determines how much of [0006](0006-2026-10-07-org-hierarchy-model.md) is automated.

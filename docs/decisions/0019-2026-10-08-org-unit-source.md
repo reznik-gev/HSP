@@ -4,6 +4,7 @@
 - **Status:** Accepted
 - **Resolves:** open question in [0017](0017-2026-10-08-people-data-source.md)
 - **Refines:** [0006](0006-2026-10-07-org-hierarchy-model.md)
+- **Amended by:** [0086](0086-2026-10-12-automatic-release.md) (no review flags on automatic changes)
 
 ## Options considered
 - Maintained in HSP
@@ -25,7 +26,7 @@
 | Unit managers | Owned by HSP by default. Optionally derived from the AD group's `managedBy` attribute (configurable). |
 | Space ownership and delegation | Owned by HSP ([0007](0007-2026-10-07-authorization-model.md)). |
 | Person in several unit groups | One must be **primary**. See the open question below. |
-| Group deleted in AD | The unit is **archived**, not deleted. Spaces it owned revert to the parent unit and are flagged for review. |
+| Group deleted in AD | The unit is **archived**, not deleted. Spaces it owned revert to the parent unit ([0086](0086-2026-10-12-automatic-release.md): no review flag). |
 | Group moved to another parent | The unit moves. Effective permissions change, and the move is audited. A notification goes to affected space owners. |
 | Cyclic or multi-parent nesting in AD | Rejected by the sync, which reports it in the admin console. The tree stays strict per 0006. |
 

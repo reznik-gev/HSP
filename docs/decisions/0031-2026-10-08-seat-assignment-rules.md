@@ -3,7 +3,7 @@
 - **Date:** 2026-10-08
 - **Status:** Accepted
 - **Refines:** [0009](0009-2026-10-07-seat-assignment-model.md)
-- **Refined by:** [0082](0082-2026-10-10-publish-discard-restore.md) (the publisher may confirm unassigning seats instead of unassigning first), [0085](0085-2026-10-12-seat-assignment-api.md) (deactivated people, archived units and archived floors free their seats instead of flagging them)
+- **Refined by:** [0082](0082-2026-10-10-publish-discard-restore.md) (the publisher may confirm unassigning seats instead of unassigning first), [0085](0085-2026-10-12-seat-assignment-api.md) (deactivated people, archived units and archived floors free their seats instead of flagging them), [0086](0086-2026-10-12-automatic-release.md) (publish and reassignment free seats automatically, without confirmation)
 
 ## Options considered
 **Time model:**
@@ -25,5 +25,5 @@
 ## Consequences
 - No future-dated moves in v1. A planned move is executed on the day it happens. Dated assignments can be added later by adding validity columns and replacing the unique constraint with an exclusion constraint.
 - Assignment references the seat's **stable element ID** ([0028](0028-2026-10-08-floor-version-storage.md)), so moving a seat in a new floor version keeps its occupant.
-- Publish-time conflict check ([0015](0015-2026-10-08-floor-plan-versioning.md)): if the draft deletes an assigned seat, or changes its mode to bookable or unavailable, the publisher must unassign or reassign first.
-- Archiving a person (inactive) or a unit flags their seats for reallocation rather than deleting the assignments.
+- Publish-time conflict check ([0015](0015-2026-10-08-floor-plan-versioning.md)): if the draft deletes an assigned seat, or changes its mode to bookable or unavailable, the publisher must unassign or reassign first. *Now: publishing frees those seats automatically ([0086](0086-2026-10-12-automatic-release.md)).*
+- Archiving a person (inactive) or a unit flags their seats for reallocation rather than deleting the assignments. *Now: their seats are freed ([0085](0085-2026-10-12-seat-assignment-api.md)).*
