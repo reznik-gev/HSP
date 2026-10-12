@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
@@ -356,15 +356,20 @@ class UnitsService:
 
     async def delete_position(self, position_id: uuid.UUID) -> None:
         p = await self._position(position_id)
-        used = await self.db.scalar(
-            select(models.UnitMembership.person_id)
-            .where(models.UnitMembership.position_id == p.id)
-            .limit(1)
-        )
-        if used is not None:
-            raise ProblemException(
-                409, "in-use", "Position in use", "People currently hold this position."
+        # docs/0084: holders keep their unit membership and just lose the position.
+        holders = list(
+            await self.db.scalars(
+                update(models.UnitMembership)
+                .where(models.UnitMembership.position_id == p.id)
+                .values(position_id=None)
+                .returning(models.UnitMembership.person_id)
             )
+        )
         await self.db.delete(p)
-        self._audit("position.deleted", "position", p.id, before={"title": p.title})
+        self._audit(
+            "position.deleted",
+            "position",
+            p.id,
+            before={"title": p.title, "holders": sorted(str(h) for h in holders)},
+        )
         await self.db.commit()

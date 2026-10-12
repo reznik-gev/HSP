@@ -626,7 +626,7 @@ export interface paths {
         post?: never;
         /**
          * Delete Position
-         * @description Only while nobody holds the position (409 in-use).
+         * @description People holding the position keep their unit membership, without a position (docs/0084).
          */
         delete: operations["delete_position_api_v1_positions__position_id__delete"];
         options?: never;
