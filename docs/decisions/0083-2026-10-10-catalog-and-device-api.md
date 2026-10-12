@@ -1,10 +1,10 @@
 # 0083 — Catalog, zone type and device API
 
 - **Date:** 2026-10-10
-- **Status:** Proposed. Chosen by Claude, using the recommended option for each question, while the product owner was away. **Pending owner review.**
+- **Status:** Accepted. Proposed by Claude while the product owner was away, then reviewed by the owner choice by choice on 2026-10-12. All seven choices were approved as proposed.
 - **Refines:** [0020](0020-2026-10-08-space-hierarchy.md), [0021](0021-2026-10-08-object-catalog.md), [0022](0022-2026-10-08-device-asset-data.md), [0034](0034-2026-10-08-v1-data-model.md)
 
-## Decisions (recommended options, not yet confirmed)
+## Decisions
 | Question | Chosen | Why |
 |---|---|---|
 | Can built-in catalog items be edited? | **No, read-only** (`409 builtin-read-only`) | They're seeded and updated by migrations ([0034](0034-2026-10-08-v1-data-model.md) review E). Admins copy one into a custom item instead. |
