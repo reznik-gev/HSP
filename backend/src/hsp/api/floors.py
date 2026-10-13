@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from hsp.api.common import WRITE, get_locations_repository
@@ -14,6 +14,7 @@ from hsp.auth.dependencies import CurrentPrincipal
 from hsp.locations.floors import FloorsService
 from hsp.locations.repository import LocationsRepository
 from hsp.models import Floor
+from hsp.release import ReleaseReport
 
 router = APIRouter(prefix="/floors", tags=["floors"])
 
@@ -107,10 +108,11 @@ async def update_floor(floor_id: uuid.UUID, body: FloorPatch, service: Service) 
     return to_out(await service.update(floor_id, body.model_dump(exclude_unset=True)))
 
 
-@router.delete("/{floor_id}", status_code=204, dependencies=WRITE)
-async def archive_floor(floor_id: uuid.UUID, service: Service) -> Response:
-    await service.archive(floor_id)
-    return Response(status_code=204)
+@router.delete("/{floor_id}", dependencies=WRITE)
+async def archive_floor(floor_id: uuid.UUID, service: Service) -> ReleaseReport:
+    """Archive (soft delete, docs/0078) and free the floor's assigned seats. Refused only while
+    someone is editing it. The response lists everything archived and freed (docs/0086)."""
+    return await service.archive(floor_id)
 
 
 @router.post("/{floor_id}/restore", dependencies=WRITE)

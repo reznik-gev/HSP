@@ -1,16 +1,19 @@
-"""Org units and positions against PostgreSQL (docs/0006, docs/0078, docs/0084)."""
+"""Org units and positions against PostgreSQL (docs/0006, docs/0078, docs/0084, docs/0086)."""
 
+import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
+from hsp import models
 from hsp.auth.principal import ADMIN_ROLE, Principal
 from hsp.models import new_id
 from hsp.org.units import PositionIn, UnitIn, UnitsService
 from hsp.problems import ProblemException
-from tests.db.plan_helpers import new_tenant
+from tests.db.plan_helpers import make_floor, new_tenant
 
 
 @pytest.fixture
@@ -57,23 +60,85 @@ async def test_move_and_cycle_protection(svc: UnitsService) -> None:
     assert exc.value.slug == "root-cannot-move"
 
 
-async def test_archive_bottom_up_restore_top_down(svc: UnitsService) -> None:
+async def person(svc: UnitsService, name: str, *memberships: tuple[Any, bool]) -> uuid.UUID:
+    now = datetime.now(UTC)
+    p = models.Person(
+        id=new_id(),
+        tenant_id=svc.principal.tenant_id,
+        display_name=name,
+        email=f"{name.lower()}-{new_id().hex[-8:]}@hsp.local",
+        source=models.RecordSource.MANUAL,
+        active=True,
+        created_at=now,
+        updated_at=now,
+    )
+    svc.db.add(p)
+    await svc.db.flush()
+    for unit, primary in memberships:
+        svc.db.add(
+            models.UnitMembership(
+                person_id=p.id,
+                unit_id=unit.id,
+                tenant_id=svc.principal.tenant_id,
+                is_primary=primary,
+                primary_override=primary,
+            )
+        )
+    await svc.db.flush()
+    return p.id
+
+
+async def memberships(svc: UnitsService, person_id: uuid.UUID) -> set[tuple[uuid.UUID, bool]]:
+    rows = await svc.db.scalars(
+        select(models.UnitMembership).where(models.UnitMembership.person_id == person_id)
+    )
+    return {(m.unit_id, m.is_primary) for m in rows}
+
+
+async def test_archive_cascades_moves_members_up_and_frees_unit_seats(svc: UnitsService) -> None:
     t = await tree(svc)
-    with pytest.raises(ProblemException) as exc:
-        await svc.archive(t["eng"].id)
-    assert exc.value.slug == "has-active-children"
-    assert exc.value.errors is not None and exc.value.errors[0].message == "Web"
-    await svc.archive(t["web"].id)
-    await svc.archive(t["eng"].id)
+    root, eng, web, sales = t["root"], t["eng"], t["web"], t["sales"]
+    dana = await person(svc, "Dana", (web, True), (sales, False))
+    eli = await person(svc, "Eli", (root, True), (eng, False))
+    floor, _ = await make_floor(svc.db, svc.principal.tenant_id)
+    seat = models.FloorElement(
+        id=new_id(), tenant_id=svc.principal.tenant_id, floor_id=floor, kind="object"
+    )
+    svc.db.add(seat)
+    await svc.db.flush()
+    svc.db.add(
+        models.SeatAssignment(
+            id=new_id(),
+            tenant_id=svc.principal.tenant_id,
+            seat_element_id=seat.id,
+            holder_unit_id=web.id,
+            assigned_by="a",
+        )
+    )
+    await svc.db.flush()
+
+    report = await svc.archive(eng.id)  # docs/0086: Web goes with it
+    assert [a.name for a in report.archived] == ["Engineering", "Web"]
+    assert [f.seat_id for f in report.freed_seats] == [seat.id]
+    assert {m.person_id for m in report.moved_members} == {dana, eli}
+    # Dana's primary (Web) moves up to Company and stays primary; Eli merges into Company.
+    assert await memberships(svc, dana) == {(root.id, True), (sales.id, False)}
+    assert await memberships(svc, eli) == {(root.id, True)}
     assert {u.name for u in await svc.list_units(include_archived=False, after=None, limit=50)} == {
         "Company",
         "Sales",
     }
+
     with pytest.raises(ProblemException) as exc:
-        await svc.restore(t["web"].id)
-    assert exc.value.slug == "parent-archived"
-    await svc.restore(t["eng"].id)
-    assert (await svc.restore(t["web"].id)).archived_at is None
+        await svc.restore(web.id)
+    assert exc.value.slug == "parent-archived"  # restore stays top-down
+    await svc.restore(eng.id)
+    assert (await svc.restore(web.id)).archived_at is None
+    with pytest.raises(ProblemException) as exc:
+        await svc.archive(root.id)
+    assert exc.value.slug == "root-unit"
+    assert (await svc.archive(sales.id)).archived[0].name == "Sales"
+    assert (await svc.archive(sales.id)).archived == []  # idempotent
 
 
 async def test_positions(svc: UnitsService) -> None:

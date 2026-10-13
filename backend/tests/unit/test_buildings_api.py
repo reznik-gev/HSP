@@ -12,7 +12,7 @@ from hsp.api.common import get_locations_repository
 from hsp.auth.dependencies import get_principal
 from hsp.auth.principal import ADMIN_ROLE, Principal
 from hsp.main import create_app
-from hsp.models import Floor, new_id
+from hsp.models import Floor, SeatAssignment, new_id
 from tests.fakes import InMemoryLocationsRepository
 
 TENANT = new_id()
@@ -113,7 +113,7 @@ def test_invalid_code_format_is_422(client: TestClient) -> None:
     building(client, site(client), "bad code!", expect=422)
 
 
-def test_archive_blocked_by_active_floor(
+def test_archive_cascades_to_floors_and_frees_their_seats(
     client: TestClient, repo: InMemoryLocationsRepository
 ) -> None:
     b = building(client, site(client))
@@ -134,16 +134,35 @@ def test_archive_blocked_by_active_floor(
         archived_at=None,
     )
     repo.floors[floor.id] = floor
+    seat, person = new_id(), new_id()
+    repo.seat_assignments[floor.id] = [
+        SeatAssignment(
+            id=new_id(),
+            tenant_id=TENANT,
+            seat_element_id=seat,
+            holder_person_id=person,
+            assigned_by="a",
+        )
+    ]
     r = client.delete(f"/api/v1/buildings/{b['id']}", headers=CSRF)
-    assert r.status_code == 409
-    assert r.json()["errors"][0]["message"] == "Floor Ground (level 0)"
+    assert r.status_code == 200
+    body = r.json()
+    assert [a["name"] for a in body["archived"]] == ["Building A (Building A)", "Ground"]
+    assert body["freed_seats"] == [
+        {"seat_id": str(seat), "holder_person_id": str(person), "holder_unit_id": None}
+    ]
+    assert [e.action for e in repo.events][-3:] == [
+        "building.archived",
+        "floor.archived",
+        "seat.unassigned",
+    ]
 
 
 def test_restore_is_top_down(client: TestClient, repo: InMemoryLocationsRepository) -> None:
     s = site(client)
     b = building(client, s)
-    assert client.delete(f"/api/v1/buildings/{b['id']}", headers=CSRF).status_code == 204
-    assert client.delete(f"/api/v1/sites/{s}", headers=CSRF).status_code == 204  # now empty
+    assert client.delete(f"/api/v1/buildings/{b['id']}", headers=CSRF).status_code == 200
+    assert client.delete(f"/api/v1/sites/{s}", headers=CSRF).status_code == 200
     assert client.post(f"/api/v1/buildings/{b['id']}/restore", headers=CSRF).status_code == 409
     assert client.post(f"/api/v1/sites/{s}/restore", headers=CSRF).status_code == 200
     assert client.post(f"/api/v1/buildings/{b['id']}/restore", headers=CSRF).status_code == 200

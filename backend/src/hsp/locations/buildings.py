@@ -9,9 +9,11 @@ from typing import Any
 from hsp.audit import changed_fields
 from hsp.auth.principal import Principal
 from hsp.locations import common
+from hsp.locations.archiving import LocationArchiver
 from hsp.locations.repository import LocationsRepository
 from hsp.models import Building, Site, new_id
 from hsp.problems import ProblemException
+from hsp.release import ReleaseReport
 
 EDITABLE = ("name", "code")
 
@@ -111,20 +113,10 @@ class BuildingsService:
             await self.repo.commit()
         return building
 
-    async def archive(self, building_id: uuid.UUID) -> None:
+    async def archive(self, building_id: uuid.UUID) -> ReleaseReport:
+        """Cascades to the building's active floors and frees their seats (docs/0086)."""
         building = await self.get(building_id)
-        if building.archived_at is not None:
-            return
-        blocking = await self.repo.active_floors(self._tenant, building_id)
-        if blocking:
-            raise common.has_active_children(
-                "building",
-                "floor",
-                [(f.id, f"Floor {f.name} (level {f.level_index})") for f in blocking],
-            )
-        building.archived_at = building.updated_at = datetime.now(UTC)
-        self._audit("building.archived", building, after={"archived_at": building.archived_at})
-        await self.repo.commit()
+        return await LocationArchiver(self.repo, self.principal, self.request_id).archive(building)
 
     async def restore(self, building_id: uuid.UUID) -> Building:
         building = await self.get(building_id)

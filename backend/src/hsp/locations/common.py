@@ -21,21 +21,6 @@ def archived_read_only(kind: str) -> ProblemException:
     )
 
 
-def has_active_children(
-    kind: str, child_kind: str, children: list[tuple[uuid.UUID, str]]
-) -> ProblemException:
-    return ProblemException(
-        409,
-        "has-active-children",
-        f"{kind.capitalize()} has active {child_kind}s",
-        f"Archive its {child_kind}s first (docs/0078).",
-        errors=[
-            ProblemError(code="active_child", message=label, element_id=str(child_id))
-            for child_id, label in children
-        ],
-    )
-
-
 def parent_archived(kind: str, parent_kind: str) -> ProblemException:
     return ProblemException(
         409,
@@ -64,6 +49,7 @@ def record(
     entity_id: uuid.UUID,
     before: dict[str, Any] | None = None,
     after: dict[str, Any] | None = None,
+    reason: str | None = None,
 ) -> None:
     repo.record(
         audit_event(
@@ -74,5 +60,6 @@ def record(
             before=before,
             after=after,
             request_id=request_id,
+            reason=reason,
         )
     )

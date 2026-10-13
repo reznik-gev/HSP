@@ -4,7 +4,7 @@ import uuid
 from typing import Any
 
 from hsp.auth.sessions import Session, SessionTokens, with_tokens
-from hsp.models import AuditEvent, Building, Floor, Site, new_id
+from hsp.models import AuditEvent, Building, Floor, SeatAssignment, Site, new_id
 
 
 class InMemorySessionStore:
@@ -44,6 +44,7 @@ class InMemoryLocationsRepository:
         self.buildings: dict[uuid.UUID, Building] = {}
         self.floors: dict[uuid.UUID, Floor] = {}
         self.lock_holders: dict[uuid.UUID, str] = {}  # floor id -> holder name
+        self.seat_assignments: dict[uuid.UUID, list[SeatAssignment]] = {}  # floor id -> seats
         self.events: list[AuditEvent] = []
         self._pending: list[Site | Building | Floor | AuditEvent] = []
         self.committed = 0
@@ -147,6 +148,9 @@ class InMemoryLocationsRepository:
 
     async def lock_holder(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: Any) -> str | None:
         return self.lock_holders.get(floor_id)
+
+    async def free_seats(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> list[SeatAssignment]:
+        return self.seat_assignments.pop(floor_id, [])
 
     def add(self, entity: Site | Building | Floor) -> None:
         self._pending.append(entity)

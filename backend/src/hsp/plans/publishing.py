@@ -1,11 +1,11 @@
-"""Publish, discard and restore a floor's draft (docs/0015, 0028, 0031, 0034, 0082)."""
+"""Publish, discard and restore a floor's draft (docs/0015, 0028, 0031, 0034, 0082, 0086)."""
 
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy import and_, delete, exists, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,24 +16,19 @@ from hsp.plans.changeset import ATTR, KINDS, Element, Kind
 from hsp.plans.drafts import REV_MODEL, DraftRepository, DraftsService
 from hsp.plans.schema import PlanContent
 from hsp.problems import ProblemError, ProblemException
+from hsp.release import FreedSeat, freed, seat_unassigned
 
 
 class PublishIn(BaseModel):
     base_revision: int
     note: str | None = None
-    unassign_seats: list[uuid.UUID] = Field(
-        default=[],
-        description="Assigned seats the publisher confirms may be unassigned because the draft "
-        "removes them or makes them non-assignable (docs/0082). Taken from the assigned_seat_* "
-        "errors of a refused publish.",
-    )
 
 
 class PublishResult(BaseModel):
     floor_id: uuid.UUID
     published_version: int
     superseded_version: int | None
-    unassigned_seats: list[uuid.UUID] = []
+    freed_seats: list[FreedSeat] = []
 
 
 class PublishRepository(Protocol):
@@ -233,17 +228,14 @@ def _elements(content: PlanContent) -> dict[tuple[Kind, uuid.UUID], Element]:
     return {(k, e.id): e for k in KINDS for e in getattr(content, ATTR[k])}
 
 
-def seats_losing_assignment(draft: PlanContent, assigned: set[uuid.UUID]) -> dict[uuid.UUID, str]:
-    """Assigned seat -> problem code, for seats the draft removes or makes non-assignable."""
+def seats_losing_assignment(draft: PlanContent, assigned: set[uuid.UUID]) -> set[uuid.UUID]:
+    """Assigned seats the draft removes or makes non-assignable: freed on publish (docs/0086)."""
     objects = {o.id: o for o in draft.objects}
-    out: dict[uuid.UUID, str] = {}
-    for seat_id in assigned:
-        current = objects.get(seat_id)
-        if current is None:
-            out[seat_id] = "assigned_seat_removed"
-        elif current.allocation_mode != "assigned":
-            out[seat_id] = "assigned_seat_not_assignable"
-    return out
+    return {
+        seat_id
+        for seat_id in assigned
+        if (o := objects.get(seat_id)) is None or o.allocation_mode != "assigned"
+    }
 
 
 def publish_conflicts(
@@ -251,13 +243,11 @@ def publish_conflicts(
     published: PlanContent,
     labels_elsewhere: dict[str, str],
     devices_elsewhere: dict[uuid.UUID, str],
-    assigned: set[uuid.UUID],
-    confirmed: frozenset[uuid.UUID] | set[uuid.UUID] = frozenset(),
 ) -> list[ProblemError]:
     """The docs/0082 publish checks. Pure, so each rule is unit-tested directly.
 
-    Seat-label and device problems always block. A seat losing its assignment blocks only until
-    the publisher confirms it (`confirmed`, from `unassign_seats`).
+    Only data errors block. Assigned seats the draft removes are not a conflict: publishing frees
+    them (docs/0086).
     """
     problems: list[ProblemError] = []
     seats = [
@@ -298,17 +288,6 @@ def publish_conflicts(
                     element_id=str(o.id),
                 )
             )
-    losing = seats_losing_assignment(draft, assigned)
-    for seat_id in sorted(losing.keys() - confirmed):
-        what = "removes" if losing[seat_id] == "assigned_seat_removed" else "changes the mode of"
-        problems.append(
-            ProblemError(
-                code=losing[seat_id],
-                element_id=str(seat_id),
-                message=f"The draft {what} a seat that is assigned to someone. Reassign them "
-                "first, or confirm unassigning by listing the seat in unassign_seats.",
-            )
-        )
     return problems
 
 
@@ -360,15 +339,11 @@ class PublishingService:
         content = await self.drafts.load_content(self._tenant, floor_id, draft.version)
         before = await self._published_content(floor_id, published)
         seat_ids = {o.id for o in content.objects} | {o.id for o in before.objects}
-        assigned = await self.repo.assigned_seats(self._tenant, seat_ids)
-        confirmed = set(body.unassign_seats)
         problems = publish_conflicts(
             content,
             before,
             await self.repo.seat_labels_elsewhere(self._tenant, floor_id),
             await self.repo.devices_elsewhere(self._tenant, floor_id),
-            assigned,
-            confirmed,
         )
         if problems:
             raise ProblemException(
@@ -378,29 +353,19 @@ class PublishingService:
                 f"{len(problems)} problem(s) to resolve first.",
                 errors=problems,
             )
-        # Only seats that really lose their assignment; other confirmed ids are ignored.
+        assigned = await self.repo.assigned_seats(self._tenant, seat_ids)
         released = await self.repo.unassign(
-            self._tenant, confirmed & seats_losing_assignment(content, assigned).keys()
+            self._tenant, seats_losing_assignment(content, assigned)
         )
+        reason = f"Seat removed or made non-assignable in floor version {draft.version}"
         for a in released:
             self.drafts.record(
-                audit_event(
-                    self.principal,
-                    action="seat.unassigned",
-                    entity_type="seat",
-                    entity_id=a.seat_element_id,
-                    before={
-                        "holder_person_id": a.holder_person_id and str(a.holder_person_id),
-                        "holder_unit_id": a.holder_unit_id and str(a.holder_unit_id),
-                    },
-                    reason=f"Confirmed when publishing floor version {draft.version}",
-                    request_id=self.request_id,
-                )
+                seat_unassigned(self.principal, a, reason=reason, request_id=self.request_id)
             )
         await self.repo.publish(
             floor_id, draft.id, draft.version, published, self.principal.subject, body.note
         )
-        unassigned = sorted(a.seat_element_id for a in released)
+        freed_seats = sorted((freed(a) for a in released), key=lambda f: f.seat_id)
         self._audit(
             "floor.published",
             floor_id,
@@ -408,7 +373,7 @@ class PublishingService:
                 "version": draft.version,
                 "superseded": published,
                 "note": body.note,
-                "unassigned_seats": [str(s) for s in unassigned],
+                "freed_seats": [str(f.seat_id) for f in freed_seats],
             },
         )
         await self.drafts.commit()
@@ -416,7 +381,7 @@ class PublishingService:
             floor_id=floor_id,
             published_version=draft.version,
             superseded_version=published,
-            unassigned_seats=unassigned,
+            freed_seats=freed_seats,
         )
 
     async def discard(self, floor_id: uuid.UUID) -> None:

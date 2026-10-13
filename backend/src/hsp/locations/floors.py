@@ -13,9 +13,11 @@ from typing import Any
 from hsp.audit import changed_fields
 from hsp.auth.principal import Principal
 from hsp.locations import common
+from hsp.locations.archiving import LocationArchiver
 from hsp.locations.repository import LocationsRepository
 from hsp.models import Building, Floor, new_id
 from hsp.problems import ProblemException
+from hsp.release import ReleaseReport
 
 EDITABLE = (
     "name",
@@ -125,23 +127,10 @@ class FloorsService:
             await self.repo.commit()
         return floor
 
-    async def archive(self, floor_id: uuid.UUID) -> None:
-        # TODO(seat assignments): once that API exists, also refuse archiving a floor that has
-        # assigned seats (docs/0031).
+    async def archive(self, floor_id: uuid.UUID) -> ReleaseReport:
+        """Frees the floor's assigned seats (docs/0085). Refused while someone edits it."""
         floor = await self.get(floor_id)
-        if floor.archived_at is not None:
-            return
-        holder = await self.repo.lock_holder(self._tenant, floor_id, datetime.now(UTC))
-        if holder is not None:
-            raise ProblemException(
-                409,
-                "floor-locked",
-                "Floor is being edited",
-                f"{holder} is editing this floor. Ask them to finish, or force-release the lock.",
-            )
-        floor.archived_at = floor.updated_at = datetime.now(UTC)
-        self._audit("floor.archived", floor, after={"archived_at": floor.archived_at})
-        await self.repo.commit()
+        return await LocationArchiver(self.repo, self.principal, self.request_id).archive(floor)
 
     async def restore(self, floor_id: uuid.UUID) -> Floor:
         floor = await self.get(floor_id)
