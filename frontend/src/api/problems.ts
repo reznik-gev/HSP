@@ -19,7 +19,15 @@ export interface Problem {
   errors?: ProblemError[] | null;
 }
 
+/** An API refusal as a throwable error, for mutations (keeps the Problem Details). */
+export class ApiProblem extends Error {
+  constructor(readonly problem: Problem | null) {
+    super(problem?.title ?? "Request failed");
+  }
+}
+
 export function asProblem(error: unknown): Problem | null {
+  if (error instanceof ApiProblem) return error.problem;
   return error && typeof error === "object" && ("title" in error || "type" in error)
     ? (error as Problem)
     : null;

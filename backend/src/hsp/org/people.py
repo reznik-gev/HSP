@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import delete, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
@@ -161,6 +161,7 @@ class PeopleService:
         include_inactive: bool,
         after: uuid.UUID | None,
         limit: int,
+        seated: bool | None = None,
     ) -> list[PersonOut]:
         query = select(models.Person).where(models.Person.tenant_id == self._tenant)
         if q:
@@ -178,6 +179,9 @@ class PeopleService:
             )
         if not include_inactive:
             query = query.where(models.Person.active.is_(True))
+        if seated is not None:  # docs/0088: "without a seat" filter
+            holds = exists().where(models.SeatAssignment.holder_person_id == models.Person.id)
+            query = query.where(holds if seated else ~holds)
         if after is not None:
             query = query.where(models.Person.id > after)
         return await self._out(

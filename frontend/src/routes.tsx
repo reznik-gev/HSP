@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { AppShell } from "@/app/AppShell";
 import { Page } from "@/app/Page";
 import { FloorsPage } from "@/floors/FloorsPage";
+import { validatePeopleSearch } from "@/people/search";
 import { SeatsPage } from "@/seats/SeatsPage";
 
 const rootRoute = createRootRoute({ component: Outlet, notFoundComponent: NotFound });
@@ -51,6 +52,12 @@ const floorPlanRoute = createRoute({
   // Loaded on first visit: keeps the plan viewer out of the initial bundle.
   component: lazyRouteComponent(() => import("@/floors/FloorPlanPage"), "FloorPlanPage"),
 });
+const peopleRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/people",
+  validateSearch: validatePeopleSearch,
+  component: lazyRouteComponent(() => import("@/people/PeoplePage"), "PeoplePage"),
+});
 const seatsRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "/seats",
@@ -73,7 +80,7 @@ const benchRoutes =
     : [];
 
 export const routeTree = rootRoute.addChildren([
-  shellRoute.addChildren([indexRoute, floorsRoute, floorPlanRoute, seatsRoute]),
+  shellRoute.addChildren([indexRoute, floorsRoute, floorPlanRoute, peopleRoute, seatsRoute]),
   ...benchRoutes,
 ]);
 

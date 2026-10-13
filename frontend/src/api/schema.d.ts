@@ -4551,6 +4551,8 @@ export interface operations {
                 /** @description Members of this unit */
                 unit_id?: string | null;
                 include_inactive?: boolean;
+                /** @description true: holds a seat; false: holds none (docs/0088) */
+                seated?: boolean | null;
                 /** @description Page size */
                 limit?: number;
                 /** @description `next_cursor` from the previous page */

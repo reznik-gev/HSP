@@ -1,5 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Armchair, Layers, PanelLeftClose, PanelLeftOpen, type LucideIcon } from "lucide-react";
+import {
+  Armchair,
+  Layers,
+  type LucideIcon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Users,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -8,10 +15,15 @@ import { cn } from "@/lib/utils";
 
 import { useSidebar } from "./sidebarState";
 
-/** Main areas, in the order of docs/0087. Later phases add People, Catalog, Imports, Admin. */
-const AREAS: { to: "/floors" | "/seats"; label: "nav.floors" | "nav.seats"; icon: LucideIcon }[] = [
+/** Main areas (docs/0087, docs/0088). Later phases add Catalog and Imports. */
+const AREAS: {
+  to: "/floors" | "/seats" | "/people";
+  label: "nav.floors" | "nav.seats" | "nav.people";
+  icon: LucideIcon;
+}[] = [
   { to: "/floors", label: "nav.floors", icon: Layers },
   { to: "/seats", label: "nav.seats", icon: Armchair },
+  { to: "/people", label: "nav.people", icon: Users },
 ];
 
 export function Sidebar() {
