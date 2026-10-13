@@ -57,5 +57,31 @@
     "admin": "Administrator",
     "viewer": "Viewer",
     "signOut": "Sign out"
+  },
+  "plan": {
+    "breadcrumb": "Location",
+    "version": "Published version {{version}}",
+    "loadFailed": "Couldn't load this floor. Reload the page to try again.",
+    "notPublished": "This floor has no published plan yet.",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fit": "Fit the floor to the screen",
+    "legend": "Seat colours",
+    "seatDetails": "Seat details",
+    "close": "Close",
+    "unlabelled": "Seat without a label",
+    "reservedFor": "Reserved for {{unit}}",
+    "state": {
+      "person": "Assigned",
+      "unit": "Reserved for a team",
+      "free": "Free",
+      "bookable": "Bookable",
+      "unavailable": "Unavailable"
+    },
+    "explain": {
+      "free": "Nobody sits here yet.",
+      "bookable": "Booked by the day; not assigned to anyone.",
+      "unavailable": "Out of use for now."
+    }
   }
 }
