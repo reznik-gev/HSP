@@ -1,0 +1,32 @@
+{
+  "app": {
+    "name": "HSP",
+    "fullName": "Human-Space Program"
+  },
+  "nav": {
+    "main": "Main",
+    "floors": "Floors",
+    "seats": "Seats",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
+  },
+  "settings": {
+    "language": "Language",
+    "appearance": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Same as system"
+  },
+  "floors": {
+    "title": "Floors",
+    "empty": "Sites, buildings and floors will be listed here."
+  },
+  "seats": {
+    "title": "Seats",
+    "empty": "Search for a person, team or seat label to see where they sit."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "This address doesn't match any page. Use the sidebar to find what you need."
+  }
+}

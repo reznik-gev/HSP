@@ -1,59 +1,69 @@
-/** Code-based route tree (docs/0067). */
-import { useQuery } from "@tanstack/react-query";
+/** Code-based route tree (docs/0067). Pages live inside the app shell (docs/0087). */
 import {
   createRootRoute,
   createRoute,
   createRouter,
   lazyRouteComponent,
-  Link,
   Outlet,
+  redirect,
 } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
-import { api } from "@/api/client";
+import { AppShell } from "@/app/AppShell";
+import { EmptyState, Page } from "@/app/Page";
 
-const rootRoute = createRootRoute({
-  component: () => (
-    <div className="min-h-screen">
-      <header className="flex items-center gap-6 border-b border-border px-6 py-3">
-        <Link to="/" className="font-semibold">
-          HSP
-        </Link>
-        <span className="text-sm text-muted-foreground">Human-Space Program</span>
-      </header>
-      <main className="p-6">
-        <Outlet />
-      </main>
-    </div>
-  ),
+const rootRoute = createRootRoute({ component: Outlet, notFoundComponent: NotFound });
+
+/** Every page except the dev-only benchmark sits inside the sidebar + top bar. */
+const shellRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: "shell",
+  component: AppShell,
 });
 
-function Home() {
-  // /healthz is proxied in dev only for this smoke check; real screens use /api/v1.
-  const health = useQuery({
-    queryKey: ["healthz"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/healthz");
-      if (error) throw new Error("API unreachable");
-      return data;
-    },
-  });
+const indexRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/",
+  beforeLoad: () => redirect({ to: "/floors", throw: true }),
+});
 
+function FloorsPage() {
+  const { t } = useTranslation();
   return (
-    <section className="space-y-2">
-      <h1 className="text-2xl font-semibold">Welcome to HSP</h1>
-      <p className="text-muted-foreground">
-        API:{" "}
-        {health.isPending
-          ? "checking..."
-          : health.isError
-            ? "unreachable"
-            : `${health.data.status} (v${health.data.version})`}
-      </p>
-    </section>
+    <Page title={t("floors.title")}>
+      <EmptyState>{t("floors.empty")}</EmptyState>
+    </Page>
   );
 }
 
-const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: Home });
+function SeatsPage() {
+  const { t } = useTranslation();
+  return (
+    <Page title={t("seats.title")}>
+      <EmptyState>{t("seats.empty")}</EmptyState>
+    </Page>
+  );
+}
+
+function NotFound() {
+  const { t } = useTranslation();
+  return (
+    <Page title={t("notFound.title")}>
+      <p className="max-w-prose text-muted-foreground">{t("notFound.body")}</p>
+    </Page>
+  );
+}
+
+const floorsRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/floors",
+  component: FloorsPage,
+});
+const seatsRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/seats",
+  component: SeatsPage,
+});
 
 // Dev-only benchmark routes (docs/0073): present in `pnpm dev` and `vite build --mode bench`,
 // tree-shaken out of production builds because the condition is a build-time constant.
@@ -68,9 +78,12 @@ const benchRoutes =
       ]
     : [];
 
-export const router = createRouter({
-  routeTree: rootRoute.addChildren([indexRoute, ...benchRoutes]),
-});
+export const routeTree = rootRoute.addChildren([
+  shellRoute.addChildren([indexRoute, floorsRoute, seatsRoute]),
+  ...benchRoutes,
+]);
+
+export const router = createRouter({ routeTree });
 
 declare module "@tanstack/react-router" {
   interface Register {

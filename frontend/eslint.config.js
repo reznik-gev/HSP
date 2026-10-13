@@ -19,6 +19,28 @@ export default tseslint.config(
     },
   },
   {
+    // Hebrew is right-to-left (docs/0087): use logical classes (ms-/me-/ps-/pe-/start-/end-,
+    // border-s/e, rounded-s/e, text-start/end) so layouts mirror. The floor-plan drawing never
+    // mirrors, but it is SVG geometry, not Tailwind classes.
+    files: ["src/**/*.tsx", "src/**/*.ts"],
+    ignores: ["src/**/*.test.ts", "src/**/*.test.tsx"], // prose like "right-to-left"
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "Literal[value=/(^|[ :])-?(ml|mr|pl|pr|left|right|border-l|border-r|rounded-l|rounded-r|rounded-tl|rounded-tr|rounded-bl|rounded-br|text-left|text-right|float-left|float-right)-/]",
+          message:
+            "Physical left/right class: use the logical one (ms-, me-, ps-, pe-, start-, end-, border-s, rounded-s, text-start) so Hebrew mirrors (docs/0087).",
+        },
+        {
+          selector: "Literal[value=/(^|[ :])(text-left|text-right|float-left|float-right)( |$)/]",
+          message: "Use text-start/text-end so Hebrew mirrors (docs/0087).",
+        },
+      ],
+    },
+  },
+  {
     // The editor core must stay renderer-agnostic: no React, DOM or SVG view code (docs/0052).
     files: ["src/editor/core/**/*.ts"],
     languageOptions: { globals: {} },

@@ -52,6 +52,6 @@ Phases 2 and 3 get their own plan records once phase 1 is in use.
   - Every visible string needs an English and a Hebrew entry, and a test fails when a key is missing in either file.
   - The assistant writes the first Hebrew translations, and **the owner reviews them**.
 - **RTL in code review:** physical left/right CSS classes are flagged, and screens are checked in both directions. The plan canvas is the one deliberate exception (choice 6).
-- **Fonts:** Inter and Heebo files live in `frontend/src/assets/fonts` along with their licenses (SIL OFL).
+- **Fonts:** Inter and Heebo come from the `@fontsource-variable` npm packages, which include their SIL OFL licenses. Vite copies the font files into the build, so nothing is fetched at runtime.
 - **Preferences** are new backend state: one small table keyed by the Keycloak subject.
 - **No mobile layouts in v1.** Search could get a phone-friendly view later if people need it.
