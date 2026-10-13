@@ -32,6 +32,20 @@
   --ring: #2459a6;
   --radius: 0.375rem;
   --font-ui: "Inter Variable", "Heebo Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* The floor plan: drafting paper, graphite walls (docs/0087). */
+  --plan-paper: #ffffff;
+  --plan-wall: #3d434b;
+  --plan-hatch: #d9dde2;
+  --plan-ink: #1b1e22;
+  --plan-object-stroke: #8a929c;
+  /* Seat states (docs/0087 choice 11). */
+  --seat-person: #a9c2ea;
+  --seat-unit: #cbbdf0;
+  --seat-free: #e2f2e6;
+  --seat-free-stroke: #3f8f5a;
+  --seat-bookable: #f5e3b5;
+  --seat-unavailable: #e3e5e8;
 }
 
 .dark {
@@ -53,6 +67,18 @@
   --border: #2a2f36;
   --input: #353b43;
   --ring: #7aa5e8;
+
+  --plan-paper: #16191d;
+  --plan-wall: #c9ced6;
+  --plan-hatch: #2b3036;
+  --plan-ink: #e6e8eb;
+  --plan-object-stroke: #6f7883;
+  --seat-person: #34568e;
+  --seat-unit: #56478a;
+  --seat-free: #1f3a28;
+  --seat-free-stroke: #5fb47c;
+  --seat-bookable: #5c4a20;
+  --seat-unavailable: #2c3036;
 }
 
 @theme inline {

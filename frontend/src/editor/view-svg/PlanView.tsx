@@ -1,7 +1,7 @@
 /**
  * SVG view of a floor plan (docs/0042, docs/0052). A THIN view: it renders the store and
- * forwards raw pointer/wheel input to the headless core (`Interaction`); it never decides what
- * was hit or how things move.
+ * forwards raw pointer/wheel input to the headless core (an editing `Interaction` or a read-only
+ * `ViewerInteraction`); it never decides what was hit or how things move.
  *
  * Performance structure (docs/0042 mitigations):
  * - Everything is drawn in plan millimetres inside one y-flip group; pan/zoom only changes the
@@ -10,11 +10,14 @@
  * - Selected elements are hidden in the static layer by a generated ID stylesheet and redrawn
  *   in the selection layer, whose group carries the drag offset as a single transform.
  * - Pointer events are disabled on drawn shapes; hit-testing is geometric, in the core.
+ *
+ * Colours come from CSS variables (index.css), so the plan follows light and dark mode. The
+ * drawing never mirrors in right-to-left languages: it is geometry (docs/0087 choice 6).
  */
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 
-import { type Interaction } from "@/editor/core/interaction";
+import type { PointerInput } from "@/editor/core/interaction";
 import {
   type CatalogItem,
   catalogItemOf,
@@ -36,10 +39,26 @@ export interface RenderOptions {
   lod: boolean;
 }
 
+/** What the view needs from the core's input handling (editing or read-only). */
+export interface PlanInput {
+  setSize(width: number, height: number): void;
+  pointerDown(e: PointerInput): string;
+  pointerMove(e: PointerInput): void;
+  pointerUp(e: PointerInput): void;
+  wheel(sx: number, sy: number, deltaY: number): void;
+}
+
+/** Seat states the viewer colours (docs/0087 choice 11). */
+export type SeatState = "person" | "unit" | "free" | "bookable" | "unavailable";
+
 export interface PlanViewProps {
   store: EditorStore;
-  interaction: Interaction;
+  interaction: PlanInput;
   options: RenderOptions;
+  /** Seat id -> state; seats get a state colour instead of their catalog colour. */
+  seatStates?: ReadonlyMap<string, SeatState>;
+  /** Pointer moving with no button pressed (canvas pixels), or leaving the canvas (null). */
+  onHover?: (point: { sx: number; sy: number } | null) => void;
   /** Called after the static layer for a new plan has been painted (initial render timing). */
   onStaticPainted?: () => void;
   /** Called after a pointer-down that changed the selection has been painted. */
@@ -47,17 +66,49 @@ export interface PlanViewProps {
 }
 
 const LOD_MM_PER_PX = 30;
-const WALL_COLOR = "#44403c";
+const NO_STATES: ReadonlyMap<string, SeatState> = new Map();
 
 /** Run `fn` after the next paint (rAF fires before paint; the timeout lands after it). */
 function afterPaint(fn: () => void): void {
   requestAnimationFrame(() => setTimeout(fn, 0));
 }
 
+const PLAN_CSS = `
+  svg[data-lod="far"] .lod-detail { display: none; }
+  .plan * { pointer-events: none; }
+  .plan-wall { stroke: var(--plan-wall); }
+  .plan-door { stroke: var(--plan-wall); }
+  .plan-gap { stroke: var(--plan-paper); }
+  .plan-column { fill: var(--plan-wall); }
+  .plan-object { stroke: var(--plan-object-stroke); }
+  .plan-label {
+    fill: var(--plan-ink);
+    font-family: inherit;
+    font-weight: 500;
+    /* A paper-coloured halo keeps labels readable over monitors and fills, as on maps. */
+    paint-order: stroke;
+    stroke: var(--plan-paper);
+    stroke-width: 36px;
+    stroke-linejoin: round;
+  }
+  /* When seats are coloured, other furniture steps back so the seat states read first. */
+  svg[data-seat-view] .plan-furniture { fill-opacity: 0.45; }
+  .plan-selected { stroke: var(--primary); }
+  .seat-person { fill: var(--seat-person); }
+  .seat-unit { fill: var(--seat-unit); }
+  .seat-free { fill: var(--seat-free); stroke: var(--seat-free-stroke); }
+  .seat-bookable { fill: var(--seat-bookable); }
+  .seat-unavailable { fill: var(--seat-unavailable); stroke-dasharray: 60 40; }
+  .hatch-bg { fill: var(--plan-hatch); }
+  .hatch-line { stroke: var(--plan-wall); }
+`;
+
 export function PlanView({
   store,
   interaction,
   options,
+  seatStates = NO_STATES,
+  onHover,
   onStaticPainted,
   onSelectionPainted,
 }: PlanViewProps) {
@@ -104,27 +155,31 @@ export function PlanView({
   return (
     <svg
       ref={svgRef}
-      className="h-full w-full touch-none select-none bg-white"
+      direction="ltr"
+      className="h-full w-full touch-none bg-[var(--plan-paper)] select-none"
       viewBox={`${vx} ${vy} ${vw} ${vh}`}
       data-lod={far ? "far" : "near"}
+      data-seat-view={seatStates.size > 0 ? "" : undefined}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
         downAt.current = performance.now();
         const what = interaction.pointerDown(toInput(e));
         if (what !== "select") downAt.current = null;
       }}
-      onPointerMove={(e) => interaction.pointerMove(toInput(e))}
+      onPointerMove={(e) => {
+        const input = toInput(e);
+        interaction.pointerMove(input);
+        if (onHover) onHover(e.buttons === 0 ? { sx: input.sx, sy: input.sy } : null);
+      }}
       onPointerUp={(e) => interaction.pointerUp(toInput(e))}
+      onPointerLeave={() => onHover?.(null)}
       onContextMenu={(e) => e.preventDefault()}
       // Middle-button pans; stop Chrome's middle-click autoscroll from taking over.
       onMouseDown={(e) => {
         if (e.button === 1) e.preventDefault();
       }}
     >
-      <style>{`
-        svg[data-lod="far"] .lod-detail { display: none; }
-        .plan * { pointer-events: none; }
-      `}</style>
+      <style>{PLAN_CSS}</style>
       <defs>
         <pattern
           id="wall-hatch"
@@ -133,17 +188,25 @@ export function PlanView({
           height="120"
           patternTransform="rotate(45)"
         >
-          <rect width="120" height="120" fill="#d6d3d1" />
-          <line x1="0" y1="0" x2="0" y2="120" stroke={WALL_COLOR} strokeWidth="40" />
+          <rect className="hatch-bg" width="120" height="120" />
+          <line className="hatch-line" x1="0" y1="0" x2="0" y2="120" strokeWidth="40" />
         </pattern>
       </defs>
       <g className="plan" transform="scale(1,-1)">
-        {plan && <StaticLayer plan={plan} options={options} onPainted={onStaticPainted} />}
+        {plan && (
+          <StaticLayer
+            plan={plan}
+            options={options}
+            seatStates={seatStates}
+            onPainted={onStaticPainted}
+          />
+        )}
         {plan && (
           <SelectionLayer
             store={store}
             plan={plan}
             options={options}
+            seatStates={seatStates}
             onPainted={() => {
               if (downAt.current !== null && onSelectionPainted) {
                 onSelectionPainted(performance.now() - downAt.current);
@@ -162,10 +225,12 @@ export function PlanView({
 const StaticLayer = memo(function StaticLayer({
   plan,
   options,
+  seatStates,
   onPainted,
 }: {
   plan: Plan;
   options: RenderOptions;
+  seatStates: ReadonlyMap<string, SeatState>;
   onPainted: (() => void) | undefined;
 }) {
   useLayoutEffect(() => {
@@ -186,7 +251,7 @@ const StaticLayer = memo(function StaticLayer({
               key={z.id}
               points={z.boundary.map((p) => `${p[0]},${p[1]}`).join(" ")}
               fill={z.color}
-              fillOpacity={0.25}
+              fillOpacity={0.2}
               stroke={z.color}
               strokeWidth={30}
             />
@@ -194,12 +259,22 @@ const StaticLayer = memo(function StaticLayer({
         </g>
       )}
       <g>
+        {(plan.columns ?? []).map((c) => (
+          <polygon
+            key={c.id}
+            className="plan-column"
+            points={c.footprint.map((p) => `${p[0]},${p[1]}`).join(" ")}
+          />
+        ))}
+      </g>
+      <g>
         {chains.map((c, i) => (
           <path
             key={i}
+            className={options.hatching ? undefined : "plan-wall"}
             d={`M${c.points.map((p) => `${p[0]} ${p[1]}`).join(" L")}${c.closed ? " Z" : ""}`}
             fill="none"
-            stroke={options.hatching ? "url(#wall-hatch)" : WALL_COLOR}
+            stroke={options.hatching ? "url(#wall-hatch)" : undefined}
             strokeWidth={c.thickness_mm}
             strokeLinejoin="miter"
             strokeLinecap="butt"
@@ -215,7 +290,14 @@ const StaticLayer = memo(function StaticLayer({
       <g>
         {plan.objectOrder.map((id) => {
           const obj = plan.objects[id];
-          return obj ? <ObjectShape key={id} item={catalogItemOf(plan, obj)} obj={obj} /> : null;
+          return obj ? (
+            <ObjectShape
+              key={id}
+              item={catalogItemOf(plan, obj)}
+              obj={obj}
+              state={seatStates.get(id)}
+            />
+          ) : null;
         })}
       </g>
       {options.labels && (
@@ -236,42 +318,38 @@ const StaticLayer = memo(function StaticLayer({
 const ObjectShape = memo(function ObjectShape({
   item,
   obj,
+  state,
   highlight = false,
 }: {
   item: CatalogItem;
   obj: PlacedObject;
+  state: SeatState | undefined;
   highlight?: boolean;
 }) {
   const domId = highlight ? undefined : `e-${obj.id}`;
   const transform = `translate(${obj.position[0]} ${obj.position[1]}) rotate(${obj.rotation_ddeg / 10})`;
-  const stroke = highlight ? "#2563eb" : "#78716c";
-  const strokeWidth = highlight ? 40 : 12;
-  const detail = item.category === "monitor" ? "lod-detail" : undefined;
-  if (item.shape === "cylinder") {
-    return (
-      <circle
-        id={domId}
-        className={detail}
-        transform={transform}
-        r={item.width_mm / 2}
-        fill={item.color}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
-      />
-    );
-  }
+  const className = [
+    highlight ? "plan-selected" : "plan-object",
+    state ? `seat-${state}` : "plan-furniture",
+    item.category === "monitor" && "lod-detail",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const common = {
+    id: domId,
+    className,
+    transform,
+    fill: item.color, // overridden by the seat-state class, if any
+    strokeWidth: highlight ? 60 : 12,
+  };
+  if (item.shape === "cylinder") return <circle {...common} r={item.width_mm / 2} />;
   return (
     <rect
-      id={`e-${obj.id}`}
-      className={detail}
-      transform={transform}
+      {...common}
       x={-item.width_mm / 2}
       y={-item.depth_mm / 2}
       width={item.width_mm}
       height={item.depth_mm}
-      fill={item.color}
-      stroke={stroke}
-      strokeWidth={strokeWidth}
     />
   );
 });
@@ -280,12 +358,11 @@ const Label = memo(function Label({ obj, copy = false }: { obj: PlacedObject; co
   return (
     <text
       id={copy ? undefined : `l-${obj.id}`}
+      className="plan-label"
       transform={`translate(${obj.position[0]} ${obj.position[1]}) scale(1 -1)`}
       fontSize={180}
-      fontFamily="system-ui, sans-serif"
       textAnchor="middle"
       dominantBaseline="central"
-      fill="#1c1917"
     >
       {obj.label}
     </text>
@@ -312,20 +389,30 @@ function Door({ opening, wall, arcs }: { opening: Opening; wall: Wall; arcs: boo
   return (
     <g>
       {/* Gap in the wall */}
-      <line x1={sx} y1={sy} x2={ex} y2={ey} stroke="#ffffff" strokeWidth={wall.thickness_mm + 4} />
+      <line
+        className="plan-gap"
+        x1={sx}
+        y1={sy}
+        x2={ex}
+        y2={ey}
+        strokeWidth={wall.thickness_mm + 4}
+      />
       {opening.type === "door" && (
         <>
-          <line x1={hx} y1={hy} x2={lx} y2={ly} stroke={WALL_COLOR} strokeWidth={30} />
+          <line className="plan-door" x1={hx} y1={hy} x2={lx} y2={ly} strokeWidth={30} />
           {arcs && (
             <path
+              className="plan-door"
               d={`M${lx} ${ly} A${opening.width_mm} ${opening.width_mm} 0 0 ${sweep} ${fx} ${fy}`}
               fill="none"
-              stroke={WALL_COLOR}
               strokeWidth={12}
               strokeDasharray="60 40"
             />
           )}
         </>
+      )}
+      {opening.type === "window" && (
+        <line className="plan-door" x1={sx} y1={sy} x2={ex} y2={ey} strokeWidth={40} />
       )}
     </g>
   );
@@ -337,11 +424,13 @@ function SelectionLayer({
   store,
   plan,
   options,
+  seatStates,
   onPainted,
 }: {
   store: EditorStore;
   plan: Plan;
   options: RenderOptions;
+  seatStates: ReadonlyMap<string, SeatState>;
   onPainted: () => void;
 }) {
   const selection = useStore(store, (s) => s.selection);
@@ -365,7 +454,13 @@ function SelectionLayer({
         {ids.map((id) => {
           const obj = plan.objects[id];
           return obj ? (
-            <ObjectShape key={id} item={catalogItemOf(plan, obj)} obj={obj} highlight />
+            <ObjectShape
+              key={id}
+              item={catalogItemOf(plan, obj)}
+              obj={obj}
+              state={seatStates.get(id)}
+              highlight
+            />
           ) : null;
         })}
         {options.labels &&

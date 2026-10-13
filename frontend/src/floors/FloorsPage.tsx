@@ -3,6 +3,7 @@
  * One occupancy request per site returns the whole tree with counts.
  */
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/client";
@@ -127,7 +128,13 @@ function BuildingFloors({ building }: { building: BuildingOccupancy }) {
               return (
                 <tr key={f.id} className="border-b last:border-b-0">
                   <th scope="row" className="px-3 py-2.5 text-start font-medium">
-                    {f.name}
+                    <Link
+                      to="/floors/$floorId"
+                      params={{ floorId: f.id }}
+                      className="hover:text-primary hover:underline"
+                    >
+                      {f.name}
+                    </Link>
                   </th>
                   <td className="px-3 py-2.5 text-end text-muted-foreground">
                     {n.format(f.level_index)}

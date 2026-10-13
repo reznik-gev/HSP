@@ -35,6 +35,13 @@ export interface Zone {
   boundary: readonly Vec2[];
 }
 
+export interface Column {
+  id: string;
+  footprint: readonly Vec2[];
+}
+
+export type AllocationMode = "assigned" | "bookable" | "unavailable";
+
 export interface CatalogItem {
   id: string;
   key: string;
@@ -54,12 +61,15 @@ export interface PlacedObject {
   rotation_ddeg: number;
   label: string | null;
   attached_to: string | null;
+  /** Set on seats only (docs/0009). */
+  allocation_mode?: AllocationMode | null;
 }
 
 export interface Plan {
   walls: readonly Wall[];
   openings: readonly Opening[];
   zones: readonly Zone[];
+  columns?: readonly Column[];
   /** Objects by id, plus a stable draw order (lower index is drawn first). */
   objects: Readonly<Record<string, PlacedObject>>;
   objectOrder: readonly string[];

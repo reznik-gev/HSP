@@ -12,7 +12,13 @@ export default defineConfig(({ mode }) => ({
     // `vite build --mode bench` includes the /bench routes (docs/0073).
     "import.meta.env.VITE_BENCH": JSON.stringify(mode === "bench" ? "1" : ""),
   },
-  build: mode === "bench" ? { outDir: "dist-bench" } : {},
+  build: {
+    ...(mode === "bench" ? { outDir: "dist-bench" } : {}),
+    // The main chunk is library code (React, Radix, TanStack, i18next): ~180 kB gzipped, fine
+    // for a desktop app on the company network (docs/0087). Pages load lazily on top of it;
+    // raise this only with a reason.
+    chunkSizeWarningLimit: 700,
+  },
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },

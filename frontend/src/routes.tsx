@@ -51,6 +51,14 @@ const floorsRoute = createRoute({
   path: "/floors",
   component: FloorsPage,
 });
+const floorPlanRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/floors/$floorId",
+  validateSearch: (search: Record<string, unknown>): { seat?: string } =>
+    typeof search.seat === "string" ? { seat: search.seat } : {},
+  // Loaded on first visit: keeps the plan viewer out of the initial bundle.
+  component: lazyRouteComponent(() => import("@/floors/FloorPlanPage"), "FloorPlanPage"),
+});
 const seatsRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "/seats",
@@ -71,7 +79,7 @@ const benchRoutes =
     : [];
 
 export const routeTree = rootRoute.addChildren([
-  shellRoute.addChildren([indexRoute, floorsRoute, seatsRoute]),
+  shellRoute.addChildren([indexRoute, floorsRoute, floorPlanRoute, seatsRoute]),
   ...benchRoutes,
 ]);
 
