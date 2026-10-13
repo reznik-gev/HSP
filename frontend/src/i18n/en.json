@@ -19,7 +19,22 @@
   },
   "floors": {
     "title": "Floors",
-    "empty": "Sites, buildings and floors will be listed here."
+    "noSites": "No sites yet. An administrator adds sites, buildings and floors.",
+    "noBuildings": "No buildings on this site yet.",
+    "noFloors": "No floors in this building yet.",
+    "loadFailed": "Couldn't load the floors. Reload the page to try again.",
+    "buildingCode": "Code {{code}}",
+    "occupancyLabel": "{{taken}} of {{total}} assignable seats taken",
+    "columns": {
+      "floor": "Floor",
+      "level": "Level",
+      "seats": "Seats",
+      "taken": "Taken",
+      "free": "Free",
+      "bookable": "Bookable",
+      "unavailable": "Unavailable",
+      "occupancy": "Occupancy"
+    }
   },
   "seats": {
     "title": "Seats",

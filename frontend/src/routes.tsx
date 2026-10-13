@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 
 import { AppShell } from "@/app/AppShell";
 import { EmptyState, Page } from "@/app/Page";
+import { FloorsPage } from "@/floors/FloorsPage";
 
 const rootRoute = createRootRoute({ component: Outlet, notFoundComponent: NotFound });
 
@@ -26,15 +27,6 @@ const indexRoute = createRoute({
   path: "/",
   beforeLoad: () => redirect({ to: "/floors", throw: true }),
 });
-
-function FloorsPage() {
-  const { t } = useTranslation();
-  return (
-    <Page title={t("floors.title")}>
-      <EmptyState>{t("floors.empty")}</EmptyState>
-    </Page>
-  );
-}
 
 function SeatsPage() {
   const { t } = useTranslation();
