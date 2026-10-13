@@ -65,6 +65,13 @@ const orgRoute = createRoute({
   validateSearch: validateOrgSearch,
   component: lazyRouteComponent(() => import("@/org/OrgPage"), "OrgPage"),
 });
+const importsRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/imports",
+  validateSearch: (s: Record<string, unknown>): { kind?: "units" | "people" | "seats" } =>
+    s.kind === "units" || s.kind === "people" || s.kind === "seats" ? { kind: s.kind } : {},
+  component: lazyRouteComponent(() => import("@/imports/ImportsPage"), "ImportsPage"),
+});
 const seatsRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "/seats",
@@ -93,6 +100,7 @@ export const routeTree = rootRoute.addChildren([
     floorPlanRoute,
     peopleRoute,
     orgRoute,
+    importsRoute,
     seatsRoute,
   ]),
   ...benchRoutes,

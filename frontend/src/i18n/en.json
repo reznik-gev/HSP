@@ -10,7 +10,8 @@
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
     "people": "People",
-    "org": "Teams"
+    "org": "Teams",
+    "imports": "Imports"
   },
   "settings": {
     "language": "Language",
@@ -238,5 +239,53 @@
     "undone": "{{seat}} is back as it was",
     "undoSkipped": "{{seat}} changed again meanwhile, so it was left as it is",
     "inactive": "Seats go only to active people and teams."
+  },
+  "imports": {
+    "title": "Imports",
+    "what": "What to import",
+    "adminsOnly": "Only administrators can import files.",
+    "kinds": {
+      "units": {
+        "title": "Teams",
+        "explain": "Each row is a team, identified by its HR ID. Parents can come after their teams; re-importing the same file changes nothing."
+      },
+      "people": {
+        "title": "People",
+        "explain": "Each row is a person, matched by HR ID or else by email. People listed again are reactivated; their teams are replaced by the file's."
+      },
+      "seats": {
+        "title": "Seat assignments",
+        "explain": "Each row gives a seat to a person (by email) or reserves it for a team (by HR ID). Seats not in the file stay as they are; a taken seat is reassigned."
+      }
+    },
+    "template": "Download template",
+    "choose": "Choose a CSV or Excel file, or drop it here",
+    "formats": ".csv (UTF-8) or .xlsx, up to 10 MB",
+    "checking": "Checking the file…",
+    "preview": "Preview: nothing has changed yet",
+    "hasErrors_one": "{{count}} problem to fix",
+    "hasErrors_other": "{{count}} problems to fix",
+    "fixAndRetry": "Nothing was imported. Fix these rows in the file and choose it again.",
+    "apply": "Apply import",
+    "applied": "Imported",
+    "appliedNotice": "{{file}} imported",
+    "counts": {
+      "rows": "Rows",
+      "created": "Created",
+      "createdPreview": "Will be created",
+      "updated": "Updated",
+      "updatedPreview": "Will be updated",
+      "unchanged": "Unchanged",
+      "unchangedPreview": "Already up to date",
+      "reactivated": "Reactivated",
+      "reactivatedPreview": "Will be reactivated",
+      "positionsCreated": "Positions created",
+      "positionsCreatedPreview": "Positions to create"
+    },
+    "columns": {
+      "row": "Row",
+      "column": "Column",
+      "problem": "Problem"
+    }
   }
 }
