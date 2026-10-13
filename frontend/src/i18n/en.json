@@ -215,6 +215,13 @@
     "errors": {
       "cycle": "A team can't be part of its own sub-team.",
       "externalIdTaken": "This team code is already in use."
-    }
+    },
+    "chart": "Org chart",
+    "view": "View",
+    "views": {
+      "tree": "Tree",
+      "chart": "Chart"
+    },
+    "fit": "Fit the chart to the screen"
   }
 }

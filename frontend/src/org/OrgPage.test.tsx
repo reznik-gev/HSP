@@ -96,6 +96,29 @@ describe("teams (docs/0088)", () => {
     );
   });
 
+  it("the chart view draws every team as a link to its panel", async () => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private cb: ResizeObserverCallback) {}
+        observe() {
+          this.cb(
+            [{ contentRect: { width: 900, height: 600 } } as ResizeObserverEntry],
+            this as never,
+          );
+        }
+        disconnect() {}
+      },
+    );
+    const { router } = await renderApp("/org", backend());
+    await userEvent.click(await screen.findByRole("button", { name: "Chart" }));
+    expect(router.state.location.search).toMatchObject({ view: "chart" });
+    const chart = await screen.findByRole("group", { name: "Org chart" });
+    const platform = await within(chart).findByRole("link", { name: "Platform, 2 people" });
+    expect(platform).toHaveAttribute("href", "/org?view=chart&unit=plat");
+    expect(within(chart).getAllByRole("link")).toHaveLength(4);
+  });
+
   it("a team opens with its positions and members", async () => {
     await renderApp("/org?unit=plat", backend());
     const panel = await screen.findByRole("dialog", { name: "Platform" });

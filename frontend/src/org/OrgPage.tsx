@@ -3,43 +3,24 @@
  * Expand and collapse; each team shows how many active people are directly in it. The open team
  * lives in the address (?unit=), so a team can be shared as a link.
  */
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api } from "@/api/client";
 import { Page } from "@/app/Page";
 import { AdminOnly } from "@/auth/admin";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import { memberCountsQuery } from "./members";
+import { OrgChart } from "./OrgChart";
 import type { OrgSearch } from "./search";
 import { UnitPanel } from "./UnitPanel";
 import { type Unit, unitsQuery } from "./units";
 
 const route = getRouteApi("/shell/org");
-
-/** Active people per team (direct members), counted from everyone's memberships. */
-export const memberCountsQuery = queryOptions({
-  queryKey: ["people", "member-counts"],
-  queryFn: async (): Promise<Map<string, number>> => {
-    const counts = new Map<string, number>();
-    let cursor: string | undefined;
-    do {
-      const { data } = await api.GET("/api/v1/people", {
-        params: { query: { limit: 500, cursor } },
-      });
-      if (!data) throw new Error("Couldn't count members");
-      for (const p of data.items) {
-        for (const m of p.memberships) counts.set(m.unit_id, (counts.get(m.unit_id) ?? 0) + 1);
-      }
-      cursor = data.next_cursor ?? undefined;
-    } while (cursor);
-    return counts;
-  },
-});
 
 export function OrgPage() {
   const { t } = useTranslation();
@@ -51,7 +32,26 @@ export function OrgPage() {
 
   return (
     <Page title={t("org.title")}>
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <div role="group" aria-label={t("org.view")} className="flex rounded-md border p-0.5">
+          {(["tree", "chart"] as const).map((v) => {
+            const on = (search.view ?? "tree") === v;
+            return (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={on}
+                onClick={() => set({ view: v === "chart" ? "chart" : undefined })}
+                className={cn(
+                  "rounded px-3 py-1 text-sm",
+                  on ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground",
+                )}
+              >
+                {t(`org.views.${v}`)}
+              </button>
+            );
+          })}
+        </div>
         <AdminOnly>
           <Button onClick={() => set({ new: true, unit: undefined })}>
             <Plus aria-hidden />
@@ -66,6 +66,8 @@ export function OrgPage() {
           </p>
         ) : units.data?.length === 0 ? (
           <p className="text-muted-foreground">{t("org.empty")}</p>
+        ) : units.data && search.view === "chart" ? (
+          <OrgChart units={units.data.filter((u) => !u.archived_at)} selected={search.unit} />
         ) : units.data ? (
           <Tree units={units.data.filter((u) => !u.archived_at)} selected={search.unit} />
         ) : null}
