@@ -42,7 +42,12 @@ export function fakeBackend(routes: Routes) {
 }
 
 export async function renderApp(path: string, routes: Routes = {}) {
-  const backend = fakeBackend({ "GET /api/v1/auth/me": { status: 200, body: ADMIN }, ...routes });
+  const backend = fakeBackend({
+    "GET /api/v1/auth/me": { status: 200, body: ADMIN },
+    "GET /api/v1/me/preferences": { status: 200, body: {} },
+    "PUT /api/v1/me/preferences": { status: 200, body: {} },
+    ...routes,
+  });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createRouter({
     routeTree,

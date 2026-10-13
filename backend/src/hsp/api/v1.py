@@ -15,12 +15,14 @@ from hsp.api import (
     org_units,
     people,
     plans,
+    preferences,
     seats,
     sites,
 )
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(auth.router)
+router.include_router(preferences.router)
 router.include_router(sites.router)
 router.include_router(buildings.router)
 router.include_router(floors.router)

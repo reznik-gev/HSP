@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useApplyPreferences } from "@/lib/preferences";
 
 import { useSessionExpired } from "./expiry";
 import { currentPath, loginUrl, meQuery, navigation } from "./session";
@@ -27,10 +28,17 @@ export function SessionGate({ children }: { children: ReactNode }) {
   if (me.data === null) return <ToLogin />;
   return (
     <>
+      <ApplyPreferences />
       {children}
       <ExpiredDialog />
     </>
   );
+}
+
+/** The signed-in user's saved language and theme (docs/0087). */
+function ApplyPreferences() {
+  useApplyPreferences();
+  return null;
 }
 
 /** Nothing to show yet: the page background, so the shell doesn't flash in and out. */
