@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
-import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { applyTheme, useTheme } from "@/lib/theme";
-import { routeTree } from "@/routes";
+import { renderApp as render } from "@/test/renderApp";
 
 import { useSidebar } from "./sidebarState";
 
@@ -22,18 +21,15 @@ beforeAll(() => {
 
 afterEach(async () => {
   cleanup(); // Testing Library only auto-cleans with Vitest globals, which we don't use
+  vi.unstubAllGlobals();
   await act(() => i18n.changeLanguage("en"));
   useSidebar.setState({ collapsed: false });
   useTheme.setState({ choice: "system" });
 });
 
 async function renderAt(path: string) {
-  const router = createRouter({
-    routeTree,
-    history: createMemoryHistory({ initialEntries: [path] }),
-  });
-  render(<RouterProvider router={router} />);
-  await act(() => router.load());
+  const { router } = await render(path);
+  await screen.findByRole("navigation", { name: "Main" }); // signed in: the shell is up
   return router;
 }
 
@@ -73,7 +69,7 @@ describe("app shell (docs/0087)", () => {
   });
 
   it("unknown addresses say so", async () => {
-    await renderAt("/nowhere");
+    await render("/nowhere"); // not-found pages need no session
     expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
   });
 });

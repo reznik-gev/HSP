@@ -12,6 +12,8 @@ import {
 import { LANGUAGES, type Language } from "@/i18n";
 import { useTheme, type ThemeChoice } from "@/lib/theme";
 
+import { UserMenu } from "./UserMenu";
+
 /** Each language is named in itself, so anyone can find their own. */
 const LANGUAGE_NAMES: Record<Language, string> = { en: "English", he: "עברית" };
 
@@ -26,6 +28,7 @@ export function TopBar() {
     <header className="flex h-12 shrink-0 items-center justify-end gap-1 border-b bg-card px-3">
       <LanguageMenu />
       <ThemeMenu />
+      <UserMenu />
     </header>
   );
 }
