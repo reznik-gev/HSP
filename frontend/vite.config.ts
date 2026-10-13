@@ -25,8 +25,10 @@ export default defineConfig(({ mode }) => ({
     },
   },
   test: {
-    // The editor core is headless (docs/0052), so most tests run without a DOM.
+    // The editor core is headless (docs/0052), so its tests run without a DOM. Screen tests
+    // (*.test.tsx) opt into jsdom with a `// @vitest-environment jsdom` comment.
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    setupFiles: ["src/test/setup.ts"],
   },
 }));

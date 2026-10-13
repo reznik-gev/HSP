@@ -251,7 +251,7 @@ export function SvgBench() {
             api.current?.selectLatenciesMs.push(v);
           }}
         />
-        <div className="pointer-events-none absolute right-3 top-3 rounded bg-black/75 px-3 py-2 font-mono text-xs leading-5 text-white">
+        <div className="pointer-events-none absolute end-3 top-3 rounded bg-black/75 px-3 py-2 font-mono text-xs leading-5 text-white">
           <div>
             FPS {live?.avgFps ?? "-"} · p95 {live?.p95FrameMs ?? "-"} ms
           </div>
