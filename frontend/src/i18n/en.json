@@ -101,5 +101,13 @@
       "location": "Location",
       "actions": "Actions"
     }
+  },
+  "common": {
+    "close": "Close",
+    "undo": "Undo",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "failed": "That didn't work. Try again, or reload the page."
   }
 }
