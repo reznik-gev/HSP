@@ -10,6 +10,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
+import { AdminOnly } from "@/auth/admin";
 import { Button } from "@/components/ui/button";
 import { planBounds, planFromApi } from "@/editor/core/fromApi";
 import { createEditorStore } from "@/editor/core/store";
@@ -17,6 +18,7 @@ import { ViewerInteraction } from "@/editor/core/viewerInteraction";
 import { fitRect, zoomAt } from "@/editor/core/viewport";
 import { PlanView, type RenderOptions, type SeatState } from "@/editor/view-svg/PlanView";
 import { cn } from "@/lib/utils";
+import { SeatActions } from "@/seats/SeatActions";
 
 import {
   floorPlaceQuery,
@@ -216,6 +218,7 @@ function Viewer({
       </div>
       {selected && (
         <SeatPanel
+          seatId={selected}
           label={plan.objects[selected]?.label ?? null}
           state={states.get(selected)}
           seat={seats?.get(selected)}
@@ -292,11 +295,13 @@ function SeatTooltip({
 }
 
 function SeatPanel({
+  seatId,
   label,
   state,
   seat,
   onClose,
 }: {
+  seatId: string;
   label: string | null;
   state: SeatState | undefined;
   seat: Seat | undefined;
@@ -338,6 +343,23 @@ function SeatPanel({
           state && <p className="text-muted-foreground">{t(`plan.explain.${state}`)}</p>
         )}
       </div>
+      {/* Bookable and unavailable seats change mode in the floor plan, not here (docs/0031). */}
+      {(state === "person" || state === "unit" || state === "free") && (
+        <AdminOnly>
+          <SeatActions
+            key={seatId}
+            seatId={seatId}
+            label={label ?? t("plan.unlabelled")}
+            current={
+              person
+                ? { person_id: person.id, name: person.display_name }
+                : unit
+                  ? { unit_id: unit.id, name: unit.name }
+                  : null
+            }
+          />
+        </AdminOnly>
+      )}
     </aside>
   );
 }

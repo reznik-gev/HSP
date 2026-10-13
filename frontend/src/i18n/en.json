@@ -223,5 +223,20 @@
       "chart": "Chart"
     },
     "fit": "Fit the chart to the screen"
+  },
+  "assign": {
+    "assign": "Assign",
+    "change": "Change",
+    "unassign": "Unassign",
+    "pickLabel": "Person or team",
+    "pickPlaceholder": "Type a name, email or team",
+    "team": "Team",
+    "assigned": "{{seat}} assigned to {{name}}",
+    "reserved": "{{seat}} reserved for {{name}}",
+    "freed": "{{seat}} is free",
+    "movedOff": "{{name}} no longer has this seat",
+    "undone": "{{seat}} is back as it was",
+    "undoSkipped": "{{seat}} changed again meanwhile, so it was left as it is",
+    "inactive": "Seats go only to active people and teams."
   }
 }

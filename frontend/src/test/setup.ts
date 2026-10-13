@@ -2,6 +2,8 @@
 import "@testing-library/jest-dom/vitest";
 
 import { configure } from "@testing-library/react";
+import { toast } from "sonner";
+import { afterEach } from "vitest";
 
 // Screen tests render the whole app (router, lazy pages, i18n). With every test file running
 // in parallel, the first render can take over a second, so wait up to 5 s for elements.
@@ -15,3 +17,8 @@ if (typeof Element !== "undefined" && !("setPointerCapture" in Element.prototype
     hasPointerCapture: () => false,
   });
 }
+
+// Notices live in a global store (Sonner): clear them so one test's notice can't leak into the next.
+afterEach(() => {
+  toast.dismiss();
+});
