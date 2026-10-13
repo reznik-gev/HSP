@@ -10,8 +10,9 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { AppShell } from "@/app/AppShell";
-import { EmptyState, Page } from "@/app/Page";
+import { Page } from "@/app/Page";
 import { FloorsPage } from "@/floors/FloorsPage";
+import { SeatsPage } from "@/seats/SeatsPage";
 
 const rootRoute = createRootRoute({ component: Outlet, notFoundComponent: NotFound });
 
@@ -27,15 +28,6 @@ const indexRoute = createRoute({
   path: "/",
   beforeLoad: () => redirect({ to: "/floors", throw: true }),
 });
-
-function SeatsPage() {
-  const { t } = useTranslation();
-  return (
-    <Page title={t("seats.title")}>
-      <EmptyState>{t("seats.empty")}</EmptyState>
-    </Page>
-  );
-}
 
 function NotFound() {
   const { t } = useTranslation();
@@ -62,6 +54,8 @@ const floorPlanRoute = createRoute({
 const seatsRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "/seats",
+  validateSearch: (search: Record<string, unknown>): { q?: string } =>
+    typeof search.q === "string" && search.q ? { q: search.q } : {},
   component: SeatsPage,
 });
 

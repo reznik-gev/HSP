@@ -83,5 +83,23 @@
       "bookable": "Booked by the day; not assigned to anyone.",
       "unavailable": "Out of use for now."
     }
+  },
+  "search": {
+    "label": "Search seats, people and teams",
+    "placeholder": "Search for a person, team or seat label",
+    "placeholderShort": "Where does… sit?",
+    "results": "Seats matching “{{q}}”",
+    "none": "No seats match “{{q}}”. Check the spelling, or search for a team or seat label instead.",
+    "failed": "Couldn't search right now. Reload the page to try again.",
+    "more": "Show more",
+    "showOnPlan": "Show on plan",
+    "showOnPlanFor": "Show {{seat}} on the floor plan",
+    "columns": {
+      "seat": "Seat",
+      "holder": "Holder",
+      "team": "Team",
+      "location": "Location",
+      "actions": "Actions"
+    }
   }
 }

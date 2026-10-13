@@ -24,5 +24,9 @@ dist-bench/
 .DS_Store
 Thumbs.db
 
+# Playwright browser-test output (frontend/e2e, docs/0087)
+frontend/test-results/
+frontend/playwright-report/
+
 # Claude Code: temporary git worktrees created for background agents
 .claude/worktrees/
