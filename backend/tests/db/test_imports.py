@@ -11,8 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from hsp import models
 from hsp.auth.principal import ADMIN_ROLE, Principal
+from hsp.imports import read_table
 from hsp.models import new_id
-from hsp.org.imports import ImportService, read_table
+from hsp.org.imports import ImportService
 from hsp.problems import ProblemException
 from tests.db.plan_helpers import new_tenant
 

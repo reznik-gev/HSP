@@ -1,29 +1,24 @@
-"""CSV/Excel import of org units and people (docs/0027, docs/0084).
+"""CSV/Excel import of org units and people (docs/0027, docs/0084). The dry-run / apply flow and
+file reading are shared with the other imports (hsp/imports.py)."""
 
-Dry run by default: the import runs exactly as it would for real inside the transaction, then
-rolls back, so the preview reports everything a real run would (including database errors).
-With apply=True it commits. All or nothing: any row error means nothing is written.
-"""
-
-import csv
-import io
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
 from email_validator import EmailNotValidError, validate_email
-from openpyxl import load_workbook
-from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
-from hsp.audit import audit_event
 from hsp.auth.principal import Principal
-from hsp.problems import ProblemException
+from hsp.imports import (
+    ImportReport,
+    ImportRun,
+    check_columns,
+    finish_import,
+)
 
-MAX_ROWS = 50_000
 UNIT_COLUMNS = {"external_id", "name", "parent_external_id", "level_label"}
 PEOPLE_COLUMNS = {
     "email",
@@ -36,84 +31,6 @@ PEOPLE_COLUMNS = {
 }
 
 
-class RowError(BaseModel):
-    row: int  # 1-based spreadsheet row; the header is row 1
-    column: str | None = None
-    code: str
-    message: str
-
-
-class ImportReport(BaseModel):
-    kind: str
-    applied: bool
-    rows: int
-    created: int = 0
-    updated: int = 0
-    unchanged: int = 0
-    reactivated: int = 0
-    positions_created: int = 0
-    errors: list[RowError] = []
-    warnings: list[str] = []
-
-
-def read_table(filename: str, data: bytes) -> list[dict[str, str | None]]:
-    """Rows as dicts keyed by lowercase header. CSV (UTF-8, BOM ok) or XLSX (first sheet)."""
-    name = filename.lower()
-    if name.endswith(".xlsx"):
-        sheet = load_workbook(io.BytesIO(data), read_only=True, data_only=True).worksheets[0]
-        raw = [
-            [("" if c is None else str(c)) for c in r] for r in sheet.iter_rows(values_only=True)
-        ]
-    elif name.endswith(".csv"):
-        try:
-            text = data.decode("utf-8-sig")
-        except UnicodeDecodeError:
-            raise ProblemException(
-                422, "import-unreadable", "Unreadable file", "CSV files must be UTF-8."
-            ) from None
-        raw = list(csv.reader(io.StringIO(text)))
-    else:
-        raise ProblemException(
-            415, "import-format", "Unsupported file", "Upload a .csv or .xlsx file."
-        )
-    if not raw:
-        return []
-    header = [h.strip().lower() for h in raw[0]]
-    rows = []
-    for values in raw[1:]:
-        if not any(v.strip() for v in values):
-            continue  # skip blank lines
-        rows.append({h: (v.strip() or None) for h, v in zip(header, values, strict=False) if h})
-    if len(rows) > MAX_ROWS:
-        raise ProblemException(
-            413, "import-too-large", "Too many rows", f"At most {MAX_ROWS} rows per import."
-        )
-    return rows
-
-
-@dataclass
-class _Run:
-    report: ImportReport
-    row_of: dict[str, int] = field(default_factory=dict)
-
-    def error(self, row: int, code: str, message: str, column: str | None = None) -> None:
-        self.report.errors.append(RowError(row=row, column=column, code=code, message=message))
-
-
-def _columns_warning(
-    rows: list[dict[str, Any]], known: set[str], required: set[str], run: _Run
-) -> bool:
-    present = set(rows[0]) if rows else set()
-    missing = required - present
-    if rows and missing:
-        run.error(1, "missing_column", f"Missing required column(s): {', '.join(sorted(missing))}.")
-        return False
-    unknown = present - known
-    if unknown:
-        run.report.warnings.append(f"Ignored unknown column(s): {', '.join(sorted(unknown))}.")
-    return True
-
-
 @dataclass
 class ImportService:
     db: AsyncSession
@@ -124,33 +41,14 @@ class ImportService:
     def _tenant(self) -> uuid.UUID:
         return self.principal.tenant_id
 
-    async def _finish(self, run: _Run, apply: bool) -> ImportReport:
-        if run.report.errors or not apply:
-            await self.db.rollback()
-            run.report.applied = False
-            return run.report
-        counts = run.report.model_dump(
-            include={"rows", "created", "updated", "unchanged", "reactivated", "positions_created"}
-        )
-        self.db.add(
-            audit_event(
-                self.principal,
-                action=f"import.{run.report.kind}",
-                entity_type="import",
-                entity_id=models.new_id(),
-                after=counts,
-                request_id=self.request_id,
-            )
-        )
-        await self.db.commit()
-        run.report.applied = True
-        return run.report
+    async def _finish(self, run: ImportRun, apply: bool) -> ImportReport:
+        return await finish_import(self.db, self.principal, self.request_id, run, apply)
 
     # Units -----------------------------------------------------------------------------------
 
     async def import_units(self, rows: list[dict[str, str | None]], apply: bool) -> ImportReport:
-        run = _Run(ImportReport(kind="units", applied=False, rows=len(rows)))
-        if not _columns_warning(rows, UNIT_COLUMNS, {"external_id", "name"}, run):
+        run = ImportRun(ImportReport(kind="units", applied=False, rows=len(rows)))
+        if not check_columns(rows, UNIT_COLUMNS, {"external_id", "name"}, run):
             return await self._finish(run, apply)
         existing: dict[str, models.OrgUnit] = {
             u.external_id: u
@@ -290,8 +188,8 @@ class ImportService:
     # People ----------------------------------------------------------------------------------
 
     async def import_people(self, rows: list[dict[str, str | None]], apply: bool) -> ImportReport:
-        run = _Run(ImportReport(kind="people", applied=False, rows=len(rows)))
-        if not _columns_warning(rows, PEOPLE_COLUMNS, {"email", "display_name"}, run):
+        run = ImportRun(ImportReport(kind="people", applied=False, rows=len(rows)))
+        if not check_columns(rows, PEOPLE_COLUMNS, {"email", "display_name"}, run):
             return await self._finish(run, apply)
         units: dict[str, models.OrgUnit] = {
             u.external_id: u
@@ -452,7 +350,7 @@ class ImportService:
         row: dict[str, Any],
         units: dict[str, models.OrgUnit],
         positions: dict[tuple[uuid.UUID, str], models.Position],
-        run: _Run,
+        run: ImportRun,
         now: datetime,
     ) -> bool:
         primary_unit = units[row["primary"]] if row["primary"] else None

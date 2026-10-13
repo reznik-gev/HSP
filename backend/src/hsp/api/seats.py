@@ -12,9 +12,11 @@ from hsp.auth.dependencies import CurrentPrincipal
 from hsp.db import get_session
 from hsp.release import ReleaseReport
 from hsp.seats.assignments import AssignmentIn, SeatAssignmentOut, SeatAssignmentService
+from hsp.seats.batch import BatchIn, BatchResult, SeatBatchService
 from hsp.seats.search import SeatOut, SeatSearchService
 
 router = APIRouter(prefix="/seats", tags=["seats"])
+batch_router = APIRouter(prefix="/seat-assignments", tags=["seats"])
 
 
 def get_service(
@@ -101,3 +103,19 @@ async def assign_seat(
 async def unassign_seat(seat_id: uuid.UUID, service: Service) -> ReleaseReport:
     """Free the seat. Idempotent."""
     return await service.unassign(seat_id)
+
+
+def get_batch(
+    request: Request, principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]
+) -> SeatBatchService:
+    return SeatBatchService(db, principal, getattr(request.state, "request_id", None))
+
+
+@batch_router.post("/batch", dependencies=WRITE)
+async def batch_assign(
+    body: BatchIn, service: Annotated[SeatBatchService, Depends(get_batch)]
+) -> BatchResult:
+    """Assign, unassign and swap many seats at once, all or nothing (docs/0085). Steps run in
+    order; 422 batch-invalid lists every failing step by `op_index` and changes nothing. The
+    result shows the final state of every touched seat and who lost a seat."""
+    return await service.apply(body)

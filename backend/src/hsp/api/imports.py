@@ -1,4 +1,5 @@
-"""/api/v1/imports: CSV/Excel import of org units and people (docs/0027, docs/0084).
+"""/api/v1/imports: CSV/Excel import of org units, people and seat assignments (docs/0027,
+docs/0084, docs/0085).
 
 Dry run by default; resend the same file with `?apply=true` to commit.
 """
@@ -11,8 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from hsp.api.common import WRITE
 from hsp.auth.dependencies import CurrentPrincipal
 from hsp.db import get_session
-from hsp.org.imports import ImportReport, ImportService, read_table
+from hsp.imports import ImportReport, read_table
+from hsp.org.imports import ImportService
 from hsp.problems import ProblemException
+from hsp.seats.imports import SeatImportService
 
 router = APIRouter(prefix="/imports", tags=["organization"])
 
@@ -49,3 +52,20 @@ async def import_people(file: UploadFile, service: Service, apply: Apply = False
     """Columns: email*, display_name*, external_id, title, primary_unit_external_id,
     secondary_unit_external_ids (";"-separated, needs a primary), position (docs/0084)."""
     return await service.import_people(await _rows(file), apply)
+
+
+def get_seat_import(
+    request: Request, principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]
+) -> SeatImportService:
+    return SeatImportService(db, principal, getattr(request.state, "request_id", None))
+
+
+@router.post("/seat-assignments", dependencies=WRITE, tags=["seats"])
+async def import_seat_assignments(
+    file: UploadFile,
+    service: Annotated[SeatImportService, Depends(get_seat_import)],
+    apply: Apply = False,
+) -> ImportReport:
+    """Columns: seat_label*, building_code (when the label exists in several buildings), and one
+    of holder_email or holder_unit_external_id; note. Taken seats are reassigned (docs/0085)."""
+    return await service.import_assignments(await _rows(file), apply)

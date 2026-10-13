@@ -64,6 +64,63 @@
         "title": "ArchivedItem",
         "type": "object"
       },
+      "AssignStep": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "op": {
+            "const": "assign",
+            "title": "Op",
+            "type": "string"
+          },
+          "person_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person Id"
+          },
+          "seat_id": {
+            "format": "uuid",
+            "title": "Seat Id",
+            "type": "string"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Reserve the seat for a unit",
+            "title": "Unit Id"
+          }
+        },
+        "required": [
+          "op",
+          "seat_id"
+        ],
+        "title": "AssignStep",
+        "type": "object"
+      },
       "AssignmentIn": {
         "properties": {
           "note": {
@@ -164,6 +221,68 @@
         "title": "AssignmentOut",
         "type": "object"
       },
+      "BatchIn": {
+        "properties": {
+          "steps": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "assign": "#/components/schemas/AssignStep",
+                  "swap": "#/components/schemas/SwapStep",
+                  "unassign": "#/components/schemas/UnassignStep"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AssignStep"
+                },
+                {
+                  "$ref": "#/components/schemas/UnassignStep"
+                },
+                {
+                  "$ref": "#/components/schemas/SwapStep"
+                }
+              ]
+            },
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "steps"
+        ],
+        "title": "BatchIn",
+        "type": "object"
+      },
+      "BatchResult": {
+        "properties": {
+          "released": {
+            "description": "Holders who held a touched seat before the batch and no longer do",
+            "items": {
+              "$ref": "#/components/schemas/FreedSeat"
+            },
+            "title": "Released",
+            "type": "array"
+          },
+          "seats": {
+            "description": "Final state of every seat the batch touched",
+            "items": {
+              "$ref": "#/components/schemas/SeatAssignmentOut"
+            },
+            "title": "Seats",
+            "type": "array"
+          }
+        },
+        "required": [
+          "seats",
+          "released"
+        ],
+        "title": "BatchResult",
+        "type": "object"
+      },
       "Body_import_people_api_v1_imports_people_post": {
         "properties": {
           "file": {
@@ -176,6 +295,20 @@
           "file"
         ],
         "title": "Body_import_people_api_v1_imports_people_post",
+        "type": "object"
+      },
+      "Body_import_seat_assignments_api_v1_imports_seat_assignments_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_seat_assignments_api_v1_imports_seat_assignments_post",
         "type": "object"
       },
       "Body_import_units_api_v1_imports_units_post": {
@@ -3391,6 +3524,53 @@
         "title": "SitePatch",
         "type": "object"
       },
+      "SwapStep": {
+        "properties": {
+          "op": {
+            "const": "swap",
+            "title": "Op",
+            "type": "string"
+          },
+          "other_seat_id": {
+            "description": "The two seats exchange holders",
+            "format": "uuid",
+            "title": "Other Seat Id",
+            "type": "string"
+          },
+          "seat_id": {
+            "format": "uuid",
+            "title": "Seat Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "seat_id",
+          "other_seat_id"
+        ],
+        "title": "SwapStep",
+        "type": "object"
+      },
+      "UnassignStep": {
+        "properties": {
+          "op": {
+            "const": "unassign",
+            "title": "Op",
+            "type": "string"
+          },
+          "seat_id": {
+            "format": "uuid",
+            "title": "Seat Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "seat_id"
+        ],
+        "title": "UnassignStep",
+        "type": "object"
+      },
       "UnitIn": {
         "properties": {
           "color": {
@@ -6058,6 +6238,63 @@
         ]
       }
     },
+    "/api/v1/imports/seat-assignments": {
+      "post": {
+        "description": "Columns: seat_label*, building_code (when the label exists in several buildings), and one\nof holder_email or holder_unit_external_id; note. Taken seats are reassigned (docs/0085).",
+        "operationId": "import_seat_assignments_api_v1_imports_seat_assignments_post",
+        "parameters": [
+          {
+            "description": "false = dry run (report only); true = commit",
+            "in": "query",
+            "name": "apply",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "false = dry run (report only); true = commit",
+              "title": "Apply",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_seat_assignments_api_v1_imports_seat_assignments_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import Seat Assignments",
+        "tags": [
+          "organization",
+          "seats"
+        ]
+      }
+    },
     "/api/v1/imports/units": {
       "post": {
         "description": "Columns: external_id*, name*, parent_external_id, level_label (docs/0084).",
@@ -7161,6 +7398,48 @@
         "summary": "Rename Position",
         "tags": [
           "organization"
+        ]
+      }
+    },
+    "/api/v1/seat-assignments/batch": {
+      "post": {
+        "description": "Assign, unassign and swap many seats at once, all or nothing (docs/0085). Steps run in\norder; 422 batch-invalid lists every failing step by `op_index` and changes nothing. The\nresult shows the final state of every touched seat and who lost a seat.",
+        "operationId": "batch_assign_api_v1_seat_assignments_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Batch Assign",
+        "tags": [
+          "seats"
         ]
       }
     },
