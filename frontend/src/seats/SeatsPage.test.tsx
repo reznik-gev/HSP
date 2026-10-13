@@ -66,6 +66,18 @@ describe("where does X sit? (docs/0085, docs/0087)", () => {
     expect(new URL(searched!.url).searchParams.get("q")).toBe("maya");
   });
 
+  it("seats nobody holds say whether they are free or bookable", async () => {
+    const empty = { ...MAYA_SEAT, holder_person: null };
+    await renderApp("/seats?q=ht", {
+      "GET /api/v1/seats": seats([
+        { ...empty, id: "d5", label: "HT-3-05", allocation_mode: "bookable" },
+        { ...empty, id: "d6", label: "HT-3-06" },
+      ]),
+    });
+    expect(await screen.findByRole("row", { name: /HT-3-05/ })).toHaveTextContent("Bookable");
+    expect(screen.getByRole("row", { name: /HT-3-06/ })).toHaveTextContent("Free");
+  });
+
   it("says when nothing matches, and how to search differently", async () => {
     await renderApp("/seats?q=nobody", { "GET /api/v1/seats": seats([]) });
     expect(await screen.findByText(/No seats match “nobody”/)).toBeInTheDocument();
