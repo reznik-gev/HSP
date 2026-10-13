@@ -558,6 +558,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/imports/seat-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Seat Assignments
+         * @description Columns: seat_label*, building_code (when the label exists in several buildings), and one
+         *     of holder_email or holder_unit_external_id; note. Taken seats are reassigned (docs/0085).
+         */
+        post: operations["import_seat_assignments_api_v1_imports_seat_assignments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/imports/units": {
         parameters: {
             query?: never;
@@ -838,6 +859,28 @@ export interface paths {
         patch: operations["rename_position_api_v1_positions__position_id__patch"];
         trace?: never;
     };
+    "/api/v1/seat-assignments/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Batch Assign
+         * @description Assign, unassign and swap many seats at once, all or nothing (docs/0085). Steps run in
+         *     order; 422 batch-invalid lists every failing step by `op_index` and changes nothing. The
+         *     result shows the final state of every touched seat and who lost a seat.
+         */
+        post: operations["batch_assign_api_v1_seat_assignments_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/seats": {
         parameters: {
             query?: never;
@@ -1071,6 +1114,28 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** AssignStep */
+        AssignStep: {
+            /** Note */
+            note?: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "assign";
+            /** Person Id */
+            person_id?: string | null;
+            /**
+             * Seat Id
+             * Format: uuid
+             */
+            seat_id: string;
+            /**
+             * Unit Id
+             * @description Reserve the seat for a unit
+             */
+            unit_id?: string | null;
+        };
         /** AssignmentIn */
         AssignmentIn: {
             /** Note */
@@ -1099,8 +1164,31 @@ export interface components {
             /** Note */
             note: string | null;
         };
+        /** BatchIn */
+        BatchIn: {
+            /** Steps */
+            steps: (components["schemas"]["AssignStep"] | components["schemas"]["UnassignStep"] | components["schemas"]["SwapStep"])[];
+        };
+        /** BatchResult */
+        BatchResult: {
+            /**
+             * Released
+             * @description Holders who held a touched seat before the batch and no longer do
+             */
+            released: components["schemas"]["FreedSeat"][];
+            /**
+             * Seats
+             * @description Final state of every seat the batch touched
+             */
+            seats: components["schemas"]["SeatAssignmentOut"][];
+        };
         /** Body_import_people_api_v1_imports_people_post */
         Body_import_people_api_v1_imports_people_post: {
+            /** File */
+            file: string;
+        };
+        /** Body_import_seat_assignments_api_v1_imports_seat_assignments_post */
+        Body_import_seat_assignments_api_v1_imports_seat_assignments_post: {
             /** File */
             file: string;
         };
@@ -2338,6 +2426,38 @@ export interface components {
             name?: string | null;
             /** Time Zone */
             time_zone?: string | null;
+        };
+        /** SwapStep */
+        SwapStep: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "swap";
+            /**
+             * Other Seat Id
+             * Format: uuid
+             * @description The two seats exchange holders
+             */
+            other_seat_id: string;
+            /**
+             * Seat Id
+             * Format: uuid
+             */
+            seat_id: string;
+        };
+        /** UnassignStep */
+        UnassignStep: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "unassign";
+            /**
+             * Seat Id
+             * Format: uuid
+             */
+            seat_id: string;
         };
         /** UnitIn */
         UnitIn: {
@@ -3877,6 +3997,42 @@ export interface operations {
             };
         };
     };
+    import_seat_assignments_api_v1_imports_seat_assignments_post: {
+        parameters: {
+            query?: {
+                /** @description false = dry run (report only); true = commit */
+                apply?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_seat_assignments_api_v1_imports_seat_assignments_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     import_units_api_v1_imports_units_post: {
         parameters: {
             query?: {
@@ -4587,6 +4743,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PositionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    batch_assign_api_v1_seat_assignments_batch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchResult"];
                 };
             };
             /** @description Validation Error */

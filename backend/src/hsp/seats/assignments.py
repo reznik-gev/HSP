@@ -124,7 +124,7 @@ class SeatAssignmentService:
             assignment=_out(current) if current else None,
         )
 
-    async def _check_holder(self, body: AssignmentIn) -> None:
+    async def check_holder(self, body: AssignmentIn) -> None:
         if body.person_id is not None:
             p = await self.db.scalar(
                 select(models.Person).where(
@@ -161,6 +161,21 @@ class SeatAssignmentService:
             )
 
     async def assign(self, seat_id: uuid.UUID, body: AssignmentIn) -> SeatAssignmentOut:
+        seat = await self.assignable_seat(seat_id)
+        await self.check_holder(body)
+        placed = await self.place(seat, body.person_id, body.unit_id, body.note)
+        await self.db.commit()
+        return placed
+
+    async def unassign(self, seat_id: uuid.UUID) -> ReleaseReport:
+        """Free the seat. Idempotent; works even if the seat has left the published plan."""
+        released = await self.release(seat_id, reason="Unassigned")
+        await self.db.commit()
+        return ReleaseReport(freed_seats=[released] if released else [])
+
+    # Building blocks for single, batch and import changes. They don't commit. ----------------
+
+    async def assignable_seat(self, seat_id: uuid.UUID) -> PublishedSeat:
         seat = await self._seat(seat_id)
         if seat.mode != models.AllocationMode.ASSIGNED:
             raise ProblemException(
@@ -170,32 +185,40 @@ class SeatAssignmentService:
                 f"The seat is {seat.mode or 'without a mode'}; only 'assigned' seats can be "
                 "assigned. Change its mode in the floor plan and publish.",
             )
-        await self._check_holder(body)
-        current = await self._current(seat_id)
-        same = current is not None and (
-            current.holder_person_id == body.person_id and current.holder_unit_id == body.unit_id
-        )
-        if same and current is not None:
-            if current.note != body.note:
-                current.note = body.note
-                await self.db.commit()
+        return seat
+
+    async def place(
+        self,
+        seat: PublishedSeat,
+        person_id: uuid.UUID | None,
+        unit_id: uuid.UUID | None,
+        note: str | None = None,
+    ) -> SeatAssignmentOut:
+        """Make the holder hold the seat, reassigning it if taken (docs/0086). The caller has
+        checked the seat and the holder."""
+        current = await self._current(seat.id)
+        if current is not None and (current.holder_person_id, current.holder_unit_id) == (
+            person_id,
+            unit_id,
+        ):
+            current.note = note
             return SeatAssignmentOut(
                 seat_id=seat.id, label=seat.label, floor_id=seat.floor_id, assignment=_out(current)
             )
         replaced = freed(current) if current else None
         before = _holder(current)
-        if current is not None:  # docs/0086: reassign, and say who was replaced
+        if current is not None:
             await self.db.delete(current)
-            await self.db.flush()
+            await self.db.flush()  # free the one-holder-per-seat constraint
         new = models.SeatAssignment(
             id=models.new_id(),
             tenant_id=self._tenant,
             seat_element_id=seat.id,
-            holder_person_id=body.person_id,
-            holder_unit_id=body.unit_id,
+            holder_person_id=person_id,
+            holder_unit_id=unit_id,
             assigned_at=datetime.now(UTC),
             assigned_by=self.principal.subject,
-            note=body.note,
+            note=note,
         )
         self.db.add(new)
         self.db.add(
@@ -209,7 +232,7 @@ class SeatAssignmentService:
                 request_id=self.request_id,
             )
         )
-        await self.db.commit()
+        await self.db.flush()
         return SeatAssignmentOut(
             seat_id=seat.id,
             label=seat.label,
@@ -218,19 +241,16 @@ class SeatAssignmentService:
             replaced=replaced,
         )
 
-    async def unassign(self, seat_id: uuid.UUID) -> ReleaseReport:
-        """Free the seat. Idempotent; works even if the seat has left the published plan."""
+    async def release(self, seat_id: uuid.UUID, *, reason: str) -> FreedSeat | None:
         current = await self._current(seat_id)
         if current is None:
-            return ReleaseReport()
+            return None
         await self.db.delete(current)
         self.db.add(
-            seat_unassigned(
-                self.principal, current, reason="Unassigned", request_id=self.request_id
-            )
+            seat_unassigned(self.principal, current, reason=reason, request_id=self.request_id)
         )
-        await self.db.commit()
-        return ReleaseReport(freed_seats=[freed(current)])
+        await self.db.flush()
+        return freed(current)
 
 
 async def free_person_seats(
