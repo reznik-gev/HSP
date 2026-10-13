@@ -36,5 +36,8 @@ export default defineConfig(({ mode }) => ({
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     setupFiles: ["src/test/setup.ts"],
+    // Screen tests render the whole app; with every file running in parallel a slow machine
+    // can need more than the default 5 s for one test.
+    testTimeout: 15_000,
   },
 }));
