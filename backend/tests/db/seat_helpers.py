@@ -11,7 +11,7 @@ from hsp import models
 from hsp.models import new_id
 from hsp.plans.drafts import SqlDraftRepository
 from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
-from hsp.seats.assignments import SeatAssignmentService
+from hsp.seats.assignments import AssignmentIn, SeatAssignmentService
 from tests.db.plan_helpers import add, apply, context, desk_data
 
 
@@ -93,3 +93,28 @@ async def unit(ctx: dict[str, Any], name: str, archived: bool = False) -> uuid.U
     db.add(u)
     await db.flush()
     return u.id
+
+
+async def member(ctx: dict[str, Any], person_id: Any, unit_id: Any) -> None:
+    ctx["db"].add(
+        models.UnitMembership(
+            person_id=person_id,
+            unit_id=unit_id,
+            tenant_id=ctx["tenant"],
+            is_primary=True,
+            primary_override=True,
+        )
+    )
+    await ctx["db"].flush()
+
+
+async def seated(ctx: dict[str, Any]) -> dict[str, Any]:
+    """Maya (primary unit Platform, with Eli) sits at seat a; seat b is reserved for Vision."""
+    seats = SeatAssignmentService(ctx["db"], ctx["admin"])
+    platform, vision = await unit(ctx, "Platform"), await unit(ctx, "Vision")
+    maya, eli = await person(ctx, "Maya"), await person(ctx, "Eli")
+    await member(ctx, maya, platform)
+    await member(ctx, eli, platform)
+    await seats.assign(ctx["a"], AssignmentIn(person_id=maya))
+    await seats.assign(ctx["b"], AssignmentIn(unit_id=vision))
+    return {"platform": platform, "vision": vision, "maya": maya, "eli": eli}
