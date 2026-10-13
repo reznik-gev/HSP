@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LANGUAGES, type Language } from "@/i18n";
+import { useSavePreference } from "@/lib/preferences";
 import { useTheme, type ThemeChoice } from "@/lib/theme";
 
 import { UserMenu } from "./UserMenu";
@@ -35,6 +36,11 @@ export function TopBar() {
 
 function LanguageMenu() {
   const { t, i18n } = useTranslation();
+  const save = useSavePreference();
+  const choose = (language: Language) => {
+    void i18n.changeLanguage(language);
+    save.mutate({ language });
+  };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -47,7 +53,7 @@ function LanguageMenu() {
           {t("settings.language")}
         </DropdownMenuLabel>
         {LANGUAGES.map((lng) => (
-          <DropdownMenuItem key={lng} lang={lng} onSelect={() => void i18n.changeLanguage(lng)}>
+          <DropdownMenuItem key={lng} lang={lng} onSelect={() => choose(lng)}>
             <span className="flex-1">{LANGUAGE_NAMES[lng]}</span>
             {i18n.resolvedLanguage === lng && <Check aria-hidden />}
           </DropdownMenuItem>
@@ -60,6 +66,11 @@ function LanguageMenu() {
 function ThemeMenu() {
   const { t } = useTranslation();
   const { choice, setChoice } = useTheme();
+  const save = useSavePreference();
+  const choose = (theme: ThemeChoice) => {
+    setChoice(theme);
+    save.mutate({ theme });
+  };
   const Current = THEMES.find((x) => x.choice === choice)?.icon ?? Monitor;
   return (
     <DropdownMenu>
@@ -73,7 +84,7 @@ function ThemeMenu() {
           {t("settings.appearance")}
         </DropdownMenuLabel>
         {THEMES.map(({ choice: c, icon: Icon }) => (
-          <DropdownMenuItem key={c} onSelect={() => setChoice(c)}>
+          <DropdownMenuItem key={c} onSelect={() => choose(c)}>
             <Icon aria-hidden />
             <span className="flex-1">{t(`settings.${c}`)}</span>
             {choice === c && <Check aria-hidden />}
