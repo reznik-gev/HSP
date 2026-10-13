@@ -18,6 +18,8 @@ from hsp import models
 from hsp.audit import audit_event, changed_fields
 from hsp.auth.principal import Principal
 from hsp.problems import ProblemError, ProblemException
+from hsp.release import FreedSeat
+from hsp.seats.assignments import free_person_seats
 
 PERSON_FIELDS = ("display_name", "email", "title", "external_id")
 
@@ -61,6 +63,11 @@ class PersonOut(BaseModel):
     source: str
     primary_unit_id: uuid.UUID | None
     memberships: list[MembershipOut]
+
+
+class DeactivationOut(BaseModel):
+    person: PersonOut
+    freed_seats: list[FreedSeat]
 
 
 def _snapshot(p: models.Person) -> dict[str, Any]:
@@ -242,6 +249,15 @@ class PeopleService:
             self._audit("person.updated", p.id, b, a)
             await self.db.commit()
         return (await self._out([p]))[0]
+
+    async def deactivate(self, person_id: uuid.UUID) -> DeactivationOut:
+        """Deactivate and free the person's seats (docs/0017, docs/0085). Devices issued to them
+        keep the link (docs/0086)."""
+        p = await self.get_person(person_id)
+        freed_seats = []
+        if p.active:
+            freed_seats = await free_person_seats(self.db, self.principal, p, self.request_id)
+        return DeactivationOut(person=await self.set_active(p.id, False), freed_seats=freed_seats)
 
     async def set_active(self, person_id: uuid.UUID, active: bool) -> PersonOut:
         p = await self.get_person(person_id)

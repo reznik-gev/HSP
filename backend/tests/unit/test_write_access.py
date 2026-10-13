@@ -34,6 +34,8 @@ WRITES = [
     ("put", f"/api/v1/people/{ID}/memberships"),
     ("post", "/api/v1/imports/units"),
     ("post", "/api/v1/imports/people"),
+    ("put", f"/api/v1/seats/{ID}/assignment"),
+    ("delete", f"/api/v1/seats/{ID}/assignment"),
 ]
 
 
