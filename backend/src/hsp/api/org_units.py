@@ -19,6 +19,7 @@ from hsp.org.units import (
     UnitsService,
     unit_out,
 )
+from hsp.release import ReleaseReport
 
 router = APIRouter(tags=["organization"])
 
@@ -64,10 +65,12 @@ async def update_unit(unit_id: uuid.UUID, body: UnitPatch, service: Service) -> 
     return await service.update(unit_id, body.model_dump(exclude_unset=True))
 
 
-@router.delete("/org-units/{unit_id}", status_code=204, dependencies=WRITE)
-async def archive_unit(unit_id: uuid.UUID, service: Service) -> Response:
-    await service.archive(unit_id)
-    return Response(status_code=204)
+@router.delete("/org-units/{unit_id}", dependencies=WRITE)
+async def archive_unit(unit_id: uuid.UUID, service: Service) -> ReleaseReport:
+    """Archive the unit and its active sub-units (docs/0086). Members move up to the parent unit,
+    keeping their primary flag; seats held by the archived units are freed. 409 root-unit for the
+    root. The response lists everything archived, moved and freed."""
+    return await service.archive(unit_id)
 
 
 @router.post("/org-units/{unit_id}/restore", dependencies=WRITE)

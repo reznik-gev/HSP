@@ -5,10 +5,18 @@ import uuid
 from datetime import datetime
 from typing import Protocol
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp.models import AuditEvent, Building, Floor, FloorEditLock, Site
+from hsp.models import (
+    AuditEvent,
+    Building,
+    Floor,
+    FloorEditLock,
+    FloorElement,
+    SeatAssignment,
+    Site,
+)
 
 Entity = Site | Building | Floor
 
@@ -70,6 +78,10 @@ class LocationsRepository(Protocol):
         self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime
     ) -> str | None:
         """Display name (or subject) of whoever holds a valid edit lock, if anyone."""
+        ...
+
+    async def free_seats(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> list[SeatAssignment]:
+        """Delete the assignments of the floor's seats and return them (docs/0085)."""
         ...
 
     def add(self, entity: Entity) -> None: ...
@@ -191,6 +203,21 @@ class SqlLocationsRepository:
             )
         )
         return (lock.holder_name or lock.holder_subject) if lock else None
+
+    async def free_seats(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> list[SeatAssignment]:
+        rows = list(
+            await self._db.scalars(
+                select(SeatAssignment)
+                .join(FloorElement, FloorElement.id == SeatAssignment.seat_element_id)
+                .where(SeatAssignment.tenant_id == tenant_id, FloorElement.floor_id == floor_id)
+                .order_by(SeatAssignment.seat_element_id)
+            )
+        )
+        if rows:
+            await self._db.execute(
+                delete(SeatAssignment).where(SeatAssignment.id.in_([r.id for r in rows]))
+            )
+        return rows
 
     def add(self, entity: Entity) -> None:
         self._db.add(entity)

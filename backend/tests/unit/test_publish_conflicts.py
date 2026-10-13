@@ -1,7 +1,7 @@
 """publish_conflicts: the docs/0082 publish checks as a pure function."""
 
 from hsp.models import new_id
-from hsp.plans.publishing import publish_conflicts
+from hsp.plans.publishing import publish_conflicts, seats_losing_assignment
 from hsp.plans.schema import CatalogItem, PlacedObject, PlanContent
 
 DESK = new_id()
@@ -42,14 +42,12 @@ def plan(*objects: PlacedObject) -> PlanContent:
 
 
 def test_clean_draft_has_no_conflicts() -> None:
-    assert (
-        publish_conflicts(plan(seat("A-01"), seat("A-02"), seat(None)), plan(), {}, {}, set()) == []
-    )
+    assert publish_conflicts(plan(seat("A-01"), seat("A-02"), seat(None)), plan(), {}, {}) == []
 
 
 def test_duplicate_label_on_the_floor_and_in_the_building() -> None:
     a, b = seat("A-01"), seat("A-01")
-    problems = publish_conflicts(plan(a, b, seat("B-07")), plan(), {"B-07": "Level 1"}, {}, set())
+    problems = publish_conflicts(plan(a, b, seat("B-07")), plan(), {"B-07": "Level 1"}, {})
     assert [p.code for p in problems] == ["seat_label_duplicate", "seat_label_duplicate"]
     assert problems[0].related_ids == [str(a.id)]
     assert "Level 1" in problems[1].message
@@ -58,29 +56,14 @@ def test_duplicate_label_on_the_floor_and_in_the_building() -> None:
 def test_device_already_on_another_floor() -> None:
     device = new_id()
     problems = publish_conflicts(
-        plan(seat("A-01", device_id=device)), plan(), {}, {device: "Level 2"}, set()
+        plan(seat("A-01", device_id=device)), plan(), {}, {device: "Level 2"}
     )
     assert [p.code for p in problems] == ["device_on_other_floor"]
 
 
-def test_assigned_seats_must_stay_assignable() -> None:
+def test_assigned_seats_the_draft_drops_are_freed_not_conflicts() -> None:
     kept, removed, now_bookable = seat("A-01"), seat("A-02"), seat("A-03")
     draft = plan(kept, seat("A-03", mode="bookable", id=now_bookable.id))
-    problems = publish_conflicts(
-        draft, plan(kept, removed, now_bookable), {}, {}, {kept.id, removed.id, now_bookable.id}
-    )
-    assert sorted(p.code for p in problems) == [
-        "assigned_seat_not_assignable",
-        "assigned_seat_removed",
-    ]
-
-
-def test_confirmed_seats_no_longer_block() -> None:
-    kept, removed = seat("A-01"), seat("A-02")
-    assigned = {kept.id, removed.id}
-    assert publish_conflicts(plan(kept), plan(kept, removed), {}, {}, assigned, {removed.id}) == []
-    # Confirmation never excuses a label clash.
-    problems = publish_conflicts(
-        plan(kept), plan(kept, removed), {"A-01": "Level 2"}, {}, assigned, {removed.id, kept.id}
-    )
-    assert [p.code for p in problems] == ["seat_label_duplicate"]
+    assert publish_conflicts(draft, plan(kept, removed, now_bookable), {}, {}) == []  # docs/0086
+    assigned = {kept.id, removed.id, now_bookable.id}
+    assert seats_losing_assignment(draft, assigned) == {removed.id, now_bookable.id}

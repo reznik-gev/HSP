@@ -141,7 +141,7 @@ async def test_publish_conflicts_labels_devices_and_assignments(ctx: dict[str, A
     ]
 
 
-async def test_assigned_seat_cannot_be_removed_by_publishing(ctx: dict[str, Any]) -> None:
+async def test_publishing_frees_assigned_seats_it_removes(ctx: dict[str, Any]) -> None:
     seat = new_id()
     await apply(ctx, 0, add("object", seat, **desk_data(ctx)))
     await publish(ctx, 1)
@@ -166,15 +166,10 @@ async def test_assigned_seat_cannot_be_removed_by_publishing(ctx: dict[str, Any]
     )
     await ctx["db"].flush()
     await apply(ctx, 0, {"op": "delete", "kind": "object", "id": str(seat)})
-    with pytest.raises(ProblemException) as exc:
-        await publish(ctx, 1)
-    assert [e.code for e in exc.value.errors or []] == ["assigned_seat_removed"]
-
-    # The publisher confirms: the seat is unassigned in the same transaction, and audited.
-    result = await publishing(ctx).publish(
-        ctx["floor"], PublishIn(base_revision=1, unassign_seats=[seat, new_id()])
-    )
-    assert (result.published_version, result.unassigned_seats) == (2, [seat])
+    # docs/0086: publishing frees the seat in the same transaction, audited and reported.
+    result = await publish(ctx, 1)
+    assert result.published_version == 2
+    assert [(f.seat_id, f.holder_person_id) for f in result.freed_seats] == [(seat, person)]
     db = ctx["db"]
     assert (
         await db.scalar(

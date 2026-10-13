@@ -115,10 +115,10 @@ def test_noop_patch_writes_nothing(client: TestClient, repo: InMemoryLocationsRe
 
 def test_archive_restore_and_listing(client: TestClient) -> None:
     site = create(client)
-    assert client.delete(f"/api/v1/sites/{site['id']}", headers=CSRF).status_code == 204
-    assert (
-        client.delete(f"/api/v1/sites/{site['id']}", headers=CSRF).status_code == 204
-    )  # idempotent
+    archived = client.delete(f"/api/v1/sites/{site['id']}", headers=CSRF)
+    assert [a["id"] for a in archived.json()["archived"]] == [site["id"]]
+    again = client.delete(f"/api/v1/sites/{site['id']}", headers=CSRF)
+    assert (again.status_code, again.json()["archived"]) == (200, [])  # idempotent
     assert client.get("/api/v1/sites").json()["items"] == []
     archived = client.get("/api/v1/sites", params={"include_archived": True}).json()["items"]
     assert archived[0]["archived_at"] is not None
@@ -131,7 +131,7 @@ def test_archive_restore_and_listing(client: TestClient) -> None:
     assert len(client.get("/api/v1/sites").json()["items"]) == 1
 
 
-def test_archive_blocked_by_active_building(
+def test_archive_cascades_to_active_buildings(
     client: TestClient, repo: InMemoryLocationsRepository
 ) -> None:
     site = create(client)
@@ -147,9 +147,14 @@ def test_archive_blocked_by_active_building(
     )
     repo.buildings[b.id] = b
     r = client.delete(f"/api/v1/sites/{site['id']}", headers=CSRF)
-    assert r.status_code == 409
-    assert r.json()["type"].endswith("/has-active-children")
-    assert r.json()["errors"][0]["element_id"] == str(b.id)
+    assert r.status_code == 200  # docs/0086: no more bottom-up archiving
+    assert [(a["kind"], a["id"]) for a in r.json()["archived"]] == [
+        ("site", site["id"]),
+        ("building", str(b.id)),
+    ]
+    assert repo.buildings[b.id].archived_at is not None
+    cascaded = [e for e in repo.events if e.entity_id == b.id]
+    assert cascaded[0].action == "building.archived" and cascaded[0].reason is not None
 
 
 def test_cursor_pagination(client: TestClient) -> None:

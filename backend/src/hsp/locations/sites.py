@@ -9,8 +9,10 @@ from typing import Any
 from hsp.audit import changed_fields
 from hsp.auth.principal import Principal
 from hsp.locations import common
+from hsp.locations.archiving import LocationArchiver
 from hsp.locations.repository import LocationsRepository
 from hsp.models import Site, new_id
+from hsp.release import ReleaseReport
 
 EDITABLE = ("name", "address", "time_zone")
 
@@ -82,18 +84,10 @@ class SitesService:
             await self.repo.commit()
         return site
 
-    async def archive(self, site_id: uuid.UUID) -> None:
+    async def archive(self, site_id: uuid.UUID) -> ReleaseReport:
+        """Cascades to active buildings and their floors, freeing seats (docs/0086)."""
         site = await self.get(site_id)
-        if site.archived_at is not None:
-            return  # idempotent (docs/0078)
-        blocking = await self.repo.active_buildings(self.principal.tenant_id, site_id)
-        if blocking:
-            raise common.has_active_children(
-                "site", "building", [(b.id, f"Building {b.code} ({b.name})") for b in blocking]
-            )
-        site.archived_at = site.updated_at = datetime.now(UTC)
-        self._audit("site.archived", site, after={"archived_at": site.archived_at})
-        await self.repo.commit()
+        return await LocationArchiver(self.repo, self.principal, self.request_id).archive(site)
 
     async def restore(self, site_id: uuid.UUID) -> Site:
         site = await self.get(site_id)

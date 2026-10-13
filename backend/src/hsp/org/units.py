@@ -7,13 +7,21 @@ from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
 from hsp.audit import audit_event, changed_fields
 from hsp.auth.principal import Principal
 from hsp.problems import ProblemError, ProblemException
+from hsp.release import (
+    ArchivedItem,
+    FreedSeat,
+    MovedMember,
+    ReleaseReport,
+    freed,
+    seat_unassigned,
+)
 
 UNIT_FIELDS = ("name", "parent_id", "level_label", "color", "external_id")
 
@@ -258,31 +266,149 @@ class UnitsService:
             await self.db.commit()
         return unit_out(u)
 
-    async def archive(self, unit_id: uuid.UUID) -> None:
+    async def archive(self, unit_id: uuid.UUID) -> ReleaseReport:
+        """Archive the unit and its active sub-units (docs/0086). Their members move up to the
+        nearest active ancestor, and seats held by the archived units are freed (docs/0085)."""
         u = await self.get_unit(unit_id)
         if u.archived_at is not None:
-            return
-        children = list(
+            return ReleaseReport()
+        if u.parent_id is None:
+            raise ProblemException(
+                409,
+                "root-unit",
+                "Can't archive the root unit",
+                "The organization always has a root; its members would have nowhere to go.",
+            )
+        units = list(
             await self.db.scalars(
                 select(models.OrgUnit).where(
-                    models.OrgUnit.parent_id == u.id, models.OrgUnit.archived_at.is_(None)
+                    models.OrgUnit.tenant_id == self._tenant, models.OrgUnit.archived_at.is_(None)
                 )
             )
         )
-        if children:
-            raise ProblemException(
-                409,
-                "has-active-children",
-                "Unit has active sub-units",
-                "Archive or move its sub-units first (docs/0078).",
-                errors=[
-                    ProblemError(code="active_child", message=c.name, element_id=str(c.id))
-                    for c in children
-                ],
+        children: dict[uuid.UUID, list[models.OrgUnit]] = {}
+        for x in units:
+            if x.parent_id is not None:
+                children.setdefault(x.parent_id, []).append(x)
+        subtree, queue = [u], [u]
+        while queue:
+            for child in children.get(queue.pop(0).id, []):
+                subtree.append(child)
+                queue.append(child)
+        ids = [x.id for x in subtree]
+        target = u.parent_id  # active: an active unit never sits under an archived one
+
+        report = ReleaseReport()
+        now = datetime.now(UTC)
+        for x in subtree:
+            x.archived_at = x.updated_at = now
+            self.db.add(
+                audit_event(
+                    self.principal,
+                    action="org_unit.archived",
+                    entity_type="org_unit",
+                    entity_id=x.id,
+                    after={"archived_at": now},
+                    reason=None if x is u else f"Archived with {u.name}",
+                    request_id=self.request_id,
+                )
             )
-        u.archived_at = u.updated_at = datetime.now(UTC)
-        self._audit("org_unit.archived", "org_unit", u.id, after={"archived_at": u.archived_at})
+            report.archived.append(ArchivedItem(kind="org_unit", id=x.id, name=x.name))
+        report.moved_members = await self._move_members_up(ids, target, u.name)
+        report.freed_seats = await self._free_unit_seats(ids, u.name)
         await self.db.commit()
+        return report
+
+    async def _move_members_up(
+        self, unit_ids: list[uuid.UUID], target: uuid.UUID, archived_name: str
+    ) -> list[MovedMember]:
+        """Memberships in archived units become memberships of `target`, merging with an
+        existing one. A primary stays primary, so the explicit primary survives (docs/0084)."""
+        leaving = list(
+            await self.db.scalars(
+                select(models.UnitMembership).where(models.UnitMembership.unit_id.in_(unit_ids))
+            )
+        )
+        if not leaving:
+            return []
+        by_person: dict[uuid.UUID, list[models.UnitMembership]] = {}
+        for m in leaving:
+            by_person.setdefault(m.person_id, []).append(m)
+        existing = {
+            m.person_id: m
+            for m in await self.db.scalars(
+                select(models.UnitMembership).where(
+                    models.UnitMembership.unit_id == target,
+                    models.UnitMembership.person_id.in_(by_person),
+                )
+            )
+        }
+        await self.db.execute(
+            delete(models.UnitMembership).where(models.UnitMembership.unit_id.in_(unit_ids))
+        )
+        await self.db.flush()  # free the "one primary" index before re-pointing primaries
+        moved = []
+        for person_id, ms in sorted(by_person.items()):
+            was_primary = any(m.is_primary for m in ms)
+            here = existing.get(person_id)
+            if here is None:
+                self.db.add(
+                    models.UnitMembership(
+                        person_id=person_id,
+                        unit_id=target,
+                        tenant_id=self._tenant,
+                        position_id=None,
+                        is_primary=was_primary,
+                        primary_override=was_primary,
+                    )
+                )
+            elif was_primary:
+                here.is_primary = here.primary_override = True
+            from_ids = sorted(m.unit_id for m in ms)
+            self.db.add(
+                audit_event(
+                    self.principal,
+                    action="person.memberships_changed",
+                    entity_type="person",
+                    entity_id=person_id,
+                    before={"unit_ids": [str(i) for i in from_ids]},
+                    after={"unit_id": str(target), "is_primary": was_primary},
+                    reason=f"{archived_name} archived; moved up to its parent unit",
+                    request_id=self.request_id,
+                )
+            )
+            moved.append(
+                MovedMember(person_id=person_id, from_unit_ids=from_ids, to_unit_id=target)
+            )
+        await self.db.flush()
+        return moved
+
+    async def _free_unit_seats(
+        self, unit_ids: list[uuid.UUID], archived_name: str
+    ) -> list[FreedSeat]:
+        held = list(
+            await self.db.scalars(
+                select(models.SeatAssignment)
+                .where(models.SeatAssignment.holder_unit_id.in_(unit_ids))
+                .order_by(models.SeatAssignment.seat_element_id)
+            )
+        )
+        if held:
+            await self.db.execute(
+                delete(models.SeatAssignment).where(
+                    models.SeatAssignment.id.in_([a.id for a in held])
+                )
+            )
+        for a in held:
+            self.db.add(
+                seat_unassigned(
+                    self.principal,
+                    a,
+                    reason=f"{archived_name} archived",
+                    request_id=self.request_id,
+                )
+            )
+        return [freed(a) for a in held]
 
     async def restore(self, unit_id: uuid.UUID) -> UnitOut:
         u = await self.get_unit(unit_id)

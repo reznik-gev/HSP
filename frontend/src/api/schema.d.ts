@@ -115,7 +115,8 @@ export interface paths {
         post?: never;
         /**
          * Archive Building
-         * @description Archive (soft delete). Refused with 409 while active floors exist (docs/0078).
+         * @description Archive (soft delete, docs/0078). Cascades to its active floors; every archived floor frees
+         *     its assigned seats. The response lists everything archived and freed (docs/0086).
          */
         delete: operations["archive_building_api_v1_buildings__building_id__delete"];
         options?: never;
@@ -300,7 +301,11 @@ export interface paths {
         get: operations["get_floor_api_v1_floors__floor_id__get"];
         put?: never;
         post?: never;
-        /** Archive Floor */
+        /**
+         * Archive Floor
+         * @description Archive (soft delete, docs/0078) and free the floor's assigned seats. Refused only while
+         *     someone is editing it. The response lists everything archived and freed (docs/0086).
+         */
         delete: operations["archive_floor_api_v1_floors__floor_id__delete"];
         options?: never;
         head?: never;
@@ -371,9 +376,8 @@ export interface paths {
         /**
          * Publish Draft
          * @description Make the draft the published version (docs/0082). `base_revision` must be the revision
-         *     you reviewed. 409 publish-conflicts lists seat-label, device and assignment problems.
-         *     Assigned seats that the draft removes or makes non-assignable are unassigned only when
-         *     listed in `unassign_seats` (docs/0082).
+         *     you reviewed. 409 publish-conflicts lists seat-label and device problems. Assigned seats the
+         *     draft removes or makes non-assignable are freed, and listed in `freed_seats` (docs/0086).
          */
         post: operations["publish_draft_api_v1_floors__floor_id__draft_publish_post"];
         delete?: never;
@@ -609,7 +613,12 @@ export interface paths {
         get: operations["get_unit_api_v1_org_units__unit_id__get"];
         put?: never;
         post?: never;
-        /** Archive Unit */
+        /**
+         * Archive Unit
+         * @description Archive the unit and its active sub-units (docs/0086). Members move up to the parent unit,
+         *     keeping their primary flag; seats held by the archived units are freed. 409 root-unit for the
+         *     root. The response lists everything archived, moved and freed.
+         */
         delete: operations["archive_unit_api_v1_org_units__unit_id__delete"];
         options?: never;
         head?: never;
@@ -785,7 +794,9 @@ export interface paths {
         post?: never;
         /**
          * Archive Site
-         * @description Archive (soft delete). Refused with 409 while active buildings exist (docs/0078).
+         * @description Archive (soft delete, docs/0078). Cascades to its active buildings and their floors;
+         *     archived floors free their assigned seats. The response lists everything archived and freed
+         *     (docs/0086).
          */
         delete: operations["archive_site_api_v1_sites__site_id__delete"];
         options?: never;
@@ -921,6 +932,18 @@ export interface components {
              * @enum {string}
              */
             op: "add";
+        };
+        /** ArchivedItem */
+        ArchivedItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
         };
         /** Body_import_people_api_v1_imports_people_post */
         Body_import_people_api_v1_imports_people_post: {
@@ -1369,6 +1392,18 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** FreedSeat */
+        FreedSeat: {
+            /** Holder Person Id */
+            holder_person_id: string | null;
+            /** Holder Unit Id */
+            holder_unit_id: string | null;
+            /**
+             * Seat Id
+             * Format: uuid
+             */
+            seat_id: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1523,6 +1558,21 @@ export interface components {
              * Format: uuid
              */
             unit_id: string;
+        };
+        /** MovedMember */
+        MovedMember: {
+            /** From Unit Ids */
+            from_unit_ids: string[];
+            /**
+             * Person Id
+             * Format: uuid
+             */
+            person_id: string;
+            /**
+             * To Unit Id
+             * Format: uuid
+             */
+            to_unit_id: string;
         };
         /** Opening */
         Opening: {
@@ -1864,12 +1914,6 @@ export interface components {
             base_revision: number;
             /** Note */
             note?: string | null;
-            /**
-             * Unassign Seats
-             * @description Assigned seats the publisher confirms may be unassigned because the draft removes them or makes them non-assignable (docs/0082). Taken from the assigned_seat_* errors of a refused publish.
-             * @default []
-             */
-            unassign_seats: string[];
         };
         /** PublishResult */
         PublishResult: {
@@ -1878,15 +1922,33 @@ export interface components {
              * Format: uuid
              */
             floor_id: string;
+            /**
+             * Freed Seats
+             * @default []
+             */
+            freed_seats: components["schemas"]["FreedSeat"][];
             /** Published Version */
             published_version: number;
             /** Superseded Version */
             superseded_version: number | null;
+        };
+        /** ReleaseReport */
+        ReleaseReport: {
             /**
-             * Unassigned Seats
+             * Archived
              * @default []
              */
-            unassigned_seats: string[];
+            archived: components["schemas"]["ArchivedItem"][];
+            /**
+             * Freed Seats
+             * @default []
+             */
+            freed_seats: components["schemas"]["FreedSeat"][];
+            /**
+             * Moved Members
+             * @default []
+             */
+            moved_members: components["schemas"]["MovedMember"][];
         };
         /** RevisionOut */
         RevisionOut: {
@@ -2370,11 +2432,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReleaseReport"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -2956,11 +3020,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReleaseReport"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -3631,11 +3697,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReleaseReport"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -4190,11 +4258,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReleaseReport"];
+                };
             };
             /** @description Validation Error */
             422: {

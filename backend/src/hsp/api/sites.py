@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from hsp.api.common import WRITE, get_locations_repository
@@ -13,6 +13,7 @@ from hsp.auth.dependencies import CurrentPrincipal
 from hsp.locations.repository import LocationsRepository
 from hsp.locations.sites import SitesService
 from hsp.models import Site
+from hsp.release import ReleaseReport
 
 router = APIRouter(prefix="/sites", tags=["sites"])
 
@@ -85,11 +86,12 @@ async def update_site(site_id: uuid.UUID, body: SitePatch, service: Service) -> 
     return to_out(await service.update(site_id, body.model_dump(exclude_unset=True)))
 
 
-@router.delete("/{site_id}", status_code=204, dependencies=WRITE)
-async def archive_site(site_id: uuid.UUID, service: Service) -> Response:
-    """Archive (soft delete). Refused with 409 while active buildings exist (docs/0078)."""
-    await service.archive(site_id)
-    return Response(status_code=204)
+@router.delete("/{site_id}", dependencies=WRITE)
+async def archive_site(site_id: uuid.UUID, service: Service) -> ReleaseReport:
+    """Archive (soft delete, docs/0078). Cascades to its active buildings and their floors;
+    archived floors free their assigned seats. The response lists everything archived and freed
+    (docs/0086)."""
+    return await service.archive(site_id)
 
 
 @router.post("/{site_id}/restore", dependencies=WRITE)

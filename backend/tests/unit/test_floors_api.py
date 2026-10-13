@@ -121,15 +121,16 @@ def test_published_version_is_not_patchable(client: TestClient, building_id: str
     assert r.json()["published_version"] is None  # unknown fields are ignored
 
 
-def test_floor_blocks_building_archive_and_restore_is_top_down(
+def test_building_archive_cascades_and_restore_is_top_down(
     client: TestClient, building_id: str
 ) -> None:
     f = floor(client, building_id, 0)
-    assert client.delete(f"/api/v1/buildings/{building_id}", headers=CSRF).status_code == 409
-    assert client.delete(f"/api/v1/floors/{f['id']}", headers=CSRF).status_code == 204
-    assert client.delete(f"/api/v1/buildings/{building_id}", headers=CSRF).status_code == 204
+    r = client.delete(f"/api/v1/buildings/{building_id}", headers=CSRF)
+    assert [a["id"] for a in r.json()["archived"]] == [building_id, f["id"]]  # docs/0086
     assert client.post(f"/api/v1/floors/{f['id']}/restore", headers=CSRF).status_code == 409
     assert client.post(f"/api/v1/buildings/{building_id}/restore", headers=CSRF).status_code == 200
+    floors = client.get("/api/v1/floors", params={"building_id": building_id}).json()["items"]
+    assert floors == []  # restoring the building doesn't bring its floors back
     assert (
         client.post(f"/api/v1/floors/{f['id']}/restore", headers=CSRF).json()["archived_at"] is None
     )
@@ -153,3 +154,7 @@ def test_archive_refused_while_floor_is_being_edited(
     assert r.status_code == 409
     assert r.json()["type"].endswith("/floor-locked")
     assert "Alice is editing" in r.json()["detail"]
+    # A cascade from the building is refused too: the lock protects unsaved work (docs/0086).
+    r = client.delete(f"/api/v1/buildings/{building_id}", headers=CSRF)
+    assert r.status_code == 409
+    assert r.json()["errors"][0]["element_id"] == f["id"]

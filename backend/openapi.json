@@ -40,6 +40,30 @@
         "title": "AddOp",
         "type": "object"
       },
+      "ArchivedItem": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "name"
+        ],
+        "title": "ArchivedItem",
+        "type": "object"
+      },
       "Body_import_people_api_v1_imports_people_post": {
         "properties": {
           "file": {
@@ -1268,6 +1292,46 @@
         "title": "FloorVersion",
         "type": "object"
       },
+      "FreedSeat": {
+        "properties": {
+          "holder_person_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holder Person Id"
+          },
+          "holder_unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holder Unit Id"
+          },
+          "seat_id": {
+            "format": "uuid",
+            "title": "Seat Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seat_id",
+          "holder_person_id",
+          "holder_unit_id"
+        ],
+        "title": "FreedSeat",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1609,6 +1673,35 @@
           "primary_override"
         ],
         "title": "MembershipOut",
+        "type": "object"
+      },
+      "MovedMember": {
+        "properties": {
+          "from_unit_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "From Unit Ids",
+            "type": "array"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "to_unit_id": {
+            "format": "uuid",
+            "title": "To Unit Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person_id",
+          "from_unit_ids",
+          "to_unit_id"
+        ],
+        "title": "MovedMember",
         "type": "object"
       },
       "Opening": {
@@ -2506,16 +2599,6 @@
               }
             ],
             "title": "Note"
-          },
-          "unassign_seats": {
-            "default": [],
-            "description": "Assigned seats the publisher confirms may be unassigned because the draft removes them or makes them non-assignable (docs/0082). Taken from the assigned_seat_* errors of a refused publish.",
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "title": "Unassign Seats",
-            "type": "array"
           }
         },
         "required": [
@@ -2531,6 +2614,14 @@
             "title": "Floor Id",
             "type": "string"
           },
+          "freed_seats": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FreedSeat"
+            },
+            "title": "Freed Seats",
+            "type": "array"
+          },
           "published_version": {
             "title": "Published Version",
             "type": "integer"
@@ -2545,15 +2636,6 @@
               }
             ],
             "title": "Superseded Version"
-          },
-          "unassigned_seats": {
-            "default": [],
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "title": "Unassigned Seats",
-            "type": "array"
           }
         },
         "required": [
@@ -2562,6 +2644,36 @@
           "superseded_version"
         ],
         "title": "PublishResult",
+        "type": "object"
+      },
+      "ReleaseReport": {
+        "properties": {
+          "archived": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ArchivedItem"
+            },
+            "title": "Archived",
+            "type": "array"
+          },
+          "freed_seats": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FreedSeat"
+            },
+            "title": "Freed Seats",
+            "type": "array"
+          },
+          "moved_members": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/MovedMember"
+            },
+            "title": "Moved Members",
+            "type": "array"
+          }
+        },
+        "title": "ReleaseReport",
         "type": "object"
       },
       "RevisionOut": {
@@ -3674,7 +3786,7 @@
     },
     "/api/v1/buildings/{building_id}": {
       "delete": {
-        "description": "Archive (soft delete). Refused with 409 while active floors exist (docs/0078).",
+        "description": "Archive (soft delete, docs/0078). Cascades to its active floors; every archived floor frees\nits assigned seats. The response lists everything archived and freed (docs/0086).",
         "operationId": "archive_building_api_v1_buildings__building_id__delete",
         "parameters": [
           {
@@ -3689,7 +3801,14 @@
           }
         ],
         "responses": {
-          "204": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseReport"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "422": {
@@ -4595,6 +4714,7 @@
     },
     "/api/v1/floors/{floor_id}": {
       "delete": {
+        "description": "Archive (soft delete, docs/0078) and free the floor's assigned seats. Refused only while\nsomeone is editing it. The response lists everything archived and freed (docs/0086).",
         "operationId": "archive_floor_api_v1_floors__floor_id__delete",
         "parameters": [
           {
@@ -4609,7 +4729,14 @@
           }
         ],
         "responses": {
-          "204": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseReport"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "422": {
@@ -4898,7 +5025,7 @@
     },
     "/api/v1/floors/{floor_id}/draft/publish": {
       "post": {
-        "description": "Make the draft the published version (docs/0082). `base_revision` must be the revision\nyou reviewed. 409 publish-conflicts lists seat-label, device and assignment problems.\nAssigned seats that the draft removes or makes non-assignable are unassigned only when\nlisted in `unassign_seats` (docs/0082).",
+        "description": "Make the draft the published version (docs/0082). `base_revision` must be the revision\nyou reviewed. 409 publish-conflicts lists seat-label and device problems. Assigned seats the\ndraft removes or makes non-assignable are freed, and listed in `freed_seats` (docs/0086).",
         "operationId": "publish_draft_api_v1_floors__floor_id__draft_publish_post",
         "parameters": [
           {
@@ -5598,6 +5725,7 @@
     },
     "/api/v1/org-units/{unit_id}": {
       "delete": {
+        "description": "Archive the unit and its active sub-units (docs/0086). Members move up to the parent unit,\nkeeping their primary flag; seats held by the archived units are freed. 409 root-unit for the\nroot. The response lists everything archived, moved and freed.",
         "operationId": "archive_unit_api_v1_org_units__unit_id__delete",
         "parameters": [
           {
@@ -5612,7 +5740,14 @@
           }
         ],
         "responses": {
-          "204": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseReport"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "422": {
@@ -6454,7 +6589,7 @@
     },
     "/api/v1/sites/{site_id}": {
       "delete": {
-        "description": "Archive (soft delete). Refused with 409 while active buildings exist (docs/0078).",
+        "description": "Archive (soft delete, docs/0078). Cascades to its active buildings and their floors;\narchived floors free their assigned seats. The response lists everything archived and freed\n(docs/0086).",
         "operationId": "archive_site_api_v1_sites__site_id__delete",
         "parameters": [
           {
@@ -6469,7 +6604,14 @@
           }
         ],
         "responses": {
-          "204": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseReport"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "422": {
