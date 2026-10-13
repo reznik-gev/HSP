@@ -8,7 +8,8 @@
     "floors": "קומות",
     "seats": "עמדות",
     "collapse": "כיווץ סרגל הצד",
-    "expand": "הרחבת סרגל הצד"
+    "expand": "הרחבת סרגל הצד",
+    "people": "אנשים"
   },
   "settings": {
     "language": "שפה",
@@ -109,5 +110,69 @@
     "cancel": "ביטול",
     "saving": "שומרים…",
     "failed": "הפעולה לא הצליחה. נסו שוב, או טענו מחדש את הדף."
+  },
+  "people": {
+    "title": "אנשים",
+    "new": "אדם חדש",
+    "create": "יצירה",
+    "searchLabel": "חיפוש אנשים",
+    "searchPlaceholder": "שם או אימייל",
+    "filters": {
+      "unit": "צוות",
+      "allTeams": "כל הצוותים",
+      "unseated": "ללא עמדה",
+      "inactive": "כולל לא פעילים"
+    },
+    "columns": {
+      "name": "שם",
+      "title": "תפקיד",
+      "team": "צוות",
+      "status": "סטטוס"
+    },
+    "active": "פעיל/ה",
+    "inactive": "לא פעיל/ה",
+    "none": "אף אחד לא מתאים למסננים האלה.",
+    "loadFailed": "לא ניתן לטעון אנשים. טענו מחדש את הדף כדי לנסות שוב.",
+    "isInactive": "האדם הזה לא פעיל: אין לו עמדות, והוא לא מופיע ברשימות כברירת מחדל.",
+    "details": "פרטים",
+    "teams": "צוותים",
+    "seats": "עמדות",
+    "devices": "ציוד",
+    "fields": {
+      "name": "שם",
+      "email": "אימייל",
+      "title": "תפקיד",
+      "externalId": "מספר עובד",
+      "team": "צוות",
+      "position": "משרה"
+    },
+    "primary": "ראשי",
+    "noTeams": "עדיין לא שייך/ת לאף צוות.",
+    "noPosition": "ללא משרה",
+    "addTeam": "הוספת צוות",
+    "removeTeam": "הסרת צוות",
+    "saveTeams": "שמירת צוותים",
+    "teamsSaved": "הצוותים נשמרו",
+    "noSeats": "אין עמדה.",
+    "noDevices": "לא הונפק ציוד.",
+    "notPlaced": "לא ממוקם בקומה",
+    "saved": "{{name}} נשמר/ה",
+    "created": "{{name}} נוצר/ה",
+    "deactivate": "השבתה",
+    "reactivate": "הפעלה מחדש",
+    "deactivated": "{{name}} הושבת/ה",
+    "reactivated": "{{name}} הופעל/ה מחדש",
+    "seatsFreed_one": "עמדה אחת שוחררה",
+    "seatsFreed_two": "שתי עמדות שוחררו",
+    "seatsFreed_other": "{{count}} עמדות שוחררו",
+    "seatsTaken_one": "עמדה אחת ניתנה בינתיים למישהו אחר ונשארת אצלו.",
+    "seatsTaken_two": "שתי עמדות ניתנו בינתיים למישהו אחר ונשארות אצלו.",
+    "seatsTaken_other": "{{count}} עמדות ניתנו בינתיים למישהו אחר ונשארות אצלו.",
+    "errors": {
+      "emailTaken": "מישהו אחר כבר משתמש באימייל הזה.",
+      "externalIdTaken": "למישהו אחר כבר יש את מספר העובד הזה.",
+      "primaryRequired": "בחרו איזה צוות הוא הראשי.",
+      "duplicateTeam": "צוות מופיע פעמיים."
+    }
   }
 }

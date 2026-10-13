@@ -7092,6 +7092,24 @@
             }
           },
           {
+            "description": "true: holds a seat; false: holds none (docs/0088)",
+            "in": "query",
+            "name": "seated",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "true: holds a seat; false: holds none (docs/0088)",
+              "title": "Seated"
+            }
+          },
+          {
             "description": "Page size",
             "in": "query",
             "name": "limit",

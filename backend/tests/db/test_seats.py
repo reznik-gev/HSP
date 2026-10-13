@@ -90,3 +90,19 @@ async def test_deactivating_a_person_frees_their_seats(ctx: dict[str, Any]) -> N
     assert (await seats.get(ctx["a"])).assignment is None
     assert (await people.set_active(maya, True)).active is True
     assert (await seats.get(ctx["a"])).assignment is None  # reactivating doesn't give seats back
+
+
+async def test_people_can_be_filtered_by_whether_they_hold_a_seat(ctx: dict[str, Any]) -> None:
+    seats: SeatAssignmentService = ctx["seats"]
+    maya, eli = await person(ctx, "Maya"), await person(ctx, "Eli")
+    await seats.assign(ctx["a"], AssignmentIn(person_id=maya))
+    people = PeopleService(ctx["db"], ctx["admin"])
+
+    async def ids(seated: bool) -> set[Any]:
+        rows = await people.list_people(
+            q=None, unit_id=None, include_inactive=False, after=None, limit=500, seated=seated
+        )
+        return {p.id for p in rows}
+
+    assert maya in await ids(True) and maya not in await ids(False)
+    assert eli in await ids(False) and eli not in await ids(True)

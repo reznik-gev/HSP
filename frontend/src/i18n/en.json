@@ -8,7 +8,8 @@
     "floors": "Floors",
     "seats": "Seats",
     "collapse": "Collapse sidebar",
-    "expand": "Expand sidebar"
+    "expand": "Expand sidebar",
+    "people": "People"
   },
   "settings": {
     "language": "Language",
@@ -109,5 +110,67 @@
     "cancel": "Cancel",
     "saving": "Saving…",
     "failed": "That didn't work. Try again, or reload the page."
+  },
+  "people": {
+    "title": "People",
+    "new": "New person",
+    "create": "Create person",
+    "searchLabel": "Search people",
+    "searchPlaceholder": "Name or email",
+    "filters": {
+      "unit": "Team",
+      "allTeams": "All teams",
+      "unseated": "Without a seat",
+      "inactive": "Include inactive"
+    },
+    "columns": {
+      "name": "Name",
+      "title": "Title",
+      "team": "Team",
+      "status": "Status"
+    },
+    "active": "Active",
+    "inactive": "Inactive",
+    "none": "Nobody matches these filters.",
+    "loadFailed": "Couldn't load people. Reload the page to try again.",
+    "isInactive": "This person is inactive: they hold no seats and don't appear in lists by default.",
+    "details": "Details",
+    "teams": "Teams",
+    "seats": "Seats",
+    "devices": "Devices",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "title": "Title",
+      "externalId": "HR ID",
+      "team": "Team",
+      "position": "Position"
+    },
+    "primary": "Primary",
+    "noTeams": "Not in any team yet.",
+    "noPosition": "No position",
+    "addTeam": "Add team",
+    "removeTeam": "Remove team",
+    "saveTeams": "Save teams",
+    "teamsSaved": "Teams saved",
+    "noSeats": "No seat.",
+    "noDevices": "No devices issued.",
+    "notPlaced": "Not placed on a floor",
+    "saved": "{{name}} saved",
+    "created": "{{name}} created",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "deactivated": "{{name}} deactivated",
+    "reactivated": "{{name}} reactivated",
+    "seatsFreed_one": "{{count}} seat freed",
+    "seatsFreed_other": "{{count}} seats freed",
+    "seatsTaken_one": "{{count}} seat was given to someone else meanwhile and stays with them.",
+    "seatsTaken_other": "{{count}} seats were given to someone else meanwhile and stay with them.",
+    "errors": {
+      "emailTaken": "Someone else already uses this email.",
+      "externalIdTaken": "Someone else already has this HR ID.",
+      "primaryRequired": "Choose which team is primary.",
+      "duplicateTeam": "A team is listed twice."
+    }
   }
 }

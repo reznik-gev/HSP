@@ -12,7 +12,10 @@ function keys(tree: object, prefix = ""): string[] {
 
 describe("translations (docs/0087)", () => {
   it("English and Hebrew have the same keys", () => {
-    expect(keys(he).sort()).toEqual(keys(en).sort());
+    // Plural forms differ by language (Hebrew has a dual): compare the base keys.
+    const base = (tree: object) =>
+      [...new Set(keys(tree).map((k) => k.replace(/_(zero|one|two|few|many|other)$/, "")))].sort();
+    expect(base(he)).toEqual(base(en));
   });
 
   it("no translation is empty", () => {

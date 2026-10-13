@@ -21,6 +21,8 @@ export function Toaster() {
       theme={choice}
       dir={rtl ? "rtl" : "ltr"}
       position={rtl ? "bottom-left" : "bottom-right"}
+      // Clickable even while a side panel is open (Radix blocks pointer events outside it).
+      style={{ pointerEvents: "auto" }}
       toastOptions={{
         classNames: {
           toast: "!bg-popover !text-popover-foreground !border-border !font-sans",
@@ -30,6 +32,11 @@ export function Toaster() {
       }}
     />
   );
+}
+
+/** True for events inside a notice, so panels don't treat Undo as a click outside. */
+export function isInsideNotice(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest("[data-sonner-toaster]") !== null;
 }
 
 export interface NoticeOptions {

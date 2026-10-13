@@ -37,14 +37,23 @@ async def list_people(
     q: Annotated[str | None, Query(description="Search name or email")] = None,
     unit_id: Annotated[uuid.UUID | None, Query(description="Members of this unit")] = None,
     include_inactive: Annotated[bool, Query()] = False,
+    seated: Annotated[
+        bool | None, Query(description="true: holds a seat; false: holds none (docs/0088)")
+    ] = None,
     limit: LimitParam = DEFAULT_LIMIT,
     cursor: CursorParam = None,
 ) -> Page[PersonOut]:
-    filters = {"q": q, "unit_id": unit_id, "include_inactive": include_inactive}
+    filters = {
+        "q": q,
+        "unit_id": unit_id,
+        "include_inactive": include_inactive,
+        "seated": seated,
+    }
     rows = await service.list_people(
         q=q,
         unit_id=unit_id,
         include_inactive=include_inactive,
+        seated=seated,
         after=decode_cursor(cursor, filters),
         limit=limit + 1,
     )

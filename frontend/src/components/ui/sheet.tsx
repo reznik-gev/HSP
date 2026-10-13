@@ -9,6 +9,7 @@ import type * as React from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { isInsideNotice } from "@/lib/notify";
 import { cn } from "@/lib/utils";
 
 export const Sheet = Primitive.Root;
@@ -18,6 +19,7 @@ export const SheetClose = Primitive.Close;
 export function SheetContent({
   className,
   children,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof Primitive.Content>) {
   const { t } = useTranslation();
@@ -31,6 +33,11 @@ export function SheetContent({
           "data-[state=open]:slide-in-from-right rtl:data-[state=open]:slide-in-from-left",
           className,
         )}
+        // Clicking Undo in a notice must not close the panel (docs/0088 choice 6).
+        onInteractOutside={(e) => {
+          if (isInsideNotice(e.target)) e.preventDefault();
+          onInteractOutside?.(e);
+        }}
         {...props}
       >
         {children}
