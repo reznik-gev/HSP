@@ -318,5 +318,42 @@
       "holder_inactive_team": "{{name}} בארכיון.",
       "unknown_columns": "עמודות לא מוכרות לא נקלטו: {{columns}}."
     }
+  },
+  "locations": {
+    "actionsFor": "פעולות עבור {{name}}",
+    "edit": "עריכה",
+    "archive": "העברה לארכיון",
+    "create": "יצירה",
+    "newTitle": {
+      "site": "הוספת אתר",
+      "building": "הוספת בניין",
+      "floor": "הוספת קומה"
+    },
+    "editTitle": {
+      "site": "עריכת אתר",
+      "building": "עריכת בניין",
+      "floor": "עריכת קומה"
+    },
+    "fields": {
+      "name": "שם",
+      "timeZone": "אזור זמן",
+      "address": "כתובת",
+      "code": "קוד",
+      "codeHint": "קצר וייחודי באתר, למשל HT. משמש במספרי עמדות ובייבוא.",
+      "level": "מפלס",
+      "levelHint": "0 לקומת הקרקע, מספר שלילי מתחתיה."
+    },
+    "saved": "{{name}} נשמר",
+    "created": "{{name}} נוצר",
+    "archived": "{{name}} הועבר לארכיון",
+    "restored": "{{name}} שוחזר",
+    "alsoArchived_one": "ועוד פריט אחד הועבר יחד איתו",
+    "alsoArchived_two": "ועוד שני פריטים הועברו יחד איתו",
+    "alsoArchived_other": "ועוד {{count}} פריטים הועברו יחד איתו",
+    "errors": {
+      "codeTaken": "בניין אחר באתר כבר משתמש בקוד הזה.",
+      "levelTaken": "קומה אחרת בבניין כבר נמצאת במפלס הזה.",
+      "beingEdited": "מישהו עורך שם קומה. בקשו ממנו לסיים קודם."
+    }
   }
 }

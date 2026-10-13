@@ -312,5 +312,41 @@
       "holder_inactive_team": "{{name}} is archived.",
       "unknown_columns": "Ignored unknown column(s): {{columns}}."
     }
+  },
+  "locations": {
+    "actionsFor": "Actions for {{name}}",
+    "edit": "Edit",
+    "archive": "Archive",
+    "create": "Create",
+    "newTitle": {
+      "site": "Add site",
+      "building": "Add building",
+      "floor": "Add floor"
+    },
+    "editTitle": {
+      "site": "Edit site",
+      "building": "Edit building",
+      "floor": "Edit floor"
+    },
+    "fields": {
+      "name": "Name",
+      "timeZone": "Time zone",
+      "address": "Address",
+      "code": "Code",
+      "codeHint": "Short and unique within the site, e.g. HT. Used in seat labels and imports.",
+      "level": "Level",
+      "levelHint": "0 for the ground floor, negative below it."
+    },
+    "saved": "{{name}} saved",
+    "created": "{{name}} created",
+    "archived": "{{name}} archived",
+    "restored": "{{name}} restored",
+    "alsoArchived_one": "{{count}} more item archived with it",
+    "alsoArchived_other": "{{count}} more items archived with it",
+    "errors": {
+      "codeTaken": "Another building on this site already uses this code.",
+      "levelTaken": "Another floor in this building is already at this level.",
+      "beingEdited": "Someone is editing a floor there. Ask them to finish first."
+    }
   }
 }
