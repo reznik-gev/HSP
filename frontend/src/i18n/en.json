@@ -28,5 +28,19 @@
   "notFound": {
     "title": "Page not found",
     "body": "This address doesn't match any page. Use the sidebar to find what you need."
+  },
+  "session": {
+    "signingIn": "Taking you to sign in…",
+    "unreachable": "Can't reach the HSP server. Check your connection, then reload the page.",
+    "reload": "Reload",
+    "expiredTitle": "You've been signed out",
+    "expiredBody": "Your session ended. Sign in again to continue; you'll come back to this page.",
+    "signInAgain": "Sign in again"
+  },
+  "user": {
+    "menu": "Account: {{name}}",
+    "admin": "Administrator",
+    "viewer": "Viewer",
+    "signOut": "Sign out"
   }
 }
