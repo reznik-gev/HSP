@@ -695,7 +695,8 @@ export interface paths {
         post?: never;
         /**
          * Deactivate Person
-         * @description Deactivate (people are never deleted, docs/0017).
+         * @description Deactivate (people are never deleted, docs/0017). Their seats are freed and listed in the
+         *     response; reactivating doesn't give them back (docs/0085).
          */
         delete: operations["deactivate_person_api_v1_people__person_id__delete"];
         options?: never;
@@ -761,6 +762,36 @@ export interface paths {
         head?: never;
         /** Rename Position */
         patch: operations["rename_position_api_v1_positions__position_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/seats/{seat_id}/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Assignment
+         * @description Who holds the seat; `assignment` is null when it's free.
+         */
+        get: operations["get_assignment_api_v1_seats__seat_id__assignment_get"];
+        /**
+         * Assign Seat
+         * @description Give the seat to a person or reserve it for a unit. Only published seats in `assigned`
+         *     mode (409 seat-not-assignable otherwise); the holder must be active (422 holder-inactive).
+         *     A taken seat is reassigned, and `replaced` names the previous holder (docs/0086).
+         */
+        put: operations["assign_seat_api_v1_seats__seat_id__assignment_put"];
+        post?: never;
+        /**
+         * Unassign Seat
+         * @description Free the seat. Idempotent.
+         */
+        delete: operations["unassign_seat_api_v1_seats__seat_id__assignment_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/sites": {
@@ -944,6 +975,34 @@ export interface components {
             kind: string;
             /** Name */
             name: string;
+        };
+        /** AssignmentIn */
+        AssignmentIn: {
+            /** Note */
+            note?: string | null;
+            /** Person Id */
+            person_id?: string | null;
+            /**
+             * Unit Id
+             * @description Reserve the seat for a unit
+             */
+            unit_id?: string | null;
+        };
+        /** AssignmentOut */
+        AssignmentOut: {
+            /**
+             * Assigned At
+             * Format: date-time
+             */
+            assigned_at: string;
+            /** Assigned By */
+            assigned_by: string;
+            /** Holder Person Id */
+            holder_person_id: string | null;
+            /** Holder Unit Id */
+            holder_unit_id: string | null;
+            /** Note */
+            note: string | null;
         };
         /** Body_import_people_api_v1_imports_people_post */
         Body_import_people_api_v1_imports_people_post: {
@@ -1187,6 +1246,12 @@ export interface components {
              * Format: uuid
              */
             id: string;
+        };
+        /** DeactivationOut */
+        DeactivationOut: {
+            /** Freed Seats */
+            freed_seats: components["schemas"]["FreedSeat"][];
+            person: components["schemas"]["PersonOut"];
         };
         /** DeleteOp */
         DeleteOp: {
@@ -1990,6 +2055,24 @@ export interface components {
             message: string;
             /** Row */
             row: number;
+        };
+        /** SeatAssignmentOut */
+        SeatAssignmentOut: {
+            assignment: components["schemas"]["AssignmentOut"] | null;
+            /**
+             * Floor Id
+             * Format: uuid
+             */
+            floor_id: string;
+            /** Label */
+            label: string | null;
+            /** @description The previous holder, when this request reassigned the seat */
+            replaced?: components["schemas"]["FreedSeat"] | null;
+            /**
+             * Seat Id
+             * Format: uuid
+             */
+            seat_id: string;
         };
         /** SiteIn */
         SiteIn: {
@@ -3968,7 +4051,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PersonOut"];
+                    "application/json": components["schemas"]["DeactivationOut"];
                 };
             };
             /** @description Validation Error */
@@ -4134,6 +4217,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PositionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_assignment_api_v1_seats__seat_id__assignment_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                seat_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatAssignmentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assign_seat_api_v1_seats__seat_id__assignment_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                seat_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignmentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeatAssignmentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unassign_seat_api_v1_seats__seat_id__assignment_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                seat_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleaseReport"];
                 };
             };
             /** @description Validation Error */

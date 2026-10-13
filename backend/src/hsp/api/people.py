@@ -10,7 +10,14 @@ from hsp.api.common import WRITE
 from hsp.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
 from hsp.auth.dependencies import CurrentPrincipal
 from hsp.db import get_session
-from hsp.org.people import MembershipIn, PeopleService, PersonIn, PersonOut, PersonPatch
+from hsp.org.people import (
+    DeactivationOut,
+    MembershipIn,
+    PeopleService,
+    PersonIn,
+    PersonOut,
+    PersonPatch,
+)
 
 router = APIRouter(prefix="/people", tags=["organization"])
 
@@ -60,9 +67,10 @@ async def update_person(person_id: uuid.UUID, body: PersonPatch, service: Servic
 
 
 @router.delete("/{person_id}", dependencies=WRITE)
-async def deactivate_person(person_id: uuid.UUID, service: Service) -> PersonOut:
-    """Deactivate (people are never deleted, docs/0017)."""
-    return await service.set_active(person_id, False)
+async def deactivate_person(person_id: uuid.UUID, service: Service) -> DeactivationOut:
+    """Deactivate (people are never deleted, docs/0017). Their seats are freed and listed in the
+    response; reactivating doesn't give them back (docs/0085)."""
+    return await service.deactivate(person_id)
 
 
 @router.post("/{person_id}/reactivate", dependencies=WRITE)

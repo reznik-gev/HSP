@@ -64,6 +64,106 @@
         "title": "ArchivedItem",
         "type": "object"
       },
+      "AssignmentIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "person_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person Id"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Reserve the seat for a unit",
+            "title": "Unit Id"
+          }
+        },
+        "title": "AssignmentIn",
+        "type": "object"
+      },
+      "AssignmentOut": {
+        "properties": {
+          "assigned_at": {
+            "format": "date-time",
+            "title": "Assigned At",
+            "type": "string"
+          },
+          "assigned_by": {
+            "title": "Assigned By",
+            "type": "string"
+          },
+          "holder_person_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holder Person Id"
+          },
+          "holder_unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holder Unit Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "holder_person_id",
+          "holder_unit_id",
+          "assigned_at",
+          "assigned_by",
+          "note"
+        ],
+        "title": "AssignmentOut",
+        "type": "object"
+      },
       "Body_import_people_api_v1_imports_people_post": {
         "properties": {
           "file": {
@@ -731,6 +831,26 @@
           "height_mm"
         ],
         "title": "Column",
+        "type": "object"
+      },
+      "DeactivationOut": {
+        "properties": {
+          "freed_seats": {
+            "items": {
+              "$ref": "#/components/schemas/FreedSeat"
+            },
+            "title": "Freed Seats",
+            "type": "array"
+          },
+          "person": {
+            "$ref": "#/components/schemas/PersonOut"
+          }
+        },
+        "required": [
+          "person",
+          "freed_seats"
+        ],
+        "title": "DeactivationOut",
         "type": "object"
       },
       "DeleteOp": {
@@ -2794,6 +2914,60 @@
           "message"
         ],
         "title": "RowError",
+        "type": "object"
+      },
+      "SeatAssignmentOut": {
+        "properties": {
+          "assignment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssignmentOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "floor_id": {
+            "format": "uuid",
+            "title": "Floor Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "replaced": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FreedSeat"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The previous holder, when this request reassigned the seat"
+          },
+          "seat_id": {
+            "format": "uuid",
+            "title": "Seat Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seat_id",
+          "label",
+          "floor_id",
+          "assignment"
+        ],
+        "title": "SeatAssignmentOut",
         "type": "object"
       },
       "SiteIn": {
@@ -6150,7 +6324,7 @@
     },
     "/api/v1/people/{person_id}": {
       "delete": {
-        "description": "Deactivate (people are never deleted, docs/0017).",
+        "description": "Deactivate (people are never deleted, docs/0017). Their seats are freed and listed in the\nresponse; reactivating doesn't give them back (docs/0085).",
         "operationId": "deactivate_person_api_v1_people__person_id__delete",
         "parameters": [
           {
@@ -6169,7 +6343,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PersonOut"
+                  "$ref": "#/components/schemas/DeactivationOut"
                 }
               }
             },
@@ -6470,6 +6644,144 @@
         "summary": "Rename Position",
         "tags": [
           "organization"
+        ]
+      }
+    },
+    "/api/v1/seats/{seat_id}/assignment": {
+      "delete": {
+        "description": "Free the seat. Idempotent.",
+        "operationId": "unassign_seat_api_v1_seats__seat_id__assignment_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seat_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seat Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unassign Seat",
+        "tags": [
+          "seats"
+        ]
+      },
+      "get": {
+        "description": "Who holds the seat; `assignment` is null when it's free.",
+        "operationId": "get_assignment_api_v1_seats__seat_id__assignment_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seat_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seat Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatAssignmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Assignment",
+        "tags": [
+          "seats"
+        ]
+      },
+      "put": {
+        "description": "Give the seat to a person or reserve it for a unit. Only published seats in `assigned`\nmode (409 seat-not-assignable otherwise); the holder must be active (422 holder-inactive).\nA taken seat is reassigned, and `replaced` names the previous holder (docs/0086).",
+        "operationId": "assign_seat_api_v1_seats__seat_id__assignment_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seat_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seat Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatAssignmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assign Seat",
+        "tags": [
+          "seats"
         ]
       }
     },

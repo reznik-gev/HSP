@@ -14,6 +14,7 @@ from hsp.api import (
     org_units,
     people,
     plans,
+    seats,
     sites,
 )
 
@@ -30,3 +31,4 @@ router.include_router(devices.router)
 router.include_router(org_units.router)
 router.include_router(people.router)
 router.include_router(imports.router)
+router.include_router(seats.router)
