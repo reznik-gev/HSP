@@ -2,6 +2,7 @@ import { Outlet } from "@tanstack/react-router";
 
 import { SessionGate } from "@/auth/SessionGate";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/lib/notify";
 
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
@@ -20,6 +21,7 @@ export function AppShell() {
             </main>
           </div>
         </div>
+        <Toaster />
       </TooltipProvider>
     </SessionGate>
   );
