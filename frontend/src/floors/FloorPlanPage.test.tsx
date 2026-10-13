@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-import { act, cleanup, screen } from "@testing-library/react";
+import { act, cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { renderApp, type Routes } from "@/test/renderApp";
+import { ADMIN, renderApp, type Routes } from "@/test/renderApp";
 
 const DESK = {
   id: "rev-desk",
@@ -165,5 +165,80 @@ describe("floor plan viewer (docs/0087)", () => {
       "GET /api/v1/floors/f3/versions/2": { status: 500 },
     });
     expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't load this floor");
+  });
+});
+
+describe("assigning seats on the plan (docs/0088)", () => {
+  const people = {
+    "GET /api/v1/people": {
+      status: 200,
+      body: {
+        items: [
+          {
+            id: "p7",
+            display_name: "Yoni Peretz",
+            email: "yoni@acme.example",
+            title: null,
+            external_id: null,
+            active: true,
+            source: "manual",
+            primary_unit_id: null,
+            memberships: [],
+          },
+        ],
+        next_cursor: null,
+      },
+    },
+    "GET /api/v1/org-units": { status: 200, body: { items: [], next_cursor: null } },
+  };
+
+  it("an admin reassigns Maya's seat to Yoni; the notice says Maya lost it; Undo puts her back", async () => {
+    const { calls } = await renderApp("/floors/f3?seat=d1", {
+      ...backend(),
+      ...people,
+      "PUT /api/v1/seats/d1/assignment": { status: 200, body: {} },
+      // Undo checks the seat still has Yoni before putting Maya back.
+      "GET /api/v1/seats/d1/assignment": {
+        status: 200,
+        body: { assignment: { holder_person_id: "p7", holder_unit_id: null } },
+      },
+    });
+    const panel = await screen.findByRole("complementary", { name: "Seat details" });
+    await userEvent.click(within(panel).getByRole("button", { name: "Change" }));
+    await userEvent.type(within(panel).getByRole("combobox", { name: "Person or team" }), "yoni");
+    await userEvent.click(await within(panel).findByRole("option", { name: /Yoni Peretz/ }));
+    expect(await screen.findByText("A-01 assigned to Yoni Peretz")).toBeInTheDocument();
+    expect(screen.getByText("Maya Shani no longer has this seat")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    expect(await screen.findByText("A-01 is back as it was")).toBeInTheDocument();
+    const puts = await Promise.all(
+      calls.filter((r) => r.method === "PUT").map(async (r) => (await r.json()) as unknown),
+    );
+    expect(puts).toEqual([{ person_id: "p7" }, { person_id: "p1" }]);
+  });
+
+  it("freeing a seat offers Undo; viewers see no seat actions", async () => {
+    await renderApp("/floors/f3?seat=d1", {
+      ...backend(),
+      "DELETE /api/v1/seats/d1/assignment": { status: 200, body: { freed_seats: [] } },
+    });
+    const panel = await screen.findByRole("complementary", { name: "Seat details" });
+    await userEvent.click(within(panel).getByRole("button", { name: "Unassign" }));
+    expect(await screen.findByText("A-01 is free")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Undo" })).toBeInTheDocument();
+    cleanup();
+
+    await renderApp("/floors/f3?seat=d1", {
+      ...backend(),
+      "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } },
+    });
+    const viewerPanel = await screen.findByRole("complementary", { name: "Seat details" });
+    expect(within(viewerPanel).queryByRole("button", { name: "Change" })).toBeNull();
+  });
+
+  it("bookable seats aren't assigned from the plan", async () => {
+    await renderApp("/floors/f3?seat=d3", backend());
+    const panel = await screen.findByRole("complementary", { name: "Seat details" });
+    expect(within(panel).queryByRole("button", { name: "Assign" })).toBeNull();
   });
 });
