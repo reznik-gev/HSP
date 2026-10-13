@@ -134,6 +134,13 @@ function Results({ q }: { q: string }) {
   );
 }
 
+/** A seat nobody holds: free to assign, or not assignable at all (docs/0009). */
+function unheldState(seat: Seat): "free" | "bookable" | "unavailable" {
+  if (seat.allocation_mode === "bookable") return "bookable";
+  if (seat.allocation_mode === "unavailable") return "unavailable";
+  return "free";
+}
+
 function SeatRow({ seat }: { seat: Seat }) {
   const { t } = useTranslation();
   const person = seat.holder_person;
@@ -154,7 +161,7 @@ function SeatRow({ seat }: { seat: Seat }) {
         ) : seat.holder_unit ? (
           <span className="text-muted-foreground">{t("plan.state.unit")}</span>
         ) : (
-          <span className="text-muted-foreground">{t("plan.state.free")}</span>
+          <span className="text-muted-foreground">{t(`plan.state.${unheldState(seat)}`)}</span>
         )}
       </td>
       <td className="px-3 py-2.5">{team ?? "–"}</td>
