@@ -4,11 +4,17 @@
  */
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/client";
 import type { components } from "@/api/schema";
 import { EmptyState, Page } from "@/app/Page";
+import { AdminOnly, useIsAdmin } from "@/auth/admin";
+import { Button } from "@/components/ui/button";
+
+import { type LocationEdit, LocationMenu, LocationSheet, useArchive } from "./LocationAdmin";
 
 type Site = components["schemas"]["SiteOut"];
 type SiteOccupancy = components["schemas"]["SiteOccupancy"];
@@ -39,8 +45,17 @@ const siteOccupancyQuery = (siteId: string) =>
 export function FloorsPage() {
   const { t } = useTranslation();
   const sites = useQuery(sitesQuery);
+  const [edit, setEdit] = useState<LocationEdit | null>(null);
   return (
     <Page title={t("floors.title")}>
+      <AdminOnly>
+        <div className="-mt-2 mb-6 flex justify-end">
+          <Button onClick={() => setEdit({ kind: "site" })}>
+            <Plus aria-hidden />
+            {t("locations.newTitle.site")}
+          </Button>
+        </div>
+      </AdminOnly>
       {sites.isPending ? null : sites.isError ? (
         <p role="alert" className="text-destructive">
           {t("floors.loadFailed")}
@@ -50,26 +65,39 @@ export function FloorsPage() {
       ) : (
         <div className="space-y-10">
           {sites.data.map((site) => (
-            <SiteSection key={site.id} site={site} />
+            <SiteSection key={site.id} site={site} onEdit={setEdit} />
           ))}
         </div>
       )}
+      {edit && <LocationSheet edit={edit} onClose={() => setEdit(null)} />}
     </Page>
   );
 }
 
-function SiteSection({ site }: { site: Site }) {
+function SiteSection({ site, onEdit }: { site: Site; onEdit: (e: LocationEdit) => void }) {
   const { t } = useTranslation();
   const occupancy = useQuery(siteOccupancyQuery(site.id));
+  const archive = useArchive();
   return (
     <section aria-labelledby={`site-${site.id}`}>
       <div className="flex items-baseline justify-between gap-4 border-b pb-2">
         <h2 id={`site-${site.id}`} className="text-xl font-semibold tracking-tight">
           {site.name}
         </h2>
-        <span className="text-xs text-muted-foreground" dir="ltr">
-          {site.time_zone}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground" dir="ltr">
+            {site.time_zone}
+          </span>
+          <AdminOnly>
+            <LocationMenu
+              label={site.name}
+              onEdit={() => onEdit({ kind: "site", item: site })}
+              onAdd={() => onEdit({ kind: "building", siteId: site.id })}
+              addLabel={t("locations.newTitle.building")}
+              onArchive={() => archive.mutate({ kind: "site", id: site.id, name: site.name })}
+            />
+          </AdminOnly>
+        </div>
       </div>
       {occupancy.isError && (
         <p role="alert" className="mt-4 text-destructive">
@@ -81,25 +109,54 @@ function SiteSection({ site }: { site: Site }) {
       )}
       <div className="mt-5 space-y-7">
         {occupancy.data?.buildings.map((b) => (
-          <BuildingFloors key={b.id} building={b} />
+          <BuildingFloors key={b.id} building={b} siteId={site.id} onEdit={onEdit} />
         ))}
       </div>
     </section>
   );
 }
 
-function BuildingFloors({ building }: { building: BuildingOccupancy }) {
+function BuildingFloors({
+  building,
+  siteId,
+  onEdit,
+}: {
+  building: BuildingOccupancy;
+  siteId: string;
+  onEdit: (e: LocationEdit) => void;
+}) {
   const { t, i18n } = useTranslation();
+  const isAdmin = useIsAdmin();
+  const archive = useArchive();
   const n = new Intl.NumberFormat(i18n.resolvedLanguage);
   const columns = ["seats", "taken", "free", "bookable", "unavailable"] as const;
   return (
     <div>
-      <h3 className="flex items-baseline gap-2 text-base font-medium">
-        {building.name}
-        <span className="text-sm font-normal text-muted-foreground">
-          {t("floors.buildingCode", { code: building.code })}
-        </span>
-      </h3>
+      <div className="flex items-center gap-2">
+        <h3 className="flex items-baseline gap-2 text-base font-medium">
+          {building.name}
+          <span className="text-sm font-normal text-muted-foreground">
+            {t("floors.buildingCode", { code: building.code })}
+          </span>
+        </h3>
+        {isAdmin && (
+          <LocationMenu
+            label={building.name}
+            onEdit={() =>
+              onEdit({
+                kind: "building",
+                siteId,
+                item: { id: building.id, name: building.name, code: building.code },
+              })
+            }
+            onAdd={() => onEdit({ kind: "floor", buildingId: building.id })}
+            addLabel={t("locations.newTitle.floor")}
+            onArchive={() =>
+              archive.mutate({ kind: "building", id: building.id, name: building.name })
+            }
+          />
+        )}
+      </div>
       {building.floors.length === 0 ? (
         <p className="mt-2 text-muted-foreground">{t("floors.noFloors")}</p>
       ) : (
@@ -120,6 +177,11 @@ function BuildingFloors({ building }: { building: BuildingOccupancy }) {
               <th scope="col" className="w-40 px-3 py-2 text-start font-normal">
                 {t("floors.columns.occupancy")}
               </th>
+              {isAdmin && (
+                <th scope="col" className="w-12">
+                  <span className="sr-only">{t("search.columns.actions")}</span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -147,6 +209,21 @@ function BuildingFloors({ building }: { building: BuildingOccupancy }) {
                   <td className="px-3 py-2.5">
                     <OccupancyBar taken={c.taken} assignable={c.taken + c.free} />
                   </td>
+                  {isAdmin && (
+                    <td className="px-1">
+                      <LocationMenu
+                        label={f.name}
+                        onEdit={() =>
+                          onEdit({
+                            kind: "floor",
+                            buildingId: building.id,
+                            item: { id: f.id, name: f.name, level_index: f.level_index },
+                          })
+                        }
+                        onArchive={() => archive.mutate({ kind: "floor", id: f.id, name: f.name })}
+                      />
+                    </td>
+                  )}
                 </tr>
               );
             })}
