@@ -578,6 +578,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/occupancy/buildings/{building_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Building Occupancy */
+        get: operations["building_occupancy_api_v1_occupancy_buildings__building_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/occupancy/floors/{floor_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Floor Occupancy */
+        get: operations["floor_occupancy_api_v1_occupancy_floors__floor_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/occupancy/sites/{site_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Site Occupancy
+         * @description Totals for the site, per active building and per active floor.
+         */
+        get: operations["site_occupancy_api_v1_occupancy_sites__site_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/occupancy/units/{unit_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Unit Occupancy
+         * @description Seats reserved for the unit and seats held by its active members.
+         */
+        get: operations["unit_occupancy_api_v1_occupancy_units__unit_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/org-units": {
         parameters: {
             query?: never;
@@ -762,6 +836,27 @@ export interface paths {
         head?: never;
         /** Rename Position */
         patch: operations["rename_position_api_v1_positions__position_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/seats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Seats
+         * @description "Where does X sit?" over published plans of active floors, with each seat's place
+         *     (site > building > floor) and holder (docs/0085).
+         */
+        get: operations["search_seats_api_v1_seats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/seats/{seat_id}/assignment": {
@@ -1029,6 +1124,21 @@ export interface components {
              */
             site_id: string;
         };
+        /** BuildingOccupancy */
+        BuildingOccupancy: {
+            /** Code */
+            code: string;
+            counts: components["schemas"]["Counts"];
+            /** Floors */
+            floors: components["schemas"]["FloorOccupancy"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** BuildingOut */
         BuildingOut: {
             /** Archived At */
@@ -1247,6 +1357,40 @@ export interface components {
              */
             id: string;
         };
+        /** Counts */
+        Counts: {
+            /**
+             * Assigned To People
+             * @default 0
+             */
+            assigned_to_people: number;
+            /**
+             * Bookable
+             * @default 0
+             */
+            bookable: number;
+            /**
+             * Free
+             * @description In assigned mode, with no holder
+             * @default 0
+             */
+            free: number;
+            /**
+             * Reserved For Units
+             * @default 0
+             */
+            reserved_for_units: number;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Unavailable
+             * @default 0
+             */
+            unavailable: number;
+        };
         /** DeactivationOut */
         DeactivationOut: {
             /** Freed Seats */
@@ -1372,6 +1516,19 @@ export interface components {
              */
             origin_y_mm: number;
         };
+        /** FloorOccupancy */
+        FloorOccupancy: {
+            counts: components["schemas"]["Counts"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Level Index */
+            level_index: number;
+            /** Name */
+            name: string;
+        };
         /** FloorOut */
         FloorOut: {
             /** Archived At */
@@ -1480,6 +1637,19 @@ export interface components {
             status: string;
             /** Version */
             version: string;
+        };
+        /** HolderPerson */
+        HolderPerson: {
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            primary_unit: components["schemas"]["Ref"] | null;
         };
         /** ImportReport */
         ImportReport: {
@@ -1726,6 +1896,13 @@ export interface components {
         Page_RevisionOut_: {
             /** Items */
             items: components["schemas"]["RevisionOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** Page[SeatOut] */
+        Page_SeatOut_: {
+            /** Items */
+            items: components["schemas"]["SeatOut"][];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -1997,6 +2174,16 @@ export interface components {
             /** Superseded Version */
             superseded_version: number | null;
         };
+        /** Ref */
+        Ref: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** ReleaseReport */
         ReleaseReport: {
             /**
@@ -2074,6 +2261,24 @@ export interface components {
              */
             seat_id: string;
         };
+        /** SeatOut */
+        SeatOut: {
+            /** Allocation Mode */
+            allocation_mode: string | null;
+            building: components["schemas"]["Ref"];
+            floor: components["schemas"]["Ref"];
+            holder_person: components["schemas"]["HolderPerson"] | null;
+            holder_unit: components["schemas"]["Ref"] | null;
+            /**
+             * Id
+             * Format: uuid
+             * @description The seat's element id
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            site: components["schemas"]["Ref"];
+        };
         /** SiteIn */
         SiteIn: {
             /** Address */
@@ -2085,6 +2290,19 @@ export interface components {
              * @description IANA time zone, e.g. Europe/Berlin
              */
             time_zone: string;
+        };
+        /** SiteOccupancy */
+        SiteOccupancy: {
+            /** Buildings */
+            buildings: components["schemas"]["BuildingOccupancy"][];
+            counts: components["schemas"]["Counts"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** SiteOut */
         SiteOut: {
@@ -2136,6 +2354,32 @@ export interface components {
              * @description Null only for the root unit
              */
             parent_id?: string | null;
+        };
+        /** UnitOccupancy */
+        UnitOccupancy: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Include Sub Units */
+            include_sub_units: boolean;
+            /**
+             * Member Held
+             * @description Seats held by members of the unit(s)
+             */
+            member_held: number;
+            /** Members */
+            members: number;
+            /** Members Without Seat */
+            members_without_seat: number;
+            /** Name */
+            name: string;
+            /**
+             * Unit Held
+             * @description Seats reserved for the unit(s)
+             */
+            unit_held: number;
         };
         /** UnitOut */
         UnitOut: {
@@ -3669,6 +3913,132 @@ export interface operations {
             };
         };
     };
+    building_occupancy_api_v1_occupancy_buildings__building_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                building_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingOccupancy"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    floor_occupancy_api_v1_occupancy_floors__floor_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                floor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FloorOccupancy"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    site_occupancy_api_v1_occupancy_sites__site_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOccupancy"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unit_occupancy_api_v1_occupancy_units__unit_id__get: {
+        parameters: {
+            query?: {
+                include_sub_units?: boolean;
+            };
+            header?: never;
+            path: {
+                unit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitOccupancy"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_units_api_v1_org_units_get: {
         parameters: {
             query?: {
@@ -4217,6 +4587,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PositionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_seats_api_v1_seats_get: {
+        parameters: {
+            query?: {
+                /** @description Seat label, holder name or email, holding unit or holder's primary unit */
+                q?: string | null;
+                site_id?: string | null;
+                building_id?: string | null;
+                floor_id?: string | null;
+                holder_person_id?: string | null;
+                holder_unit_id?: string | null;
+                /** @description assigned = held by a person, reserved = held by a unit */
+                status?: ("assigned" | "reserved" | "free") | null;
+                /** @description Page size */
+                limit?: number;
+                /** @description `next_cursor` from the previous page */
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_SeatOut_"];
                 };
             };
             /** @description Validation Error */
