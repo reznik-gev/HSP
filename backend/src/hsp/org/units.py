@@ -18,6 +18,7 @@ from hsp.release import (
     ArchivedItem,
     FreedSeat,
     MovedMember,
+    PreviousMembership,
     ReleaseReport,
     freed,
     seat_unassigned,
@@ -378,7 +379,18 @@ class UnitsService:
                 )
             )
             moved.append(
-                MovedMember(person_id=person_id, from_unit_ids=from_ids, to_unit_id=target)
+                MovedMember(
+                    person_id=person_id,
+                    from_unit_ids=from_ids,
+                    to_unit_id=target,
+                    previous=[
+                        PreviousMembership(
+                            unit_id=m.unit_id, position_id=m.position_id, is_primary=m.is_primary
+                        )
+                        for m in sorted(ms, key=lambda m: m.unit_id)
+                    ],
+                    merged=here is not None,
+                )
             )
         await self.db.flush()
         return moved

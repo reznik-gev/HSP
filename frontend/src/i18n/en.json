@@ -9,7 +9,8 @@
     "seats": "Seats",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
-    "people": "People"
+    "people": "People",
+    "org": "Teams"
   },
   "settings": {
     "language": "Language",
@@ -171,6 +172,49 @@
       "externalIdTaken": "This personal number is already in use.",
       "primaryRequired": "Choose which team is primary.",
       "duplicateTeam": "A team is listed twice."
+    }
+  },
+  "org": {
+    "title": "Teams",
+    "new": "New team",
+    "create": "Create team",
+    "loadFailed": "Couldn't load the teams. Reload the page to try again.",
+    "empty": "No teams yet. Import your organization, or create the first team.",
+    "expand": "Expand {{name}}",
+    "collapse": "Collapse {{name}}",
+    "members_one": "{{count}} person",
+    "members_other": "{{count}} people",
+    "details": "Details",
+    "positions": "Positions",
+    "membersTitle": "Members",
+    "noPositions": "No positions in this team.",
+    "noMembers": "Nobody is directly in this team.",
+    "secondary": "Secondary team",
+    "positionTitle": "Position title",
+    "newPosition": "New position",
+    "addPosition": "Add",
+    "renamePosition": "Rename {{title}}",
+    "removePosition": "Remove {{title}}",
+    "positionRemoved": "{{title}} removed; people who held it keep their team.",
+    "fields": {
+      "name": "Name",
+      "level": "Level",
+      "levelHint": "For example: Division, Group, Team.",
+      "parent": "Part of",
+      "externalId": "HR ID"
+    },
+    "saved": "{{name}} saved",
+    "created": "{{name}} created",
+    "archive": "Archive team",
+    "archived": "{{name}} archived",
+    "restored": "{{name}} restored",
+    "alsoArchived_one": "{{count}} sub-team too",
+    "alsoArchived_other": "{{count}} sub-teams too",
+    "membersMoved_one": "{{count}} person moved to the parent team",
+    "membersMoved_other": "{{count}} people moved to the parent team",
+    "errors": {
+      "cycle": "A team can't be part of its own sub-team.",
+      "externalIdTaken": "Another team already has this HR ID."
     }
   }
 }

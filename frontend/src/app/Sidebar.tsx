@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   Armchair,
   Layers,
+  Network,
   type LucideIcon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -17,13 +18,14 @@ import { useSidebar } from "./sidebarState";
 
 /** Main areas (docs/0087, docs/0088). Later phases add Catalog and Imports. */
 const AREAS: {
-  to: "/floors" | "/seats" | "/people";
-  label: "nav.floors" | "nav.seats" | "nav.people";
+  to: "/floors" | "/seats" | "/people" | "/org";
+  label: "nav.floors" | "nav.seats" | "nav.people" | "nav.org";
   icon: LucideIcon;
 }[] = [
   { to: "/floors", label: "nav.floors", icon: Layers },
   { to: "/seats", label: "nav.seats", icon: Armchair },
   { to: "/people", label: "nav.people", icon: Users },
+  { to: "/org", label: "nav.org", icon: Network },
 ];
 
 export function Sidebar() {

@@ -9,7 +9,8 @@
     "seats": "עמדות",
     "collapse": "כיווץ סרגל הצד",
     "expand": "הרחבת סרגל הצד",
-    "people": "אנשים"
+    "people": "אנשים",
+    "org": "צוותים"
   },
   "settings": {
     "language": "שפה",
@@ -173,6 +174,52 @@
       "externalIdTaken": "המספר האישי הזה כבר בשימוש.",
       "primaryRequired": "בחרו איזה צוות הוא הראשי.",
       "duplicateTeam": "צוות מופיע פעמיים."
+    }
+  },
+  "org": {
+    "title": "צוותים",
+    "new": "צוות חדש",
+    "create": "יצירה",
+    "loadFailed": "לא ניתן לטעון את הצוותים. טענו מחדש את הדף כדי לנסות שוב.",
+    "empty": "עדיין אין צוותים. ייבאו את מבנה הארגון, או צרו את הצוות הראשון.",
+    "expand": "הרחבת {{name}}",
+    "collapse": "כיווץ {{name}}",
+    "members_one": "אדם אחד",
+    "members_two": "שני אנשים",
+    "members_other": "{{count}} אנשים",
+    "details": "פרטים",
+    "positions": "משרות",
+    "membersTitle": "חברים",
+    "noPositions": "אין משרות בצוות הזה.",
+    "noMembers": "אין אנשים ישירות בצוות הזה.",
+    "secondary": "צוות משני",
+    "positionTitle": "שם המשרה",
+    "newPosition": "משרה חדשה",
+    "addPosition": "הוספה",
+    "renamePosition": "שינוי שם {{title}}",
+    "removePosition": "הסרת {{title}}",
+    "positionRemoved": "{{title}} הוסרה; מי שהחזיק בה נשאר בצוות.",
+    "fields": {
+      "name": "שם",
+      "level": "דרג",
+      "levelHint": "לדוגמה: חטיבה, קבוצה, צוות.",
+      "parent": "חלק מ־",
+      "externalId": "מזהה במערכת משאבי אנוש"
+    },
+    "saved": "{{name}} נשמר",
+    "created": "{{name}} נוצר",
+    "archive": "העברת הצוות לארכיון",
+    "archived": "{{name}} הועבר לארכיון",
+    "restored": "{{name}} שוחזר",
+    "alsoArchived_one": "וגם צוות משנה אחד",
+    "alsoArchived_two": "וגם שני צוותי משנה",
+    "alsoArchived_other": "וגם {{count}} צוותי משנה",
+    "membersMoved_one": "אדם אחד עבר לצוות שמעל",
+    "membersMoved_two": "שני אנשים עברו לצוות שמעל",
+    "membersMoved_other": "{{count}} אנשים עברו לצוות שמעל",
+    "errors": {
+      "cycle": "צוות לא יכול להיות חלק מצוות המשנה שלו.",
+      "externalIdTaken": "לצוות אחר כבר יש את המזהה הזה."
     }
   }
 }
