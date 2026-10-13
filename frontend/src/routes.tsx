@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { AppShell } from "@/app/AppShell";
 import { Page } from "@/app/Page";
 import { FloorsPage } from "@/floors/FloorsPage";
+import { validateOrgSearch } from "@/org/search";
 import { validatePeopleSearch } from "@/people/search";
 import { SeatsPage } from "@/seats/SeatsPage";
 
@@ -58,6 +59,12 @@ const peopleRoute = createRoute({
   validateSearch: validatePeopleSearch,
   component: lazyRouteComponent(() => import("@/people/PeoplePage"), "PeoplePage"),
 });
+const orgRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/org",
+  validateSearch: validateOrgSearch,
+  component: lazyRouteComponent(() => import("@/org/OrgPage"), "OrgPage"),
+});
 const seatsRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "/seats",
@@ -80,7 +87,14 @@ const benchRoutes =
     : [];
 
 export const routeTree = rootRoute.addChildren([
-  shellRoute.addChildren([indexRoute, floorsRoute, floorPlanRoute, peopleRoute, seatsRoute]),
+  shellRoute.addChildren([
+    indexRoute,
+    floorsRoute,
+    floorPlanRoute,
+    peopleRoute,
+    orgRoute,
+    seatsRoute,
+  ]),
   ...benchRoutes,
 ]);
 

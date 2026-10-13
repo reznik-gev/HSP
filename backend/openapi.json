@@ -2074,10 +2074,25 @@
             "title": "From Unit Ids",
             "type": "array"
           },
+          "merged": {
+            "default": false,
+            "description": "The person was already a member of to_unit_id (so Undo keeps that one)",
+            "title": "Merged",
+            "type": "boolean"
+          },
           "person_id": {
             "format": "uuid",
             "title": "Person Id",
             "type": "string"
+          },
+          "previous": {
+            "default": [],
+            "description": "The memberships the person had in the archived units",
+            "items": {
+              "$ref": "#/components/schemas/PreviousMembership"
+            },
+            "title": "Previous",
+            "type": "array"
           },
           "to_unit_id": {
             "format": "uuid",
@@ -3051,6 +3066,38 @@
           }
         },
         "title": "Preferences",
+        "type": "object"
+      },
+      "PreviousMembership": {
+        "properties": {
+          "is_primary": {
+            "title": "Is Primary",
+            "type": "boolean"
+          },
+          "position_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Id"
+          },
+          "unit_id": {
+            "format": "uuid",
+            "title": "Unit Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit_id",
+          "position_id",
+          "is_primary"
+        ],
+        "title": "PreviousMembership",
         "type": "object"
       },
       "PublishIn": {

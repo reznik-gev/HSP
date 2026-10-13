@@ -121,6 +121,10 @@ async def test_archive_cascades_moves_members_up_and_frees_unit_seats(svc: Units
     assert [a.name for a in report.archived] == ["Engineering", "Web"]
     assert [f.seat_id for f in report.freed_seats] == [seat.id]
     assert {m.person_id for m in report.moved_members} == {dana, eli}
+    moved = {m.person_id: m for m in report.moved_members}
+    # What Undo needs: Dana's old primary team, and that Eli was already in the root.
+    assert [(p.unit_id, p.is_primary) for p in moved[dana].previous] == [(web.id, True)]
+    assert (moved[dana].merged, moved[eli].merged) == (False, True)
     # Dana's primary (Web) moves up to Company and stays primary; Eli merges into Company.
     assert await memberships(svc, dana) == {(root.id, True), (sales.id, False)}
     assert await memberships(svc, eli) == {(root.id, True)}

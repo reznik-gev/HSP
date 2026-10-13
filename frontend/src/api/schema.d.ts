@@ -1911,10 +1911,22 @@ export interface components {
             /** From Unit Ids */
             from_unit_ids: string[];
             /**
+             * Merged
+             * @description The person was already a member of to_unit_id (so Undo keeps that one)
+             * @default false
+             */
+            merged: boolean;
+            /**
              * Person Id
              * Format: uuid
              */
             person_id: string;
+            /**
+             * Previous
+             * @description The memberships the person had in the archived units
+             * @default []
+             */
+            previous: components["schemas"]["PreviousMembership"][];
             /**
              * To Unit Id
              * Format: uuid
@@ -2270,6 +2282,18 @@ export interface components {
             language?: ("en" | "he") | null;
             /** Theme */
             theme?: ("light" | "dark" | "system") | null;
+        };
+        /** PreviousMembership */
+        PreviousMembership: {
+            /** Is Primary */
+            is_primary: boolean;
+            /** Position Id */
+            position_id: string | null;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
         };
         /** PublishIn */
         PublishIn: {

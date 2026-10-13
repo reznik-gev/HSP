@@ -6,7 +6,7 @@ and reported back so the UI can say what happened (e.g. "Maya was unassigned fro
 
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from hsp import models
 from hsp.audit import audit_event
@@ -25,10 +25,23 @@ class FreedSeat(BaseModel):
     holder_unit_id: uuid.UUID | None
 
 
+class PreviousMembership(BaseModel):
+    unit_id: uuid.UUID
+    position_id: uuid.UUID | None
+    is_primary: bool
+
+
 class MovedMember(BaseModel):
     person_id: uuid.UUID
     from_unit_ids: list[uuid.UUID]
     to_unit_id: uuid.UUID
+    previous: list[PreviousMembership] = Field(
+        default=[], description="The memberships the person had in the archived units"
+    )
+    merged: bool = Field(
+        default=False,
+        description="The person was already a member of to_unit_id (so Undo keeps that one)",
+    )
 
 
 class ReleaseReport(BaseModel):
