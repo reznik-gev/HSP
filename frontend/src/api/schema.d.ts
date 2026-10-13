@@ -599,6 +599,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Preferences
+         * @description `null` means not chosen: browser language, system theme, centimetres.
+         */
+        get: operations["get_preferences_api_v1_me_preferences_get"];
+        /**
+         * Put Preferences
+         * @description Replace the three preferences (send all of them; `null` clears one).
+         */
+        put: operations["put_preferences_api_v1_me_preferences_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/occupancy/buildings/{building_id}": {
         parameters: {
             query?: never;
@@ -2237,6 +2261,15 @@ export interface components {
              * Format: uuid
              */
             unit_id: string;
+        };
+        /** Preferences */
+        Preferences: {
+            /** Display Units */
+            display_units?: ("cm" | "m" | "mm") | null;
+            /** Language */
+            language?: ("en" | "he") | null;
+            /** Theme */
+            theme?: ("light" | "dark" | "system") | null;
         };
         /** PublishIn */
         PublishIn: {
@@ -4056,6 +4089,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImportReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_preferences_api_v1_me_preferences_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preferences"];
+                };
+            };
+        };
+    };
+    put_preferences_api_v1_me_preferences_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Preferences"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preferences"];
                 };
             };
             /** @description Validation Error */

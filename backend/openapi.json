@@ -3000,6 +3000,59 @@
         "title": "PositionOut",
         "type": "object"
       },
+      "Preferences": {
+        "properties": {
+          "display_units": {
+            "anyOf": [
+              {
+                "enum": [
+                  "cm",
+                  "m",
+                  "mm"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Units"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "enum": [
+                  "en",
+                  "he"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "enum": [
+                  "light",
+                  "dark",
+                  "system"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          }
+        },
+        "title": "Preferences",
+        "type": "object"
+      },
       "PublishIn": {
         "properties": {
           "base_revision": {
@@ -6348,6 +6401,68 @@
         "summary": "Import Units",
         "tags": [
           "organization"
+        ]
+      }
+    },
+    "/api/v1/me/preferences": {
+      "get": {
+        "description": "`null` means not chosen: browser language, system theme, centimetres.",
+        "operationId": "get_preferences_api_v1_me_preferences_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preferences"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Preferences",
+        "tags": [
+          "auth"
+        ]
+      },
+      "put": {
+        "description": "Replace the three preferences (send all of them; `null` clears one).",
+        "operationId": "put_preferences_api_v1_me_preferences_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Preferences"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preferences"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Preferences",
+        "tags": [
+          "auth"
         ]
       }
     },
