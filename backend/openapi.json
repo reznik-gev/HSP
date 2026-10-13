@@ -222,6 +222,42 @@
         "title": "BuildingIn",
         "type": "object"
       },
+      "BuildingOccupancy": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/Counts"
+          },
+          "floors": {
+            "items": {
+              "$ref": "#/components/schemas/FloorOccupancy"
+            },
+            "title": "Floors",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "code",
+          "counts",
+          "floors"
+        ],
+        "title": "BuildingOccupancy",
+        "type": "object"
+      },
       "BuildingOut": {
         "properties": {
           "archived_at": {
@@ -833,6 +869,43 @@
         "title": "Column",
         "type": "object"
       },
+      "Counts": {
+        "properties": {
+          "assigned_to_people": {
+            "default": 0,
+            "title": "Assigned To People",
+            "type": "integer"
+          },
+          "bookable": {
+            "default": 0,
+            "title": "Bookable",
+            "type": "integer"
+          },
+          "free": {
+            "default": 0,
+            "description": "In assigned mode, with no holder",
+            "title": "Free",
+            "type": "integer"
+          },
+          "reserved_for_units": {
+            "default": 0,
+            "title": "Reserved For Units",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          },
+          "unavailable": {
+            "default": 0,
+            "title": "Unavailable",
+            "type": "integer"
+          }
+        },
+        "title": "Counts",
+        "type": "object"
+      },
       "DeactivationOut": {
         "properties": {
           "freed_seats": {
@@ -1155,6 +1228,34 @@
           "level_index"
         ],
         "title": "FloorIn",
+        "type": "object"
+      },
+      "FloorOccupancy": {
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/Counts"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "level_index": {
+            "title": "Level Index",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "level_index",
+          "counts"
+        ],
+        "title": "FloorOccupancy",
         "type": "object"
       },
       "FloorOut": {
@@ -1481,6 +1582,41 @@
           "version"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "HolderPerson": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "primary_unit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ref"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "email",
+          "primary_unit"
+        ],
+        "title": "HolderPerson",
         "type": "object"
       },
       "ImportReport": {
@@ -2116,6 +2252,34 @@
           "next_cursor"
         ],
         "title": "Page[RevisionOut]",
+        "type": "object"
+      },
+      "Page_SeatOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SeatOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "Page[SeatOut]",
         "type": "object"
       },
       "Page_SiteOut_": {
@@ -2766,6 +2930,25 @@
         "title": "PublishResult",
         "type": "object"
       },
+      "Ref": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "Ref",
+        "type": "object"
+      },
       "ReleaseReport": {
         "properties": {
           "archived": {
@@ -2970,6 +3153,79 @@
         "title": "SeatAssignmentOut",
         "type": "object"
       },
+      "SeatOut": {
+        "properties": {
+          "allocation_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allocation Mode"
+          },
+          "building": {
+            "$ref": "#/components/schemas/Ref"
+          },
+          "floor": {
+            "$ref": "#/components/schemas/Ref"
+          },
+          "holder_person": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HolderPerson"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "holder_unit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ref"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "description": "The seat's element id",
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "site": {
+            "$ref": "#/components/schemas/Ref"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "allocation_mode",
+          "site",
+          "building",
+          "floor",
+          "holder_person",
+          "holder_unit"
+        ],
+        "title": "SeatOut",
+        "type": "object"
+      },
       "SiteIn": {
         "properties": {
           "address": {
@@ -3000,6 +3256,37 @@
           "time_zone"
         ],
         "title": "SiteIn",
+        "type": "object"
+      },
+      "SiteOccupancy": {
+        "properties": {
+          "buildings": {
+            "items": {
+              "$ref": "#/components/schemas/BuildingOccupancy"
+            },
+            "title": "Buildings",
+            "type": "array"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/Counts"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "counts",
+          "buildings"
+        ],
+        "title": "SiteOccupancy",
         "type": "object"
       },
       "SiteOut": {
@@ -3166,6 +3453,52 @@
           "name"
         ],
         "title": "UnitIn",
+        "type": "object"
+      },
+      "UnitOccupancy": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "include_sub_units": {
+            "title": "Include Sub Units",
+            "type": "boolean"
+          },
+          "member_held": {
+            "description": "Seats held by members of the unit(s)",
+            "title": "Member Held",
+            "type": "integer"
+          },
+          "members": {
+            "title": "Members",
+            "type": "integer"
+          },
+          "members_without_seat": {
+            "title": "Members Without Seat",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "unit_held": {
+            "description": "Seats reserved for the unit(s)",
+            "title": "Unit Held",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "include_sub_units",
+          "unit_held",
+          "member_held",
+          "members",
+          "members_without_seat"
+        ],
+        "title": "UnitOccupancy",
         "type": "object"
       },
       "UnitOut": {
@@ -5781,6 +6114,190 @@
         ]
       }
     },
+    "/api/v1/occupancy/buildings/{building_id}": {
+      "get": {
+        "operationId": "building_occupancy_api_v1_occupancy_buildings__building_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "building_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Building Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildingOccupancy"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Building Occupancy",
+        "tags": [
+          "seats"
+        ]
+      }
+    },
+    "/api/v1/occupancy/floors/{floor_id}": {
+      "get": {
+        "operationId": "floor_occupancy_api_v1_occupancy_floors__floor_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "floor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Floor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FloorOccupancy"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Floor Occupancy",
+        "tags": [
+          "seats"
+        ]
+      }
+    },
+    "/api/v1/occupancy/sites/{site_id}": {
+      "get": {
+        "description": "Totals for the site, per active building and per active floor.",
+        "operationId": "site_occupancy_api_v1_occupancy_sites__site_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Site Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteOccupancy"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Site Occupancy",
+        "tags": [
+          "seats"
+        ]
+      }
+    },
+    "/api/v1/occupancy/units/{unit_id}": {
+      "get": {
+        "description": "Seats reserved for the unit and seats held by its active members.",
+        "operationId": "unit_occupancy_api_v1_occupancy_units__unit_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unit_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Unit Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_sub_units",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Sub Units",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitOccupancy"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unit Occupancy",
+        "tags": [
+          "seats"
+        ]
+      }
+    },
     "/api/v1/org-units": {
       "get": {
         "description": "Units as a flat list; build the tree from `parent_id`.",
@@ -6644,6 +7161,198 @@
         "summary": "Rename Position",
         "tags": [
           "organization"
+        ]
+      }
+    },
+    "/api/v1/seats": {
+      "get": {
+        "description": "\"Where does X sit?\" over published plans of active floors, with each seat's place\n(site > building > floor) and holder (docs/0085).",
+        "operationId": "search_seats_api_v1_seats_get",
+        "parameters": [
+          {
+            "description": "Seat label, holder name or email, holding unit or holder's primary unit",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Seat label, holder name or email, holding unit or holder's primary unit",
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "site_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Site Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "building_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Building Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "floor_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Floor Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "holder_person_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Holder Person Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "holder_unit_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Holder Unit Id"
+            }
+          },
+          {
+            "description": "assigned = held by a person, reserved = held by a unit",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "assigned",
+                    "reserved",
+                    "free"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "assigned = held by a person, reserved = held by a unit",
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Page size",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "`next_cursor` from the previous page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`next_cursor` from the previous page",
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_SeatOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Seats",
+        "tags": [
+          "seats"
         ]
       }
     },
