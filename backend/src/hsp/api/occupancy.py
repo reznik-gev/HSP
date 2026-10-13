@@ -8,10 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp.auth.dependencies import CurrentPrincipal
 from hsp.db import get_session
-from hsp.seats.search import (
+from hsp.seats.occupancy import (
     BuildingOccupancy,
     FloorOccupancy,
-    SeatSearchService,
+    OccupancyService,
     SiteOccupancy,
     UnitOccupancy,
 )
@@ -21,11 +21,11 @@ router = APIRouter(prefix="/occupancy", tags=["seats"])
 
 def get_service(
     principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]
-) -> SeatSearchService:
-    return SeatSearchService(db, principal)
+) -> OccupancyService:
+    return OccupancyService(db, principal)
 
 
-Service = Annotated[SeatSearchService, Depends(get_service)]
+Service = Annotated[OccupancyService, Depends(get_service)]
 
 
 @router.get("/sites/{site_id}")

@@ -8,10 +8,9 @@ it and reports who was replaced (docs/0086). History lives in the audit log.
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
-from sqlalchemy import and_, delete, or_, select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
@@ -19,6 +18,7 @@ from hsp.audit import audit_event
 from hsp.auth.principal import Principal
 from hsp.problems import ProblemError, ProblemException
 from hsp.release import FreedSeat, ReleaseReport, freed, seat_unassigned
+from hsp.seats.published import published_seats
 
 
 class AssignmentIn(BaseModel):
@@ -56,18 +56,7 @@ class PublishedSeat:
     id: uuid.UUID
     label: str | None
     floor_id: uuid.UUID
-    is_seat: bool
     mode: models.AllocationMode | None
-
-
-def visible_at_published(rev: Any) -> Any:
-    """The revision is part of its floor's published version (docs/0028)."""
-    f = models.Floor
-    return and_(
-        f.published_version.is_not(None),
-        rev.from_version <= f.published_version,
-        or_(rev.to_version.is_(None), rev.to_version > f.published_version),
-    )
 
 
 def _out(a: models.SeatAssignment) -> AssignmentOut:
@@ -101,29 +90,21 @@ class SeatAssignmentService:
         return self.principal.tenant_id
 
     async def _seat(self, seat_id: uuid.UUID) -> PublishedSeat:
-        r, e, f, c = models.ObjectRev, models.FloorElement, models.Floor, models.CatalogItemRev
+        r, f = models.ObjectRev, models.Floor
+        query = select(r.label, f.id, r.allocation_mode).select_from(r)
         row = (
             await self.db.execute(
-                select(r.label, f.id, c.is_seat, r.allocation_mode)
-                .join(e, e.id == r.element_id)
-                .join(f, f.id == e.floor_id)
-                .join(c, c.id == r.catalog_item_rev_id)
-                .where(
-                    r.element_id == seat_id,
-                    f.tenant_id == self._tenant,
-                    f.archived_at.is_(None),
-                    visible_at_published(r),
-                )
+                published_seats(query, self._tenant).where(r.element_id == seat_id)
             )
         ).first()
-        if row is None or not row[2]:
+        if row is None:
             raise ProblemException(
                 404,
                 "seat-not-found",
                 "Seat not found",
                 f"{seat_id} is not a seat in the published plan of an active floor.",
             )
-        return PublishedSeat(seat_id, row[0], row[1], row[2], row[3])
+        return PublishedSeat(seat_id, row[0], row[1], row[2])
 
     async def _current(self, seat_id: uuid.UUID) -> models.SeatAssignment | None:
         return await self.db.scalar(
