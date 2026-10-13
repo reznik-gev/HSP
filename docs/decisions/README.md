@@ -96,3 +96,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0085 | 2026-10-12 | [Seat assignment API, search, occupancy and bulk assignment](0085-2026-10-12-seat-assignment-api.md) | Accepted |
 | 0086 | 2026-10-12 | [Free resources automatically instead of asking for confirmation](0086-2026-10-12-automatic-release.md) | Accepted |
 | 0087 | 2026-10-13 | [Frontend delivery plan: viewer first, English and Hebrew, desktop](0087-2026-10-13-frontend-delivery-plan.md) | Accepted |
+| 0088 | 2026-10-14 | [Admin screens (frontend phase 2)](0088-2026-10-14-admin-screens.md) | Accepted |
