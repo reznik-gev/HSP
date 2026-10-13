@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import {
   Armchair,
+  FileUp,
   Layers,
   Network,
   type LucideIcon,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { useIsAdmin } from "@/auth/admin";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -18,19 +20,23 @@ import { useSidebar } from "./sidebarState";
 
 /** Main areas (docs/0087, docs/0088). Later phases add Catalog and Imports. */
 const AREAS: {
-  to: "/floors" | "/seats" | "/people" | "/org";
-  label: "nav.floors" | "nav.seats" | "nav.people" | "nav.org";
+  to: "/floors" | "/seats" | "/people" | "/org" | "/imports";
+  label: "nav.floors" | "nav.seats" | "nav.people" | "nav.org" | "nav.imports";
   icon: LucideIcon;
+  /** Hidden from viewers (docs/0088 choice 2). */
+  adminOnly?: boolean;
 }[] = [
   { to: "/floors", label: "nav.floors", icon: Layers },
   { to: "/seats", label: "nav.seats", icon: Armchair },
   { to: "/people", label: "nav.people", icon: Users },
   { to: "/org", label: "nav.org", icon: Network },
+  { to: "/imports", label: "nav.imports", icon: FileUp, adminOnly: true },
 ];
 
 export function Sidebar() {
   const { t } = useTranslation();
   const { collapsed, toggle } = useSidebar();
+  const isAdmin = useIsAdmin();
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
 
   return (
@@ -52,7 +58,7 @@ export function Sidebar() {
         )}
       </div>
       <nav aria-label={t("nav.main")} className="flex flex-1 flex-col gap-0.5 p-2">
-        {AREAS.map(({ to, label, icon: Icon }) => {
+        {AREAS.filter((a) => isAdmin || !a.adminOnly).map(({ to, label, icon: Icon }) => {
           const link = (
             <Link
               to={to}
