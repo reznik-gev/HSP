@@ -72,19 +72,30 @@ describe("imports (docs/0088)", () => {
               row: 5,
               column: "parent_external_id",
               code: "parent_not_found",
-              message: "Unknown parent X.",
+              message: "Unknown parent unit 'X'.",
+              params: { value: "X" },
+            },
+            // A code this build doesn't know shows the server's English message.
+            { row: 6, column: null, code: "something_new", message: "Something new." },
+          ],
+          warnings: [
+            {
+              code: "unknown_columns",
+              message: "Ignored unknown column(s): shoe_size.",
+              params: { columns: "shoe_size" },
             },
           ],
-          warnings: ["Ignored unknown column(s): shoe_size."],
         }),
       },
     });
     await userEvent.click(await screen.findByRole("tab", { name: "Teams" }));
     await userEvent.upload(screen.getByLabelText(/Choose a CSV or Excel file/), csv());
-    expect(await screen.findByRole("heading", { name: "2 problems to fix" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "3 problems to fix" })).toBeInTheDocument();
     expect(
-      screen.getByRole("row", { name: /5 parent_external_id Unknown parent X\./ }),
+      screen.getByRole("row", { name: /5 parent_external_id Unknown parent team code X\./ }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("row", { name: /3 name This column needs a value\./ })).toBeVisible();
+    expect(screen.getByRole("row", { name: /6 – Something new\./ })).toBeVisible();
     expect(screen.getByText("Ignored unknown column(s): shoe_size.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Apply import" })).toBeNull();
   });

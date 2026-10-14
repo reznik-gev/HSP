@@ -1802,7 +1802,7 @@
           "warnings": {
             "default": [],
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ImportWarning"
             },
             "title": "Warnings",
             "type": "array"
@@ -1814,6 +1814,33 @@
           "rows"
         ],
         "title": "ImportReport",
+        "type": "object"
+      },
+      "ImportWarning": {
+        "description": "Something the import ignored. Translated by `code` and `params` like RowError.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ImportWarning",
         "type": "object"
       },
       "KindDiff": {
@@ -3299,6 +3326,7 @@
         "type": "object"
       },
       "RowError": {
+        "description": "One problem in the file. `message` is English; clients translate `code` with `params`.",
         "properties": {
           "code": {
             "title": "Code",
@@ -3318,6 +3346,14 @@
           "message": {
             "title": "Message",
             "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Params",
+            "type": "object"
           },
           "row": {
             "title": "Row",

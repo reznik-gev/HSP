@@ -77,6 +77,8 @@ class ImportService:
                     "duplicate_row",
                     f"external_id {ext!r} appears twice (also row {run.row_of[ext]}).",
                     "external_id",
+                    value=ext,
+                    other_row=run.row_of[ext],
                 )
                 continue
             wanted[ext], run.row_of[ext] = r, i
@@ -106,6 +108,7 @@ class ImportService:
                     "parent_not_found",
                     f"Unknown parent unit {parent!r}.",
                     "parent_external_id",
+                    value=parent,
                 )
             if ext in existing and existing[ext].archived_at is not None:
                 run.error(
@@ -113,6 +116,7 @@ class ImportService:
                     "unit_archived",
                     f"Unit {ext!r} is archived; restore it first.",
                     "external_id",
+                    value=ext,
                 )
         if run.report.errors:
             return await self._finish(run, apply)
@@ -217,7 +221,7 @@ class ImportService:
             try:
                 email = validate_email(email_raw, check_deliverability=False).normalized.lower()
             except EmailNotValidError as exc:
-                run.error(i, "invalid_email", str(exc), "email")
+                run.error(i, "invalid_email", str(exc), "email", value=email_raw)
                 continue
             if not name:
                 run.error(i, "required", "display_name is required.", "display_name")
@@ -229,6 +233,8 @@ class ImportService:
                         "duplicate_row",
                         f"{col} {key!r} appears twice (also row {seen[key]}).",
                         col,
+                        value=key,
+                        other_row=seen[key],
                     )
                 elif key:
                     seen[key] = i
@@ -243,9 +249,9 @@ class ImportService:
             ] + [(c, "secondary_unit_external_ids") for c in secondary]:
                 u = units.get(code)
                 if u is None:
-                    run.error(i, "unit_not_found", f"Unknown unit {code!r}.", col)
+                    run.error(i, "unit_not_found", f"Unknown unit {code!r}.", col, value=code)
                 elif u.archived_at is not None:
-                    run.error(i, "unit_archived", f"Unit {code!r} is archived.", col)
+                    run.error(i, "unit_archived", f"Unit {code!r} is archived.", col, value=code)
             if r.get("position") and not primary:
                 run.error(
                     i,
@@ -267,6 +273,7 @@ class ImportService:
                     "identity_conflict",
                     f"external_id matches {match_ext.email}, but the email belongs to someone "
                     "else.",
+                    email=match_ext.email,
                 )
             elif (
                 ext
@@ -280,6 +287,9 @@ class ImportService:
                     "identity_conflict",
                     f"{email} already has external_id {match_email.external_id!r}, not {ext!r}.",
                     "external_id",
+                    email=email,
+                    current=match_email.external_id,
+                    value=ext,
                 )
             parsed.append(
                 (

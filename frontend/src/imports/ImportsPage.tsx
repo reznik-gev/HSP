@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
 import { cn } from "@/lib/utils";
 
+import { problemText } from "./problems";
 import { downloadTemplate, IMPORT_KINDS, type ImportKind } from "./templates";
 
 type Report = components["schemas"]["ImportReport"];
@@ -216,8 +217,8 @@ function ReportView({
         ))}
       </dl>
       {report.warnings.map((w) => (
-        <p key={w} className="text-sm text-muted-foreground">
-          {w}
+        <p key={w.code} className="text-sm text-muted-foreground">
+          {problemText(t, w)}
         </p>
       ))}
       {errors.length > 0 ? (
@@ -244,7 +245,7 @@ function ReportView({
                   <td className="px-3 py-2" dir="ltr">
                     <code className="text-xs">{e.column ?? "–"}</code>
                   </td>
-                  <td className="px-3 py-2">{e.message}</td>
+                  <td className="px-3 py-2">{problemText(t, e)}</td>
                 </tr>
               ))}
             </tbody>
