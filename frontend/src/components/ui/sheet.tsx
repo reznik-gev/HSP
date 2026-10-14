@@ -83,3 +83,18 @@ export function SheetBody({ className, ...props }: React.ComponentProps<"div">) 
 export function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={cn("flex justify-end gap-2 border-t px-6 py-4", className)} {...props} />;
 }
+
+/** A titled block inside SheetBody, e.g. a person's "Teams" or "Seats". */
+export function SheetSection({
+  title,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"section"> & { title: string }) {
+  return (
+    <section className={cn("space-y-3", className)} {...props}>
+      <h3 className="text-sm font-semibold">{title}</h3>
+      {children}
+    </section>
+  );
+}
