@@ -188,23 +188,23 @@
     "members_two": "שני אנשים",
     "members_other": "{{count}} אנשים",
     "details": "פרטים",
-    "positions": "משרות",
+    "positions": "תפקידים",
     "membersTitle": "חברים",
-    "noPositions": "אין משרות בצוות הזה.",
+    "noPositions": "אין תפקידים בצוות הזה.",
     "noMembers": "אין אנשים ישירות בצוות הזה.",
     "secondary": "צוות משני",
-    "positionTitle": "שם המשרה",
-    "newPosition": "משרה חדשה",
+    "positionTitle": "שם התפקיד",
+    "newPosition": "תפקיד חדש",
     "addPosition": "הוספה",
     "renamePosition": "שינוי שם {{title}}",
     "removePosition": "הסרת {{title}}",
-    "positionRemoved": "{{title}} הוסרה; מי שהחזיק בה נשאר בצוות.",
+    "positionRemoved": "{{title}} הוסר; מי שהחזיק בו נשאר בצוות.",
     "fields": {
       "name": "שם",
       "level": "דרג",
       "levelHint": "לדוגמה: חטיבה, קבוצה, צוות.",
       "parent": "חלק מ־",
-      "externalId": "מזהה במערכת משאבי אנוש"
+      "externalId": "קוד צוות"
     },
     "saved": "{{name}} נשמר",
     "created": "{{name}} נוצר",
@@ -219,7 +219,7 @@
     "membersMoved_other": "{{count}} אנשים עברו לצוות שמעל",
     "errors": {
       "cycle": "צוות לא יכול להיות חלק מצוות המשנה שלו.",
-      "externalIdTaken": "לצוות אחר כבר יש את המזהה הזה."
+      "externalIdTaken": "קוד הצוות הזה כבר בשימוש."
     }
   }
 }

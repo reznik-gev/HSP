@@ -201,7 +201,7 @@
       "level": "Level",
       "levelHint": "For example: Division, Group, Team.",
       "parent": "Part of",
-      "externalId": "HR ID"
+      "externalId": "Team code"
     },
     "saved": "{{name}} saved",
     "created": "{{name}} created",
@@ -214,7 +214,7 @@
     "membersMoved_other": "{{count}} people moved to the parent team",
     "errors": {
       "cycle": "A team can't be part of its own sub-team.",
-      "externalIdTaken": "Another team already has this HR ID."
+      "externalIdTaken": "This team code is already in use."
     }
   }
 }
