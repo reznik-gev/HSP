@@ -247,15 +247,15 @@
     "kinds": {
       "units": {
         "title": "Teams",
-        "explain": "Each row is a team, identified by its HR ID. Parents can come after their teams; re-importing the same file changes nothing."
+        "explain": "Each row is a team, identified by its team code. Parents can come after their teams; re-importing the same file changes nothing."
       },
       "people": {
         "title": "People",
-        "explain": "Each row is a person, matched by HR ID or else by email. People listed again are reactivated; their teams are replaced by the file's."
+        "explain": "Each row is a person, matched by personal number or else by email. People listed again are reactivated; their teams are replaced by the file's."
       },
       "seats": {
         "title": "Seat assignments",
-        "explain": "Each row gives a seat to a person (by email) or reserves it for a team (by HR ID). Seats not in the file stay as they are; a taken seat is reassigned."
+        "explain": "Each row gives a seat to a person (by email) or reserves it for a team (by team code). Seats not in the file stay as they are; a taken seat is reassigned."
       }
     },
     "template": "Download template",
