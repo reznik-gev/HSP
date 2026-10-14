@@ -292,6 +292,31 @@
       "row": "שורה",
       "column": "עמודה",
       "problem": "בעיה"
+    },
+    "problems": {
+      "required": "חסר ערך בעמודה הזו.",
+      "duplicate_row": "{{value}} מופיע פעמיים (גם בשורה {{other_row}}).",
+      "second_root": "רק לצוות העליון מותר להיות בלי צוות־אב.",
+      "parent_not_found": "קוד צוות־האב {{value}} לא קיים.",
+      "unit_archived": "הצוות {{value}} בארכיון; יש לשחזר אותו קודם.",
+      "unit_cycle": "הקישורים לצוותי־אב הופכים צוות לחלק מצוות המשנה שלו.",
+      "invalid_email": "{{value}} אינו אימייל תקין.",
+      "unit_not_found": "קוד הצוות {{value}} לא קיים.",
+      "position_without_unit": "תפקיד דורש את primary_unit_external_id.",
+      "primary_required": "צוותים משניים דורשים את primary_unit_external_id.",
+      "identity_conflict": "המספר האישי שייך ל־{{email}}, אבל האימייל שייך למישהו אחר.",
+      "identity_conflict_current": "ל־{{email}} כבר יש מספר אישי {{current}}, לא {{value}}.",
+      "missing_column": "חסרות עמודות חובה: {{columns}}.",
+      "seat_not_found": "אין עמדה מפורסמת {{value}}.",
+      "seat_not_found_building": "אין עמדה מפורסמת {{value}} בבניין {{building}}.",
+      "seat_ambiguous": "העמדה {{value}} קיימת בכמה בניינים ({{buildings}}); יש להוסיף building_code.",
+      "seat_not_assignable": "אי אפשר לשייך את העמדה {{value}}: היא להזמנה או לא זמינה.",
+      "holder_required": "יש למלא בדיוק אחד מהשניים: holder_email או holder_unit_external_id.",
+      "holder_not_found_person": "אין אדם עם האימייל {{value}}.",
+      "holder_not_found_team": "קוד הצוות {{value}} לא קיים.",
+      "holder_inactive_person": "{{name}} לא פעיל/ה.",
+      "holder_inactive_team": "{{name}} בארכיון.",
+      "unknown_columns": "עמודות לא מוכרות לא נקלטו: {{columns}}."
     }
   }
 }

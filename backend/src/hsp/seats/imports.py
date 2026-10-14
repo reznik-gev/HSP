@@ -85,6 +85,8 @@ class SeatImportService:
                     "duplicate_row",
                     f"Seat {seat.label} appears twice (also row {seen[seat.id]}).",
                     "seat_label",
+                    value=seat.label,
+                    other_row=seen[seat.id],
                 )
                 continue
             seen[seat.id] = i
@@ -112,7 +114,14 @@ class SeatImportService:
         matches = [s for s in seats.get(label.lower(), []) if not code or s.building_code == code]
         if not matches:
             where = f" in building {code}" if code else ""
-            run.error(i, "seat_not_found", f"No published seat {label}{where}.", "seat_label")
+            run.error(
+                i,
+                "seat_not_found",
+                f"No published seat {label}{where}.",
+                "seat_label",
+                value=label,
+                **({"building": code} if code else {}),
+            )
             return None
         if len(matches) > 1:
             codes = ", ".join(sorted(s.building_code for s in matches))
@@ -121,6 +130,8 @@ class SeatImportService:
                 "seat_ambiguous",
                 f"Seat {label} exists in several buildings ({codes}); add building_code.",
                 "building_code",
+                value=label,
+                buildings=codes,
             )
             return None
         seat = matches[0].seat
@@ -130,6 +141,8 @@ class SeatImportService:
                 "seat_not_assignable",
                 f"Seat {label} is {seat.mode}; only 'assigned' seats can be assigned.",
                 "seat_label",
+                value=label,
+                mode=seat.mode,
             )
             return None
         return seat
@@ -154,21 +167,26 @@ class SeatImportService:
         if email:
             person = people.get(email.lower())
             if person is None:
-                run.error(i, "holder_not_found", f"No person {email}.", "holder_email")
+                run.error(i, "holder_not_found", f"No person {email}.", "holder_email", value=email)
                 return None
             if not person.active:
                 run.error(
-                    i, "holder_inactive", f"{person.display_name} is inactive.", "holder_email"
+                    i,
+                    "holder_inactive",
+                    f"{person.display_name} is inactive.",
+                    "holder_email",
+                    name=person.display_name,
                 )
                 return None
             return person.id, None
         unit = units.get(unit_ext or "")
         column = "holder_unit_external_id"
         if unit is None:
-            run.error(i, "holder_not_found", f"No unit with external id {unit_ext}.", column)
+            message = f"No unit with external id {unit_ext}."
+            run.error(i, "holder_not_found", message, column, value=unit_ext)
             return None
         if unit.archived_at is not None:
-            run.error(i, "holder_inactive", f"{unit.name} is archived.", column)
+            run.error(i, "holder_inactive", f"{unit.name} is archived.", column, name=unit.name)
             return None
         return None, unit.id
 

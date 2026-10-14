@@ -24,10 +24,21 @@ COUNTS = {"rows", "created", "updated", "unchanged", "reactivated", "positions_c
 
 
 class RowError(BaseModel):
+    """One problem in the file. `message` is English; clients translate `code` with `params`."""
+
     row: int  # 1-based spreadsheet row; the header is row 1
     column: str | None = None
     code: str
     message: str
+    params: dict[str, str] = {}
+
+
+class ImportWarning(BaseModel):
+    """Something the import ignored. Translated by `code` and `params` like RowError."""
+
+    code: str
+    message: str
+    params: dict[str, str] = {}
 
 
 class ImportReport(BaseModel):
@@ -40,7 +51,7 @@ class ImportReport(BaseModel):
     reactivated: int = 0
     positions_created: int = 0
     errors: list[RowError] = []
-    warnings: list[str] = []
+    warnings: list[ImportWarning] = []
 
 
 def read_table(filename: str, data: bytes) -> list[dict[str, str | None]]:
@@ -83,8 +94,18 @@ class ImportRun:
     report: ImportReport
     row_of: dict[str, int] = field(default_factory=dict)
 
-    def error(self, row: int, code: str, message: str, column: str | None = None) -> None:
-        self.report.errors.append(RowError(row=row, column=column, code=code, message=message))
+    def error(
+        self, row: int, code: str, message: str, column: str | None = None, **params: object
+    ) -> None:
+        self.report.errors.append(
+            RowError(
+                row=row,
+                column=column,
+                code=code,
+                message=message,
+                params={k: str(v) for k, v in params.items()},
+            )
+        )
 
 
 def check_columns(
@@ -93,11 +114,19 @@ def check_columns(
     present = set(rows[0]) if rows else set()
     missing = required - present
     if rows and missing:
-        run.error(1, "missing_column", f"Missing required column(s): {', '.join(sorted(missing))}.")
+        columns = ", ".join(sorted(missing))
+        run.error(1, "missing_column", f"Missing required column(s): {columns}.", columns=columns)
         return False
     unknown = present - known
     if unknown:
-        run.report.warnings.append(f"Ignored unknown column(s): {', '.join(sorted(unknown))}.")
+        columns = ", ".join(sorted(unknown))
+        run.report.warnings.append(
+            ImportWarning(
+                code="unknown_columns",
+                message=f"Ignored unknown column(s): {columns}.",
+                params={"columns": columns},
+            )
+        )
     return True
 
 

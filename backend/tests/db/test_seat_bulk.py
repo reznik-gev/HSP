@@ -148,5 +148,9 @@ async def test_import_reports_every_bad_row(ctx: dict[str, Any]) -> None:
         (7, "seat_not_found"),
         (9, "duplicate_row"),
     ]
-    assert report.warnings == ["Ignored unknown column(s): shoe_size."]
+    assert [e.params for e in report.errors if e.code == "seat_not_found"] == [
+        {"value": "NOPE-1"},
+        {"value": seat["b"], "building": "WRONG"},
+    ]
+    assert [w.params for w in report.warnings] == [{"columns": "shoe_size"}]
     assert await holder(ctx, ctx["a"]) == ctx["maya"]

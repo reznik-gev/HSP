@@ -1805,7 +1805,24 @@ export interface components {
              * Warnings
              * @default []
              */
-            warnings: string[];
+            warnings: components["schemas"]["ImportWarning"][];
+        };
+        /**
+         * ImportWarning
+         * @description Something the import ignored. Translated by `code` and `params` like RowError.
+         */
+        ImportWarning: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /**
+             * Params
+             * @default {}
+             */
+            params: {
+                [key: string]: string;
+            };
         };
         /** KindDiff */
         KindDiff: {
@@ -2377,7 +2394,10 @@ export interface components {
             /** Width Mm */
             width_mm: number;
         };
-        /** RowError */
+        /**
+         * RowError
+         * @description One problem in the file. `message` is English; clients translate `code` with `params`.
+         */
         RowError: {
             /** Code */
             code: string;
@@ -2385,6 +2405,13 @@ export interface components {
             column?: string | null;
             /** Message */
             message: string;
+            /**
+             * Params
+             * @default {}
+             */
+            params: {
+                [key: string]: string;
+            };
             /** Row */
             row: number;
         };

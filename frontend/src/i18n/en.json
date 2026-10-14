@@ -286,6 +286,31 @@
       "row": "Row",
       "column": "Column",
       "problem": "Problem"
+    },
+    "problems": {
+      "required": "This column needs a value.",
+      "duplicate_row": "{{value}} appears twice (also row {{other_row}}).",
+      "second_root": "Only the top team can have no parent.",
+      "parent_not_found": "Unknown parent team code {{value}}.",
+      "unit_archived": "Team {{value}} is archived; restore it first.",
+      "unit_cycle": "These parent links make a team part of its own sub-team.",
+      "invalid_email": "{{value}} isn't a valid email.",
+      "unit_not_found": "Unknown team code {{value}}.",
+      "position_without_unit": "A position needs primary_unit_external_id.",
+      "primary_required": "Secondary teams need primary_unit_external_id.",
+      "identity_conflict": "This personal number belongs to {{email}}, but the email belongs to someone else.",
+      "identity_conflict_current": "{{email}} already has personal number {{current}}, not {{value}}.",
+      "missing_column": "Missing required column(s): {{columns}}.",
+      "seat_not_found": "No published seat {{value}}.",
+      "seat_not_found_building": "No published seat {{value}} in building {{building}}.",
+      "seat_ambiguous": "Seat {{value}} exists in several buildings ({{buildings}}); add building_code.",
+      "seat_not_assignable": "Seat {{value}} can't be assigned: it's bookable or unavailable.",
+      "holder_required": "Fill in exactly one of holder_email and holder_unit_external_id.",
+      "holder_not_found_person": "No person with email {{value}}.",
+      "holder_not_found_team": "Unknown team code {{value}}.",
+      "holder_inactive_person": "{{name}} is inactive.",
+      "holder_inactive_team": "{{name}} is archived.",
+      "unknown_columns": "Ignored unknown column(s): {{columns}}."
     }
   }
 }

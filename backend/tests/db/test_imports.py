@@ -73,7 +73,7 @@ async def test_units_dry_run_then_apply_then_idempotent(svc: ImportService) -> N
     rows = read_table("units.csv", UNITS_CSV)
     preview = await svc.import_units(rows, apply=False)
     assert (preview.applied, preview.created, preview.errors) == (False, 3, [])
-    assert preview.warnings == ["Ignored unknown column(s): shoe_size."]
+    assert [w.params for w in preview.warnings] == [{"columns": "shoe_size"}]
     assert await count(svc, models.OrgUnit) == 0  # dry run wrote nothing
 
     done = await svc.import_units(rows, apply=True)
@@ -92,6 +92,10 @@ async def test_units_errors_are_reported_per_row_and_nothing_is_written(svc: Imp
         (5, "second_root"),
         (6, "duplicate_row"),
     ]
+    # Clients translate the code; params carry the values to show (e.g. in Hebrew).
+    params = {e.code: e.params for e in report.errors}
+    assert params["parent_not_found"] == {"value": "NOPE"}
+    assert params["duplicate_row"] == {"value": "CO", "other_row": "2"}
     assert await count(svc, models.OrgUnit) == 0
 
 
