@@ -125,7 +125,7 @@ describe("people (docs/0088)", () => {
     await userEvent.type(within(panel).getByLabelText("Name"), "Dana Cohen");
     await userEvent.type(within(panel).getByLabelText("Email"), "dana@acme.example");
     await userEvent.click(within(panel).getByRole("button", { name: "Create person" }));
-    expect(await within(panel).findByText("Someone else already uses this email.")).toBeVisible();
+    expect(await within(panel).findByText("This email is already in use.")).toBeVisible();
     expect(within(panel).getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
     await userEvent.click(within(panel).getByRole("button", { name: "Create person" }));
     await waitFor(() => expect(router.state.location.search).toMatchObject({ person: "p9" }));
@@ -165,7 +165,7 @@ describe("people (docs/0088)", () => {
     expect(screen.getByText("2 seats freed")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Undo" }));
     expect(
-      await screen.findByText("1 seat was given to someone else meanwhile and stays with them."),
+      await screen.findByText("1 seat was assigned in the meantime and stays as it is."),
     ).toBeInTheDocument();
     const puts = calls.filter((r) => r.method === "PUT").map((r) => new URL(r.url).pathname);
     expect(puts).toEqual(["/api/v1/seats/d2/assignment"]); // d7 stays with its new holder

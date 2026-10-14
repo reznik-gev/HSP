@@ -142,7 +142,7 @@
       "name": "Name",
       "email": "Email",
       "title": "Title",
-      "externalId": "HR ID",
+      "externalId": "Personal number",
       "team": "Team",
       "position": "Position"
     },
@@ -164,11 +164,11 @@
     "reactivated": "{{name}} reactivated",
     "seatsFreed_one": "{{count}} seat freed",
     "seatsFreed_other": "{{count}} seats freed",
-    "seatsTaken_one": "{{count}} seat was given to someone else meanwhile and stays with them.",
-    "seatsTaken_other": "{{count}} seats were given to someone else meanwhile and stay with them.",
+    "seatsTaken_one": "{{count}} seat was assigned in the meantime and stays as it is.",
+    "seatsTaken_other": "{{count}} seats were assigned in the meantime and stay as they are.",
     "errors": {
-      "emailTaken": "Someone else already uses this email.",
-      "externalIdTaken": "Someone else already has this HR ID.",
+      "emailTaken": "This email is already in use.",
+      "externalIdTaken": "This personal number is already in use.",
       "primaryRequired": "Choose which team is primary.",
       "duplicateTeam": "A team is listed twice."
     }
