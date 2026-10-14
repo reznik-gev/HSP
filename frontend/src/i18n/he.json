@@ -125,7 +125,7 @@
     },
     "columns": {
       "name": "שם",
-      "title": "תפקיד",
+      "title": "מקצוע",
       "team": "צוות",
       "status": "סטטוס"
     },
@@ -141,14 +141,14 @@
     "fields": {
       "name": "שם",
       "email": "אימייל",
-      "title": "תפקיד",
+      "title": "מקצוע",
       "externalId": "מספר אישי",
       "team": "צוות",
-      "position": "משרה"
+      "position": "תפקיד"
     },
     "primary": "ראשי",
     "noTeams": "עדיין לא שייך/ת לאף צוות.",
-    "noPosition": "ללא משרה",
+    "noPosition": "ללא תפקיד",
     "addTeam": "הוספת צוות",
     "removeTeam": "הסרת צוות",
     "saveTeams": "שמירת צוותים",
