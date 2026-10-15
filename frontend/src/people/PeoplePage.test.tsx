@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
@@ -68,15 +68,6 @@ function backend(extra: Routes = {}): Routes {
 }
 
 const asViewer = { "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } } };
-
-beforeEach(() => {
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
-});
 
 afterEach(async () => {
   cleanup();

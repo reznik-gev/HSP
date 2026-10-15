@@ -13,12 +13,6 @@ let assigned: string[] = [];
 beforeEach(() => {
   assigned = [];
   vi.spyOn(navigation, "assign").mockImplementation((url) => void assigned.push(url));
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
 });
 
 afterEach(() => {

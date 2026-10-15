@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { fakeBackend, renderApp, type Reply, type Routes } from "@/test/renderApp";
@@ -67,15 +67,6 @@ function backend(extra: Routes = {}): Routes {
   };
 }
 
-beforeEach(() => {
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
-});
-
 afterEach(async () => {
   cleanup();
   vi.unstubAllGlobals();
@@ -97,19 +88,6 @@ describe("teams (docs/0088)", () => {
   });
 
   it("the chart view draws every team as a link to its panel", async () => {
-    vi.stubGlobal(
-      "ResizeObserver",
-      class {
-        constructor(private cb: ResizeObserverCallback) {}
-        observe() {
-          this.cb(
-            [{ contentRect: { width: 900, height: 600 } } as ResizeObserverEntry],
-            this as never,
-          );
-        }
-        disconnect() {}
-      },
-    );
     const { router } = await renderApp("/org", backend());
     await userEvent.click(await screen.findByRole("button", { name: "Chart" }));
     expect(router.state.location.search).toMatchObject({ view: "chart" });

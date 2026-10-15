@@ -6,7 +6,7 @@
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
@@ -14,8 +14,7 @@ import { Interaction } from "@/editor/core/interaction";
 import { createEditorStore, type EditorStore } from "@/editor/core/store";
 import { ViewerInteraction } from "@/editor/core/viewerInteraction";
 import { EditOverlay } from "@/editor/view-svg/EditOverlay";
-import { PlanView, type RenderOptions } from "@/editor/view-svg/PlanView";
-import { fitPlan, useElementSize, ZoomControls } from "@/editor/view-svg/ZoomControls";
+import { PlanCanvas } from "@/editor/view-svg/PlanCanvas";
 import { floorPlaceQuery, zoneTypesQuery } from "@/floors/planData";
 import { notify, notifyError } from "@/lib/notify";
 import { preferencesQuery } from "@/lib/preferences";
@@ -36,14 +35,6 @@ import { ToolStrip } from "./ToolStrip";
 import { useEditorKeys } from "./useEditorKeys";
 
 const route = getRouteApi("/editor/floors/$floorId/edit");
-
-const OPTIONS: RenderOptions = {
-  labels: true,
-  hatching: false,
-  doorArcs: true,
-  zoneFills: true,
-  lod: true,
-};
 
 export function EditorPage() {
   const { t } = useTranslation();
@@ -186,33 +177,20 @@ function Canvas({
 }) {
   const [viewing] = useState(() => new ViewerInteraction(store));
   const tool = useStore(store, (s) => s.tool);
-  const canvas = useRef<HTMLDivElement>(null);
-  const size = useElementSize(canvas);
-  const generation = useStore(store, (s) => s.generation);
-
-  useEffect(() => {
-    if (size) fitPlan(store, size);
-    // Fit when a plan is loaded and once the canvas has a size, not on every resize.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store, generation, size === null]);
-
   return (
-    <div
-      ref={canvas}
+    <PlanCanvas
+      store={store}
+      view={{
+        interaction: editable ? interaction : viewing,
+        overlay: <EditOverlay store={store} />,
+      }}
+      className={cn(editable && tool !== "select" && "cursor-crosshair")}
       // Working on the plan takes the keyboard away from any field, for the editor's shortcuts.
       onPointerDownCapture={() => {
         if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
       }}
-      className={cn("relative min-w-0 flex-1", editable && tool !== "select" && "cursor-crosshair")}
     >
-      <PlanView
-        store={store}
-        interaction={editable ? interaction : viewing}
-        options={OPTIONS}
-        overlay={<EditOverlay store={store} />}
-      />
-      <ZoomControls store={store} size={size} />
       {editable && <ToolOptions store={store} />}
-    </div>
+    </PlanCanvas>
   );
 }

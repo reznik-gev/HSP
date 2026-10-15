@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
@@ -110,28 +110,6 @@ function backend(over: Routes = {}, publishedVersion: number | null = 2): Routes
 const NO_DRAFT: Reply = { status: 404, body: { type: "/problems/no-draft", title: "No draft" } };
 const calls = (list: Request[], key: string) =>
   list.filter((r) => `${r.method} ${new URL(r.url).pathname}` === key).length;
-
-beforeEach(() => {
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
-  vi.stubGlobal(
-    "ResizeObserver",
-    class {
-      constructor(private cb: ResizeObserverCallback) {}
-      observe() {
-        this.cb(
-          [{ contentRect: { width: 800, height: 600 } } as ResizeObserverEntry],
-          this as never,
-        );
-      }
-      disconnect() {}
-    },
-  );
-});
 
 afterEach(async () => {
   cleanup();
@@ -290,23 +268,6 @@ function drag(from: [number, number], to: [number, number]) {
 }
 
 describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
-  beforeEach(() => {
-    Element.prototype.setPointerCapture = () => {};
-    // jsdom has no PointerEvent; a MouseEvent carries the same coordinates and buttons.
-    if (!("PointerEvent" in window)) {
-      vi.stubGlobal(
-        "PointerEvent",
-        class extends MouseEvent {
-          readonly pointerId: number;
-          constructor(type: string, init: PointerEventInit = {}) {
-            super(type, init);
-            this.pointerId = init.pointerId ?? 1;
-          }
-        },
-      );
-    }
-  });
-
   function saving() {
     const changesets: { base_revision: number; ops: { data?: unknown }[] }[] = [];
     let revision = 3;

@@ -8,7 +8,8 @@
  * with every wall that meets there (Alt detaches just that wall, docs/0044), dragging a
  * selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
  * Drawing tools (wall, door, window, column, zone, item): a click places, a drag pans; see
- * their classes. R turns the item being placed, or the selected furniture, a quarter turn. The middle button always pans; the wheel zooms.
+ * their classes. R turns the item being placed, or the selected furniture, a quarter turn.
+ * The middle button always pans and the wheel zooms (PanZoom, shared with the viewer).
  */
 import {
   deleteSelection,
@@ -29,7 +30,7 @@ import { ItemTool } from "./tools/itemTool";
 import { fitOnWall, OpeningTool } from "./tools/openingTool";
 import { WallTool } from "./tools/wallTool";
 import { ZoneTool } from "./tools/zoneTool";
-import { panBy, screenToPlan, zoomAt } from "./viewport";
+import { isClick, PanZoom } from "./panZoom";
 
 export interface PointerInput {
   sx: number;
@@ -43,18 +44,16 @@ export interface PointerInput {
 type Gesture =
   | { kind: "none" }
   /** `clickClears`: a click without moving (on empty space) clears the selection. */
-  | { kind: "pan"; lastSx: number; lastSy: number; clickClears?: boolean }
+  | { kind: "pan"; clickClears?: boolean }
   | { kind: "drag"; start: Vec2; moved: boolean }
   | { kind: "junction"; from: Vec2; walls: string[] }
   /** Sliding a door or window: `grab` is where along it the pointer took hold. */
   | { kind: "slide"; id: string; grab: number }
   | { kind: "vertex"; zone: string; index: number; from: Vec2 };
 
-const DRAG_THRESHOLD_PX = 3;
-
 export class Interaction {
   private gesture: Gesture = { kind: "none" };
-  private size: Vec2 = [1, 1];
+  private readonly view: PanZoom;
   private downAt: Vec2 = [0, 0];
   private readonly wallTool: WallTool;
   private readonly openingTool: OpeningTool;
@@ -63,6 +62,7 @@ export class Interaction {
   private readonly itemTool: ItemTool;
 
   constructor(private readonly store: EditorStore) {
+    this.view = new PanZoom(store);
     this.wallTool = new WallTool(store);
     this.openingTool = new OpeningTool(store);
     this.columnTool = new ColumnTool(store);
@@ -84,11 +84,17 @@ export class Interaction {
   }
 
   setSize(width: number, height: number): void {
-    this.size = [Math.max(1, width), Math.max(1, height)];
+    this.view.setSize(width, height);
+  }
+
+  /** Starts dragging the view; a click without moving may do more on release. */
+  private pan(e: PointerInput, clickClears = false): void {
+    this.view.startPan(e.sx, e.sy);
+    this.gesture = { kind: "pan", clickClears };
   }
 
   private toPlan(e: PointerInput): Vec2 {
-    return screenToPlan(this.store.getState().viewport, this.size, e.sx, e.sy);
+    return this.view.toPlan(e.sx, e.sy);
   }
 
   /** Returns what happened, so the view can e.g. time selection latency. */
@@ -97,13 +103,13 @@ export class Interaction {
     if (!s.plan || !s.hitIndex) return "none";
     this.downAt = [e.sx, e.sy];
     if (e.button === 1) {
-      this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy };
+      this.pan(e);
       return "pan";
     }
     if (s.tool !== "select") {
       if (e.button === 2 && s.tool === "wall") this.wallTool.finish();
       // A click places (on release); a drag pans.
-      else if (e.button === 0) this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy };
+      else if (e.button === 0) this.pan(e);
       return "none";
     }
     if (e.button !== 0) return "none";
@@ -143,17 +149,17 @@ export class Interaction {
     }
     if (hit?.kind === "wall") {
       s.select([hit.id], e.shift);
-      this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy };
+      this.pan(e);
       return "select";
     }
     const zone = zoneAt(s.plan, p);
     if (zone) {
       s.select([zone], e.shift);
-      this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy };
+      this.pan(e);
       return "select";
     }
     // Empty space: pan, and clear selection on a plain click.
-    this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy, clickClears: !e.shift };
+    this.pan(e, !e.shift);
     return "clear";
   }
 
@@ -186,15 +192,9 @@ export class Interaction {
     const s = this.store.getState();
     const g = this.gesture;
     if (g.kind === "pan") {
-      s.setViewport(panBy(s.viewport, e.sx - g.lastSx, e.sy - g.lastSy));
-      this.gesture = { ...g, lastSx: e.sx, lastSy: e.sy };
+      this.view.movePan(e.sx, e.sy);
     } else if (g.kind === "drag") {
-      if (
-        !g.moved &&
-        Math.hypot(e.sx - this.downAt[0], e.sy - this.downAt[1]) < DRAG_THRESHOLD_PX
-      ) {
-        return;
-      }
+      if (!g.moved && isClick(this.downAt, e.sx, e.sy)) return;
       g.moved = true;
       const p = this.toPlan(e);
       const snap = (v: number) =>
@@ -238,7 +238,8 @@ export class Interaction {
     const s = this.store.getState();
     const g = this.gesture;
     this.gesture = { kind: "none" };
-    const clicked = Math.hypot(e.sx - this.downAt[0], e.sy - this.downAt[1]) < DRAG_THRESHOLD_PX;
+    this.view.endPan();
+    const clicked = isClick(this.downAt, e.sx, e.sy);
     if (g.kind === "drag" && g.moved) {
       s.commitDrag();
     } else if (g.kind === "junction") {
@@ -272,15 +273,14 @@ export class Interaction {
   focus(id: string): void {
     const s = this.store.getState();
     if (!s.plan) return;
-    const viewport = viewportFor(s.plan, id, this.size);
+    const viewport = viewportFor(s.plan, id, this.view.size);
     if (!viewport) return;
     s.select([id]);
     s.setViewport(viewport);
   }
 
   wheel(sx: number, sy: number, deltaY: number): void {
-    const s = this.store.getState();
-    s.setViewport(zoomAt(s.viewport, this.size, sx, sy, Math.exp(-deltaY * 0.0015)));
+    this.view.wheel(sx, sy, deltaY);
   }
 
   /** Keyboard commands; returns whether the key was used. */
