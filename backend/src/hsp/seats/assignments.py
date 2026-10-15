@@ -27,7 +27,7 @@ class AssignmentIn(BaseModel):
     note: str | None = Field(default=None, max_length=500)
 
     @model_validator(mode="after")
-    def _exactly_one_holder(self) -> "AssignmentIn":
+    def _exactly_one_holder(self) -> AssignmentIn:
         if (self.person_id is None) == (self.unit_id is None):
             raise ValueError("Give exactly one of person_id or unit_id.")
         return self

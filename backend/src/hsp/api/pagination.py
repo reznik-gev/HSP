@@ -46,7 +46,7 @@ def decode_cursor(cursor: str | None, filters: dict[str, Any]) -> uuid.UUID | No
         data = json.loads(base64.urlsafe_b64decode(padded))
         after = uuid.UUID(data["after"])
         matches = data["f"] == _fingerprint(filters)
-    except (ValueError, KeyError, TypeError):
+    except ValueError, KeyError, TypeError:
         raise ProblemException(400, "cursor-invalid", "Invalid cursor") from None
     if not matches:
         raise ProblemException(

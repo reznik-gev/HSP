@@ -161,7 +161,7 @@ class OidcClient:
         )
         try:
             return self._decode(id_token, await self._key_set(), registry)
-        except (JoseError, ValueError):
+        except JoseError, ValueError:
             # The provider may have rotated its signing key: refetch the key set once.
             try:
                 return self._decode(id_token, await self._key_set(refresh=True), registry)
@@ -199,7 +199,7 @@ class OidcClient:
                         token=tokens.refresh_token,
                         token_type_hint="refresh_token",
                     )
-            except (OAuthError, httpx2.HTTPError):
+            except OAuthError, httpx2.HTTPError:
                 pass  # the session is deleted locally either way
         if not meta.end_session_endpoint:
             return None
