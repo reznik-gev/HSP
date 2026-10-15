@@ -350,6 +350,11 @@ export class Interaction {
     return [sx, sy];
   }
 
+  /** A canvas point (screen px) on the plan, in mm. */
+  planAt(sx: number, sy: number): Vec2 {
+    return this.view.toPlan(sx, sy);
+  }
+
   /** Where the pointer last was on the canvas (screen px), e.g. to open a box there. */
   lastPointer: { sx: number; sy: number } = { sx: 0, sy: 0 };
 

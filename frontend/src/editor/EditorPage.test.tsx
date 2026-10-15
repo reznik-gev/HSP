@@ -482,6 +482,26 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     expect(screen.getByText("Next: HT-3-03")).toBeVisible();
   });
 
+  it("Ctrl+C then Ctrl+V pastes a copy in place, without the seat label", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    click([2000, 1000]);
+    await userEvent.keyboard("{Control>}c{/Control}");
+    expect(await screen.findByText("Copied 1 element")).toBeVisible();
+    await userEvent.keyboard("{Control>}v{/Control}");
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops).toEqual([
+      expect.objectContaining({
+        op: "add",
+        kind: "object",
+        data: expect.objectContaining({ position: [2000, 1000, 0], label: null }) as unknown,
+      }),
+    ]);
+    // The copy is selected, and its label is empty.
+    expect(screen.getByLabelText("Seat label")).toHaveValue("");
+  });
+
   it("Exit saves what's waiting before leaving", async () => {
     const { routes, changesets } = saving();
     const { calls: sent } = await renderApp("/floors/f3/edit", routes);

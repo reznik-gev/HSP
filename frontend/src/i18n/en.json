@@ -596,6 +596,12 @@
       "pattern": "Pattern",
       "next": "Next: {{label}}",
       "invalid": "Put one counter in braces, e.g. HT-3-{01}"
+    },
+    "clipboard": {
+      "copied_one": "Copied {{count}} element",
+      "copied_other": "Copied {{count}} elements",
+      "howToPaste": "Ctrl+V pastes in place, Ctrl+Shift+V at the pointer, on this floor or another.",
+      "empty": "Nothing to paste. Select something and press Ctrl+C first."
     }
   }
 }
