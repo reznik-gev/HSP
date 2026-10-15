@@ -2,13 +2,13 @@
  * The wall tool (docs/0044, docs/0089): click to start, click again for each corner; every
  * segment is its own wall and its own undo step, starting where the last one ended, so walls
  * join exactly. Clicking the chain's first point closes the room and ends the chain, as do
- * Enter, Escape and the right mouse button. Points snap to wall ends, then to the grid.
+ * Enter, Escape and the right mouse button. Points snap as docs/0047 says (see snap.ts).
  *
  * The chain lives in the store's preview, so switching tools always ends it.
  */
 import { addWall } from "../edits";
 import type { Vec2 } from "../plan";
-import { snapPoint } from "../snap";
+import { snapPoint, snapSettings } from "../snap";
 import type { EditorStore } from "../store";
 
 const same = (p: Vec2, q: Vec2) => p[0] === q[0] && p[1] === q[1];
@@ -25,9 +25,7 @@ export class WallTool {
     const s = this.store.getState();
     const { start } = this.chain();
     return snapPoint(s.plan!, p, {
-      mmPerPx: s.viewport.mmPerPx,
-      gridMm: s.gridMm,
-      gridSnap: s.gridSnap,
+      ...snapSettings(s, s.snapFree),
       extra: start ? [start] : [],
     });
   }

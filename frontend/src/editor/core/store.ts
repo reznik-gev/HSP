@@ -95,6 +95,8 @@ export interface EditorState {
   displayUnit: DisplayUnit;
   gridMm: 10 | 50 | 100 | 500;
   gridSnap: boolean;
+  /** Alt is held: snapping is off for this pointer move (docs/0047). */
+  snapFree: boolean;
   /** The edited plan in API shape; null in the read-only viewer. */
   document: ApiPlan | null;
   zoneTypes: ZoneTypes;
@@ -140,6 +142,8 @@ export interface EditorState {
   commitDrag(): void;
   setDisplayUnit(unit: DisplayUnit): void;
   toggleGridSnap(): void;
+  setGridMm(gridMm: EditorState["gridMm"]): void;
+  setSnapFree(free: boolean): void;
   setTool(tool: Tool): void;
   setPreview(preview: Preview): void;
   setWallDefaults(defaults: Partial<WallDefaults>): void;
@@ -200,6 +204,7 @@ export function createEditorStore() {
       displayUnit: "cm",
       gridMm: 50, // 5 cm default (docs/0047)
       gridSnap: true,
+      snapFree: false,
       document: null,
       zoneTypes: new Map(),
       undoStack: [],
@@ -328,6 +333,10 @@ export function createEditorStore() {
       },
       setDisplayUnit: (displayUnit) => set({ displayUnit }),
       toggleGridSnap: () => set((s) => ({ gridSnap: !s.gridSnap })),
+      setGridMm: (gridMm) => set({ gridMm }),
+      setSnapFree: (snapFree) => {
+        if (get().snapFree !== snapFree) set({ snapFree });
+      },
       setTool: (tool) => set({ tool, preview: null }),
       setPreview: (preview) => set({ preview }),
       setWallDefaults: (defaults) => set({ wallDefaults: { ...get().wallDefaults, ...defaults } }),

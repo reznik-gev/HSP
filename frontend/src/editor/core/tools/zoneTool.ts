@@ -8,7 +8,7 @@
 import { addZone } from "../edits";
 import { isSimplePolygon } from "../geometry";
 import type { Vec2 } from "../plan";
-import { snapPoint } from "../snap";
+import { snapPoint, snapSettings } from "../snap";
 import type { EditorStore } from "../store";
 
 const same = (p: Vec2, q: Vec2) => p[0] === q[0] && p[1] === q[1];
@@ -24,9 +24,7 @@ export class ZoneTool {
   private snap(p: Vec2) {
     const s = this.store.getState();
     return snapPoint(s.plan!, p, {
-      mmPerPx: s.viewport.mmPerPx,
-      gridMm: s.gridMm,
-      gridSnap: s.gridSnap,
+      ...snapSettings(s, s.snapFree),
       extra: this.points(),
     });
   }

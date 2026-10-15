@@ -550,6 +550,17 @@
         "superseded": "Earlier",
         "discarded": "Discarded"
       }
+    },
+    "snap": {
+      "endpoint": "Endpoint",
+      "midpoint": "Midpoint",
+      "centreline": "On wall"
+    },
+    "grid": {
+      "snap": "Grid",
+      "snapHint": "Snap to the grid (G). Hold Alt to place freely.",
+      "size": "Grid size",
+      "cm": "{{cm}} cm"
     }
   }
 }

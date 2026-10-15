@@ -14,6 +14,7 @@ import { Interaction } from "@/editor/core/interaction";
 import { createEditorStore, type EditorStore } from "@/editor/core/store";
 import { ViewerInteraction } from "@/editor/core/viewerInteraction";
 import { EditOverlay } from "@/editor/view-svg/EditOverlay";
+import { GridUnderlay } from "@/editor/view-svg/GridUnderlay";
 import { PlanCanvas } from "@/editor/view-svg/PlanCanvas";
 import { floorPlaceQuery, zoneTypesQuery } from "@/floors/planData";
 import { notify, notifyError } from "@/lib/notify";
@@ -21,6 +22,7 @@ import { preferencesQuery } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 
 import { EditorTopBar } from "./EditorTopBar";
+import { GridControls } from "./GridControls";
 import { HistorySheet } from "./publish/HistorySheet";
 import { PublishDialog } from "./publish/PublishDialog";
 import { useDraftActions } from "./publish/useDraftActions";
@@ -76,7 +78,12 @@ export function EditorPage() {
   useEffect(() => {
     if (wallHeight) store.getState().setWallDefaults({ height_mm: wallHeight });
   }, [store, wallHeight]);
-  const units = useQuery(preferencesQuery).data?.display_units;
+  const preferences = useQuery(preferencesQuery).data;
+  const units = preferences?.display_units;
+  const gridMm = preferences?.grid_mm;
+  useEffect(() => {
+    if (gridMm) store.getState().setGridMm(gridMm);
+  }, [store, gridMm]);
   useEffect(() => {
     if (units) store.getState().setDisplayUnit(units);
   }, [store, units]);
@@ -182,6 +189,7 @@ function Canvas({
       store={store}
       view={{
         interaction: editable ? interaction : viewing,
+        underlay: editable ? <GridUnderlay store={store} /> : undefined,
         overlay: <EditOverlay store={store} />,
       }}
       className={cn(editable && tool !== "select" && "cursor-crosshair")}
@@ -191,6 +199,7 @@ function Canvas({
       }}
     >
       {editable && <ToolOptions store={store} />}
+      {editable && <GridControls store={store} />}
     </PlanCanvas>
   );
 }

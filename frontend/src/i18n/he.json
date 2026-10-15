@@ -569,6 +569,17 @@
         "superseded": "קודמת",
         "discarded": "בוטלה"
       }
+    },
+    "snap": {
+      "endpoint": "קצה",
+      "midpoint": "אמצע",
+      "centreline": "על הקיר"
+    },
+    "grid": {
+      "snap": "רשת",
+      "snapHint": "הצמדה לרשת (G). החזיקו Alt כדי להציב בחופשיות.",
+      "size": "גודל הרשת",
+      "cm": "{{cm}} ס״מ"
     }
   }
 }

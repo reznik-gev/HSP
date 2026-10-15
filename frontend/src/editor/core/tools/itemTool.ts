@@ -13,7 +13,7 @@ export class ItemTool {
   private snap(p: Vec2): Vec2 {
     const s = this.store.getState();
     const g = s.gridMm;
-    return s.gridSnap
+    return s.gridSnap && !s.snapFree
       ? [Math.round(p[0] / g) * g, Math.round(p[1] / g) * g]
       : [Math.round(p[0]), Math.round(p[1])];
   }

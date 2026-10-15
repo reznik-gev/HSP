@@ -23,7 +23,7 @@ import { alongSegment } from "./geometry";
 import { viewportFor } from "./focus";
 import { hitTest, zoneAt } from "./hitTest";
 import type { Vec2 } from "./plan";
-import { SNAP_PX, snapPoint } from "./snap";
+import { SNAP_PX, snapPoint, snapSettings } from "./snap";
 import type { EditorStore } from "./store";
 import { ColumnTool } from "./tools/columnTool";
 import { ItemTool } from "./tools/itemTool";
@@ -99,6 +99,7 @@ export class Interaction {
 
   /** Returns what happened, so the view can e.g. time selection latency. */
   pointerDown(e: PointerInput): "select" | "pan" | "clear" | "none" {
+    this.store.getState().setSnapFree(Boolean(e.alt));
     const s = this.store.getState();
     if (!s.plan || !s.hitIndex) return "none";
     this.downAt = [e.sx, e.sy];
@@ -189,6 +190,7 @@ export class Interaction {
   }
 
   pointerMove(e: PointerInput): void {
+    this.store.getState().setSnapFree(Boolean(e.alt));
     const s = this.store.getState();
     const g = this.gesture;
     if (g.kind === "pan") {
@@ -198,21 +200,19 @@ export class Interaction {
       g.moved = true;
       const p = this.toPlan(e);
       const snap = (v: number) =>
-        s.gridSnap ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
+        s.gridSnap && !e.alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
       s.setDrag({ dx: snap(p[0] - g.start[0]), dy: snap(p[1] - g.start[1]) });
     } else if (g.kind === "junction" && s.plan) {
       const { point, kind } = snapPoint(s.plan, this.toPlan(e), {
-        mmPerPx: s.viewport.mmPerPx,
-        gridMm: s.gridMm,
-        gridSnap: s.gridSnap,
+        ...snapSettings(s, e.alt),
         ignore: g.from,
+        // The moving walls' own centrelines move with them.
+        ignoreWalls: new Set(g.walls),
       });
       s.setPreview({ kind: "junction", from: g.from, to: point, walls: g.walls, snap: kind });
     } else if (g.kind === "vertex" && s.plan) {
       const { point, kind } = snapPoint(s.plan, this.toPlan(e), {
-        mmPerPx: s.viewport.mmPerPx,
-        gridMm: s.gridMm,
-        gridSnap: s.gridSnap,
+        ...snapSettings(s, e.alt),
         ignore: g.from,
       });
       s.setPreview({ kind: "vertex", zone: g.zone, index: g.index, to: point, snap: kind });
@@ -235,6 +235,7 @@ export class Interaction {
   }
 
   pointerUp(e: PointerInput): void {
+    this.store.getState().setSnapFree(Boolean(e.alt));
     const s = this.store.getState();
     const g = this.gesture;
     this.gesture = { kind: "none" };
@@ -292,6 +293,10 @@ export class Interaction {
         if (s.tool === "zone" && this.zoneTool.cancel()) return true;
         if (s.tool !== "select") s.setTool("select");
         else s.clearSelection();
+        return true;
+      case "g":
+      case "G":
+        s.toggleGridSnap();
         return true;
       case "Enter":
         if (s.tool === "zone") return this.zoneTool.close();

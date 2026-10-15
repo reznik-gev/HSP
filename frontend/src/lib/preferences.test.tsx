@@ -39,6 +39,11 @@ describe("saved preferences (docs/0046, docs/0087)", () => {
     await waitFor(() => expect(calls.some((r) => r.method === "PUT")).toBe(true));
     const put = calls.find((r) => r.method === "PUT");
     expect(put?.headers.get("X-CSRF-Token")).toBe("csrf-123");
-    expect(await put?.json()).toEqual({ language: "en", theme: "dark", display_units: "m" });
+    expect(await put?.json()).toEqual({
+      language: "en",
+      theme: "dark",
+      display_units: "m",
+      grid_mm: null,
+    });
   });
 });

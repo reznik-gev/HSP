@@ -30,8 +30,10 @@ async def ctx(conn: AsyncConnection) -> dict[str, Any]:
 async def test_defaults_then_saved_per_user(ctx: dict[str, Any]) -> None:
     noa, eli = ctx["as_user"]("noa"), ctx["as_user"]("eli")
     assert await noa.get() == Preferences()  # nothing chosen yet
-    await noa.put(Preferences(language="he", theme="dark", display_units="m"))
-    assert await noa.get() == Preferences(language="he", theme="dark", display_units="m")
+    await noa.put(Preferences(language="he", theme="dark", display_units="m", grid_mm=100))
+    assert await noa.get() == Preferences(
+        language="he", theme="dark", display_units="m", grid_mm=100
+    )
     assert await eli.get() == Preferences()  # each user has their own
 
     await noa.put(Preferences(language="en"))  # null clears the others
@@ -40,16 +42,18 @@ async def test_defaults_then_saved_per_user(ctx: dict[str, Any]) -> None:
 
 async def test_other_keys_in_the_profile_are_kept(ctx: dict[str, Any]) -> None:
     ctx["db"].add(
-        models.UserProfile(tenant_id=ctx["tenant"], subject="noa", preferences={"grid_mm": 50})
+        models.UserProfile(tenant_id=ctx["tenant"], subject="noa", preferences={"future_key": 1})
     )
     await ctx["db"].flush()
     await ctx["as_user"]("noa").put(Preferences(theme="light"))
     profile = await ctx["db"].scalar(
         select(models.UserProfile).where(models.UserProfile.subject == "noa")
     )
-    assert profile is not None and profile.preferences["grid_mm"] == 50
+    assert profile is not None and profile.preferences["future_key"] == 1
 
 
 def test_unknown_values_are_refused() -> None:
     with pytest.raises(ValidationError):
         Preferences.model_validate({"language": "fr"})
+    with pytest.raises(ValidationError):
+        Preferences.model_validate({"grid_mm": 70})  # 1, 5, 10 or 50 cm only (docs/0047)

@@ -376,6 +376,24 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     await waitFor(() => expect(calls(sent, "PUT /api/v1/me/preferences")).toBe(1));
   });
 
+  it("the grid bar starts at the saved grid size, saves a new one, and G toggles snapping", async () => {
+    const { routes } = saving();
+    const { calls: sent } = await renderApp("/floors/f3/edit", {
+      ...routes,
+      "GET /api/v1/me/preferences": { status: 200, body: { grid_mm: 500 } },
+    });
+    await screen.findByText("Draft 3 · Saved");
+    const size = screen.getByRole("combobox", { name: "Grid size" });
+    await waitFor(() => expect(size).toHaveDisplayValue("50 cm"));
+    expect(screen.getByTestId("grid")).toBeInTheDocument();
+    await userEvent.selectOptions(size, "10 cm");
+    await waitFor(() => expect(calls(sent, "PUT /api/v1/me/preferences")).toBe(1));
+    const snap = screen.getByRole("button", { name: "Grid" });
+    expect(snap).toHaveAttribute("aria-pressed", "true");
+    await userEvent.keyboard("g");
+    expect(snap).toHaveAttribute("aria-pressed", "false");
+  });
+
   it("Exit saves what's waiting before leaving", async () => {
     const { routes, changesets } = saving();
     const { calls: sent } = await renderApp("/floors/f3/edit", routes);

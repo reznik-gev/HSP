@@ -14,7 +14,7 @@ import { useTheme } from "./theme";
 
 export type Preferences = components["schemas"]["Preferences"];
 
-const NONE: Preferences = { language: null, theme: null, display_units: null };
+const NONE: Preferences = { language: null, theme: null, display_units: null, grid_mm: null };
 
 export const preferencesQuery = queryOptions({
   queryKey: ["preferences"],
