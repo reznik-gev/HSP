@@ -12,50 +12,25 @@ from hsp.plans.changeset import (
     ChangesetRejected,
     DeleteOp,
     Op,
-    References,
     UpdateOp,
     apply_changeset,
     needed_references,
 )
-from hsp.plans.schema import CatalogItem, PlacedObject, PlanContent, Wall, Zone
+from hsp.plans.schema import PlacedObject, PlanContent, Wall, Zone
+from tests.stubs import stub_catalog_item, stub_references
 
 DESK, CHAIR, MONITOR = new_id(), new_id(), new_id()
 ZONE_TYPE, DEVICE = new_id(), new_id()
 
 
-def item(
-    rev: uuid.UUID,
-    key: str,
-    category: str,
-    *,
-    seat: bool = False,
-    mountable: bool = False,
-    attaches: list[str] | None = None,
-) -> CatalogItem:
-    return CatalogItem(
-        id=rev,
-        item_id=new_id(),
-        key=key,
-        category=category,
-        name=key.title(),
-        shape="box",
-        width_mm=600,
-        depth_mm=600,
-        height_mm=700,
-        color=None,
-        is_seat=seat,
-        mountable=mountable,
-        attaches_to_categories=attaches or [],
-        footprint_blocks=True,
-    )
-
-
-REFS = References(
-    catalog={
-        DESK: item(DESK, "desk", "desk", seat=True),
-        CHAIR: item(CHAIR, "chair", "chair"),
-        MONITOR: item(MONITOR, "monitor", "monitor", mountable=True, attaches=["desk"]),
-    },
+REFS = stub_references(
+    [
+        stub_catalog_item(DESK, "desk", "desk", is_seat=True),
+        stub_catalog_item(CHAIR, "chair", "chair"),
+        stub_catalog_item(
+            MONITOR, "monitor", "monitor", mountable=True, attaches_to_categories=["desk"]
+        ),
+    ],
     zone_type_ids=frozenset({ZONE_TYPE}),
     device_ids=frozenset({DEVICE}),
 )
