@@ -380,6 +380,11 @@
     },
     "reloaded": "This draft changed elsewhere, so it was loaded again.",
     "rejected": "That change couldn't be saved, so the draft was loaded again.",
-    "unsavedExit": "Your latest changes aren't saved yet. Choose Exit again to leave without them."
+    "unsavedExit": "Your latest changes aren't saved yet. Choose Exit again to leave without them.",
+    "tools": {
+      "label": "Tools",
+      "select": "Select",
+      "wall": "Wall"
+    }
   }
 }

@@ -247,6 +247,13 @@ function onScreen(x: number, y: number): { clientX: number; clientY: number } {
   return { clientX: ((x - vx) / vw) * 800, clientY: ((-y - vy) / vh) * 600 };
 }
 
+function click(at: [number, number]) {
+  const svg = document.querySelector("svg[data-lod]")!;
+  const p = onScreen(...at);
+  fireEvent.pointerDown(svg, { ...p, button: 0, pointerId: 1 });
+  fireEvent.pointerUp(svg, { ...p, button: 0, pointerId: 1 });
+}
+
 function drag(from: [number, number], to: [number, number]) {
   const svg = document.querySelector("svg[data-lod]")!;
   const a = onScreen(...from);
@@ -311,6 +318,29 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     });
     expect(screen.getByRole("button", { name: "Redo" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
+  });
+
+  it("the Wall tool draws a wall corner to corner and saves it", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.click(screen.getByRole("button", { name: "Wall" }));
+    expect(screen.getByRole("button", { name: "Wall" })).toHaveAttribute("aria-pressed", "true");
+    click([0, 3000]);
+    click([4000, 3000]);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops).toEqual([
+      {
+        op: "add",
+        kind: "wall",
+        id: expect.stringMatching(/^[0-9a-f-]{36}$/) as string,
+        data: { a: [0, 3000], b: [4000, 3000], thickness_mm: 150, height_mm: 3000 },
+      },
+    ]);
+    // V goes back to Select.
+    await userEvent.keyboard("v");
+    expect(screen.getByRole("button", { name: "Select" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("Exit saves what's waiting before leaving", async () => {

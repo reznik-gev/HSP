@@ -1,8 +1,8 @@
 /**
  * The floor editor (docs/0089): a full-screen page that holds the floor's edit lock while open.
  * It opens the draft, or the published plan when there is no draft yet, and saves every change
- * to the draft as you go. For now furniture can be moved; the drawing tools and the side panel
- * arrive in the following steps of phase 3a.
+ * to the draft as you go. Tools so far: select (move furniture, drag wall junctions, delete)
+ * and walls; the other tools and the side panel arrive in the following steps of phase 3a.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
@@ -14,16 +14,20 @@ import { problemMessage } from "@/api/problems";
 import { Interaction } from "@/editor/core/interaction";
 import { createEditorStore, type EditorStore } from "@/editor/core/store";
 import { ViewerInteraction } from "@/editor/core/viewerInteraction";
+import { EditOverlay } from "@/editor/view-svg/EditOverlay";
 import { PlanView, type RenderOptions } from "@/editor/view-svg/PlanView";
 import { fitPlan, useElementSize, ZoomControls } from "@/editor/view-svg/ZoomControls";
 import { floorPlaceQuery, zoneTypesQuery } from "@/floors/planData";
 import { notify, notifyError } from "@/lib/notify";
+import { cn } from "@/lib/utils";
 
 import { EditorTopBar } from "./EditorTopBar";
 import { LockMessage } from "./LockMessage";
 import { editorPlanQuery } from "./session/editorPlan";
 import { useEditLock } from "./session/lock";
 import { useEditSession } from "./session/useEditSession";
+import { ToolStrip } from "./ToolStrip";
+import { useEditorKeys } from "./useEditorKeys";
 
 const route = getRouteApi("/editor/floors/$floorId/edit");
 
@@ -41,6 +45,7 @@ export function EditorPage() {
   const navigate = useNavigate();
   const client = useQueryClient();
   const [store] = useState(createEditorStore);
+  const [interaction] = useState(() => new Interaction(store));
   const place = useQuery(floorPlaceQuery(floorId));
   const lock = useEditLock(floorId);
   const held = lock.state.kind === "held";
@@ -60,7 +65,11 @@ export function EditorPage() {
     },
     onLockLost: lock.markLost,
   });
-  useUndoShortcuts(store, held);
+  useEditorKeys(store, interaction, held);
+  const wallHeight = place.data?.floor.default_wall_height_mm;
+  useEffect(() => {
+    if (wallHeight) store.getState().setWallDefaults({ height_mm: wallHeight });
+  }, [store, wallHeight]);
 
   // Exit saves what's left first. If that fails, a second Exit leaves without it.
   const [leaveAnyway, setLeaveAnyway] = useState(false);
@@ -91,7 +100,10 @@ export function EditorPage() {
           {t("plan.loadFailed")}
         </p>
       ) : editorPlan.data && zoneTypes.data ? (
-        <Canvas store={store} editable={held} />
+        <div className="flex min-h-0 flex-1">
+          <ToolStrip store={store} disabled={!held} />
+          <Canvas store={store} interaction={interaction} editable={held} />
+        </div>
       ) : (
         lock.state.kind === "acquiring" && (
           <div className="flex-1 bg-[var(--plan-paper)]" aria-busy="true" />
@@ -101,28 +113,17 @@ export function EditorPage() {
   );
 }
 
-/** Ctrl+Z undoes, Ctrl+Shift+Z or Ctrl+Y redoes (docs/0050), except while typing in a field. */
-function useUndoShortcuts(store: EditorStore, enabled: boolean) {
-  useEffect(() => {
-    if (!enabled) return;
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable]")) return;
-      if (!(e.ctrlKey || e.metaKey)) return;
-      const key = e.key.toLowerCase();
-      if (key === "z" && !e.shiftKey) store.getState().undo();
-      else if ((key === "z" && e.shiftKey) || key === "y") store.getState().redo();
-      else return;
-      e.preventDefault();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [store, enabled]);
-}
-
-function Canvas({ store, editable }: { store: EditorStore; editable: boolean }) {
-  const [editing] = useState(() => new Interaction(store));
+function Canvas({
+  store,
+  interaction,
+  editable,
+}: {
+  store: EditorStore;
+  interaction: Interaction;
+  editable: boolean;
+}) {
   const [viewing] = useState(() => new ViewerInteraction(store));
+  const tool = useStore(store, (s) => s.tool);
   const canvas = useRef<HTMLDivElement>(null);
   const size = useElementSize(canvas);
   const generation = useStore(store, (s) => s.generation);
@@ -134,8 +135,16 @@ function Canvas({ store, editable }: { store: EditorStore; editable: boolean }) 
   }, [store, generation, size === null]);
 
   return (
-    <div ref={canvas} className="relative min-h-0 flex-1">
-      <PlanView store={store} interaction={editable ? editing : viewing} options={OPTIONS} />
+    <div
+      ref={canvas}
+      className={cn("relative min-w-0 flex-1", editable && tool === "wall" && "cursor-crosshair")}
+    >
+      <PlanView
+        store={store}
+        interaction={editable ? interaction : viewing}
+        options={OPTIONS}
+        overlay={<EditOverlay store={store} />}
+      />
       <ZoomControls store={store} size={size} />
     </div>
   );
