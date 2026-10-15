@@ -468,7 +468,7 @@
       "label": "מספר עמדה",
       "mode": "שימוש בעמדה",
       "modeOptions": {
-        "assigned": "משויכת לאדם",
+        "assigned": "משויכת",
         "bookable": "להזמנה",
         "unavailable": "לא זמינה"
       },
