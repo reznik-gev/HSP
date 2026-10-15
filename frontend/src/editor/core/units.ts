@@ -33,6 +33,26 @@ export function formatLength(mm: number, displayUnit: DisplayUnit): string {
   }
 }
 
+/** Integer millimetres as a bare number in the display unit, for an input field. */
+export function formatLengthValue(mm: number, displayUnit: DisplayUnit): string {
+  switch (displayUnit) {
+    case "mm":
+      return String(mm);
+    case "cm":
+      return trimZeros((mm / 10).toFixed(1));
+    case "m":
+      return (mm / 1000).toFixed(2);
+  }
+}
+
+/** Degrees as typed ("90", "45.5", "-90") to decidegrees in [0, 3600), or null. */
+export function parseAngle(input: string): number | null {
+  const match = /^\s*(-?\d+(?:[.,]\d+)?)\s*°?\s*$/.exec(input);
+  if (!match?.[1]) return null;
+  const ddeg = Math.round(Number(match[1].replace(",", ".")) * 10);
+  return ((ddeg % 3600) + 3600) % 3600;
+}
+
 /** Decidegrees (storage) to degrees with one decimal (display). */
 export function formatAngle(ddeg: number): string {
   return `${trimZeros((ddeg / 10).toFixed(1))}°`;

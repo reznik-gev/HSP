@@ -408,6 +408,69 @@
       "device": "Devices",
       "monitor": "Monitors",
       "decor": "Decor"
+    },
+    "props": {
+      "nothing": "Select something on the plan to see and change its measurements.",
+      "several_one": "{{count}} element selected",
+      "several_other": "{{count}} elements of different kinds selected. Select one kind to change them together.",
+      "kinds": {
+        "wall_one": "Wall",
+        "wall_other": "{{count}} walls",
+        "opening_one": "Door or window",
+        "opening_other": "{{count}} doors and windows",
+        "column_one": "Column",
+        "column_other": "{{count}} columns",
+        "zone_one": "Zone",
+        "zone_other": "{{count}} zones",
+        "object_one": "Item",
+        "object_other": "{{count}} items"
+      },
+      "length": "Length",
+      "thickness": "Thickness",
+      "height": "Height",
+      "openingType": "Type",
+      "openingTypeOptions": {
+        "door": "Door",
+        "window": "Window"
+      },
+      "offset": "Distance from the wall's start",
+      "width": "Width",
+      "depth": "Depth",
+      "sill": "Sill height",
+      "swing": "Opens",
+      "swingOptions": {
+        "left_in": "Hinge left, opens in",
+        "left_out": "Hinge left, opens out",
+        "right_in": "Hinge right, opens in",
+        "right_out": "Hinge right, opens out",
+        "sliding": "Sliding",
+        "none": "No door leaf"
+      },
+      "name": "Name",
+      "zoneType": "Zone type",
+      "area": "Area",
+      "x": "X",
+      "y": "Y",
+      "rotation": "Rotation",
+      "label": "Seat label",
+      "mode": "Seat use",
+      "modeOptions": {
+        "assigned": "Assigned to someone",
+        "bookable": "Bookable",
+        "unavailable": "Unavailable"
+      },
+      "mixed": "Mixed",
+      "invalidLength": "Enter a length that fits, e.g. 120 or 1.2 m.",
+      "invalidAngle": "Enter an angle in degrees, e.g. 90.",
+      "invalid": "That value can't be used here.",
+      "units": "Units",
+      "unitNames": {
+        "cm": "Centimetres",
+        "m": "Metres",
+        "mm": "Millimetres"
+      },
+      "newWallThickness": "New wall thickness",
+      "panel": "Properties"
     }
   }
 }

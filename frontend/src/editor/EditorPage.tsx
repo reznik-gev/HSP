@@ -2,7 +2,7 @@
  * The floor editor (docs/0089): a full-screen page that holds the floor's edit lock while open.
  * It opens the draft, or the published plan when there is no draft yet, and saves every change
  * to the draft as you go. Tools: select, walls, doors, windows, columns, zones and catalog
- * items; the Properties and Problems panels arrive in the following steps of phase 3a.
+ * items, with a Properties panel; the Problems panel arrives in the next step of phase 3a.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
@@ -19,6 +19,7 @@ import { PlanView, type RenderOptions } from "@/editor/view-svg/PlanView";
 import { fitPlan, useElementSize, ZoomControls } from "@/editor/view-svg/ZoomControls";
 import { floorPlaceQuery, zoneTypesQuery } from "@/floors/planData";
 import { notify, notifyError } from "@/lib/notify";
+import { preferencesQuery } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 
 import { EditorTopBar } from "./EditorTopBar";
@@ -72,6 +73,10 @@ export function EditorPage() {
   useEffect(() => {
     if (wallHeight) store.getState().setWallDefaults({ height_mm: wallHeight });
   }, [store, wallHeight]);
+  const units = useQuery(preferencesQuery).data?.display_units;
+  useEffect(() => {
+    if (units) store.getState().setDisplayUnit(units);
+  }, [store, units]);
   // New zones are rooms unless the admin picks another type.
   useEffect(() => {
     const types = zoneTypes.data;
