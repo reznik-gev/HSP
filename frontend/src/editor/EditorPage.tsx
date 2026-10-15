@@ -16,7 +16,7 @@ import { ViewerInteraction } from "@/editor/core/viewerInteraction";
 import { EditOverlay } from "@/editor/view-svg/EditOverlay";
 import { GridUnderlay } from "@/editor/view-svg/GridUnderlay";
 import { PlanCanvas } from "@/editor/view-svg/PlanCanvas";
-import { floorPlaceQuery, zoneTypesQuery } from "@/floors/planData";
+import { buildingLabelsQuery, floorPlaceQuery, zoneTypesQuery } from "@/floors/planData";
 import { notify, notifyError } from "@/lib/notify";
 import { preferencesQuery } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
@@ -89,6 +89,22 @@ export function EditorPage() {
   useEffect(() => {
     if (units) store.getState().setDisplayUnit(units);
   }, [store, units]);
+  // Seat numbering starts from the building code and floor, e.g. HT-3-{01} (docs/0049), and
+  // skips labels used on the building's other floors.
+  const building = place.data?.building;
+  const level = place.data?.floor.level_index;
+  useEffect(() => {
+    if (building && level !== undefined && store.getState().numbering.pattern === "{01}") {
+      store.getState().setNumbering({ pattern: `${building.code}-${level}-{01}` });
+    }
+  }, [store, building, level]);
+  const labels = useQuery({
+    ...buildingLabelsQuery(building?.id ?? "", floorId),
+    enabled: Boolean(building) && held,
+  });
+  useEffect(() => {
+    if (labels.data) store.getState().setTakenLabels(labels.data);
+  }, [store, labels.data]);
   // New zones are rooms unless the admin picks another type.
   useEffect(() => {
     const types = zoneTypes.data;

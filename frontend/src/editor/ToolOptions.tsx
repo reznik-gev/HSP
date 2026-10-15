@@ -1,11 +1,13 @@
 /**
  * Options for the current tool, in a small bar over the top of the canvas (docs/0089 layout).
- * So far: the thickness of new walls, and the zone type new zones get.
+ * So far: the thickness of new walls, the zone type new zones get, and the seat-numbering
+ * pattern.
  */
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
-import { Select } from "@/components/ui/field";
+import { Input, Select } from "@/components/ui/field";
+import { floorLabels, nextFree, parsePattern } from "@/editor/core/numbering";
 import type { EditorStore } from "@/editor/core/store";
 
 import { PropertyField } from "./properties/PropertyField";
@@ -33,6 +35,7 @@ export function ToolOptions({ store }: { store: EditorStore }) {
       </div>
     );
   }
+  if (tool === "number") return <NumberingOptions store={store} />;
   if (tool !== "zone") return null;
   return (
     <div className="absolute start-3 top-3 flex items-center gap-2 rounded-md border bg-card px-3 py-1.5 text-sm shadow-sm">
@@ -56,6 +59,40 @@ export function ToolOptions({ store }: { store: EditorStore }) {
         ))}
       </Select>
       <span className="text-xs text-muted-foreground">{t("editor.zoneHint")}</span>
+    </div>
+  );
+}
+
+/** The numbering pattern, e.g. HT-3-{01}, and the label the next seat gets (docs/0049). */
+function NumberingOptions({ store }: { store: EditorStore }) {
+  const { t } = useTranslation();
+  const numbering = useStore(store, (s) => s.numbering);
+  const taken = useStore(store, (s) => s.takenLabels);
+  const plan = useStore(store, (s) => s.plan);
+  const pattern = parsePattern(numbering.pattern);
+  const next =
+    pattern && plan
+      ? nextFree(pattern, numbering.next, new Set([...taken, ...floorLabels(plan)])).label
+      : null;
+  return (
+    <div className="absolute start-3 top-3 flex items-center gap-2 rounded-md border bg-card px-3 py-1.5 text-sm shadow-sm">
+      <label htmlFor="numbering-pattern" className="text-muted-foreground">
+        {t("editor.numbering.pattern")}
+      </label>
+      <Input
+        id="numbering-pattern"
+        dir="ltr"
+        className="h-8 w-36"
+        value={numbering.pattern}
+        aria-invalid={!pattern || undefined}
+        onChange={(e) => store.getState().setNumbering({ pattern: e.target.value })}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur();
+        }}
+      />
+      <span className="text-xs text-muted-foreground" aria-live="polite">
+        {next ? t("editor.numbering.next", { label: next }) : t("editor.numbering.invalid")}
+      </span>
     </div>
   );
 }

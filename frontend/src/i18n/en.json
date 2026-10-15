@@ -389,7 +389,8 @@
       "window": "Window",
       "column": "Column",
       "zone": "Zone",
-      "item": "Place item"
+      "item": "Place item",
+      "number": "Number seats"
     },
     "zoneType": "Zone type",
     "zoneHint": "Click the corners; click the first one again or press Enter to finish.",
@@ -590,6 +591,11 @@
       "count_other": "{{count}} items in all, counting the ones selected",
       "tooMany": "At most {{max}} at once.",
       "create": "Create"
+    },
+    "numbering": {
+      "pattern": "Pattern",
+      "next": "Next: {{label}}",
+      "invalid": "Put one counter in braces, e.g. HT-3-{01}"
     }
   }
 }

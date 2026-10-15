@@ -28,6 +28,7 @@ export const stubFloor = (publishedVersion: number | null = 2) => ({
   id: "f3",
   name: "Floor 3",
   building_id: "b1",
+  level_index: 3,
   published_version: publishedVersion,
 });
 

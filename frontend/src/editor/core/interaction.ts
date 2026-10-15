@@ -29,6 +29,7 @@ import { SNAP_PX, snapPoint, snapSettings } from "./snap";
 import type { EditorStore } from "./store";
 import { ColumnTool } from "./tools/columnTool";
 import { ItemTool } from "./tools/itemTool";
+import { NumberTool } from "./tools/numberTool";
 import { fitOnWall, OpeningTool } from "./tools/openingTool";
 import { WallTool } from "./tools/wallTool";
 import { ZoneTool } from "./tools/zoneTool";
@@ -52,7 +53,9 @@ type Gesture =
   | { kind: "junction"; from: Vec2; walls: string[] }
   /** Sliding a door or window: `grab` is where along it the pointer took hold. */
   | { kind: "slide"; id: string; grab: number }
-  | { kind: "vertex"; zone: string; index: number; from: Vec2 };
+  | { kind: "vertex"; zone: string; index: number; from: Vec2 }
+  /** Numbering seats by clicking or dragging across them. */
+  | { kind: "numbering" };
 
 export class Interaction {
   private gesture: Gesture = { kind: "none" };
@@ -63,6 +66,7 @@ export class Interaction {
   private readonly columnTool: ColumnTool;
   private readonly zoneTool: ZoneTool;
   private readonly itemTool: ItemTool;
+  private readonly numberTool: NumberTool;
 
   constructor(private readonly store: EditorStore) {
     this.view = new PanZoom(store);
@@ -71,6 +75,7 @@ export class Interaction {
     this.columnTool = new ColumnTool(store);
     this.zoneTool = new ZoneTool(store);
     this.itemTool = new ItemTool(store);
+    this.numberTool = new NumberTool(store);
   }
 
   /** The pointer moved with no button down, or a click placed something (drawing tools). */
@@ -109,6 +114,12 @@ export class Interaction {
     if (e.button === 1) {
       this.pan(e);
       return "pan";
+    }
+    if (s.tool === "number") {
+      if (e.button !== 0) return "none";
+      this.gesture = { kind: "numbering" };
+      this.numberTool.begin(this.toPlan(e));
+      return "none";
     }
     if (s.tool !== "select") {
       if (e.button === 2 && s.tool === "wall") this.wallTool.finish();
@@ -255,6 +266,8 @@ export class Interaction {
         ignoreWalls: new Set(g.walls),
       });
       s.setPreview({ kind: "junction", from: g.from, to: point, walls: g.walls, snap: kind });
+    } else if (g.kind === "numbering") {
+      this.numberTool.extend(this.toPlan(e));
     } else if (g.kind === "vertex" && s.plan) {
       const { point, kind } = snapPoint(s.plan, this.toPlan(e), {
         ...snapSettings(s, e.alt),
@@ -294,6 +307,8 @@ export class Interaction {
       if (preview?.kind === "junction" && s.plan) {
         s.perform(moveJunction(s.plan, g.walls, g.from, preview.to));
       }
+    } else if (g.kind === "numbering") {
+      this.numberTool.end();
     } else if (g.kind === "vertex") {
       const preview = s.preview;
       s.setPreview(null);

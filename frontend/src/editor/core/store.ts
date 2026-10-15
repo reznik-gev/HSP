@@ -13,6 +13,7 @@ import { createStore } from "zustand/vanilla";
 import type { ArraySpec } from "./array";
 import type { PlanCatalogItem, WallDefaults } from "./edits";
 import { planFromApi } from "./fromApi";
+import { parsePattern } from "./numbering";
 import { buildHitIndex, type HitIndex, moveObjects, withAttachments } from "./hitTest";
 import { type ApiPlan, applyOps, type Op } from "./operations";
 import type { Plan, Vec2 } from "./plan";
@@ -33,7 +34,7 @@ export interface DragState {
 export type ZoneTypes = ReadonlyMap<string, { name: string; color: string | null }>;
 
 /** The editing tools of phase 3a so far (docs/0089). */
-export type Tool = "select" | "wall" | "door" | "window" | "column" | "zone" | "item";
+export type Tool = "select" | "wall" | "door" | "window" | "column" | "zone" | "item" | "number";
 
 /** What a tool shows while it works, before anything is committed. */
 export type Preview =
@@ -60,6 +61,8 @@ export type Preview =
   | { kind: "zone"; points: readonly Vec2[]; to: Vec2; snap: SnapKind }
   /** A zone corner being dragged. */
   | { kind: "vertex"; zone: string; index: number; to: Vec2; snap: SnapKind }
+  /** Seats being numbered by a click or a drag (docs/0049), with the labels they'll get. */
+  | { kind: "numbering"; seats: readonly { id: string; label: string }[] }
   /** A catalog item about to be placed: where, turned how far, and what it snapped to. */
   | {
       kind: "item";
@@ -115,6 +118,10 @@ export interface EditorState {
   /** Applied changes not yet saved, oldest first. */
   pending: readonly PendingChange[];
   problems: readonly EditorProblem[];
+  /** Seat numbering (docs/0049): the pattern, and the counter for the next seat. */
+  numbering: { pattern: string; next: number };
+  /** Seat labels used elsewhere in the building, which numbering skips (docs/0034). */
+  takenLabels: ReadonlySet<string>;
   /** The array being set up for the selection (docs/0049), shown on the plan; null if none. */
   arrayDraft: ArraySpec | null;
   /** The typed-measurement box (docs/0045): where it opened and what was typed first. */
@@ -151,6 +158,9 @@ export interface EditorState {
   setPanelTab(tab: "properties" | "problems"): void;
   setMeasure(measure: EditorState["measure"]): void;
   setArrayDraft(spec: ArraySpec | null): void;
+  /** A new pattern starts its counter over, at the pattern's first number. */
+  setNumbering(change: Partial<EditorState["numbering"]>): void;
+  setTakenLabels(labels: ReadonlySet<string>): void;
   select(ids: Iterable<string>, additive?: boolean): void;
   clearSelection(): void;
   setViewport(viewport: Viewport): void;
@@ -241,6 +251,8 @@ export function createEditorStore() {
       panelTab: "properties",
       measure: null,
       arrayDraft: null,
+      numbering: { pattern: "{01}", next: 1 },
+      takenLabels: new Set(),
       generation: 0,
       tool: "select",
       preview: null,
@@ -325,6 +337,16 @@ export function createEditorStore() {
       setPanelTab: (panelTab) => set({ panelTab }),
       setMeasure: (measure) => set({ measure }),
       setArrayDraft: (arrayDraft) => set({ arrayDraft }),
+      setNumbering: (change) => {
+        const pattern = change.pattern ?? get().numbering.pattern;
+        const next =
+          change.next ??
+          (change.pattern !== undefined
+            ? (parsePattern(pattern)?.start ?? 1)
+            : get().numbering.next);
+        set({ numbering: { pattern, next } });
+      },
+      setTakenLabels: (takenLabels) => set({ takenLabels }),
       select: (ids, additive = false) => {
         const { plan, selection } = get();
         if (!plan) return;

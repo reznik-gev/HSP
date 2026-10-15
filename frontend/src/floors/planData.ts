@@ -85,6 +85,29 @@ export const floorSeatsQuery = (floorId: string) =>
     },
   });
 
+/**
+ * Seat labels used on the building's other floors (published), which seat numbering skips:
+ * labels are unique per building (docs/0034, docs/0049).
+ */
+export const buildingLabelsQuery = (buildingId: string, exceptFloorId: string) =>
+  queryOptions({
+    queryKey: ["seats", "building-labels", buildingId, exceptFloorId],
+    queryFn: async (): Promise<Set<string>> => {
+      const labels = new Set<string>();
+      let cursor: string | undefined;
+      do {
+        const { data } = await api.GET("/api/v1/seats", {
+          params: { query: { building_id: buildingId, limit: 500, cursor } },
+        });
+        if (!data) return fail("seats");
+        for (const s of data.items)
+          if (s.label && s.floor.id !== exceptFloorId) labels.add(s.label);
+        cursor = data.next_cursor ?? undefined;
+      } while (cursor);
+      return labels;
+    },
+  });
+
 /** Seat id -> the state the viewer colours (docs/0087 choice 11). */
 export function seatStates(plan: Plan, seats: ReadonlyMap<string, Seat>): Map<string, SeatState> {
   const states = new Map<string, SeatState>();

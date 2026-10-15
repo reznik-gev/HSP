@@ -460,6 +460,28 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     });
   });
 
+  it("L numbers seats from the building and floor: HT-3-01, skipping labels in use", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", {
+      ...routes,
+      // HT-3-01 is already used on another floor of the building.
+      "GET /api/v1/seats": {
+        status: 200,
+        body: page([{ ...stubSeat("x9", "HT-3-01"), floor: { id: "f2", name: "Floor 2" } }]),
+      },
+    });
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.keyboard("l");
+    expect(screen.getByLabelText("Pattern")).toHaveValue("HT-3-{01}");
+    expect(await screen.findByText("Next: HT-3-02")).toBeVisible();
+    click([2000, 1000]);
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops).toEqual([
+      { op: "update", kind: "object", id: "d1", data: { label: "HT-3-02" } },
+    ]);
+    expect(screen.getByText("Next: HT-3-03")).toBeVisible();
+  });
+
   it("Exit saves what's waiting before leaving", async () => {
     const { routes, changesets } = saving();
     const { calls: sent } = await renderApp("/floors/f3/edit", routes);
