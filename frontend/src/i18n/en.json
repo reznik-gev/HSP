@@ -85,6 +85,12 @@
       "free": "Nobody sits here yet.",
       "bookable": "Booked by the day; not assigned to anyone.",
       "unavailable": "Out of use for now."
+    },
+    "height": {
+      "label": "Height",
+      "all": "All",
+      "floor": "Floor",
+      "raised": "Raised"
     }
   },
   "search": {

@@ -14,6 +14,7 @@ import type { ArraySpec } from "./array";
 import type { PlanCatalogItem, WallDefaults } from "./edits";
 import { checkPlan, type Finding } from "./checks";
 import { planFromApi } from "./fromApi";
+import type { HeightFilter } from "./heights";
 import { parsePattern } from "./numbering";
 import { buildHitIndex, type HitIndex, moveObjects, withAttachments } from "./hitTest";
 import { type ApiPlan, applyOps, type Op } from "./operations";
@@ -109,6 +110,8 @@ export interface EditorState {
   displayUnit: DisplayUnit;
   gridMm: 10 | 50 | 100 | 500;
   gridSnap: boolean;
+  /** Which items the plan shows at full strength (docs/0095); the rest is faded. */
+  heightFilter: HeightFilter;
   /** Alt is held: snapping is off for this pointer move (docs/0047). */
   snapFree: boolean;
   /** The edited plan in API shape; null in the read-only viewer. */
@@ -172,6 +175,7 @@ export interface EditorState {
   setDisplayUnit(unit: DisplayUnit): void;
   toggleGridSnap(): void;
   setGridMm(gridMm: EditorState["gridMm"]): void;
+  setHeightFilter(filter: HeightFilter): void;
   setSnapFree(free: boolean): void;
   setTool(tool: Tool): void;
   setPreview(preview: Preview): void;
@@ -248,6 +252,7 @@ export function createEditorStore() {
       displayUnit: "cm",
       gridMm: 50, // 5 cm default (docs/0047)
       gridSnap: true,
+      heightFilter: "all",
       snapFree: false,
       document: null,
       zoneTypes: new Map(),
@@ -401,6 +406,7 @@ export function createEditorStore() {
       setDisplayUnit: (displayUnit) => set({ displayUnit }),
       toggleGridSnap: () => set((s) => ({ gridSnap: !s.gridSnap })),
       setGridMm: (gridMm) => set({ gridMm }),
+      setHeightFilter: (heightFilter) => set({ heightFilter }),
       setSnapFree: (snapFree) => {
         if (get().snapFree !== snapFree) set({ snapFree });
       },

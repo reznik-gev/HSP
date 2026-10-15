@@ -5,6 +5,7 @@
 import type { components } from "@/api/schema";
 
 import { boundsOf, type Rect } from "./geometry";
+import { stackingOrder } from "./heights";
 import type { CatalogItem, Plan, Vec2 } from "./plan";
 
 type ApiPlan = components["schemas"]["Plan"];
@@ -37,10 +38,9 @@ export function planFromApi(
       is_seat: c.is_seat,
     };
   }
-  // Draw order: things standing on the floor first, attached ones (monitors) on top.
-  const ordered = [...api.objects].sort(
-    (a, b) => Number(Boolean(a.attached_to)) - Number(Boolean(b.attached_to)),
-  );
+  // Draw order (docs/0095): by the height things stand at, so attached items (monitors) and
+  // raised ones (shelves) are drawn, and clicked, above what's below them.
+  const order = stackingOrder(api.objects, (rev) => api.catalog[rev]?.height_mm ?? 0);
   return {
     walls: api.walls.map((w) => ({ ...w, a: w.a, b: w.b })),
     openings: api.openings,
@@ -71,7 +71,7 @@ export function planFromApi(
         },
       ]),
     ),
-    objectOrder: ordered.map((o) => o.id),
+    objectOrder: order,
     catalog,
   };
 }
