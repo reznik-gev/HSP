@@ -1,7 +1,7 @@
 /**
  * The floor editor (docs/0089): a full-screen page that holds the floor's edit lock while open.
  * It opens the draft, or the published plan when there is no draft yet, and saves every change
- * to the draft as you go. Tools so far: select, walls, doors, windows and columns; zones,
+ * to the draft as you go. Tools so far: select, walls, doors, windows, columns and zones;
  * items and the side panel arrive in the following steps of phase 3a.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ import { LockMessage } from "./LockMessage";
 import { editorPlanQuery } from "./session/editorPlan";
 import { useEditLock } from "./session/lock";
 import { useEditSession } from "./session/useEditSession";
+import { ToolOptions } from "./ToolOptions";
 import { ToolStrip } from "./ToolStrip";
 import { useEditorKeys } from "./useEditorKeys";
 
@@ -70,6 +71,13 @@ export function EditorPage() {
   useEffect(() => {
     if (wallHeight) store.getState().setWallDefaults({ height_mm: wallHeight });
   }, [store, wallHeight]);
+  // New zones are rooms unless the admin picks another type.
+  useEffect(() => {
+    const types = zoneTypes.data;
+    if (!types?.size || store.getState().zoneTypeId) return;
+    const room = [...types].find(([, z]) => z.name === "Room");
+    store.getState().setZoneType((room ?? [...types][0]!)[0]);
+  }, [store, zoneTypes.data]);
 
   // Exit saves what's left first. If that fails, a second Exit leaves without it.
   const [leaveAnyway, setLeaveAnyway] = useState(false);
@@ -137,6 +145,10 @@ function Canvas({
   return (
     <div
       ref={canvas}
+      // Working on the plan takes the keyboard away from any field, for the editor's shortcuts.
+      onPointerDownCapture={() => {
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      }}
       className={cn("relative min-w-0 flex-1", editable && tool !== "select" && "cursor-crosshair")}
     >
       <PlanView
@@ -146,6 +158,7 @@ function Canvas({
         overlay={<EditOverlay store={store} />}
       />
       <ZoomControls store={store} size={size} />
+      {editable && <ToolOptions store={store} />}
     </div>
   );
 }

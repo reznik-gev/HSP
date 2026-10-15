@@ -10,13 +10,14 @@ import {
   distanceToSegment,
   pointInPolygon,
   pointInRotatedRect,
+  polygonArea,
   rotatedRectCorners,
 } from "./geometry";
 import { catalogItemOf, type Plan, type Vec2, type Wall } from "./plan";
 import { SpatialIndex } from "./spatialIndex";
 
 export interface Hit {
-  kind: "object" | "column" | "opening" | "wall";
+  kind: "object" | "column" | "opening" | "wall" | "zone";
   id: string;
 }
 
@@ -79,6 +80,17 @@ export function hitTest(plan: Plan, index: HitIndex, p: Vec2, tolerance_mm = 0):
     }
   }
   return null;
+}
+
+/** The innermost (smallest) zone containing `p`, if any: zones are picked last. */
+export function zoneAt(plan: Plan, p: Vec2): string | null {
+  let best: { id: string; area: number } | null = null;
+  for (const z of plan.zones) {
+    if (!pointInPolygon(p, z.boundary)) continue;
+    const area = Math.abs(polygonArea(z.boundary));
+    if (!best || area < best.area) best = { id: z.id, area };
+  }
+  return best?.id ?? null;
 }
 
 /** Selecting an object also selects everything attached to it (docs/0047, e.g. monitors). */

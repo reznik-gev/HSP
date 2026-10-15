@@ -67,7 +67,16 @@ function backend(over: Routes = {}, publishedVersion: number | null = 2): Routes
       body: { id: "b1", name: "Harbor Tower", code: "HT", site_id: "s1" },
     },
     "GET /api/v1/sites/s1": { status: 200, body: { id: "s1", name: "Tel Aviv HQ" } },
-    "GET /api/v1/zone-types": { status: 200, body: { items: [], next_cursor: null } },
+    "GET /api/v1/zone-types": {
+      status: 200,
+      body: {
+        items: [
+          { id: "zt1", name: "Room", color: "#93c5fd", is_enclosed: true },
+          { id: "zt2", name: "Meeting room", color: "#c4b5fd", is_enclosed: true },
+        ],
+        next_cursor: null,
+      },
+    },
     "POST /api/v1/floors/f3/lock": {
       status: 200,
       body: { ...LOCK_FREE, locked: true, is_mine: true },
@@ -358,6 +367,30 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
         data: expect.objectContaining({ wall_id: "w1", type: "door", offset_mm: 5550 }) as unknown,
       }),
     ]);
+  });
+
+  it("Z picks the Zone tool with a zone type; the outline becomes a zone of that type", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.keyboard("z");
+    const type = screen.getByRole("combobox", { name: "Zone type" });
+    expect(type).toHaveDisplayValue("Room");
+    await userEvent.selectOptions(type, "Meeting room");
+    for (const p of [
+      [0, 2000],
+      [3000, 2000],
+      [3000, 4000],
+    ] as const) {
+      click([p[0], p[1]]);
+    }
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops[0]).toMatchObject({
+      op: "add",
+      kind: "zone",
+      data: { name: "Meeting room 1", zone_type_id: "zt2" },
+    });
   });
 
   it("Exit saves what's waiting before leaving", async () => {

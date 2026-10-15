@@ -387,7 +387,10 @@
       "wall": "Wall",
       "door": "Door",
       "window": "Window",
-      "column": "Column"
-    }
+      "column": "Column",
+      "zone": "Zone"
+    },
+    "zoneType": "Zone type",
+    "zoneHint": "Click the corners; click the first one again or press Enter to finish."
   }
 }

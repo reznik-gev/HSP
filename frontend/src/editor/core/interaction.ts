@@ -5,19 +5,21 @@
  *
  * Select tool: click selects (Shift adds); dragging furniture or columns moves them, dragging a
  * door or window slides it along its wall, dragging a selected wall's end moves the junction
- * with every wall that meets there (Alt detaches just that wall, docs/0044), and empty space
- * pans. Drawing tools (wall, door, window, column): a click places, a drag pans; see their
+ * with every wall that meets there (Alt detaches just that wall, docs/0044), dragging a
+ * selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
+ * Drawing tools (wall, door, window, column, zone): a click places, a drag pans; see their
  * classes. The middle button always pans; the wheel zooms.
  */
-import { deleteSelection, moveJunction, type OpeningType, wallsAt } from "./edits";
+import { deleteSelection, moveJunction, moveZoneVertex, type OpeningType, wallsAt } from "./edits";
 import { alongSegment } from "./geometry";
-import { hitTest } from "./hitTest";
+import { hitTest, zoneAt } from "./hitTest";
 import type { Vec2 } from "./plan";
 import { SNAP_PX, snapPoint } from "./snap";
 import type { EditorStore } from "./store";
 import { ColumnTool } from "./tools/columnTool";
 import { fitOnWall, OpeningTool } from "./tools/openingTool";
 import { WallTool } from "./tools/wallTool";
+import { ZoneTool } from "./tools/zoneTool";
 import { panBy, screenToPlan, zoomAt } from "./viewport";
 
 export interface PointerInput {
@@ -36,7 +38,8 @@ type Gesture =
   | { kind: "drag"; start: Vec2; moved: boolean }
   | { kind: "junction"; from: Vec2; walls: string[] }
   /** Sliding a door or window: `grab` is where along it the pointer took hold. */
-  | { kind: "slide"; id: string; grab: number };
+  | { kind: "slide"; id: string; grab: number }
+  | { kind: "vertex"; zone: string; index: number; from: Vec2 };
 
 const DRAG_THRESHOLD_PX = 3;
 
@@ -47,11 +50,13 @@ export class Interaction {
   private readonly wallTool: WallTool;
   private readonly openingTool: OpeningTool;
   private readonly columnTool: ColumnTool;
+  private readonly zoneTool: ZoneTool;
 
   constructor(private readonly store: EditorStore) {
     this.wallTool = new WallTool(store);
     this.openingTool = new OpeningTool(store);
     this.columnTool = new ColumnTool(store);
+    this.zoneTool = new ZoneTool(store);
   }
 
   /** The pointer moved with no button down, or a click placed something (drawing tools). */
@@ -63,6 +68,7 @@ export class Interaction {
       return click ? this.openingTool.click(p, type) : this.openingTool.hover(p, type);
     }
     if (tool === "column") return click ? this.columnTool.click(p) : this.columnTool.hover(p);
+    if (tool === "zone") return click ? this.zoneTool.click(p) : this.zoneTool.hover(p);
   }
 
   setSize(width: number, height: number): void {
@@ -91,6 +97,11 @@ export class Interaction {
     if (e.button !== 0) return "none";
     const p = this.toPlan(e);
     const tolerance = 4 * s.viewport.mmPerPx; // ~4 px of slop at any zoom
+    const corner = this.selectedZoneCorner(p);
+    if (corner) {
+      this.gesture = { kind: "vertex", ...corner };
+      return "none";
+    }
     const end = this.selectedWallEnd(p);
     if (end) {
       const walls = e.alt ? [end.wall] : wallsAt(s.plan, end.point);
@@ -123,9 +134,27 @@ export class Interaction {
       this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy };
       return "select";
     }
+    const zone = zoneAt(s.plan, p);
+    if (zone) {
+      s.select([zone], e.shift);
+      this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy };
+      return "select";
+    }
     // Empty space: pan, and clear selection on a plain click.
     this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy, clickClears: !e.shift };
     return "clear";
+  }
+
+  /** A corner of a selected zone near the pointer, which can be dragged. */
+  private selectedZoneCorner(p: Vec2): { zone: string; index: number; from: Vec2 } | null {
+    const s = this.store.getState();
+    const reach = SNAP_PX * s.viewport.mmPerPx;
+    for (const z of s.plan?.zones ?? []) {
+      if (!s.selection.has(z.id)) continue;
+      const index = z.boundary.findIndex((q) => Math.hypot(q[0] - p[0], q[1] - p[1]) <= reach);
+      if (index >= 0) return { zone: z.id, index, from: z.boundary[index]! };
+    }
+    return null;
   }
 
   /** An end of a selected wall near the pointer, which can be dragged. */
@@ -167,6 +196,14 @@ export class Interaction {
         ignore: g.from,
       });
       s.setPreview({ kind: "junction", from: g.from, to: point, walls: g.walls, snap: kind });
+    } else if (g.kind === "vertex" && s.plan) {
+      const { point, kind } = snapPoint(s.plan, this.toPlan(e), {
+        mmPerPx: s.viewport.mmPerPx,
+        gridMm: s.gridMm,
+        gridSnap: s.gridSnap,
+        ignore: g.from,
+      });
+      s.setPreview({ kind: "vertex", zone: g.zone, index: g.index, to: point, snap: kind });
     } else if (g.kind === "slide" && s.plan) {
       const o = s.plan.openings.find((x) => x.id === g.id);
       const w = o && s.plan.walls.find((x) => x.id === o.wall_id);
@@ -198,6 +235,12 @@ export class Interaction {
       if (preview?.kind === "junction" && s.plan) {
         s.perform(moveJunction(s.plan, g.walls, g.from, preview.to));
       }
+    } else if (g.kind === "vertex") {
+      const preview = s.preview;
+      s.setPreview(null);
+      if (preview?.kind === "vertex" && s.plan) {
+        s.perform(moveZoneVertex(s.plan, g.zone, g.index, preview.to));
+      }
     } else if (g.kind === "slide") {
       const preview = s.preview;
       s.setPreview(null);
@@ -224,10 +267,12 @@ export class Interaction {
     switch (key) {
       case "Escape":
         if (s.tool === "wall" && this.wallTool.finish()) return true;
+        if (s.tool === "zone" && this.zoneTool.cancel()) return true;
         if (s.tool !== "select") s.setTool("select");
         else s.clearSelection();
         return true;
       case "Enter":
+        if (s.tool === "zone") return this.zoneTool.close();
         return s.tool === "wall" && this.wallTool.finish();
       case "Delete":
       case "Backspace":
