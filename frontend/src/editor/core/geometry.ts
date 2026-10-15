@@ -75,3 +75,13 @@ export function pointInPolygon(p: Vec2, poly: readonly Vec2[]): boolean {
   }
   return inside;
 }
+
+/** Where `p` falls along segment a→b: distance from `a` along it (unclamped), and off it. */
+export function alongSegment(p: Vec2, a: Vec2, b: Vec2): { along: number; length: number } {
+  const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (length === 0) return { along: 0, length };
+  return {
+    along: ((p[0] - a[0]) * (b[0] - a[0]) + (p[1] - a[1]) * (b[1] - a[1])) / length,
+    length,
+  };
+}

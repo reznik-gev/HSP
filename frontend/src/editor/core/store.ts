@@ -27,7 +27,7 @@ export interface DragState {
 export type ZoneTypes = ReadonlyMap<string, { name: string; color: string | null }>;
 
 /** The editing tools of phase 3a so far (docs/0089). */
-export type Tool = "select" | "wall";
+export type Tool = "select" | "wall" | "door" | "window" | "column";
 
 /** What a tool shows while it works, before anything is committed. */
 export type Preview =
@@ -38,6 +38,20 @@ export type Preview =
   | { kind: "wall"; start: Vec2 | null; from: Vec2 | null; to: Vec2; snap: SnapKind }
   /** A junction being dragged: these walls' endpoints at `from` follow the pointer. */
   | { kind: "junction"; from: Vec2; to: Vec2; walls: readonly string[]; snap: SnapKind }
+  /**
+   * A door or window being placed (no `id`) or slid along its wall (`id`); `wall_id` is null
+   * while the pointer is over no wall it fits in.
+   */
+  | {
+      kind: "opening";
+      id?: string;
+      type: "door" | "window";
+      wall_id: string | null;
+      offset_mm: number;
+      width_mm: number;
+    }
+  /** A column about to be placed: its footprint. */
+  | { kind: "column"; footprint: readonly Vec2[]; snap: SnapKind }
   | null;
 
 interface Step {
@@ -90,6 +104,16 @@ export interface EditorState {
   setWallDefaults(defaults: Partial<WallDefaults>): void;
 }
 
+/** Whether any element of the plan has this id. */
+function exists(plan: Plan, id: string): boolean {
+  return Boolean(
+    plan.objects[id] ||
+    plan.walls.some((w) => w.id === id) ||
+    plan.openings.some((o) => o.id === id) ||
+    plan.columns?.some((c) => c.id === id),
+  );
+}
+
 export function createEditorStore() {
   return createStore<EditorState>()((set, get) => {
     /** Applies ops to the document and refreshes everything derived from it. */
@@ -103,9 +127,7 @@ export function createEditorStore() {
         plan,
         hitIndex: buildHitIndex(plan),
         // Whatever was deleted can't stay selected.
-        selection: new Set(
-          [...selection].filter((id) => plan.objects[id] || plan.walls.some((w) => w.id === id)),
-        ),
+        selection: new Set([...selection].filter((id) => exists(plan, id))),
         drag: null,
         outbox: [...get().outbox, ...ops],
       });
@@ -184,6 +206,11 @@ export function createEditorStore() {
         if (document) {
           // Editing: a move is one undoable step of position updates.
           const ops: Op[] = [];
+          for (const c of plan.columns ?? []) {
+            if (!selection.has(c.id) || (drag.dx === 0 && drag.dy === 0)) continue;
+            const footprint = c.footprint.map((p) => [p[0] + drag.dx, p[1] + drag.dy]);
+            ops.push({ op: "update", kind: "column", id: c.id, data: { footprint } });
+          }
           for (const id of selection) {
             const o = plan.objects[id];
             if (!o || (drag.dx === 0 && drag.dy === 0)) continue;

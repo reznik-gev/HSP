@@ -1,8 +1,8 @@
 /**
  * The floor editor (docs/0089): a full-screen page that holds the floor's edit lock while open.
  * It opens the draft, or the published plan when there is no draft yet, and saves every change
- * to the draft as you go. Tools so far: select (move furniture, drag wall junctions, delete)
- * and walls; the other tools and the side panel arrive in the following steps of phase 3a.
+ * to the draft as you go. Tools so far: select, walls, doors, windows and columns; zones,
+ * items and the side panel arrive in the following steps of phase 3a.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
@@ -137,7 +137,7 @@ function Canvas({
   return (
     <div
       ref={canvas}
-      className={cn("relative min-w-0 flex-1", editable && tool === "wall" && "cursor-crosshair")}
+      className={cn("relative min-w-0 flex-1", editable && tool !== "select" && "cursor-crosshair")}
     >
       <PlanView
         store={store}

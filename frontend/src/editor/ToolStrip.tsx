@@ -3,7 +3,7 @@
  * right in Hebrew. Each tool has a one-letter shortcut. Later steps add doors, windows,
  * columns, zones and items.
  */
-import { BrickWall, MousePointer2 } from "lucide-react";
+import { AppWindow, BrickWall, DoorOpen, MousePointer2, Square } from "lucide-react";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
@@ -18,6 +18,9 @@ export const TOOLS: {
 }[] = [
   { tool: "select", key: "V", icon: MousePointer2 },
   { tool: "wall", key: "W", icon: BrickWall },
+  { tool: "door", key: "D", icon: DoorOpen },
+  { tool: "window", key: "N", icon: AppWindow },
+  { tool: "column", key: "C", icon: Square },
 ];
 
 export function ToolStrip({ store, disabled }: { store: EditorStore; disabled: boolean }) {

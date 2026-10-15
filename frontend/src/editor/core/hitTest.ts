@@ -1,15 +1,22 @@
 /**
  * Geometric hit-testing (docs/0052). The view passes a point in plan mm; the core decides what
- * was hit. Priority: attached objects (e.g. monitors) > other objects > walls; among equals,
- * the one drawn last (topmost) wins. Zones are not hit-tested here: clicking empty space
- * returns null (pan / clear selection).
+ * was hit. Priority: attached objects (e.g. monitors) > other objects > columns > doors and
+ * windows > walls; among equals, the one drawn last (topmost) wins. Zones are not hit-tested
+ * here: clicking empty space returns null (pan / clear selection).
  */
-import { boundsOf, distanceToSegment, pointInRotatedRect, rotatedRectCorners } from "./geometry";
+import {
+  alongSegment,
+  boundsOf,
+  distanceToSegment,
+  pointInPolygon,
+  pointInRotatedRect,
+  rotatedRectCorners,
+} from "./geometry";
 import { catalogItemOf, type Plan, type Vec2, type Wall } from "./plan";
 import { SpatialIndex } from "./spatialIndex";
 
 export interface Hit {
-  kind: "object" | "wall";
+  kind: "object" | "column" | "opening" | "wall";
   id: string;
 }
 
@@ -57,10 +64,18 @@ export function hitTest(plan: Plan, index: HitIndex, p: Vec2, tolerance_mm = 0):
   }
   if (best) return { kind: "object", id: best.id };
 
+  for (const c of plan.columns ?? []) {
+    if (pointInPolygon(p, c.footprint)) return { kind: "column", id: c.id };
+  }
+
   for (const id of index.walls.queryPoint(p[0], p[1])) {
     const w = index.wallsById.get(id);
     if (w && distanceToSegment(p, w.a, w.b) <= w.thickness_mm / 2 + tolerance_mm) {
-      return { kind: "wall", id };
+      const { along } = alongSegment(p, w.a, w.b);
+      const opening = plan.openings.find(
+        (o) => o.wall_id === id && along >= o.offset_mm && along <= o.offset_mm + o.width_mm,
+      );
+      return opening ? { kind: "opening", id: opening.id } : { kind: "wall", id };
     }
   }
   return null;
