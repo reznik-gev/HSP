@@ -1,7 +1,7 @@
 # 0079 — Stacked PR workflow: parent-based PRs, auto-retarget, restack script
 
 - **Date:** 2026-10-08
-- **Status:** Accepted
+- **Status:** Superseded by [0093](0093-2026-10-16-github-stacked-prs.md): GitHub's own stacks and `gh stack sync` replace the restack script; parent-based PRs and auto-retargeting stand.
 - **Refines:** [0064](0064-2026-10-08-branching-workflow.md), [0069](0069-2026-10-08-rebase-merges.md), [0076](0076-2026-10-08-backend-delivery-plan.md)
 
 ## Context

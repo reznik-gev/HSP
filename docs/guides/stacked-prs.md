@@ -1,6 +1,6 @@
 # Working with stacked pull requests
 
-A **stack** is a chain of PRs where each one builds on the one before it (for example login → sites → buildings → floors). Stacks keep PRs small and reviewable ([0076](../decisions/0076-2026-10-08-backend-delivery-plan.md)), but with **rebase-only merges** ([0069](../decisions/0069-2026-10-08-rebase-merges.md)) they need one extra step after each merge. This guide explains why, and how to handle it in one command ([0079](../decisions/0079-2026-10-08-stacked-pr-workflow.md)).
+A **stack** is a chain of PRs where each one builds on the one before it (for example login → sites → buildings → floors). Stacks keep PRs small and reviewable ([0076](../decisions/0076-2026-10-08-backend-delivery-plan.md)), but with **rebase-only merges** ([0069](../decisions/0069-2026-10-08-rebase-merges.md)) they need one extra step after each merge. We use GitHub's own stacks and the `gh stack` command for it ([0093](../decisions/0093-2026-10-16-github-stacked-prs.md)).
 
 ## Why stacks need restacking
 ```
@@ -10,30 +10,52 @@ before:   main ── X                          after merging PR 1 (rebase):
 ```
 A rebase-merge copies `A` onto `main` as a **new commit `A'`**. PR 2 still contains the old `A`, so GitHub sees the same change twice and reports the PR as out of date or conflicting. The fix is to **replay PR 2's own commits onto the new `main`**. Git notices that `A` is already there as `A'`, skips it, and no code has to be resolved by hand.
 
+## Setting up (once per machine)
+```bash
+gh extension install github/gh-stack
+git config --global rerere.enabled true       # remember conflict resolutions and reapply them
+git config --global rebase.updateRefs true    # make --update-refs the default for manual rebases
+```
+`gh` is the [GitHub CLI](https://cli.github.com/). On Windows it installs to `C:\Program Files\GitHub CLI`; if Git Bash says `gh: command not found`, add `export PATH="$PATH:/c/Program Files/GitHub CLI"` to `~/.bashrc`.
+
 ## How PRs are set up
 - PR 1 targets `main`. **PR 2 targets PR 1's branch**, PR 3 targets PR 2's branch, and so on. Each PR's diff therefore shows only its own changes.
+- GitHub groups them as one stack, shown on every PR page in it.
 - With **"Automatically delete head branches"** on (enabled for this repo), merging PR 1 deletes its branch, and **GitHub retargets PR 2 to `main` automatically**.
-- **Merge from the bottom up.** After each merge, restack the rest of the stack (next section), then merge the next PR.
 
-## Restacking: one command
-After a PR in a stack is merged, run this from the repo root on the **top** branch of the stack, or pass that branch's name:
+## Starting a stack
 ```bash
-scripts/restack.sh               # top = current branch
-scripts/restack.sh api/floors    # or name it
+gh stack init api/sites        # first branch, based on main
+# ...commit...
+gh stack add api/buildings     # next branch, on top of the current one
+# ...commit...
+gh stack submit                # push every branch, open the PRs, group them on GitHub
+gh stack view                  # see the stack
 ```
-The script:
-1. Fetches `origin`.
-2. Finds the branches in the stack. Branches whose changes are already on `main` are reported as **merged**. It compares *changes*, not commit IDs, so rebase-merged branches are recognized.
-3. Rebases the whole stack onto `origin/main` in one go (`git rebase --update-refs`). Every branch pointer in the stack moves along, and already-merged commits are skipped.
-4. Runs the checks for the areas the stack touches: backend (ruff, mypy, pytest) and/or frontend (typecheck, lint, tests).
-5. Force-pushes the stack's branches with `--force-with-lease`, which refuses to overwrite anything someone else pushed in the meantime.
+Branches that already have open PRs can be adopted, bottom to top, then synced:
+```bash
+gh stack init api/sites api/buildings api/floors
+gh stack sync
+```
+`gh stack init` only recognises **open** PRs. Don't include a branch whose PR is already merged; set the stack up before anything in it merges.
 
-Options: `--no-checks` (CI still runs), `--no-push` (rebase and check locally only). To include the database tests in the local checks, set `HSP_TEST_DATABASE_URL` (see [backend/README.md](../../backend/README.md)).
+## Merging: bottom up, then sync
+1. Check the PR has no unanswered review comments and `ci-ok` passes.
+2. Merge it with **Rebase and merge** on github.com, or from the command line:
+   ```bash
+   gh stack merge https://github.com/reznik-gev/HSP/pull/65 --rebase
+   ```
+   This merges that PR **and every unmerged PR below it** in one step: either all merge or none do. A bare number also works, but it's read as a stack number first, so the URL is clearer.
+3. Restack the rest:
+   ```bash
+   gh stack sync --prune
+   ```
+   It fetches, skips the merged branches, rebases the rest of the stack onto `main`, pushes with `--force-with-lease` (which refuses to overwrite anything someone else pushed in the meantime), updates the stack on GitHub and deletes the merged local branches.
 
-PowerShell users can run `bash scripts/restack.sh`. Git for Windows includes bash.
+CI checks every pushed branch; there's no local test run during a sync.
 
 ## When there is a real conflict
-Sometimes `main` and a stacked PR **changed the same lines**. Then the rebase stops, and the script exits with Git's conflict message:
+Sometimes `main` and a stacked PR **changed the same lines**. `gh stack sync` then puts every branch back as it was and asks you to run `gh stack rebase`, which stops at the conflict:
 ```
 CONFLICT (content): Merge conflict in backend/src/hsp/config.py
 ```
@@ -47,22 +69,17 @@ CONFLICT (content): Merge conflict in backend/src/hsp/config.py
    ```
    Edit it into the correct final version and delete the markers.
 2. `git add <file>` for each resolved file.
-3. `git rebase --continue`. Repeat if Git stops at another commit.
-4. Run `scripts/restack.sh` again. It continues from where it stopped, then checks and pushes.
+3. `gh stack rebase --continue`. Repeat if it stops at another commit.
+4. `gh stack push` to push the rebased branches.
 
-To back out at any point, `git rebase --abort` restores everything to how it was before the rebase.
-
-## Recommended Git settings (once per machine)
-```bash
-git config --global rerere.enabled true       # remember conflict resolutions and reapply them
-git config --global rebase.updateRefs true    # make --update-refs the default for manual rebases
-```
+To back out at any point, `gh stack rebase --abort` restores every branch to how it was before.
 
 ## Doing it by hand
-The equivalent of the script for a single PR:
+If `gh stack` isn't available, the same restack for a single PR in plain Git:
 ```bash
 git fetch origin
 git switch <branch>
 git rebase origin/main        # old copies of merged commits are skipped
 git push --force-with-lease
 ```
+For a whole stack, run `git rebase --update-refs origin/main` on the top branch, then push each branch.

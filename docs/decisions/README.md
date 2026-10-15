@@ -87,7 +87,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0076 | 2026-10-08 | [Backend delivery plan: login first, then the floor API, in small PRs](0076-2026-10-08-backend-delivery-plan.md) | Accepted |
 | 0077 | 2026-10-08 | [Login implementation: Authlib, encrypted sessions, Keycloak-driven lifetime](0077-2026-10-08-login-implementation.md) | Accepted |
 | 0078 | 2026-10-08 | [Archive semantics: DELETE archives, restore endpoint, block on active children](0078-2026-10-08-archive-semantics.md) | Accepted |
-| 0079 | 2026-10-08 | [Stacked PR workflow: parent-based PRs, auto-retarget, restack script](0079-2026-10-08-stacked-pr-workflow.md) | Accepted |
+| 0079 | 2026-10-08 | [Stacked PR workflow: parent-based PRs, auto-retarget, restack script](0079-2026-10-08-stacked-pr-workflow.md) | Superseded by 0093 |
 | 0080 | 2026-10-10 | [Floor-plan read access and diff format](0080-2026-10-10-plan-read-access-and-diff.md) | Accepted |
 | 0081 | 2026-10-10 | [Drafts and changesets: numbering, auto-create, rules](0081-2026-10-10-drafts-and-changesets.md) | Accepted |
 | 0082 | 2026-10-10 | [Publish, discard and restore](0082-2026-10-10-publish-discard-restore.md) | Accepted |
@@ -101,3 +101,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0090 | 2026-10-15 | [The editor's Problems panel and refused changes](0090-2026-10-15-problems-panel.md) | Accepted |
 | 0091 | 2026-10-15 | [Move the backend to Python 3.14](0091-2026-10-15-python-3-14.md) | Accepted |
 | 0092 | 2026-10-15 | [Editor speed tools (frontend phase 3b)](0092-2026-10-15-editor-speed-tools.md) | Accepted |
+| 0093 | 2026-10-16 | [Stacked PRs with GitHub's own stacks (`gh stack`)](0093-2026-10-16-github-stacked-prs.md) | Accepted |
