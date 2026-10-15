@@ -14,7 +14,7 @@ dependencies = [
     "authlib>=1.8.0",
     "cryptography>=50.0.2",
     "email-validator>=2.3.0",
-    "fastapi>=0.142.4",
+    "fastapi>=0.143.0",
     "geoalchemy2>=0.20.0",
     "httpx2>=2.13.1",
     "joserfc>=1.7.5",
@@ -34,7 +34,7 @@ hsp-api = "hsp.main:run"
 hsp-export-openapi = "hsp.openapi_export:main"
 
 [build-system]
-requires = ["uv_build>=0.12.23,<0.13.0"]
+requires = ["uv_build>=0.13.0,<0.14.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
@@ -42,7 +42,7 @@ dev = [
     "mypy>=2.4.0",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
-    "ruff>=0.16.10",
+    "ruff>=0.17.0",
     "types-openpyxl>=3.1.5.20260827",
 ]
 
