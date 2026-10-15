@@ -23,7 +23,7 @@ import { HEARTBEAT_MS } from "./session/lock";
 const WALL = stubWall("w1", [0, 0], [8000, 0], { thickness_mm: 200 });
 const plan = (version: number, state: string) =>
   stubPlan({ version, state, revision: 3, walls: [WALL] });
-/** A stubDesk at (2000, 1000), the one the tests drag, select and label. */
+/** A desk at (2000, 1000), the one the tests drag, select and label. */
 const DESK = stubDesk("d1", [2000, 1000], { label: "A-01" });
 const withDesk = (p: ReturnType<typeof plan>) => ({ ...p, objects: [DESK] });
 const LOCK_FREE = { floor_id: "f3", locked: false, is_mine: false };
@@ -230,7 +230,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     return { routes, changesets };
   }
 
-  it("moving a stubDesk saves it; Ctrl+Z moves it back and saves that too", async () => {
+  it("moving a desk saves it; Ctrl+Z moves it back and saves that too", async () => {
     const { routes, changesets } = saving();
     await renderApp("/floors/f3/edit", routes);
     await screen.findByText("Draft 3 · Saved");
@@ -253,7 +253,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
   });
 
-  it("the Wall tool draws a stubWall corner to corner and saves it", async () => {
+  it("the Wall tool draws a wall corner to corner and saves it", async () => {
     const { routes, changesets } = saving();
     await renderApp("/floors/f3/edit", routes);
     await screen.findByText("Draft 3 · Saved");
@@ -276,7 +276,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     expect(screen.getByRole("button", { name: "Select" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("D picks the Door tool; clicking a stubWall places a door on it", async () => {
+  it("D picks the Door tool; clicking a wall places a door on it", async () => {
     const { routes, changesets } = saving();
     await renderApp("/floors/f3/edit", routes);
     await screen.findByText("Draft 3 · Saved");
@@ -317,7 +317,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     });
   });
 
-  it("P opens the catalog; a chosen stubDesk is placed where clicked", async () => {
+  it("P opens the catalog; a chosen desk is placed where clicked", async () => {
     const { routes, changesets } = saving();
     await renderApp("/floors/f3/edit", routes);
     await screen.findByText("Draft 3 · Saved");
@@ -436,7 +436,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     );
     expect(await screen.findByText(/couldn't be saved, so it was undone/)).toBeVisible();
     expect(loads).toBe(1); // nothing reloaded
-    // The stubDesk is back where it was, and Undo has nothing left to take back.
+    // The desk is back where it was, and Undo has nothing left to take back.
     expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
 
     await userEvent.click(within(panel).getByRole("button", { name: /A value is out of range/ }));

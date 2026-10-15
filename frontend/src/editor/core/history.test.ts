@@ -21,7 +21,7 @@ function editing() {
 const x = (store: ReturnType<typeof editing>) => store.getState().plan?.objects.d1?.position[0];
 
 describe("edit history (docs/0050)", () => {
-  it("a drag is one undo step; undo and redo move the stubDesk and queue the changes", () => {
+  it("a drag is one undo step; undo and redo move the desk and queue the changes", () => {
     const store = editing();
     const s = store.getState();
     s.select(["d1"]);
@@ -55,7 +55,7 @@ describe("edit history (docs/0050)", () => {
     expect(store.getState().plan?.objects.d1?.label).toBe("C");
   });
 
-  it("deleting a selected stubDesk clears it from the selection", () => {
+  it("deleting a selected desk clears it from the selection", () => {
     const store = editing();
     store.getState().select(["d1"]);
     store.getState().perform([{ op: "delete", kind: "object", id: "d1" }]);
