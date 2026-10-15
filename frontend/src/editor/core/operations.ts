@@ -83,3 +83,65 @@ export function newId(now = Date.now()): string {
   const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
+
+type ElementOf = { id: string } & ElementData;
+
+/** Adds before changes before deletions; hosts before what depends on them, and back. */
+const ADD_ORDER: Kind[] = ["wall", "column", "zone", "opening", "object"];
+
+/** Parents first (zones in zones, objects on objects): what must exist before each element. */
+function dependsOn(kind: Kind, el: ElementOf): string | null {
+  if (kind === "zone") return (el.parent_zone_id as string | null) ?? null;
+  if (kind === "object") return (el.attached_to as string | null) ?? null;
+  return null;
+}
+
+function byDependency(kind: Kind, items: ElementOf[]): ElementOf[] {
+  const ids = new Set(items.map((e) => e.id));
+  const done = new Set<string>();
+  const out: ElementOf[] = [];
+  const visit = (el: ElementOf) => {
+    if (done.has(el.id)) return;
+    done.add(el.id);
+    const parent = dependsOn(kind, el);
+    const p = parent && ids.has(parent) ? items.find((e) => e.id === parent) : undefined;
+    if (p) visit(p);
+    out.push(el);
+  };
+  items.forEach(visit);
+  return out;
+}
+
+/**
+ * The operations that turn plan `from` into plan `to`, in an order the server accepts: e.g.
+ * to put back a discarded draft on top of the published plan (docs/0089). Changed elements
+ * get every differing field.
+ */
+export function diffOps(from: ApiPlan, to: ApiPlan): Op[] {
+  const adds: Op[] = [];
+  const updates: Op[] = [];
+  const deletes: Op[] = [];
+  for (const kind of ADD_ORDER) {
+    const before = new Map(list(from, kind).map((e) => [e.id, e]));
+    const after = list(to, kind);
+    for (const el of byDependency(kind, after)) {
+      const old = before.get(el.id);
+      if (!old) {
+        adds.push({ op: "add", kind, id: el.id, data: withoutId(el) });
+        continue;
+      }
+      const data: ElementData = {};
+      for (const [k, v] of Object.entries(withoutId(el))) {
+        if (JSON.stringify(v) !== JSON.stringify(old[k] ?? null)) data[k] = v;
+      }
+      if (Object.keys(data).length) updates.push({ op: "update", kind, id: el.id, data });
+    }
+    const kept = new Set(after.map((e) => e.id));
+    const gone = byDependency(
+      kind,
+      list(from, kind).filter((e) => !kept.has(e.id)),
+    );
+    deletes.unshift(...gone.reverse().map((e): Op => ({ op: "delete", kind, id: e.id })));
+  }
+  return [...adds, ...updates, ...deletes];
+}

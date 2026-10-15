@@ -1,8 +1,8 @@
 /**
  * The editor's top bar (docs/0089): Exit, the floor, where the draft stands ("Draft 4 · Saved"),
- * and Undo / Redo (docs/0050). Publish and Discard join it at the end of phase 3a.
+ * Undo / Redo (docs/0050), the version history, Discard draft and Publish (docs/0082).
  */
-import { Redo2, Undo2, X } from "lucide-react";
+import { History, Redo2, Undo2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
@@ -19,6 +19,9 @@ export function EditorTopBar({
   publishedVersion,
   save,
   onExit,
+  onHistory,
+  onDiscard,
+  onPublish,
 }: {
   floorName: string | null;
   store: EditorStore;
@@ -26,6 +29,11 @@ export function EditorTopBar({
   publishedVersion: number | null;
   save: SaveState;
   onExit: () => void;
+  onHistory: () => void;
+  /** Null while there's no draft to discard. */
+  onDiscard: (() => void) | null;
+  /** Null while there's nothing to publish yet. */
+  onPublish: (() => void) | null;
 }) {
   const { t } = useTranslation();
   const canUndo = useStore(store, (s) => s.undoStack.length > 0);
@@ -66,6 +74,25 @@ export function EditorTopBar({
           onClick={() => store.getState().redo()}
         >
           <Redo2 aria-hidden />
+        </Button>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={t("editor.history.title")}
+          title={t("editor.history.title")}
+          onClick={onHistory}
+        >
+          <History aria-hidden />
+        </Button>
+        {onDiscard && (
+          <Button variant="outline" size="sm" onClick={onDiscard}>
+            {t("editor.discard")}
+          </Button>
+        )}
+        <Button size="sm" disabled={!onPublish} onClick={() => onPublish?.()}>
+          {t("editor.publish.button")}
         </Button>
       </div>
     </header>

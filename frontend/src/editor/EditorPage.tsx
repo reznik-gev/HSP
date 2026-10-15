@@ -22,6 +22,9 @@ import { preferencesQuery } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 
 import { EditorTopBar } from "./EditorTopBar";
+import { HistorySheet } from "./publish/HistorySheet";
+import { PublishDialog } from "./publish/PublishDialog";
+import { useDraftActions } from "./publish/useDraftActions";
 import { LockMessage } from "./LockMessage";
 import { editorPlanQuery } from "./session/editorPlan";
 import { useEditLock } from "./session/lock";
@@ -106,6 +109,17 @@ export function EditorPage() {
     await navigate({ to: "/floors/$floorId", params: { floorId } });
   };
 
+  const floorName = place.data?.floor.name ?? "";
+  const actions = useDraftActions({
+    floorId,
+    floorName,
+    store,
+    autosave,
+    reload: () => client.refetchQueries({ queryKey: planQuery.queryKey }),
+  });
+  const hasDraft = save.version !== null;
+  const draft = useStore(store, (s) => s.document);
+
   const failed = editorPlan.isError || place.isError || zoneTypes.isError;
   return (
     <>
@@ -116,6 +130,30 @@ export function EditorPage() {
         publishedVersion={publishedVersion}
         save={save}
         onExit={() => void exit()}
+        onHistory={() => actions.setHistory(true)}
+        onDiscard={held && hasDraft ? () => void actions.discard() : null}
+        onPublish={held && hasDraft ? () => void actions.openPublish() : null}
+      />
+      {hasDraft && draft && (
+        <PublishDialog
+          floorId={floorId}
+          floorName={floorName}
+          publishedVersion={publishedVersion}
+          draftVersion={save.version!}
+          document={draft}
+          baseRevision={() => autosave?.savedRevision ?? 0}
+          open={actions.publishing}
+          onOpenChange={actions.setPublishing}
+          onPublished={actions.onPublished}
+          onRefused={actions.onRefused}
+        />
+      )}
+      <HistorySheet
+        floorId={floorId}
+        hasDraft={hasDraft}
+        open={actions.history}
+        onClose={() => actions.setHistory(false)}
+        onRestored={actions.onRestored}
       />
       <LockMessage state={lock.state} onRetry={lock.retry} onTakeOver={lock.takeOver} />
       {failed ? (
