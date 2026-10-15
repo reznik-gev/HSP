@@ -100,3 +100,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0089 | 2026-10-15 | [The floor editor (frontend phase 3)](0089-2026-10-15-floor-editor.md) | Accepted |
 | 0090 | 2026-10-15 | [The editor's Problems panel and refused changes](0090-2026-10-15-problems-panel.md) | Accepted |
 | 0091 | 2026-10-15 | [Move the backend to Python 3.14](0091-2026-10-15-python-3-14.md) | Accepted |
+| 0092 | 2026-10-15 | [Editor speed tools (frontend phase 3b)](0092-2026-10-15-editor-speed-tools.md) | Accepted |
