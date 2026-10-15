@@ -22,6 +22,7 @@ import { preferencesQuery } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 
 import { EditorTopBar } from "./EditorTopBar";
+import { DimensionLabels, DimensionLines } from "./Dimensions";
 import { GridControls } from "./GridControls";
 import { MeasureInput } from "./MeasureInput";
 import { HistorySheet } from "./publish/HistorySheet";
@@ -191,7 +192,12 @@ function Canvas({
       view={{
         interaction: editable ? interaction : viewing,
         underlay: editable ? <GridUnderlay store={store} /> : undefined,
-        overlay: <EditOverlay store={store} />,
+        overlay: (
+          <>
+            <EditOverlay store={store} />
+            {editable && <DimensionLines store={store} />}
+          </>
+        ),
       }}
       className={cn(editable && tool !== "select" && "cursor-crosshair")}
       // Working on the plan takes the keyboard away from any field, for the editor's shortcuts;
@@ -204,6 +210,7 @@ function Canvas({
       {editable && <ToolOptions store={store} />}
       {editable && <GridControls store={store} />}
       {editable && <MeasureInput store={store} interaction={interaction} />}
+      {editable && <DimensionLabels store={store} interaction={interaction} />}
     </PlanCanvas>
   );
 }

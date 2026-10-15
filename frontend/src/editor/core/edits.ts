@@ -179,6 +179,26 @@ export function wallsAt(plan: Plan, p: Vec2): string[] {
 }
 
 /**
+ * Makes a wall `lengthMm` long by moving its far end (b) along the wall; the walls joined there
+ * follow (docs/0044). Null when that can't be done: a length that isn't positive, or a door or
+ * window that would no longer fit (opening_exceeds_wall, docs/0081).
+ */
+export function setWallLength(plan: Plan, wallId: string, lengthMm: number): Op[] | null {
+  const w = plan.walls.find((x) => x.id === wallId);
+  if (!w || !(lengthMm > 0)) return null;
+  const l = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]);
+  const to: Vec2 = [
+    Math.round(w.a[0] + ((w.b[0] - w.a[0]) / l) * lengthMm),
+    Math.round(w.a[1] + ((w.b[1] - w.a[1]) / l) * lengthMm),
+  ];
+  const tooLong = plan.openings.some(
+    (o) => o.wall_id === wallId && o.offset_mm + o.width_mm > lengthMm,
+  );
+  const ops = moveJunction(plan, wallsAt(plan, w.b), w.b, to);
+  return ops.length && !tooLong ? ops : null;
+}
+
+/**
  * Moves the endpoints at `from` of the given walls to `to` (dragging a junction moves every
  * connected wall, docs/0044). Returns no ops if that would collapse a wall to a point.
  */
