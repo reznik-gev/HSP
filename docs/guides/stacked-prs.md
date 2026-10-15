@@ -43,9 +43,9 @@ gh stack sync
 1. Check the PR has no unanswered review comments and `ci-ok` passes.
 2. Merge it with **Rebase and merge** on github.com, or from the command line:
    ```bash
-   gh stack merge https://github.com/reznik-gev/HSP/pull/65 --rebase
+   gh stack merge 65 --rebase
    ```
-   This merges that PR **and every unmerged PR below it** in one step: either all merge or none do. A bare number also works, but it's read as a stack number first, so the URL is clearer.
+   This merges that PR **and every unmerged PR below it** in one step: either all merge or none do. The number is read as a stack number first, then as a PR; stacks and PRs share GitHub's numbering, so they don't collide. It takes numbers only, not URLs.
 3. Restack the rest:
    ```bash
    gh stack sync --prune
