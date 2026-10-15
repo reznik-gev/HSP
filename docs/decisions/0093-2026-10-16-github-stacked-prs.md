@@ -13,6 +13,7 @@ Since then GitHub has built stacks into the product. Stacked pull requests went 
 Tried on the phase 3b stack (#65–#69, GitHub stack #70) on 2026-10-16:
 - `gh stack init` adopted the existing branches. `gh stack sync` rebased them onto `main` after #64 merged, pushed them and created the stack on GitHub.
 - `gh stack merge 65 --rebase` merged #65 alone. `gh stack sync --prune` then saw #65 was merged, skipped its branch, rebased #66–#69 (one commit each, no old copies), moved #66 to target `main` and deleted the local branch.
+- After review, `gh stack merge 67 --rebase` merged #66 and #67 together, and `gh stack merge 69 --rebase` merged #68 and #69 once their review fixes were in. A sync after each kept the rest of the stack current.
 - The result matched what `scripts/restack.sh` produced, without having to name the top branch, and the stack is visible to reviewers on GitHub.
 
 ## Options considered
@@ -31,5 +32,5 @@ Tried on the phase 3b stack (#65–#69, GitHub stack #70) on 2026-10-16:
 - One command after a merge, from any branch in the stack, and reviewers see the stack on GitHub.
 - Local checks no longer run during a restack. CI runs them on every pushed branch, and `ci-ok` still gates merging ([0070](0070-2026-10-08-ci-gate-job.md)).
 - `gh stack init` only recognises **open** PRs. Adopting branches that are already merged would push a deleted branch back, so a stack should be set up before anything in it merges.
-- In `gh stack merge <number>`, a number is read as a stack number first, then as a PR. Stacks and PRs share GitHub's numbering, so the two don't collide, but a PR's URL removes any doubt.
+- In `gh stack merge <number>`, a number is read as a stack number first, then as a PR. Stacks and PRs share GitHub's numbering, so the two don't collide. It doesn't accept URLs.
 - The feature is a **public preview** and may change. If it's withdrawn or breaks, the plain-Git steps in the guide still work, and `scripts/restack.sh` can be restored from history.
