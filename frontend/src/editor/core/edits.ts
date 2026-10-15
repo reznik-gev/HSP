@@ -95,7 +95,13 @@ export function moveZoneVertex(plan: Plan, zoneId: string, index: number, to: Ve
 export type PlanCatalogItem = ApiPlan["catalog"][string];
 
 /** A new object from the catalog. Seats start as assigned seats (docs/0009). */
-export function addObject(item: PlanCatalogItem, at: Vec2, rotationDdeg: number, id = newId()): Op {
+export function addObject(
+  item: PlanCatalogItem,
+  at: Vec2,
+  rotationDdeg: number,
+  attachedTo: string | null = null,
+  id = newId(),
+): Op {
   return {
     op: "add",
     kind: "object",
@@ -105,7 +111,7 @@ export function addObject(item: PlanCatalogItem, at: Vec2, rotationDdeg: number,
       position: [at[0], at[1], 0],
       rotation_ddeg: rotationDdeg,
       label: null,
-      attached_to: null,
+      attached_to: attachedTo,
       allocation_mode: item.is_seat ? "assigned" : null,
     },
   };

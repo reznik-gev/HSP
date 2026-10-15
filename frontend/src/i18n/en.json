@@ -554,7 +554,9 @@
     "snap": {
       "endpoint": "Endpoint",
       "midpoint": "Midpoint",
-      "centreline": "On wall"
+      "centreline": "On wall",
+      "face": "Against wall",
+      "attach": "On item"
     },
     "grid": {
       "snap": "Grid",

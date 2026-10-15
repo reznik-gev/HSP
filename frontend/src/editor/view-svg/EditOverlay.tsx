@@ -11,6 +11,7 @@ import type { Vec2, Wall } from "@/editor/core/plan";
 import type { EditorStore } from "@/editor/core/store";
 
 export function EditOverlay({ store }: { store: EditorStore }) {
+  const { t } = useTranslation();
   const plan = useStore(store, (s) => s.plan);
   const selection = useStore(store, (s) => s.selection);
   const preview = useStore(store, (s) => s.preview);
@@ -114,6 +115,19 @@ export function EditOverlay({ store }: { store: EditorStore }) {
             />
           ))}
       </g>
+      {preview?.kind === "item" &&
+        placing &&
+        (preview.snap === "face" || preview.snap === "attach") && (
+          <text
+            transform={`translate(${preview.at[0]} ${preview.at[1] + placing.depth_mm / 2 + 14 * px}) scale(1 -1)`}
+            fontSize={12 * px}
+            textAnchor="middle"
+            fill="var(--primary)"
+            data-testid="item-snap"
+          >
+            {t(`editor.snap.${preview.snap}`)}
+          </text>
+        )}
       {preview?.kind === "item" && placing && (
         <rect
           className="plan-selected"
