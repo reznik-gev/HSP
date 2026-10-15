@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from hsp.plans.changeset import References, validate
+from hsp.plans.geometry_checks import warnings
 from hsp.plans.schema import CatalogItem, PlanContent
 from tests.stubs import stub_references
 
@@ -120,7 +121,13 @@ def test_case(
     content: PlanContent, refs: References, names: dict[str, str], expected: list[Finding]
 ) -> None:
     found = sorted(
-        (p.code, names.get(p.element_id or "", p.element_id), "error")
-        for p in validate(content, refs)
+        [
+            (p.code, names.get(p.element_id or "", p.element_id), "error")
+            for p in validate(content, refs)
+        ]
+        + [
+            (w.code, names.get(w.element_id or "", w.element_id), "warning")
+            for w in warnings(content, refs.catalog)
+        ]
     )
     assert found == expected

@@ -80,9 +80,12 @@ test("draw a room, place and label a desk, publish", async ({ page }) => {
     await page.keyboard.press("v");
     const select = await planPoint(page);
     await page.mouse.click(...select(0, 0));
+    // A seat without a label is a warning until it gets one (docs/0092).
+    await expect(page.getByRole("tab", { name: /Problems\s*1/ })).toBeVisible();
     await page.getByLabel("Seat label").fill(`E2E-${tag}`);
     await page.getByLabel("Seat label").press("Enter");
     await expect(page.getByText("Draft 1 · Saved")).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Problems" })).toBeVisible();
 
     // Publish: everything is new.
     await page.getByRole("button", { name: "Publish" }).click();

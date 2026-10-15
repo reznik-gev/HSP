@@ -31,7 +31,7 @@
       "name": "a desk lifted off the floor",
       "plan": {
         "objects": [
-          { "id": "d1", "catalog_item_rev_id": "desk", "position": [0, 0, 300], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": null, "allocation_mode": "assigned" }
+          { "id": "d1", "catalog_item_rev_id": "desk", "position": [0, 0, 300], "rotation_ddeg": 0, "label": "A-01", "attached_to": null, "device_id": null, "allocation_mode": "assigned" }
         ]
       },
       "expect": [{ "code": "not_mountable", "element_id": "d1" }]
@@ -40,7 +40,7 @@
       "name": "a seat without a use, and a shelf with one",
       "plan": {
         "objects": [
-          { "id": "d1", "catalog_item_rev_id": "desk", "position": [0, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": null, "allocation_mode": null },
+          { "id": "d1", "catalog_item_rev_id": "desk", "position": [0, 0, 0], "rotation_ddeg": 0, "label": "A-01", "attached_to": null, "device_id": null, "allocation_mode": null },
           { "id": "s1", "catalog_item_rev_id": "shelf", "position": [3000, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": null, "allocation_mode": "bookable" }
         ]
       },

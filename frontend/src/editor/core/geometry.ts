@@ -141,3 +141,74 @@ export function polygonArea(points: readonly Vec2[]): number {
   }
   return sum / 2;
 }
+
+const cross = (o: Vec2, a: Vec2, b: Vec2) =>
+  (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+
+/** Triangles covering a simple polygon exactly (ear clipping), each counter-clockwise. */
+export function triangulate(points: readonly Vec2[]): Vec2[][] {
+  const pts = polygonArea(points) < 0 ? [...points].reverse() : [...points];
+  const ring = pts.map((_, i) => i);
+  const triangles: Vec2[][] = [];
+  const inside = (p: Vec2, a: Vec2, b: Vec2, c: Vec2) =>
+    cross(a, b, p) >= 0 && cross(b, c, p) >= 0 && cross(c, a, p) >= 0;
+  const same = (p: Vec2, q: Vec2) => p[0] === q[0] && p[1] === q[1];
+  while (ring.length > 3) {
+    let clipped = false;
+    for (let i = 0; i < ring.length; i++) {
+      const a = pts[ring[(i + ring.length - 1) % ring.length]!]!;
+      const b = pts[ring[i]!]!;
+      const c = pts[ring[(i + 1) % ring.length]!]!;
+      const turn = cross(a, b, c);
+      if (turn < 0) continue; // a reflex corner isn't an ear
+      // A corner on a straight line adds nothing; an ear holds no other corner.
+      const blocked =
+        turn > 0 &&
+        ring.some((j) => {
+          const p = pts[j]!;
+          return !same(p, a) && !same(p, b) && !same(p, c) && inside(p, a, b, c);
+        });
+      if (blocked) continue;
+      if (turn > 0) triangles.push([a, b, c]);
+      ring.splice(i, 1);
+      clipped = true;
+      break;
+    }
+    if (!clipped) return triangles; // not a simple polygon; the outline check reports it
+  }
+  if (ring.length === 3) triangles.push(ring.map((j) => pts[j]!));
+  return triangles;
+}
+
+/** The part of a convex counter-clockwise polygon inside another (Sutherland–Hodgman). */
+function clipConvex(subject: readonly Vec2[], clip: readonly Vec2[]): Vec2[] {
+  let out: Vec2[] = [...subject];
+  for (let i = 0; i < clip.length && out.length > 0; i++) {
+    const a = clip[i]!;
+    const b = clip[(i + 1) % clip.length]!;
+    const input = out;
+    out = [];
+    for (let j = 0; j < input.length; j++) {
+      const p = input[j]!;
+      const q = input[(j + 1) % input.length]!;
+      const cp = cross(a, b, p);
+      const cq = cross(a, b, q);
+      if (cp >= 0) out.push(p);
+      if (cp >= 0 !== cq >= 0) {
+        const t = cp / (cp - cq);
+        out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]);
+      }
+    }
+  }
+  return out;
+}
+
+/** The area two simple polygons share, in square plan units. */
+export function intersectionArea(a: readonly Vec2[], b: readonly Vec2[]): number {
+  const tb = triangulate(b);
+  let area = 0;
+  for (const ta of triangulate(a)) {
+    for (const t of tb) area += Math.abs(polygonArea(clipConvex(ta, t)));
+  }
+  return area;
+}
