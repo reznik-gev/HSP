@@ -13,6 +13,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, Field, ValidationError
 from shapely.geometry import Polygon
 
+from hsp.plans.geometry_checks import warnings, zone_errors
 from hsp.plans.schema import (
     CatalogItem,
     Column,
@@ -94,6 +95,8 @@ class ChangesetEffects:
     #: Elements removed by this changeset (explicitly or by cascade).
     deleted: set[tuple[Kind, uuid.UUID]] = field(default_factory=set)
     cascaded: list[CascadedDelete] = field(default_factory=list)
+    #: Warnings about the elements this changeset touched (docs/0051): allowed, but shown.
+    warnings: list[ProblemError] = field(default_factory=list)
 
 
 class ChangesetRejected(Exception):
@@ -271,9 +274,16 @@ def apply_changeset(
     if blocking:
         raise ChangesetRejected(blocking)
 
+    noted = [
+        w
+        for w in warnings(final, refs.catalog)
+        if {uuid.UUID(x) for x in [w.element_id or "", *(w.related_ids or [])] if x} & relevant
+    ]
+
     used = {o.catalog_item_rev_id for o in final.objects}
     final.catalog = {str(k): v for k, v in refs.catalog.items() if k in used}
     effects.content = final
+    effects.warnings = noted
     return effects
 
 
@@ -383,6 +393,8 @@ def validate(
                 break
             seen.add(cursor.id)
             cursor = zones.get(cursor.parent_zone_id) if cursor.parent_zone_id else None
+
+    problems.extend(zone_errors(plan))
 
     device_owner: dict[uuid.UUID, uuid.UUID] = {}
     for obj in plan.objects:

@@ -500,7 +500,11 @@
         "zone_has_children": "Remove the zones inside this zone first.",
         "zone_cycle": "Zones can't be inside each other in a loop.",
         "seat_label_duplicate": "Another seat in this building has the same label.",
-        "device_on_other_floor": "This device is already placed on another floor."
+        "device_on_other_floor": "This device is already placed on another floor.",
+        "zone_overlap": "This zone partly overlaps another zone. Make one fit inside the other, or move their edges apart.",
+        "item_in_door_swing": "This item stands where a door opens.",
+        "item_over_column": "This item overlaps a column.",
+        "seat_without_label": "This seat has no label yet."
       }
     },
     "discard": "Discard draft",

@@ -281,6 +281,35 @@ async def test_invalid_changeset_saves_nothing(ctx: dict[str, Any]) -> None:
     assert await ctx["db"].get(models.FloorElement, w) is None
 
 
+async def test_changesets_warn_about_what_they_touch(ctx: dict[str, Any]) -> None:
+    first, second = new_id(), new_id()
+    unlabelled = {**desk_data(ctx), "label": None}
+    r = await apply(ctx, 0, add("object", first, **unlabelled))
+    assert [(w["code"], w["element_id"]) for w in r.warnings] == [
+        ("seat_without_label", str(first))
+    ]
+    # Another change doesn't repeat warnings about elements it leaves alone.
+    r = await apply(ctx, 1, add("object", second, **desk_data(ctx, x=4000)))
+    assert r.warnings == []
+
+
+async def test_zones_overlapping_partly_are_refused(ctx: dict[str, Any]) -> None:
+    def zone(element_id: uuid.UUID, x: int) -> dict[str, Any]:
+        return add(
+            "zone",
+            element_id,
+            name=f"Room {x}",
+            zone_type_id=str(ctx["zone_type"]),
+            boundary=[[x, 0], [x + 4000, 0], [x + 4000, 3000], [x, 3000]],
+        )
+
+    await apply(ctx, 0, zone(new_id(), 0), zone(new_id(), 4000))  # sharing an edge is fine
+    with pytest.raises(ProblemException) as exc:
+        await apply(ctx, 1, zone(new_id(), 2000))
+    assert exc.value.errors is not None
+    assert {e.code for e in exc.value.errors} == {"zone_overlap"}
+
+
 async def test_ids_are_never_reused(ctx: dict[str, Any]) -> None:
     """An element deleted in a new draft still exists in the published version, so its id is
     permanent: re-adding it is refused (docs/0028)."""

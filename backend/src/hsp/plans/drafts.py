@@ -532,6 +532,7 @@ class DraftsService:
             version=draft.version,
             revision=revision,
             cascaded=[c.model_dump(mode="json") for c in effects.cascaded],
+            warnings=[w.model_dump(exclude_none=True) for w in effects.warnings],
         )
 
 
