@@ -415,6 +415,75 @@
       "device": "מכשירים",
       "monitor": "מסכים",
       "decor": "עיצוב"
+    },
+    "props": {
+      "nothing": "בחרו משהו בתוכנית כדי לראות ולשנות את המידות שלו.",
+      "several_one": "נבחר רכיב אחד",
+      "several_two": "נבחרו שני רכיבים מסוגים שונים. בחרו סוג אחד כדי לשנות אותם יחד.",
+      "several_other": "נבחרו {{count}} רכיבים מסוגים שונים. בחרו סוג אחד כדי לשנות אותם יחד.",
+      "kinds": {
+        "wall_one": "קיר",
+        "wall_two": "שני קירות",
+        "wall_other": "{{count}} קירות",
+        "opening_one": "דלת או חלון",
+        "opening_two": "שתי דלתות או חלונות",
+        "opening_other": "{{count}} דלתות וחלונות",
+        "column_one": "עמוד",
+        "column_two": "שני עמודים",
+        "column_other": "{{count}} עמודים",
+        "zone_one": "אזור",
+        "zone_two": "שני אזורים",
+        "zone_other": "{{count}} אזורים",
+        "object_one": "פריט",
+        "object_two": "שני פריטים",
+        "object_other": "{{count}} פריטים"
+      },
+      "length": "אורך",
+      "thickness": "עובי",
+      "height": "גובה",
+      "openingType": "סוג",
+      "openingTypeOptions": {
+        "door": "דלת",
+        "window": "חלון"
+      },
+      "offset": "מרחק מתחילת הקיר",
+      "width": "רוחב",
+      "depth": "עומק",
+      "sill": "גובה אדן",
+      "swing": "כיוון פתיחה",
+      "swingOptions": {
+        "left_in": "ציר משמאל, נפתחת פנימה",
+        "left_out": "ציר משמאל, נפתחת החוצה",
+        "right_in": "ציר מימין, נפתחת פנימה",
+        "right_out": "ציר מימין, נפתחת החוצה",
+        "sliding": "הזזה",
+        "none": "ללא כנף"
+      },
+      "name": "שם",
+      "zoneType": "סוג אזור",
+      "area": "שטח",
+      "x": "X",
+      "y": "Y",
+      "rotation": "סיבוב",
+      "label": "מספר עמדה",
+      "mode": "שימוש בעמדה",
+      "modeOptions": {
+        "assigned": "משויכת לאדם",
+        "bookable": "להזמנה",
+        "unavailable": "לא זמינה"
+      },
+      "mixed": "שונים",
+      "invalidLength": "הזינו אורך שמתאים, למשל 120 או 1.2 m.",
+      "invalidAngle": "הזינו זווית במעלות, למשל 90.",
+      "invalid": "אי אפשר להשתמש בערך הזה כאן.",
+      "units": "יחידות",
+      "unitNames": {
+        "cm": "סנטימטרים",
+        "m": "מטרים",
+        "mm": "מילימטרים"
+      },
+      "newWallThickness": "עובי קיר חדש",
+      "panel": "מאפיינים"
     }
   }
 }
