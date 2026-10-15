@@ -16,6 +16,7 @@ export function EditOverlay({ store }: { store: EditorStore }) {
   const px = useStore(store, (s) => s.viewport.mmPerPx);
   const thickness = useStore(store, (s) => s.wallDefaults.thickness_mm);
   const drag = useStore(store, (s) => s.drag);
+  const placing = useStore(store, (s) => s.placing);
   if (!plan) return null;
   const wallsById = new Map(plan.walls.map((w) => [w.id, w]));
   const opening = preview?.kind === "opening" ? preview : null;
@@ -112,6 +113,20 @@ export function EditOverlay({ store }: { store: EditorStore }) {
             />
           ))}
       </g>
+      {preview?.kind === "item" && placing && (
+        <rect
+          className="plan-selected"
+          transform={`translate(${preview.at[0]} ${preview.at[1]}) rotate(${preview.rotation_ddeg / 10})`}
+          x={-placing.width_mm / 2}
+          y={-placing.depth_mm / 2}
+          width={placing.width_mm}
+          height={placing.depth_mm}
+          fill="var(--primary)"
+          fillOpacity={0.25}
+          strokeWidth={2 * px}
+          data-testid="item-preview"
+        />
+      )}
       {preview?.kind === "column" && (
         <polygon
           className="plan-selected"

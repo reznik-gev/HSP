@@ -3,7 +3,7 @@
  * user action, ready for `store.perform`. Pure, like the rest of the core (docs/0052).
  */
 import { isSimplePolygon } from "./geometry";
-import { newId, type Op } from "./operations";
+import { type ApiPlan, newId, type Op } from "./operations";
 import type { Plan, Vec2 } from "./plan";
 
 export interface WallDefaults {
@@ -89,6 +89,37 @@ export function moveZoneVertex(plan: Plan, zoneId: string, index: number, to: Ve
       data: { boundary: boundary.map((p) => [p[0], p[1]]) },
     },
   ];
+}
+
+/** A catalog item as a plan carries it (docs/0021): one revision of the item. */
+export type PlanCatalogItem = ApiPlan["catalog"][string];
+
+/** A new object from the catalog. Seats start as assigned seats (docs/0009). */
+export function addObject(item: PlanCatalogItem, at: Vec2, rotationDdeg: number, id = newId()): Op {
+  return {
+    op: "add",
+    kind: "object",
+    id,
+    data: {
+      catalog_item_rev_id: item.id,
+      position: [at[0], at[1], 0],
+      rotation_ddeg: rotationDdeg,
+      label: null,
+      attached_to: null,
+      allocation_mode: item.is_seat ? "assigned" : null,
+    },
+  };
+}
+
+/** Turns the selected objects a quarter turn anticlockwise about their own centres. */
+export function rotateObjects(plan: Plan, selection: ReadonlySet<string>, byDdeg = 900): Op[] {
+  return plan.objectOrder
+    .filter((id) => selection.has(id))
+    .map((id) => {
+      const o = plan.objects[id]!;
+      const rotation_ddeg = (((o.rotation_ddeg + byDdeg) % 3600) + 3600) % 3600;
+      return { op: "update", kind: "object", id, data: { rotation_ddeg } };
+    });
 }
 
 export function addWall(a: Vec2, b: Vec2, defaults: WallDefaults, id = newId()): Op {

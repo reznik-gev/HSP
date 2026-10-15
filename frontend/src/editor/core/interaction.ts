@@ -7,16 +7,24 @@
  * door or window slides it along its wall, dragging a selected wall's end moves the junction
  * with every wall that meets there (Alt detaches just that wall, docs/0044), dragging a
  * selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
- * Drawing tools (wall, door, window, column, zone): a click places, a drag pans; see their
- * classes. The middle button always pans; the wheel zooms.
+ * Drawing tools (wall, door, window, column, zone, item): a click places, a drag pans; see
+ * their classes. R turns the item being placed, or the selected furniture, a quarter turn. The middle button always pans; the wheel zooms.
  */
-import { deleteSelection, moveJunction, moveZoneVertex, type OpeningType, wallsAt } from "./edits";
+import {
+  deleteSelection,
+  moveJunction,
+  moveZoneVertex,
+  type OpeningType,
+  rotateObjects,
+  wallsAt,
+} from "./edits";
 import { alongSegment } from "./geometry";
 import { hitTest, zoneAt } from "./hitTest";
 import type { Vec2 } from "./plan";
 import { SNAP_PX, snapPoint } from "./snap";
 import type { EditorStore } from "./store";
 import { ColumnTool } from "./tools/columnTool";
+import { ItemTool } from "./tools/itemTool";
 import { fitOnWall, OpeningTool } from "./tools/openingTool";
 import { WallTool } from "./tools/wallTool";
 import { ZoneTool } from "./tools/zoneTool";
@@ -51,12 +59,14 @@ export class Interaction {
   private readonly openingTool: OpeningTool;
   private readonly columnTool: ColumnTool;
   private readonly zoneTool: ZoneTool;
+  private readonly itemTool: ItemTool;
 
   constructor(private readonly store: EditorStore) {
     this.wallTool = new WallTool(store);
     this.openingTool = new OpeningTool(store);
     this.columnTool = new ColumnTool(store);
     this.zoneTool = new ZoneTool(store);
+    this.itemTool = new ItemTool(store);
   }
 
   /** The pointer moved with no button down, or a click placed something (drawing tools). */
@@ -69,6 +79,7 @@ export class Interaction {
     }
     if (tool === "column") return click ? this.columnTool.click(p) : this.columnTool.hover(p);
     if (tool === "zone") return click ? this.zoneTool.click(p) : this.zoneTool.hover(p);
+    if (tool === "item") return click ? this.itemTool.click(p) : this.itemTool.hover(p);
   }
 
   setSize(width: number, height: number): void {
@@ -274,6 +285,22 @@ export class Interaction {
       case "Enter":
         if (s.tool === "zone") return this.zoneTool.close();
         return s.tool === "wall" && this.wallTool.finish();
+      case "r":
+      case "R": {
+        if (s.tool === "item") {
+          s.rotatePlacing();
+          const preview = s.preview;
+          if (preview?.kind === "item") {
+            s.setPreview({ ...preview, rotation_ddeg: this.store.getState().placingRotation });
+          }
+          return true;
+        }
+        if (s.tool !== "select" || !s.plan) return false;
+        const ops = rotateObjects(s.plan, s.selection);
+        if (!ops.length) return false;
+        s.perform(ops);
+        return true;
+      }
       case "Delete":
       case "Backspace":
         if (!s.plan || !s.selection.size) return false;

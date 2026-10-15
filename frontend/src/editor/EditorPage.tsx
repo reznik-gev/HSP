@@ -1,8 +1,8 @@
 /**
  * The floor editor (docs/0089): a full-screen page that holds the floor's edit lock while open.
  * It opens the draft, or the published plan when there is no draft yet, and saves every change
- * to the draft as you go. Tools so far: select, walls, doors, windows, columns and zones;
- * items and the side panel arrive in the following steps of phase 3a.
+ * to the draft as you go. Tools: select, walls, doors, windows, columns, zones and catalog
+ * items; the Properties and Problems panels arrive in the following steps of phase 3a.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
@@ -26,6 +26,7 @@ import { LockMessage } from "./LockMessage";
 import { editorPlanQuery } from "./session/editorPlan";
 import { useEditLock } from "./session/lock";
 import { useEditSession } from "./session/useEditSession";
+import { SidePanel } from "./SidePanel";
 import { ToolOptions } from "./ToolOptions";
 import { ToolStrip } from "./ToolStrip";
 import { useEditorKeys } from "./useEditorKeys";
@@ -111,6 +112,7 @@ export function EditorPage() {
         <div className="flex min-h-0 flex-1">
           <ToolStrip store={store} disabled={!held} />
           <Canvas store={store} interaction={interaction} editable={held} />
+          {held && <SidePanel store={store} />}
         </div>
       ) : (
         lock.state.kind === "acquiring" && (

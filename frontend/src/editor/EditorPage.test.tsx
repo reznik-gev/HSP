@@ -77,6 +77,23 @@ function backend(over: Routes = {}, publishedVersion: number | null = 2): Routes
         next_cursor: null,
       },
     },
+    "GET /api/v1/catalog-items": {
+      status: 200,
+      body: {
+        items: [
+          {
+            id: "i1",
+            key: "desk",
+            name: "Desk 160 x 80",
+            category: "desk",
+            builtin: true,
+            archived_at: null,
+            current_revision: { ...DESK_ITEM, rev_no: 1, model_key: null },
+          },
+        ],
+        next_cursor: null,
+      },
+    },
     "POST /api/v1/floors/f3/lock": {
       status: 200,
       body: { ...LOCK_FREE, locked: true, is_mine: true },
@@ -390,6 +407,26 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
       op: "add",
       kind: "zone",
       data: { name: "Meeting room 1", zone_type_id: "zt2" },
+    });
+  });
+
+  it("P opens the catalog; a chosen desk is placed where clicked", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.keyboard("p");
+    expect(await screen.findByRole("heading", { name: "Desks" })).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: /Desk 160 x 80/ }));
+    click([5000, 3000]);
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops[0]).toMatchObject({
+      op: "add",
+      kind: "object",
+      data: {
+        catalog_item_rev_id: "rev-desk",
+        position: [5000, 3000, 0],
+        allocation_mode: "assigned",
+      },
     });
   });
 
