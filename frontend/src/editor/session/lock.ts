@@ -122,5 +122,8 @@ export function useEditLock(floorId: string) {
     );
   }, [floorId]);
 
-  return { state, retry, takeOver };
+  /** Autosave found out first (a save was refused for the lock). */
+  const markLost = useCallback(() => setState({ kind: "lost" }), []);
+
+  return { state, retry, takeOver, markLost };
 }

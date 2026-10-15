@@ -1,25 +1,29 @@
 /**
  * The floor editor (docs/0089): a full-screen page that holds the floor's edit lock while open.
- * It opens the draft, or the published plan when there is no draft yet. The tools, the side
- * panel and saving arrive in the following steps of phase 3a.
+ * It opens the draft, or the published plan when there is no draft yet, and saves every change
+ * to the draft as you go. For now furniture can be moved; the drawing tools and the side panel
+ * arrive in the following steps of phase 3a.
  */
-import { useQuery } from "@tanstack/react-query";
-import { getRouteApi, Link } from "@tanstack/react-router";
-import { Redo2, Undo2, X } from "lucide-react";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useStore } from "zustand";
 
-import { Button } from "@/components/ui/button";
-import { planFromApi } from "@/editor/core/fromApi";
-import { createEditorStore } from "@/editor/core/store";
+import { problemMessage } from "@/api/problems";
+import { Interaction } from "@/editor/core/interaction";
+import { createEditorStore, type EditorStore } from "@/editor/core/store";
 import { ViewerInteraction } from "@/editor/core/viewerInteraction";
 import { PlanView, type RenderOptions } from "@/editor/view-svg/PlanView";
 import { fitPlan, useElementSize, ZoomControls } from "@/editor/view-svg/ZoomControls";
-import { useLockedByText } from "@/floors/EditFloorButton";
 import { floorPlaceQuery, zoneTypesQuery } from "@/floors/planData";
+import { notify, notifyError } from "@/lib/notify";
 
-import { type EditorPlan, editorPlanQuery } from "./session/editorPlan";
-import { type LockState, useEditLock } from "./session/lock";
+import { EditorTopBar } from "./EditorTopBar";
+import { LockMessage } from "./LockMessage";
+import { editorPlanQuery } from "./session/editorPlan";
+import { useEditLock } from "./session/lock";
+import { useEditSession } from "./session/useEditSession";
 
 const route = getRouteApi("/editor/floors/$floorId/edit");
 
@@ -34,148 +38,104 @@ const OPTIONS: RenderOptions = {
 export function EditorPage() {
   const { t } = useTranslation();
   const { floorId } = route.useParams();
+  const navigate = useNavigate();
+  const client = useQueryClient();
+  const [store] = useState(createEditorStore);
   const place = useQuery(floorPlaceQuery(floorId));
   const lock = useEditLock(floorId);
-  const held = lock.state.kind === "held" || lock.state.kind === "lost";
+  const held = lock.state.kind === "held";
+  const publishedVersion = place.data?.floor.published_version ?? null;
+  const planQuery = editorPlanQuery(floorId, publishedVersion);
   const editorPlan = useQuery({
-    ...editorPlanQuery(floorId, place.data?.floor.published_version ?? null),
+    ...planQuery,
     // Read the draft only once the lock is ours, so nobody changes it under us.
-    enabled: held && place.isSuccess,
+    enabled: (held || lock.state.kind === "lost") && place.isSuccess,
   });
   const zoneTypes = useQuery(zoneTypesQuery);
+  const { autosave, save } = useEditSession(store, floorId, editorPlan.data, zoneTypes.data, held, {
+    onReload: (reason, problem) => {
+      if (reason === "stale") notify(t("editor.reloaded"));
+      else notifyError(problemMessage(problem, t("editor.rejected")));
+      void client.invalidateQueries({ queryKey: planQuery.queryKey });
+    },
+    onLockLost: lock.markLost,
+  });
+  useUndoShortcuts(store, held);
 
+  // Exit saves what's left first. If that fails, a second Exit leaves without it.
+  const [leaveAnyway, setLeaveAnyway] = useState(false);
+  const exit = async () => {
+    await autosave?.flush();
+    if (store.getState().outbox.length && !leaveAnyway) {
+      setLeaveAnyway(true);
+      notifyError(t("editor.unsavedExit"));
+      return;
+    }
+    await navigate({ to: "/floors/$floorId", params: { floorId } });
+  };
+
+  const failed = editorPlan.isError || place.isError || zoneTypes.isError;
   return (
     <>
-      <header className="flex h-14 shrink-0 items-center gap-4 border-b bg-card px-4">
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/floors/$floorId" params={{ floorId }}>
-            <X aria-hidden />
-            {t("editor.exit")}
-          </Link>
-        </Button>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-semibold">
-            {place.data ? t("editor.title", { floor: place.data.floor.name }) : " "}
-          </h1>
-          {editorPlan.data && (
-            <p className="text-xs text-muted-foreground">
-              <DraftStatus editorPlan={editorPlan.data} />
-            </p>
-          )}
-        </div>
-        {/* Wired to the edit history in the next step (docs/0050). */}
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" aria-label={t("editor.undo")} disabled>
-            <Undo2 aria-hidden />
-          </Button>
-          <Button variant="ghost" size="icon" aria-label={t("editor.redo")} disabled>
-            <Redo2 aria-hidden />
-          </Button>
-        </div>
-      </header>
+      <EditorTopBar
+        floorName={place.data?.floor.name ?? null}
+        store={store}
+        source={editorPlan.data?.source ?? null}
+        publishedVersion={publishedVersion}
+        save={save}
+        onExit={() => void exit()}
+      />
       <LockMessage state={lock.state} onRetry={lock.retry} onTakeOver={lock.takeOver} />
-      {held &&
-        (editorPlan.isError || place.isError || zoneTypes.isError ? (
-          <p role="alert" className="p-6 text-destructive">
-            {t("plan.loadFailed")}
-          </p>
-        ) : editorPlan.data && zoneTypes.data ? (
-          <Canvas editorPlan={editorPlan.data} zoneTypes={zoneTypes.data} />
-        ) : (
+      {failed ? (
+        <p role="alert" className="p-6 text-destructive">
+          {t("plan.loadFailed")}
+        </p>
+      ) : editorPlan.data && zoneTypes.data ? (
+        <Canvas store={store} editable={held} />
+      ) : (
+        lock.state.kind === "acquiring" && (
           <div className="flex-1 bg-[var(--plan-paper)]" aria-busy="true" />
-        ))}
+        )
+      )}
     </>
   );
 }
 
-function DraftStatus({ editorPlan }: { editorPlan: EditorPlan }) {
-  const { t } = useTranslation();
-  const { plan, source } = editorPlan;
-  if (source === "draft") return t("editor.status.draft", { version: plan.version });
-  if (source === "published") return t("editor.status.published", { version: plan.version });
-  return t("editor.status.new");
+/** Ctrl+Z undoes, Ctrl+Shift+Z or Ctrl+Y redoes (docs/0050), except while typing in a field. */
+function useUndoShortcuts(store: EditorStore, enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) store.getState().undo();
+      else if ((key === "z" && e.shiftKey) || key === "y") store.getState().redo();
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [store, enabled]);
 }
 
-/** Why editing isn't possible right now, and what to do about it. */
-function LockMessage({
-  state,
-  onRetry,
-  onTakeOver,
-}: {
-  state: LockState;
-  onRetry: () => void;
-  onTakeOver: () => void;
-}) {
-  const { t } = useTranslation();
-  const lockedBy = useLockedByText();
-  const banner = (role: "status" | "alert", text: string, action?: ReactNode) => (
-    <div
-      role={role}
-      className="flex items-center justify-between gap-4 border-b bg-muted px-4 py-3 text-sm"
-    >
-      <span>{text}</span>
-      {action}
-    </div>
-  );
-  switch (state.kind) {
-    case "acquiring":
-      return banner("status", t("editor.acquiring"));
-    case "busy":
-      return banner(
-        "alert",
-        lockedBy(state.holder, state.since),
-        <Button size="sm" variant="outline" title={t("editor.takeOverHint")} onClick={onTakeOver}>
-          {t("editor.takeOver")}
-        </Button>,
-      );
-    case "lost":
-      return banner(
-        "alert",
-        t("editor.lost"),
-        <Button size="sm" onClick={onRetry}>
-          {t("editor.retry")}
-        </Button>,
-      );
-    case "forbidden":
-      return banner("alert", t("editor.forbidden"));
-    case "failed":
-      return banner(
-        "alert",
-        t("editor.failed"),
-        <Button size="sm" variant="outline" onClick={onRetry}>
-          {t("editor.retry")}
-        </Button>,
-      );
-    case "held":
-      return null;
-  }
-}
-
-function Canvas({
-  editorPlan,
-  zoneTypes,
-}: {
-  editorPlan: EditorPlan;
-  zoneTypes: ReadonlyMap<string, { name: string; color: string | null }>;
-}) {
-  const [store] = useState(createEditorStore);
-  const [viewer] = useState(() => new ViewerInteraction(store));
+function Canvas({ store, editable }: { store: EditorStore; editable: boolean }) {
+  const [editing] = useState(() => new Interaction(store));
+  const [viewing] = useState(() => new ViewerInteraction(store));
   const canvas = useRef<HTMLDivElement>(null);
   const size = useElementSize(canvas);
-  const plan = useMemo(() => planFromApi(editorPlan.plan, zoneTypes), [editorPlan, zoneTypes]);
+  const generation = useStore(store, (s) => s.generation);
 
   useEffect(() => {
-    store.getState().loadPlan(plan);
-  }, [store, plan]);
-  useEffect(() => {
     if (size) fitPlan(store, size);
-    // Fit once the canvas has a size, not on every resize.
+    // Fit when a plan is loaded and once the canvas has a size, not on every resize.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store, plan, size === null]);
+  }, [store, generation, size === null]);
 
   return (
     <div ref={canvas} className="relative min-h-0 flex-1">
-      <PlanView store={store} interaction={viewer} options={OPTIONS} />
+      <PlanView store={store} interaction={editable ? editing : viewing} options={OPTIONS} />
       <ZoomControls store={store} size={size} />
     </div>
   );

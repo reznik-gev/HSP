@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,6 +17,35 @@ const plan = (version: number, state: string) => ({
   revision: 3,
   ...EMPTY,
   walls: [WALL],
+});
+const DESK_ITEM = {
+  id: "rev-desk",
+  item_id: "i1",
+  key: "desk",
+  category: "desk",
+  name: "Desk",
+  shape: "box",
+  width_mm: 1600,
+  depth_mm: 800,
+  height_mm: 740,
+  color: null,
+  is_seat: true,
+  mountable: false,
+  attaches_to_categories: [],
+  footprint_blocks: true,
+};
+const DESK = {
+  id: "d1",
+  catalog_item_rev_id: "rev-desk",
+  position: [2000, 1000, 0],
+  rotation_ddeg: 0,
+  label: "A-01",
+  allocation_mode: "assigned",
+};
+const withDesk = (p: ReturnType<typeof plan>) => ({
+  ...p,
+  objects: [DESK],
+  catalog: { "rev-desk": DESK_ITEM },
 });
 const LOCK_FREE = { floor_id: "f3", locked: false, is_mine: false };
 const LOCK_DANA = {
@@ -89,7 +118,7 @@ describe("opening the editor (docs/0089)", () => {
   it("takes the lock and opens the draft, full screen", async () => {
     const { calls: sent } = await renderApp("/floors/f3/edit", backend());
     expect(await screen.findByRole("heading", { name: "Editing Floor 3" })).toBeVisible();
-    expect(await screen.findByText("Draft 3")).toBeVisible();
+    expect(await screen.findByText("Draft 3 · Saved")).toBeVisible();
     expect(calls(sent, "POST /api/v1/floors/f3/lock")).toBe(1);
     // No app sidebar: the editor has the whole window.
     expect(screen.queryByRole("navigation", { name: "Main" })).toBeNull();
@@ -105,8 +134,8 @@ describe("opening the editor (docs/0089)", () => {
 
   it("Exit goes back to the floor and releases the lock", async () => {
     const { calls: sent } = await renderApp("/floors/f3/edit", backend());
-    await screen.findByText("Draft 3");
-    await userEvent.click(screen.getByRole("link", { name: "Exit" }));
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.click(screen.getByRole("button", { name: "Exit" }));
     expect(await screen.findByRole("heading", { name: "Floor 3" })).toBeVisible();
     expect(calls(sent, "DELETE /api/v1/floors/f3/lock")).toBe(1);
   });
@@ -115,7 +144,7 @@ describe("opening the editor (docs/0089)", () => {
     await act(() => i18n.changeLanguage("he"));
     await renderApp("/floors/f3/edit", backend());
     expect(await screen.findByRole("heading", { name: "עריכת Floor 3" })).toBeVisible();
-    expect(await screen.findByText("טיוטה 3")).toBeVisible();
+    expect(await screen.findByText("טיוטה 3 · נשמר")).toBeVisible();
   });
 });
 
@@ -139,7 +168,7 @@ describe("when someone else is editing (docs/0016)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/^Being edited by Dana Levi since/);
     expect(calls(sent, "GET /api/v1/floors/f3/draft")).toBe(0);
     await userEvent.click(screen.getByRole("button", { name: "Take over" }));
-    expect(await screen.findByText("Draft 3")).toBeVisible();
+    expect(await screen.findByText("Draft 3 · Saved")).toBeVisible();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
@@ -155,7 +184,7 @@ describe("when someone else is editing (docs/0016)", () => {
             : { status: 200, body: { ...LOCK_FREE, locked: true, is_mine: true } },
       }),
     );
-    await screen.findByText("Draft 3");
+    await screen.findByText("Draft 3 · Saved");
     taken = true;
     await act(() => vi.advanceTimersByTimeAsync(HEARTBEAT_MS));
     expect(await screen.findByRole("alert")).toHaveTextContent(/^Editing stopped/);
@@ -202,5 +231,123 @@ describe("Edit floor on the floor page (docs/0089)", () => {
     );
     await screen.findByRole("heading", { name: "Floor 3" });
     expect(screen.queryByRole("link", { name: "Edit floor" })).toBeNull();
+  });
+});
+
+/** Where a plan point is on the 800 × 600 test canvas, read from the SVG's viewBox. */
+function onScreen(x: number, y: number): { clientX: number; clientY: number } {
+  const svg = document.querySelector("svg[data-lod]")!;
+  const [vx, vy, vw, vh] = svg.getAttribute("viewBox")!.split(" ").map(Number) as [
+    number,
+    number,
+    number,
+    number,
+  ];
+  // The plan's +Y is north, drawn upwards: SVG y is -y (docs/0042).
+  return { clientX: ((x - vx) / vw) * 800, clientY: ((-y - vy) / vh) * 600 };
+}
+
+function drag(from: [number, number], to: [number, number]) {
+  const svg = document.querySelector("svg[data-lod]")!;
+  const a = onScreen(...from);
+  const b = onScreen(...to);
+  fireEvent.pointerDown(svg, { ...a, button: 0, pointerId: 1 });
+  fireEvent.pointerMove(svg, { ...b, button: 0, buttons: 1, pointerId: 1 });
+  fireEvent.pointerUp(svg, { ...b, button: 0, pointerId: 1 });
+}
+
+describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
+  beforeEach(() => {
+    Element.prototype.setPointerCapture = () => {};
+    // jsdom has no PointerEvent; a MouseEvent carries the same coordinates and buttons.
+    if (!("PointerEvent" in window)) {
+      vi.stubGlobal(
+        "PointerEvent",
+        class extends MouseEvent {
+          readonly pointerId: number;
+          constructor(type: string, init: PointerEventInit = {}) {
+            super(type, init);
+            this.pointerId = init.pointerId ?? 1;
+          }
+        },
+      );
+    }
+  });
+
+  function saving() {
+    const changesets: { base_revision: number; ops: { data?: unknown }[] }[] = [];
+    let revision = 3;
+    const routes = backend({
+      "GET /api/v1/floors/f3/draft": { status: 200, body: withDesk(plan(3, "draft")) },
+      "POST /api/v1/floors/f3/draft/changesets": (request) => {
+        void request.json().then((b) => changesets.push(b as never));
+        return {
+          status: 200,
+          body: { floor_id: "f3", version: 3, revision: ++revision, cascaded: [] },
+        };
+      },
+    });
+    return { routes, changesets };
+  }
+
+  it("moving a desk saves it; Ctrl+Z moves it back and saves that too", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    drag([2000, 1000], [3000, 1000]);
+    expect(await screen.findByText("Draft 3 · Saving…")).toBeVisible();
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]).toEqual({
+      base_revision: 3,
+      ops: [{ op: "update", kind: "object", id: "d1", data: { position: [3000, 1000, 0] } }],
+    });
+    expect(await screen.findByText("Draft 3 · Saved")).toBeVisible();
+
+    await userEvent.keyboard("{Control>}z{/Control}");
+    await waitFor(() => expect(changesets).toHaveLength(2), { timeout: 3000 });
+    expect(changesets[1]).toMatchObject({
+      base_revision: 4,
+      ops: [{ data: { position: [2000, 1000, 0] } }],
+    });
+    expect(screen.getByRole("button", { name: "Redo" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
+  });
+
+  it("Exit saves what's waiting before leaving", async () => {
+    const { routes, changesets } = saving();
+    const { calls: sent } = await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    drag([2000, 1000], [2500, 1000]);
+    await userEvent.click(screen.getByRole("button", { name: "Exit" }));
+    expect(await screen.findByRole("heading", { name: "Floor 3" })).toBeVisible();
+    expect(changesets).toHaveLength(1);
+    expect(calls(sent, "DELETE /api/v1/floors/f3/lock")).toBe(1);
+  });
+
+  it("a refused change reloads the draft and says why", async () => {
+    let loads = 0;
+    await renderApp(
+      "/floors/f3/edit",
+      backend({
+        "GET /api/v1/floors/f3/draft": () => {
+          loads++;
+          return { status: 200, body: withDesk(plan(3, "draft")) };
+        },
+        "POST /api/v1/floors/f3/draft/changesets": {
+          status: 422,
+          body: {
+            type: "https://hsp.example/problems/changeset-invalid",
+            title: "Invalid",
+            detail: "The desk is off the floor.",
+          },
+        },
+      }),
+    );
+    await screen.findByText("Draft 3 · Saved");
+    drag([2000, 1000], [3000, 1000]);
+    expect(
+      await screen.findByText("The desk is off the floor.", {}, { timeout: 3000 }),
+    ).toBeVisible();
+    await waitFor(() => expect(loads).toBe(2));
   });
 });
