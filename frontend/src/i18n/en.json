@@ -497,7 +497,58 @@
         "allocation_mode_not_seat": "Only seats have a use.",
         "device_placed_twice": "This device is already placed on the floor.",
         "zone_has_children": "Remove the zones inside this zone first.",
-        "zone_cycle": "Zones can't be inside each other in a loop."
+        "zone_cycle": "Zones can't be inside each other in a loop.",
+        "seat_label_duplicate": "Another seat in this building has the same label.",
+        "device_on_other_floor": "This device is already placed on another floor."
+      }
+    },
+    "discard": "Discard draft",
+    "discarded": "Draft discarded. The floor is back to its published plan.",
+    "undoDiscardFailed": "Couldn't bring the draft back.",
+    "unsavedPublish": "Your latest changes aren't saved yet, so the draft can't be published. Try again in a moment.",
+    "publish": {
+      "button": "Publish",
+      "title": "Publish {{floor}}",
+      "action": "Publish",
+      "publishing": "Publishing…",
+      "explain": "Draft {{version}} becomes the floor plan everyone sees.",
+      "comparing": "Comparing with the published plan…",
+      "noChanges": "Nothing changed since the published version.",
+      "added": "Added:",
+      "changed": "Changed:",
+      "removed": "Removed:",
+      "kinds": {
+        "wall_one": "{{count}} wall",
+        "wall_other": "{{count}} walls",
+        "opening_one": "{{count}} door or window",
+        "opening_other": "{{count}} doors and windows",
+        "column_one": "{{count}} column",
+        "column_other": "{{count}} columns",
+        "zone_one": "{{count}} zone",
+        "zone_other": "{{count}} zones",
+        "object_one": "{{count}} item",
+        "object_other": "{{count}} items"
+      },
+      "freed_one": "{{count}} assigned seat will be freed:",
+      "freed_other": "{{count}} assigned seats will be freed:",
+      "note": "Note (optional)",
+      "noteHint": "E.g. what changed, for the version history.",
+      "done": "{{floor}} published as version {{version}}",
+      "conflicts": "The draft can't be published yet. See Problems."
+    },
+    "history": {
+      "title": "Version history",
+      "explain": "Restoring an older version starts a draft with its content, to check and publish.",
+      "draftFirst": "Publish or discard the current draft to restore an older version.",
+      "loadFailed": "Couldn't load the versions.",
+      "version": "Version {{version}}",
+      "restore": "Restore",
+      "restored": "Version {{version}} restored as a draft. Publish it to make it current.",
+      "states": {
+        "draft": "Draft",
+        "published": "Published",
+        "superseded": "Earlier",
+        "discarded": "Discarded"
       }
     }
   }

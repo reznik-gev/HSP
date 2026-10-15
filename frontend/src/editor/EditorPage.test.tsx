@@ -522,3 +522,178 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     expect(screen.getByText(/No problems/)).toBeVisible();
   });
 });
+
+describe("publishing, discarding and history (docs/0082, docs/0089)", () => {
+  const EMPTY_DIFF = { added: [], changed: [], removed: [] };
+  const holderSeat = {
+    id: "d9",
+    label: "B-02",
+    allocation_mode: "assigned",
+    site: { id: "s1", name: "Tel Aviv HQ" },
+    building: { id: "b1", name: "Harbor Tower" },
+    floor: { id: "f3", name: "Floor 3" },
+    holder_person: { id: "p1", display_name: "Maya Cohen", email: "maya@acme.example" },
+    holder_unit: null,
+  };
+
+  function publishing(publish: Reply) {
+    const published: unknown[] = [];
+    const routes = backend({
+      "GET /api/v1/floors/f3/draft": { status: 200, body: withDesk(plan(3, "draft")) },
+      "GET /api/v1/floors/f3/versions/2/diff/3": {
+        status: 200,
+        body: {
+          floor_id: "f3",
+          from_version: 2,
+          to_version: 3,
+          walls: EMPTY_DIFF,
+          openings: EMPTY_DIFF,
+          columns: EMPTY_DIFF,
+          zones: EMPTY_DIFF,
+          objects: { added: [DESK], changed: [], removed: [{ id: "d9" }] },
+        },
+      },
+      "GET /api/v1/seats": { status: 200, body: { items: [holderSeat], next_cursor: null } },
+      "POST /api/v1/floors/f3/draft/publish": (request) => {
+        void request.json().then((b) => published.push(b));
+        return publish;
+      },
+    });
+    return { routes, published };
+  }
+
+  it("Publish shows what changed and which seats it frees, then goes to the floor", async () => {
+    const { routes, published } = publishing({
+      status: 200,
+      body: {
+        floor_id: "f3",
+        published_version: 3,
+        superseded_version: 2,
+        freed_seats: [{ seat_id: "d9" }],
+      },
+    });
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.click(screen.getByRole("button", { name: "Publish" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Publish Floor 3" });
+    const lines = await within(dialog).findAllByRole("listitem");
+    expect(lines.map((l) => l.textContent)).toEqual(
+      expect.arrayContaining(["Added: 1 item", "Removed: 1 item"]),
+    );
+    expect(within(dialog).getByText("1 assigned seat will be freed:")).toBeVisible();
+    expect(within(dialog).getByText(/B-02: Maya Cohen/)).toBeVisible();
+    await userEvent.type(within(dialog).getByLabelText(/Note/), "New desks");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Publish" }));
+    expect(await screen.findByRole("heading", { name: "Floor 3" })).toBeVisible();
+    expect(published).toEqual([{ base_revision: 3, note: "New desks" }]);
+    expect(await screen.findByText("Floor 3 published as version 3")).toBeVisible();
+  });
+
+  it("publish conflicts are listed in Problems", async () => {
+    const { routes } = publishing({
+      status: 409,
+      body: {
+        type: "https://hsp.example/problems/publish-conflicts",
+        title: "Can't publish",
+        errors: [
+          { code: "seat_label_duplicate", message: "A-01 is used twice.", element_id: "d1" },
+        ],
+      },
+    });
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.click(screen.getByRole("button", { name: "Publish" }));
+    const dialog = await screen.findByRole("alertdialog");
+    await userEvent.click(await within(dialog).findByRole("button", { name: "Publish" }));
+    const panel = await screen.findByRole("complementary", { name: "Problems" });
+    expect(
+      within(panel).getByText("Another seat in this building has the same label."),
+    ).toBeVisible();
+    expect(within(panel).getByText("Seat A-01")).toBeVisible();
+  });
+
+  it("Discard draft goes back to the published plan; Undo brings the draft back", async () => {
+    let draft: unknown = withDesk(plan(3, "draft"));
+    const restored: { base_revision: number; ops: { op: string; id: string }[] }[] = [];
+    await renderApp(
+      "/floors/f3/edit",
+      backend({
+        "GET /api/v1/floors/f3/draft": () => (draft ? { status: 200, body: draft } : NO_DRAFT),
+        "DELETE /api/v1/floors/f3/draft": () => {
+          draft = null;
+          return { status: 204 };
+        },
+        "POST /api/v1/floors/f3/draft/changesets": (request) => {
+          void request.json().then((b) => restored.push(b as never));
+          draft = withDesk(plan(3, "draft"));
+          return { status: 200, body: { floor_id: "f3", version: 3, revision: 4, cascaded: [] } };
+        },
+      }),
+    );
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.click(screen.getByRole("button", { name: "Discard draft" }));
+    expect(await screen.findByText("Published version 2 · no changes yet")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Discard draft" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Publish" })).toBeDisabled();
+    const notice = (await screen.findByText(/Draft discarded/)).closest("li")!;
+    await userEvent.click(within(notice).getByRole("button", { name: "Undo" }));
+    // The published plan has the wall; the draft added the desk.
+    expect(restored).toEqual([
+      { base_revision: 0, ops: [expect.objectContaining({ op: "add", kind: "object", id: "d1" })] },
+    ]);
+  });
+
+  it("History lists the versions; Restore waits for the draft to go", async () => {
+    await renderApp(
+      "/floors/f3/edit",
+      backend({
+        "GET /api/v1/floors/f3/versions": {
+          status: 200,
+          body: {
+            items: [
+              {
+                version: 1,
+                state: "superseded",
+                revision: 2,
+                created_at: "2026-10-01T09:00:00Z",
+                created_by: "u-1",
+                published_at: "2026-10-01T10:00:00Z",
+                note: "First",
+              },
+              {
+                version: 2,
+                state: "published",
+                revision: 5,
+                created_at: "2026-10-10T09:00:00Z",
+                created_by: "u-1",
+                published_at: "2026-10-10T10:00:00Z",
+                note: null,
+              },
+              {
+                version: 3,
+                state: "draft",
+                revision: 3,
+                created_at: "2026-10-15T09:00:00Z",
+                created_by: "u-1",
+                published_at: null,
+                note: null,
+              },
+            ],
+            next_cursor: null,
+          },
+        },
+      }),
+    );
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.click(screen.getByRole("button", { name: "Version history" }));
+    const sheet = await screen.findByRole("dialog", { name: "Version history" });
+    const items = await within(sheet).findAllByRole("listitem");
+    expect(items.map((i) => i.textContent)).toEqual([
+      expect.stringContaining("Version 3 · Draft"),
+      expect.stringContaining("Version 2 · Published"),
+      expect.stringMatching(/Version 1 · Earlier.*First/),
+    ]);
+    expect(within(sheet).getByRole("button", { name: "Restore" })).toBeDisabled();
+    expect(within(sheet).getByText(/Publish or discard the current draft/)).toBeVisible();
+  });
+});

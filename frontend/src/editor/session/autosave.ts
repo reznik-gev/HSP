@@ -56,6 +56,11 @@ export class Autosave {
     });
   }
 
+  /** The draft revision everything so far was saved at (publish needs it, docs/0082). */
+  get savedRevision(): number {
+    return this.revision;
+  }
+
   private set(status: SaveStatus): void {
     this.state.setState({ status });
   }
