@@ -33,7 +33,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0022 | 2026-10-08 | [Device assets: light asset fields](0022-2026-10-08-device-asset-data.md)  | Accepted |
 | 0023 | 2026-10-08 | [Primary unit: deepest unit wins](0023-2026-10-08-primary-unit-rule.md)   | Superseded by 0084 |
 | 0024 | 2026-10-08 | [Unit managers: assigned in HSP only](0024-2026-10-08-unit-managers.md)   | Accepted |
-| 0025 | 2026-10-08 | [v1 scope: space modeling + seat assignment](0025-2026-10-08-v1-scope.md) | Accepted |
+| 0025 | 2026-10-08 | [v1 scope: space modeling + seat assignment](0025-2026-10-08-v1-scope.md) | Accepted (3D view moved past v1 by 0094) |
 | 0026 | 2026-10-08 | [Line endings: normalize to LF](0026-2026-10-08-line-endings.md)          | Accepted |
 | 0027 | 2026-10-08 | [v1 interim: CSV import, admin-only editing, Keycloak login](0027-2026-10-08-v1-interim-people-and-access.md) | Accepted |
 | 0028 | 2026-10-08 | [Floor version storage: version-range rows](0028-2026-10-08-floor-version-storage.md) | Accepted |
@@ -51,7 +51,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0040 | 2026-10-08 | [Pagination: cursor-based](0040-2026-10-08-pagination.md)                 | Accepted |
 | 0041 | 2026-10-08 | [Live updates in v1: polling](0041-2026-10-08-live-updates.md)            | Accepted |
 | 0042 | 2026-10-08 | [2D renderer: SVG](0042-2026-10-08-2d-renderer.md)                        | Accepted |
-| 0043 | 2026-10-08 | [Editor layout: 2D main, 3D toggle/split](0043-2026-10-08-editor-view-layout.md) | Accepted |
+| 0043 | 2026-10-08 | [Editor layout: 2D main, 3D toggle/split](0043-2026-10-08-editor-view-layout.md) | Accepted (3D modes moved past v1 by 0094) |
 | 0044 | 2026-10-08 | [Wall joins: linked endpoints](0044-2026-10-08-wall-joins.md)             | Accepted |
 | 0045 | 2026-10-08 | [Dimension entry: inline typing + properties panel](0045-2026-10-08-dimension-entry.md) | Accepted |
 | 0046 | 2026-10-08 | [Display units: cm default, per-user](0046-2026-10-08-display-units.md)   | Accepted |
@@ -97,8 +97,10 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0086 | 2026-10-12 | [Free resources automatically instead of asking for confirmation](0086-2026-10-12-automatic-release.md) | Accepted |
 | 0087 | 2026-10-13 | [Frontend delivery plan: viewer first, English and Hebrew, desktop](0087-2026-10-13-frontend-delivery-plan.md) | Accepted |
 | 0088 | 2026-10-14 | [Admin screens (frontend phase 2)](0088-2026-10-14-admin-screens.md) | Accepted |
-| 0089 | 2026-10-15 | [The floor editor (frontend phase 3)](0089-2026-10-15-floor-editor.md) | Accepted |
+| 0089 | 2026-10-15 | [The floor editor (frontend phase 3)](0089-2026-10-15-floor-editor.md) | Accepted (3c replanned by 0094, 0095) |
 | 0090 | 2026-10-15 | [The editor's Problems panel and refused changes](0090-2026-10-15-problems-panel.md) | Accepted |
 | 0091 | 2026-10-15 | [Move the backend to Python 3.14](0091-2026-10-15-python-3-14.md) | Accepted |
 | 0092 | 2026-10-15 | [Editor speed tools (frontend phase 3b)](0092-2026-10-15-editor-speed-tools.md) | Accepted |
 | 0093 | 2026-10-16 | [Stacked PRs with GitHub's own stacks (`gh stack`)](0093-2026-10-16-github-stacked-prs.md) | Accepted |
+| 0094 | 2026-10-16 | [Move the 3D view past v1; show heights in 2D instead](0094-2026-10-16-3d-view-after-v1.md) | Accepted |
+| 0095 | 2026-10-16 | [Heights on the plan, Catalog and Devices screens (frontend phase 3c)](0095-2026-10-16-heights-catalog-and-devices.md) | Accepted |
