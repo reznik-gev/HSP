@@ -577,6 +577,19 @@
       "west": "Distance to the wall west",
       "south": "Distance to the wall south",
       "edit": "{{what}}: {{value}}. Click to change."
+    },
+    "array": {
+      "open": "Array…",
+      "title": "Array",
+      "rows": "Rows",
+      "columns": "Columns",
+      "dx": "Column spacing",
+      "dy": "Row spacing",
+      "mirror": "Mirror every other row (back to back)",
+      "count_one": "{{count}} item in all",
+      "count_other": "{{count}} items in all, counting the ones selected",
+      "tooMany": "At most {{max}} at once.",
+      "create": "Create"
     }
   }
 }

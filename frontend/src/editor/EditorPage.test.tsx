@@ -434,6 +434,32 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     ).toBeVisible();
   });
 
+  it("Array… previews rows × columns of the desk and creates them as one change", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    click([2000, 1000]);
+    await userEvent.click(await screen.findByRole("button", { name: "Array…" }));
+    const form = screen.getByRole("form", { name: "Array" });
+    expect(within(form).getByLabelText("Column spacing")).toHaveValue("160");
+    await userEvent.clear(within(form).getByLabelText("Rows"));
+    await userEvent.type(within(form).getByLabelText("Rows"), "2");
+    await userEvent.clear(within(form).getByLabelText("Columns"));
+    await userEvent.type(within(form).getByLabelText("Columns"), "3");
+    expect(within(form).getByText("6 items in all, counting the ones selected")).toBeVisible();
+    expect(screen.getAllByTestId("array-copy")).toHaveLength(5);
+    await userEvent.click(within(form).getByRole("button", { name: "Create" }));
+    expect(screen.queryAllByTestId("array-copy")).toHaveLength(0);
+    expect(await screen.findByRole("heading", { name: "6 items" })).toBeVisible();
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops).toHaveLength(5);
+    expect(changesets[0]!.ops[0]).toMatchObject({
+      op: "add",
+      kind: "object",
+      data: { position: [3600, 1000, 0], label: null },
+    });
+  });
+
   it("Exit saves what's waiting before leaving", async () => {
     const { routes, changesets } = saving();
     const { calls: sent } = await renderApp("/floors/f3/edit", routes);

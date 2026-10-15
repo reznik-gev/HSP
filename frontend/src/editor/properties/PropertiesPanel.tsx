@@ -3,15 +3,19 @@
  * settings, editable in the user's display unit, with a units switch saved to their
  * preferences (docs/0046). Several elements of one kind are edited together.
  */
+import { Grid3x3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
+import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
+import { selectionBox } from "@/editor/core/array";
 import { describeSelection, setField, sharedValue } from "@/editor/core/properties";
 import type { EditorStore } from "@/editor/core/store";
 import type { DisplayUnit } from "@/editor/core/units";
 import { useSavePreference } from "@/lib/preferences";
 
+import { ArrayForm } from "./ArrayForm";
 import { PropertyField } from "./PropertyField";
 
 export function PropertiesPanel({ store }: { store: EditorStore }) {
@@ -21,6 +25,7 @@ export function PropertiesPanel({ store }: { store: EditorStore }) {
   const selection = useStore(store, (s) => s.selection);
   const zoneTypes = useStore(store, (s) => s.zoneTypes);
   const unit = useStore(store, (s) => s.displayUnit);
+  const arrayDraft = useStore(store, (s) => s.arrayDraft);
   const info = document && describeSelection(document, selection, zoneTypes);
 
   return (
@@ -37,21 +42,48 @@ export function PropertiesPanel({ store }: { store: EditorStore }) {
             <h2 className="text-sm font-semibold">
               {t(`editor.props.kinds.${info.kind}`, { count: info.elements.length })}
             </h2>
-            {info.fields.map((field) => (
-              <PropertyField
-                key={field.key}
-                field={field}
-                value={sharedValue(field, info.elements)}
-                unit={unit}
-                onCommit={(value) => {
-                  if (!plan || !document) return false;
-                  const ops = setField(field, info.elements, value, { plan, document });
-                  if (!ops) return false;
-                  store.getState().perform(ops);
-                  return true;
-                }}
-              />
-            ))}
+            {arrayDraft && info.kind === "object" ? (
+              <ArrayForm store={store} />
+            ) : (
+              <>
+                {info.fields.map((field) => (
+                  <PropertyField
+                    key={field.key}
+                    field={field}
+                    value={sharedValue(field, info.elements)}
+                    unit={unit}
+                    onCommit={(value) => {
+                      if (!plan || !document) return false;
+                      const ops = setField(field, info.elements, value, { plan, document });
+                      if (!ops) return false;
+                      store.getState().perform(ops);
+                      return true;
+                    }}
+                  />
+                ))}
+                {info.kind === "object" && document && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const box = selectionBox(document, selection);
+                      if (!box) return;
+                      store.getState().setArrayDraft({
+                        rows: 1,
+                        columns: 2,
+                        dx: box.width,
+                        dy: box.depth,
+                        mirror: false,
+                      });
+                    }}
+                  >
+                    <Grid3x3 aria-hidden />
+                    {t("editor.array.open")}
+                  </Button>
+                )}
+              </>
+            )}
           </>
         )}
       </div>
