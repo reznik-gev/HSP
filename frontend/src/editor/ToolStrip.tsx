@@ -7,6 +7,7 @@ import {
   Armchair,
   BrickWall,
   DoorOpen,
+  Hash,
   MousePointer2,
   Square,
   SquareDashed,
@@ -30,6 +31,7 @@ export const TOOLS: {
   { tool: "column", key: "C", icon: Square },
   { tool: "zone", key: "Z", icon: SquareDashed },
   { tool: "item", key: "P", icon: Armchair },
+  { tool: "number", key: "L", icon: Hash },
 ];
 
 export function ToolStrip({ store, disabled }: { store: EditorStore; disabled: boolean }) {

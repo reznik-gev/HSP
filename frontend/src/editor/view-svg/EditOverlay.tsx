@@ -170,6 +170,27 @@ export function EditOverlay({ store }: { store: EditorStore }) {
             />
           );
         })}
+      {preview?.kind === "numbering" &&
+        preview.seats.map(({ id, label }) => {
+          const o = plan.objects[id];
+          if (!o) return null;
+          return (
+            <text
+              key={id}
+              transform={`translate(${o.position[0]} ${o.position[1]}) scale(1 -1)`}
+              fontSize={13 * px}
+              fontWeight={600}
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="plan-label"
+              // Inline, so it wins over the plan label colour: these aren't applied yet.
+              style={{ fill: "var(--primary)" }}
+              data-testid="numbering-label"
+            >
+              {label}
+            </text>
+          );
+        })}
       {preview?.kind === "column" && (
         <polygon
           className="plan-selected"
