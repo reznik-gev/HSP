@@ -1,42 +1,15 @@
 import { describe, expect, it } from "vitest";
 
+import { apiPlan, desk, monitor, wall, zone } from "@/test/fixtures";
+
 import { isSeat, planBounds, planFromApi } from "./fromApi";
 import { createEditorStore } from "./store";
 import { ViewerInteraction } from "./viewerInteraction";
 
-const DESK = {
-  id: "rev-desk",
-  item_id: "i1",
-  key: "desk",
-  category: "desk",
-  name: "Desk",
-  shape: "box" as const,
-  width_mm: 1600,
-  depth_mm: 800,
-  height_mm: 740,
-  color: null,
-  is_seat: true,
-  mountable: false,
-  attaches_to_categories: [],
-  footprint_blocks: true,
-};
-const MONITOR = {
-  ...DESK,
-  id: "rev-mon",
-  key: "monitor",
-  category: "monitor",
-  width_mm: 600,
-  depth_mm: 200,
-  is_seat: false,
-};
-
-const API_PLAN = {
-  floor_id: "f1",
+const API_PLAN = apiPlan({
   version: 2,
-  state: "published" as const,
-  revision: 1,
-  walls: [{ id: "w1", a: [0, 0], b: [10000, 0], thickness_mm: 200, height_mm: 3000 }],
-  openings: [],
+  state: "published",
+  walls: [wall("w1", [0, 0], [10000, 0], { thickness_mm: 200 })],
   columns: [
     {
       id: "c1",
@@ -50,37 +23,19 @@ const API_PLAN = {
     },
   ],
   zones: [
-    {
-      id: "z1",
-      name: "Pod",
-      zone_type_id: "zt1",
-      parent_zone_id: null,
-      boundary: [
+    zone(
+      "z1",
+      [
         [0, 0],
         [5000, 0],
         [5000, 5000],
       ],
-    },
+      { name: "Pod" },
+    ),
   ],
-  objects: [
-    {
-      id: "mon",
-      catalog_item_rev_id: "rev-mon",
-      position: [3000, 3000, 740],
-      rotation_ddeg: 0,
-      attached_to: "desk",
-    },
-    {
-      id: "desk",
-      catalog_item_rev_id: "rev-desk",
-      position: [3000, 3000, 0],
-      rotation_ddeg: 0,
-      label: "A-01",
-      allocation_mode: "assigned" as const,
-    },
-  ],
-  catalog: { "rev-desk": DESK, "rev-mon": MONITOR },
-};
+  // The monitor comes first on purpose: attached items are drawn after their hosts.
+  objects: [monitor("mon", "desk", [3000, 3000]), desk("desk", [3000, 3000], { label: "A-01" })],
+});
 
 function setup() {
   const plan = planFromApi(

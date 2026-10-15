@@ -4,49 +4,28 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
+import {
+  apiPlan,
+  catalogItemOut,
+  desk,
+  DESK_ITEM,
+  locationRoutes,
+  page,
+  seatOut,
+  wall,
+  ZONE_TYPES,
+} from "@/test/fixtures";
 import { ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 import { HEARTBEAT_MS } from "./session/lock";
 
-const EMPTY = { walls: [], openings: [], columns: [], zones: [], objects: [], catalog: {} };
-const WALL = { id: "w1", a: [0, 0], b: [8000, 0], thickness_mm: 200, height_mm: 3000 };
-const plan = (version: number, state: string) => ({
-  floor_id: "f3",
-  version,
-  state,
-  revision: 3,
-  ...EMPTY,
-  walls: [WALL],
-});
-const DESK_ITEM = {
-  id: "rev-desk",
-  item_id: "i1",
-  key: "desk",
-  category: "desk",
-  name: "Desk",
-  shape: "box",
-  width_mm: 1600,
-  depth_mm: 800,
-  height_mm: 740,
-  color: null,
-  is_seat: true,
-  mountable: false,
-  attaches_to_categories: [],
-  footprint_blocks: true,
-};
-const DESK = {
-  id: "d1",
-  catalog_item_rev_id: "rev-desk",
-  position: [2000, 1000, 0],
-  rotation_ddeg: 0,
-  label: "A-01",
-  allocation_mode: "assigned",
-};
-const withDesk = (p: ReturnType<typeof plan>) => ({
-  ...p,
-  objects: [DESK],
-  catalog: { "rev-desk": DESK_ITEM },
-});
+// Floor 3 has one wall; version 2 is published and draft 3 is open, at revision 3.
+const WALL = wall("w1", [0, 0], [8000, 0], { thickness_mm: 200 });
+const plan = (version: number, state: string) =>
+  apiPlan({ version, state, revision: 3, walls: [WALL] });
+/** A desk at (2000, 1000), the one the tests drag, select and label. */
+const DESK = desk("d1", [2000, 1000], { label: "A-01" });
+const withDesk = (p: ReturnType<typeof plan>) => ({ ...p, objects: [DESK] });
 const LOCK_FREE = { floor_id: "f3", locked: false, is_mine: false };
 const LOCK_DANA = {
   floor_id: "f3",
@@ -58,42 +37,9 @@ const LOCK_DANA = {
 
 function backend(over: Routes = {}, publishedVersion: number | null = 2): Routes {
   return {
-    "GET /api/v1/floors/f3": {
-      status: 200,
-      body: { id: "f3", name: "Floor 3", building_id: "b1", published_version: publishedVersion },
-    },
-    "GET /api/v1/buildings/b1": {
-      status: 200,
-      body: { id: "b1", name: "Harbor Tower", code: "HT", site_id: "s1" },
-    },
-    "GET /api/v1/sites/s1": { status: 200, body: { id: "s1", name: "Tel Aviv HQ" } },
-    "GET /api/v1/zone-types": {
-      status: 200,
-      body: {
-        items: [
-          { id: "zt1", name: "Room", color: "#93c5fd", is_enclosed: true },
-          { id: "zt2", name: "Meeting room", color: "#c4b5fd", is_enclosed: true },
-        ],
-        next_cursor: null,
-      },
-    },
-    "GET /api/v1/catalog-items": {
-      status: 200,
-      body: {
-        items: [
-          {
-            id: "i1",
-            key: "desk",
-            name: "Desk 160 x 80",
-            category: "desk",
-            builtin: true,
-            archived_at: null,
-            current_revision: { ...DESK_ITEM, rev_no: 1, model_key: null },
-          },
-        ],
-        next_cursor: null,
-      },
-    },
+    ...locationRoutes(publishedVersion),
+    "GET /api/v1/zone-types": { status: 200, body: page(ZONE_TYPES) },
+    "GET /api/v1/catalog-items": { status: 200, body: page([catalogItemOut(DESK_ITEM)]) },
     "POST /api/v1/floors/f3/lock": {
       status: 200,
       body: { ...LOCK_FREE, locked: true, is_mine: true },
@@ -102,7 +48,7 @@ function backend(over: Routes = {}, publishedVersion: number | null = 2): Routes
     "DELETE /api/v1/floors/f3/lock": { status: 204 },
     "GET /api/v1/floors/f3/draft": { status: 200, body: plan(3, "draft") },
     "GET /api/v1/floors/f3/versions/2": { status: 200, body: plan(2, "published") },
-    "GET /api/v1/seats": { status: 200, body: { items: [], next_cursor: null } },
+    "GET /api/v1/seats": { status: 200, body: page([]) },
     ...over,
   };
 }
@@ -486,16 +432,9 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
 
 describe("publishing, discarding and history (docs/0082, docs/0089)", () => {
   const EMPTY_DIFF = { added: [], changed: [], removed: [] };
-  const holderSeat = {
-    id: "d9",
-    label: "B-02",
-    allocation_mode: "assigned",
-    site: { id: "s1", name: "Tel Aviv HQ" },
-    building: { id: "b1", name: "Harbor Tower" },
-    floor: { id: "f3", name: "Floor 3" },
+  const holderSeat = seatOut("d9", "B-02", {
     holder_person: { id: "p1", display_name: "Maya Cohen", email: "maya@acme.example" },
-    holder_unit: null,
-  };
+  });
 
   function publishing(publish: Reply) {
     const published: unknown[] = [];
@@ -514,7 +453,7 @@ describe("publishing, discarding and history (docs/0082, docs/0089)", () => {
           objects: { added: [DESK], changed: [], removed: [{ id: "d9" }] },
         },
       },
-      "GET /api/v1/seats": { status: 200, body: { items: [holderSeat], next_cursor: null } },
+      "GET /api/v1/seats": { status: 200, body: page([holderSeat]) },
       "POST /api/v1/floors/f3/draft/publish": (request) => {
         void request.json().then((b) => published.push(b));
         return publish;

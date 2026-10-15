@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
+import { page, seatOut } from "@/test/fixtures";
 import { ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 const unit = (id: string, name: string, parent_id: string | null) => ({
@@ -28,24 +29,14 @@ const MAYA = {
   primary_unit_id: "u1",
   memberships: [{ unit_id: "u1", position_id: null, is_primary: true, primary_override: false }],
 };
-const ref = (id: string, name: string) => ({ id, name });
-const SEAT = {
-  id: "d2",
-  label: "HT-3-02",
-  allocation_mode: "assigned",
-  site: ref("s1", "Tel Aviv HQ"),
-  building: ref("b1", "Harbor Tower"),
-  floor: ref("f3", "Floor 3"),
-  holder_person: null,
-  holder_unit: null,
-};
+const SEAT = seatOut("d2", "HT-3-02");
 
 function backend(extra: Routes = {}): Routes {
   return {
-    "GET /api/v1/org-units": { status: 200, body: { items: UNITS, next_cursor: null } },
-    "GET /api/v1/people": { status: 200, body: { items: [MAYA], next_cursor: null } },
+    "GET /api/v1/org-units": { status: 200, body: page(UNITS) },
+    "GET /api/v1/people": { status: 200, body: page([MAYA]) },
     "GET /api/v1/people/p1": { status: 200, body: MAYA },
-    "GET /api/v1/seats": { status: 200, body: { items: [SEAT], next_cursor: null } },
+    "GET /api/v1/seats": { status: 200, body: page([SEAT]) },
     "GET /api/v1/devices": {
       status: 200,
       body: {
@@ -62,7 +53,7 @@ function backend(extra: Routes = {}): Routes {
         next_cursor: null,
       },
     },
-    "GET /api/v1/org-units/u1/positions": { status: 200, body: { items: [], next_cursor: null } },
+    "GET /api/v1/org-units/u1/positions": { status: 200, body: page([]) },
     ...extra,
   };
 }

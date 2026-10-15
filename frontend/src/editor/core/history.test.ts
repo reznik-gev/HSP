@@ -1,44 +1,16 @@
 import { describe, expect, it } from "vitest";
 
+import { apiPlan, desk } from "@/test/fixtures";
+
 import type { ApiPlan, Op } from "./operations";
 import { createEditorStore } from "./store";
 
 const WALL = { a: [0, 0], b: [3000, 0], thickness_mm: 150, height_mm: 3000 };
 const dataOf = (ops: Op[]) => ops.map((op) => ("data" in op ? op.data : null));
 
-const DESK = {
-  id: "d1",
-  catalog_item_rev_id: "rev",
-  position: [1000, 1000, 0],
-  rotation_ddeg: 0,
-  label: "A-01",
-  attached_to: null,
-  allocation_mode: "assigned",
-};
-const PLAN = {
-  floor_id: "f",
-  version: 1,
-  state: "draft",
-  revision: 1,
-  walls: [],
-  openings: [],
-  columns: [],
-  zones: [],
-  objects: [DESK],
-  catalog: {
-    rev: {
-      id: "rev",
-      key: "desk",
-      category: "desk",
-      shape: "box",
-      width_mm: 1600,
-      depth_mm: 800,
-      height_mm: 740,
-      color: null,
-      is_seat: true,
-    },
-  },
-} as unknown as ApiPlan;
+const PLAN = apiPlan({
+  objects: [desk("d1", [1000, 1000], { label: "A-01" })],
+}) as unknown as ApiPlan;
 
 function editing() {
   const store = createEditorStore();

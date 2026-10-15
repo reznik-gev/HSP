@@ -4,24 +4,17 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
+import { page, ref, seatOut } from "@/test/fixtures";
 import { renderApp, type Reply } from "@/test/renderApp";
 
-const ref = (id: string, name: string) => ({ id, name });
-const MAYA_SEAT = {
-  id: "d2",
-  label: "HT-3-02",
-  allocation_mode: "assigned",
-  site: ref("s1", "Tel Aviv HQ"),
-  building: ref("b1", "Harbor Tower"),
-  floor: ref("f3", "Floor 3"),
+const MAYA_SEAT = seatOut("d2", "HT-3-02", {
   holder_person: {
     id: "p1",
     display_name: "Maya Shani",
     email: "maya@acme.example",
     primary_unit: ref("u1", "Platform"),
   },
-  holder_unit: null,
-};
+});
 
 afterEach(async () => {
   cleanup();
@@ -39,7 +32,7 @@ function seats(items: object[], next_cursor: string | null = null) {
 describe("where does X sit? (docs/0085, docs/0087)", () => {
   it("searching from the top bar lists the seat, its holder, team and place", async () => {
     const { router, calls } = await renderApp("/floors", {
-      "GET /api/v1/sites": { status: 200, body: { items: [], next_cursor: null } },
+      "GET /api/v1/sites": { status: 200, body: page([]) },
       "GET /api/v1/seats": seats([MAYA_SEAT]),
     });
     const box = await screen.findByRole("searchbox", { name: "Search seats, people and teams" });

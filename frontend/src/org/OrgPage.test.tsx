@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
+import { page } from "@/test/fixtures";
 import { fakeBackend, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 import { undoUnitArchive } from "./undo";
@@ -49,7 +50,7 @@ const PEOPLE = [
 
 function backend(extra: Routes = {}): Routes {
   return {
-    "GET /api/v1/org-units": { status: 200, body: { items: UNITS, next_cursor: null } },
+    "GET /api/v1/org-units": { status: 200, body: page(UNITS) },
     "GET /api/v1/people": (r: Request): Reply => {
       const unitId = new URL(r.url).searchParams.get("unit_id");
       const items = unitId
@@ -61,7 +62,7 @@ function backend(extra: Routes = {}): Routes {
     },
     "GET /api/v1/org-units/plat/positions": {
       status: 200,
-      body: { items: [{ id: "pos1", unit_id: "plat", title: "Team Lead" }], next_cursor: null },
+      body: page([{ id: "pos1", unit_id: "plat", title: "Team Lead" }]),
     },
     ...extra,
   };

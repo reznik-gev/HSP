@@ -2,34 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApiPlan, Op } from "@/editor/core/operations";
 import { createEditorStore } from "@/editor/core/store";
+import { apiPlan, desk } from "@/test/fixtures";
 
 import { Autosave, RETRY_MS, SAVE_DELAY_MS } from "./autosave";
 
-const DESK = { id: "d1", catalog_item_rev_id: "rev", position: [0, 0, 0], rotation_ddeg: 0 };
-const PLAN = {
-  floor_id: "f3",
+const PLAN = apiPlan({
   version: 2,
   state: "published",
   revision: 4,
-  walls: [],
-  openings: [],
-  columns: [],
-  zones: [],
-  objects: [DESK],
-  catalog: {
-    rev: {
-      id: "rev",
-      key: "desk",
-      category: "desk",
-      shape: "box",
-      width_mm: 1600,
-      depth_mm: 800,
-      height_mm: 740,
-      color: null,
-      is_seat: true,
-    },
-  },
-} as unknown as ApiPlan;
+  objects: [desk("d1", [0, 0])],
+}) as unknown as ApiPlan;
 const label = (l: string): Op[] => [{ op: "update", kind: "object", id: "d1", data: { label: l } }];
 type Reply = { status: number; body?: unknown };
 const URL_ = "POST /api/v1/floors/f3/draft/changesets";
