@@ -9,7 +9,7 @@
  */
 import { createStore } from "zustand/vanilla";
 
-import type { WallDefaults } from "./edits";
+import type { PlanCatalogItem, WallDefaults } from "./edits";
 import { planFromApi } from "./fromApi";
 import { buildHitIndex, type HitIndex, moveObjects, withAttachments } from "./hitTest";
 import { type ApiPlan, applyOps, type Op } from "./operations";
@@ -27,7 +27,7 @@ export interface DragState {
 export type ZoneTypes = ReadonlyMap<string, { name: string; color: string | null }>;
 
 /** The editing tools of phase 3a so far (docs/0089). */
-export type Tool = "select" | "wall" | "door" | "window" | "column" | "zone";
+export type Tool = "select" | "wall" | "door" | "window" | "column" | "zone" | "item";
 
 /** What a tool shows while it works, before anything is committed. */
 export type Preview =
@@ -54,6 +54,8 @@ export type Preview =
   | { kind: "zone"; points: readonly Vec2[]; to: Vec2; snap: SnapKind }
   /** A zone corner being dragged. */
   | { kind: "vertex"; zone: string; index: number; to: Vec2; snap: SnapKind }
+  /** A catalog item about to be placed: where, and turned how far. */
+  | { kind: "item"; at: Vec2; rotation_ddeg: number }
   /** A column about to be placed: its footprint. */
   | { kind: "column"; footprint: readonly Vec2[]; snap: SnapKind }
   | null;
@@ -87,6 +89,9 @@ export interface EditorState {
   wallDefaults: WallDefaults;
   /** The zone type new zones get (docs/0020). */
   zoneTypeId: string | null;
+  /** The catalog item the item tool places, and how far it's turned (R turns it). */
+  placing: PlanCatalogItem | null;
+  placingRotation: number;
   loadPlan(plan: Plan): void;
   /** Opens a plan for editing; clears the history and the outbox. */
   loadDocument(document: ApiPlan, zoneTypes: ZoneTypes): void;
@@ -109,6 +114,10 @@ export interface EditorState {
   setPreview(preview: Preview): void;
   setWallDefaults(defaults: Partial<WallDefaults>): void;
   setZoneType(id: string): void;
+  setPlacing(item: PlanCatalogItem | null): void;
+  rotatePlacing(): void;
+  /** Adds a catalog revision to the document, so objects of it can be drawn (docs/0021). */
+  ensureCatalog(item: PlanCatalogItem): void;
 }
 
 /** Whether any element of the plan has this id. */
@@ -160,6 +169,8 @@ export function createEditorStore() {
       preview: null,
       wallDefaults: { thickness_mm: 150, height_mm: 3000 },
       zoneTypeId: null,
+      placing: null,
+      placingRotation: 0,
       loadPlan: (plan) =>
         set({ plan, hitIndex: buildHitIndex(plan), selection: new Set(), drag: null }),
       loadDocument: (document, zoneTypes) => {
@@ -243,6 +254,13 @@ export function createEditorStore() {
       setPreview: (preview) => set({ preview }),
       setWallDefaults: (defaults) => set({ wallDefaults: { ...get().wallDefaults, ...defaults } }),
       setZoneType: (zoneTypeId) => set({ zoneTypeId }),
+      setPlacing: (placing) => set({ placing, placingRotation: 0 }),
+      rotatePlacing: () => set({ placingRotation: (get().placingRotation + 900) % 3600 }),
+      ensureCatalog: (item) => {
+        const { document } = get();
+        if (!document || document.catalog[item.id]) return;
+        set({ document: { ...document, catalog: { ...document.catalog, [item.id]: item } } });
+      },
     };
   });
 }

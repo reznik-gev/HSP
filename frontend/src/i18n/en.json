@@ -388,9 +388,26 @@
       "door": "Door",
       "window": "Window",
       "column": "Column",
-      "zone": "Zone"
+      "zone": "Zone",
+      "item": "Place item"
     },
     "zoneType": "Zone type",
-    "zoneHint": "Click the corners; click the first one again or press Enter to finish."
+    "zoneHint": "Click the corners; click the first one again or press Enter to finish.",
+    "items": {
+      "title": "Place an item",
+      "search": "Search the catalog",
+      "hint": "Choose an item, then click on the plan to place it. R turns it.",
+      "none": "No items match.",
+      "loadFailed": "Couldn't load the catalog. Reload the page to try again."
+    },
+    "categories": {
+      "desk": "Desks",
+      "chair": "Chairs",
+      "table": "Tables",
+      "storage": "Storage",
+      "device": "Devices",
+      "monitor": "Monitors",
+      "decor": "Decor"
+    }
   }
 }

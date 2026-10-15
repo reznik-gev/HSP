@@ -9,7 +9,7 @@ import { createEditorStore } from "./store";
 import { planToScreen } from "./viewport";
 
 const wall = (id: string, a: Vec2, b: Vec2) => ({ id, a, b, thickness_mm: 150, height_mm: 3000 });
-const DESK_ITEM = {
+export const DESK_ITEM = {
   id: "rev",
   key: "desk",
   category: "desk",
