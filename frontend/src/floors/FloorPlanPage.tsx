@@ -5,20 +5,22 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, Link } from "@tanstack/react-router";
-import { Maximize, Minus, Plus, X } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
 import { AdminOnly } from "@/auth/admin";
 import { Button } from "@/components/ui/button";
-import { planBounds, planFromApi } from "@/editor/core/fromApi";
+import { planFromApi } from "@/editor/core/fromApi";
 import { createEditorStore } from "@/editor/core/store";
 import { ViewerInteraction } from "@/editor/core/viewerInteraction";
-import { fitRect, zoomAt } from "@/editor/core/viewport";
 import { PlanView, type RenderOptions, type SeatState } from "@/editor/view-svg/PlanView";
+import { fitPlan, useElementSize, ZoomControls } from "@/editor/view-svg/ZoomControls";
 import { cn } from "@/lib/utils";
 import { SeatActions } from "@/seats/SeatActions";
+
+import { EditFloorButton } from "./EditFloorButton";
 
 import {
   floorPlaceQuery,
@@ -82,11 +84,14 @@ export function FloorPlanPage() {
             {place.data?.floor.name ?? " "}
           </h1>
         </div>
-        {version && (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {t("plan.version", { version })}
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-4">
+          {version && (
+            <span className="text-xs text-muted-foreground">{t("plan.version", { version })}</span>
+          )}
+          <AdminOnly>
+            <EditFloorButton floorId={floorId} />
+          </AdminOnly>
+        </div>
       </header>
       {failed ? (
         <p role="alert" className="p-6 text-destructive">
@@ -122,24 +127,13 @@ function Viewer({
   seats: ReadonlyMap<string, Seat> | undefined;
   focusSeat: string | undefined;
 }) {
-  const { t } = useTranslation();
   const [store] = useState(createEditorStore);
   const [viewer] = useState(() => new ViewerInteraction(store));
   const canvas = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState<[number, number] | null>(null);
+  const size = useElementSize(canvas);
   const [hover, setHover] = useState<{ id: string; sx: number; sy: number } | null>(null);
   const selection = useStore(store, (s) => s.selection);
   const selected = [...selection].find((id) => states.has(id)) ?? null;
-
-  useLayoutEffect(() => {
-    const el = canvas.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([e]) => {
-      if (e) setSize([e.contentRect.width, e.contentRect.height]);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   // Load the plan, then either centre the requested seat or fit the whole floor.
   useEffect(() => {
@@ -154,21 +148,10 @@ function Viewer({
       store.getState().setViewport({ cx: obj.position[0], cy: obj.position[1], mmPerPx: 14 });
       return;
     }
-    const bounds = planBounds(plan);
-    if (bounds) store.getState().setViewport(fitRect(bounds, size, 48));
+    fitPlan(store, size);
     // Re-fit when the plan or the requested seat changes, not on every resize.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store, plan, focusSeat, size === null]);
-
-  const zoom = (factor: number) => {
-    if (!size) return;
-    const s = store.getState();
-    s.setViewport(zoomAt(s.viewport, size, size[0] / 2, size[1] / 2, factor));
-  };
-  const fit = () => {
-    const bounds = planBounds(plan);
-    if (bounds && size) store.getState().setViewport(fitRect(bounds, size, 48));
-  };
 
   return (
     <div className="flex min-h-0 flex-1">
@@ -193,27 +176,7 @@ function Viewer({
             y={hover.sy}
           />
         )}
-        <div className="absolute end-3 top-3 flex flex-col overflow-hidden rounded-md border bg-card shadow-sm">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t("plan.zoomIn")}
-            onClick={() => zoom(1.4)}
-          >
-            <Plus aria-hidden />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t("plan.zoomOut")}
-            onClick={() => zoom(1 / 1.4)}
-          >
-            <Minus aria-hidden />
-          </Button>
-          <Button variant="ghost" size="icon" aria-label={t("plan.fit")} onClick={fit}>
-            <Maximize aria-hidden />
-          </Button>
-        </div>
+        <ZoomControls store={store} size={size} />
         <Legend />
       </div>
       {selected && (
