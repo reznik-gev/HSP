@@ -1,20 +1,11 @@
 // @vitest-environment jsdom
 import { act, cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { useTheme } from "@/lib/theme";
 import { renderApp } from "@/test/renderApp";
-
-beforeEach(() => {
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
-});
 
 afterEach(async () => {
   cleanup();

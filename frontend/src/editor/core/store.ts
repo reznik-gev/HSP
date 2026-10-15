@@ -105,7 +105,7 @@ export interface EditorState {
   problems: readonly EditorProblem[];
   /** Which tab the side panel shows (docs/0090). */
   panelTab: "properties" | "problems";
-  /** Counts `loadDocument` calls, so views can tell a freshly loaded plan from an edit. */
+  /** Counts loaded plans (`loadPlan`, `loadDocument`), so views can tell them from edits. */
   generation: number;
   tool: Tool;
   preview: Preview;
@@ -215,7 +215,13 @@ export function createEditorStore() {
       placing: null,
       placingRotation: 0,
       loadPlan: (plan) =>
-        set({ plan, hitIndex: buildHitIndex(plan), selection: new Set(), drag: null }),
+        set({
+          plan,
+          hitIndex: buildHitIndex(plan),
+          selection: new Set(),
+          drag: null,
+          generation: get().generation + 1,
+        }),
       loadDocument: (document, zoneTypes) => {
         const plan = planFromApi(document, zoneTypes);
         set({

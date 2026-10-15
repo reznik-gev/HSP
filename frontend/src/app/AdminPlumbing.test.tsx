@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AdminOnly } from "@/auth/admin";
 import { type Me, meQuery } from "@/auth/session";
@@ -10,15 +10,6 @@ import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/compo
 import i18n from "@/i18n";
 import { notify, Toaster } from "@/lib/notify";
 import { ADMIN } from "@/test/renderApp";
-
-beforeEach(() => {
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
-});
 
 afterEach(async () => {
   cleanup();

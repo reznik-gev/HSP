@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { ADMIN, renderApp } from "@/test/renderApp";
@@ -33,15 +33,6 @@ const OCCUPANCY = {
     { id: "b2", name: "Annex", code: "AX", counts: counts(0, 0, 0, 0, 0), floors: [] },
   ],
 };
-
-beforeEach(() => {
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
-});
 
 afterEach(async () => {
   cleanup();

@@ -6,7 +6,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import { X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
@@ -15,8 +15,9 @@ import { Button } from "@/components/ui/button";
 import { planFromApi } from "@/editor/core/fromApi";
 import { createEditorStore } from "@/editor/core/store";
 import { ViewerInteraction } from "@/editor/core/viewerInteraction";
-import { PlanView, type RenderOptions, type SeatState } from "@/editor/view-svg/PlanView";
-import { fitPlan, useElementSize, ZoomControls } from "@/editor/view-svg/ZoomControls";
+import { PlanCanvas } from "@/editor/view-svg/PlanCanvas";
+import type { SeatState } from "@/editor/view-svg/PlanView";
+import { fitPlan } from "@/editor/view-svg/ZoomControls";
 import { cn } from "@/lib/utils";
 import { SeatActions } from "@/seats/SeatActions";
 
@@ -32,14 +33,6 @@ import {
 } from "./planData";
 
 const route = getRouteApi("/shell/floors/$floorId");
-
-const OPTIONS: RenderOptions = {
-  labels: true,
-  hatching: false,
-  doorArcs: true,
-  zoneFills: true,
-  lod: true,
-};
 
 const STATES: SeatState[] = ["person", "unit", "free", "bookable", "unavailable"];
 
@@ -129,8 +122,6 @@ function Viewer({
 }) {
   const [store] = useState(createEditorStore);
   const [viewer] = useState(() => new ViewerInteraction(store));
-  const canvas = useRef<HTMLDivElement>(null);
-  const size = useElementSize(canvas);
   const [hover, setHover] = useState<{ id: string; sx: number; sy: number } | null>(null);
   const selection = useStore(store, (s) => s.selection);
   const selected = [...selection].find((id) => states.has(id)) ?? null;
@@ -139,33 +130,30 @@ function Viewer({
   useEffect(() => {
     store.getState().loadPlan(plan);
   }, [store, plan]);
-  useEffect(() => {
-    if (!size) return;
+  const fit = (s: typeof store, size: [number, number]) => {
     const obj = focusSeat ? plan.objects[focusSeat] : undefined;
     if (obj && states.has(obj.id)) {
-      store.getState().select([obj.id]);
+      s.getState().select([obj.id]);
       // Close enough to read labels, far enough to see the neighbours.
-      store.getState().setViewport({ cx: obj.position[0], cy: obj.position[1], mmPerPx: 14 });
-      return;
-    }
-    fitPlan(store, size);
-    // Re-fit when the plan or the requested seat changes, not on every resize.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store, plan, focusSeat, size === null]);
+      s.getState().setViewport({ cx: obj.position[0], cy: obj.position[1], mmPerPx: 14 });
+    } else fitPlan(s, size);
+  };
 
   return (
     <div className="flex min-h-0 flex-1">
-      <div ref={canvas} className="relative min-w-0 flex-1">
-        <PlanView
-          store={store}
-          interaction={viewer}
-          options={OPTIONS}
-          seatStates={states}
-          onHover={(p) => {
+      <PlanCanvas
+        store={store}
+        fitKey={focusSeat}
+        fit={fit}
+        view={{
+          interaction: viewer,
+          seatStates: states,
+          onHover: (p) => {
             const id = p ? viewer.seatAt(p.sx, p.sy) : null;
             setHover(id && p ? { id, sx: p.sx, sy: p.sy } : null);
-          }}
-        />
+          },
+        }}
+      >
         {hover && (
           <SeatTooltip
             seatId={hover.id}
@@ -176,9 +164,8 @@ function Viewer({
             y={hover.sy}
           />
         )}
-        <ZoomControls store={store} size={size} />
         <Legend />
-      </div>
+      </PlanCanvas>
       {selected && (
         <SeatPanel
           seatId={selected}

@@ -11,12 +11,6 @@ import { useSidebar } from "./sidebarState";
 
 beforeAll(() => {
   // jsdom has no matchMedia; the theme code asks it for the system setting.
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
 });
 
 afterEach(async () => {

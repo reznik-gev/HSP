@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { ADMIN, renderApp, type Routes } from "@/test/renderApp";
@@ -91,29 +91,6 @@ function backend(publishedVersion: number | null = 2): Routes {
     },
   };
 }
-
-beforeEach(() => {
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
-  // jsdom has no layout: report a fixed canvas size.
-  vi.stubGlobal(
-    "ResizeObserver",
-    class {
-      constructor(private cb: ResizeObserverCallback) {}
-      observe() {
-        this.cb(
-          [{ contentRect: { width: 800, height: 600 } } as ResizeObserverEntry],
-          this as never,
-        );
-      }
-      disconnect() {}
-    },
-  );
-});
 
 afterEach(async () => {
   cleanup();
