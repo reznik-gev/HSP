@@ -11,7 +11,8 @@
     "expand": "Expand sidebar",
     "people": "People",
     "org": "Teams",
-    "imports": "Imports"
+    "imports": "Imports",
+    "catalog": "Catalog"
   },
   "settings": {
     "language": "Language",
@@ -613,5 +614,46 @@
       "howToPaste": "Ctrl+V pastes in place, Ctrl+Shift+V at the pointer, on this floor or another.",
       "empty": "Nothing to paste. Select something and press Ctrl+C first."
     }
+  },
+  "catalog": {
+    "title": "Catalog",
+    "adminsOnly": "Only administrators can manage the catalog.",
+    "search": "Search the catalog",
+    "show": {
+      "label": "Show",
+      "all": "All items",
+      "builtin": "Built-in",
+      "custom": "Our own",
+      "archived": "Archived"
+    },
+    "none": "No items match.",
+    "loadFailed": "Couldn't load the catalog. Reload the page to try again.",
+    "sizeCm": "{{size}} cm",
+    "badges": {
+      "builtin": "Built-in",
+      "seat": "Seat",
+      "mountable": "Mountable",
+      "attaches": "Attaches to {{to}}",
+      "blocks": "Takes floor space"
+    },
+    "details": "Details",
+    "previewLabel": "{{name}} seen from above",
+    "fields": {
+      "shape": "Shape",
+      "size": "Size (W × D × H)",
+      "color": "Colour",
+      "key": "Key"
+    },
+    "shapes": {
+      "box": "Box",
+      "cylinder": "Cylinder",
+      "l_shape": "L-shape",
+      "model": "Model"
+    },
+    "builtinNote": "Built-in items come with HSP and can't be changed. Make a copy to change one.",
+    "archivedNote": "This item is archived: it isn't offered in the editor, but items already placed keep working.",
+    "makeCopy": "Make a copy",
+    "copyName": "{{name}} (copy)",
+    "copied": "{{name}} created. Change it as you need."
   }
 }

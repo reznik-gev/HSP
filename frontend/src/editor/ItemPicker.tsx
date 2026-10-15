@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
+import { categoryName } from "@/catalog/data";
 import { Input } from "@/components/ui/field";
 import type { EditorStore } from "@/editor/core/store";
 import { formatLength } from "@/editor/core/units";
@@ -52,7 +53,7 @@ export function ItemPicker({ store }: { store: EditorStore }) {
         {categories.map((category) => (
           <section key={category} className="mb-3">
             <h3 className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase">
-              {t(`editor.categories.${category}`, { defaultValue: category })}
+              {categoryName(t, category)}
             </h3>
             <ul>
               {matches
