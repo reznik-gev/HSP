@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
+import { page } from "@/test/fixtures";
 import { ADMIN, renderApp, type Reply } from "@/test/renderApp";
 
 import { templateCsv } from "./templates";
@@ -109,7 +110,7 @@ describe("imports (docs/0088)", () => {
   it("is hidden from viewers", async () => {
     await renderApp("/floors", {
       "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } },
-      "GET /api/v1/sites": { status: 200, body: { items: [], next_cursor: null } },
+      "GET /api/v1/sites": { status: 200, body: page([]) },
     });
     const nav = await screen.findByRole("navigation", { name: "Main" });
     await waitFor(() => expect(nav).toHaveTextContent("Teams"));

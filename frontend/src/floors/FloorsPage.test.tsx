@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
+import { page } from "@/test/fixtures";
 import { ADMIN, renderApp } from "@/test/renderApp";
 
 const SITE = { id: "s1", name: "Tel Aviv HQ", time_zone: "Asia/Jerusalem", address: null };
@@ -41,7 +42,7 @@ afterEach(async () => {
 });
 
 const withSite = {
-  "GET /api/v1/sites": { status: 200, body: { items: [SITE], next_cursor: null } },
+  "GET /api/v1/sites": { status: 200, body: page([SITE]) },
   "GET /api/v1/occupancy/sites/s1": { status: 200, body: OCCUPANCY },
 };
 
@@ -73,7 +74,7 @@ describe("floors page (docs/0085, docs/0087)", () => {
 
   it("says what to do when there are no sites yet", async () => {
     await renderApp("/floors", {
-      "GET /api/v1/sites": { status: 200, body: { items: [], next_cursor: null } },
+      "GET /api/v1/sites": { status: 200, body: page([]) },
     });
     expect(await screen.findByText(/No sites yet/)).toBeInTheDocument();
   });
