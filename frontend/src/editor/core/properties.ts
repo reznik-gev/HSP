@@ -4,7 +4,7 @@
  * new value into operations (docs/0050). Lengths are integer mm and angles decidegrees here;
  * the panel parses and formats them in the user's units (docs/0046). Pure, like the core.
  */
-import { moveJunction, wallsAt } from "./edits";
+import { setWallLength } from "./edits";
 import type { ApiPlan, Kind, Op } from "./operations";
 import { polygonArea } from "./geometry";
 import type { Plan, Vec2 } from "./plan";
@@ -73,22 +73,7 @@ const WALL: Field[] = [
     kind: "length",
     get: (el) => Math.round(len(vec(el.a), vec(el.b))),
     // The far end moves along the wall; walls joined there follow (docs/0044).
-    set: (el, v, ctx) => {
-      if (!positive(v)) return null;
-      const a = vec(el.a);
-      const b = vec(el.b);
-      const l = len(a, b);
-      const to: Vec2 = [
-        Math.round(a[0] + ((b[0] - a[0]) / l) * v),
-        Math.round(a[1] + ((b[1] - a[1]) / l) * v),
-      ];
-      const ops = moveJunction(ctx.plan, wallsAt(ctx.plan, b), b, to);
-      // A door or window must still fit (opening_exceeds_wall, docs/0081).
-      const tooLong = ctx.plan.openings.some(
-        (o) => o.wall_id === el.id && o.offset_mm + o.width_mm > v,
-      );
-      return ops.length && !tooLong ? ops : null;
-    },
+    set: (el, v, ctx) => (typeof v === "number" ? setWallLength(ctx.plan, el.id, v) : null),
   },
   size("wall", "thickness_mm", "thickness"),
   size("wall", "height_mm", "height"),

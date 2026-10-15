@@ -569,6 +569,14 @@
       "length": "Length",
       "angle": "Angle",
       "invalid": "Type a length, e.g. 350 or 3.5m."
+    },
+    "dimensions": {
+      "length": "Length on the plan",
+      "east": "Distance to the wall east",
+      "north": "Distance to the wall north",
+      "west": "Distance to the wall west",
+      "south": "Distance to the wall south",
+      "edit": "{{what}}: {{value}}. Click to change."
     }
   }
 }

@@ -413,6 +413,27 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     expect(changesets[0]!.ops[0]).toMatchObject({ data: { a: [0, 3000], b: [0, 6500] } });
   });
 
+  it("a selected wall shows its length on the plan; clicking it lets you type a new one", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    click([6000, 50]);
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Length on the plan: 800 cm. Click to change." }),
+    );
+    const input = screen.getByRole("textbox", { name: "Length on the plan" });
+    expect(input).toHaveValue("800");
+    await userEvent.clear(input);
+    await userEvent.type(input, "600{Enter}");
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops).toEqual([
+      { op: "update", kind: "wall", id: "w1", data: { b: [6000, 0] } },
+    ]);
+    expect(
+      await screen.findByRole("button", { name: "Length on the plan: 600 cm. Click to change." }),
+    ).toBeVisible();
+  });
+
   it("Exit saves what's waiting before leaving", async () => {
     const { routes, changesets } = saving();
     const { calls: sent } = await renderApp("/floors/f3/edit", routes);

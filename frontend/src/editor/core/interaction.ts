@@ -33,6 +33,7 @@ import { fitOnWall, OpeningTool } from "./tools/openingTool";
 import { WallTool } from "./tools/wallTool";
 import { ZoneTool } from "./tools/zoneTool";
 import { isClick, PanZoom } from "./panZoom";
+import { planToScreen } from "./viewport";
 
 export interface PointerInput {
   sx: number;
@@ -326,6 +327,12 @@ export class Interaction {
 
   wheel(sx: number, sy: number, deltaY: number): void {
     this.view.wheel(sx, sy, deltaY);
+  }
+
+  /** A plan point on the canvas, in screen pixels (for labels drawn over the plan). */
+  screenOf(p: Vec2): [number, number] {
+    const [sx, sy] = planToScreen(this.store.getState().viewport, this.view.size, p);
+    return [sx, sy];
   }
 
   /** Where the pointer last was on the canvas (screen px), e.g. to open a box there. */
