@@ -2295,6 +2295,8 @@ export interface components {
         Preferences: {
             /** Display Units */
             display_units?: ("cm" | "m" | "mm") | null;
+            /** Grid Mm */
+            grid_mm?: (10 | 50 | 100 | 500) | null;
             /** Language */
             language?: ("en" | "he") | null;
             /** Theme */

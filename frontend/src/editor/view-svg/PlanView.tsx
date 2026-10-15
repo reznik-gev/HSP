@@ -63,6 +63,8 @@ export interface PlanViewProps {
   onStaticPainted?: () => void;
   /** Called after a pointer-down that changed the selection has been painted. */
   onSelectionPainted?: (sinceDownMs: number) => void;
+  /** Drawn under the plan, in plan millimetres (y up): the editor's grid. */
+  underlay?: ReactNode;
   /** Drawn on top, in plan millimetres (y up): the editor's handles and previews. */
   overlay?: ReactNode;
 }
@@ -113,6 +115,7 @@ export function PlanView({
   onHover,
   onStaticPainted,
   onSelectionPainted,
+  underlay,
   overlay,
 }: PlanViewProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -202,6 +205,7 @@ export function PlanView({
         </pattern>
       </defs>
       <g className="plan" transform="scale(1,-1)">
+        {underlay}
         {plan && (
           <StaticLayer
             plan={plan}

@@ -75,7 +75,7 @@ function UnitSwitch({ store }: { store: EditorStore }) {
       <Select
         id="display-unit"
         value={unit}
-        className="h-7 w-36"
+        className="h-7 w-40"
         onChange={(e) => {
           const next = e.target.value as DisplayUnit;
           store.getState().setDisplayUnit(next);

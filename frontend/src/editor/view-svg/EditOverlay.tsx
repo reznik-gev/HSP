@@ -4,6 +4,7 @@
  * tool is about to place, a junction or zone corner being dragged, and the snap marker. Plan millimetres inside
  * PlanView's y-up group; sizes meant in screen pixels are scaled by the zoom.
  */
+import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
 import type { Vec2, Wall } from "@/editor/core/plan";
@@ -155,17 +156,11 @@ export function EditOverlay({ store }: { store: EditorStore }) {
           data-testid="wall-preview"
         />
       )}
-      {preview && "snap" in preview && preview.snap === "endpoint" && "to" in preview && (
-        <rect
-          className="plan-selected"
-          x={preview.to[0] - 6 * px}
-          y={preview.to[1] - 6 * px}
-          width={12 * px}
-          height={12 * px}
-          fill="none"
-          strokeWidth={2 * px}
-        />
-      )}
+      {preview &&
+        "snap" in preview &&
+        "to" in preview &&
+        preview.snap &&
+        preview.snap !== "grid" && <SnapMarker at={preview.to} kind={preview.snap} px={px} />}
       {(preview?.kind === "wall" || preview?.kind === "zone") && (
         <circle
           className="plan-selected"
@@ -207,6 +202,60 @@ function Span({
       strokeOpacity={0.5}
       data-testid={testId}
     />
+  );
+}
+
+/** What the pointer snapped to (docs/0047): a shape at the point and a short label. */
+function SnapMarker({
+  at,
+  kind,
+  px,
+}: {
+  at: Vec2;
+  kind: "endpoint" | "midpoint" | "centreline";
+  px: number;
+}) {
+  const { t } = useTranslation();
+  const r = 6 * px;
+  const [x, y] = at;
+  return (
+    <g data-testid="snap-marker" data-snap={kind}>
+      {kind === "endpoint" && (
+        <rect
+          className="plan-selected"
+          x={x - r}
+          y={y - r}
+          width={2 * r}
+          height={2 * r}
+          fill="none"
+          strokeWidth={2 * px}
+        />
+      )}
+      {kind === "midpoint" && (
+        <polygon
+          className="plan-selected"
+          points={`${x},${y - r} ${x + r},${y} ${x},${y + r} ${x - r},${y}`}
+          fill="none"
+          strokeWidth={2 * px}
+        />
+      )}
+      {kind === "centreline" && (
+        <path
+          className="plan-selected"
+          d={`M${x - r} ${y - r}L${x + r} ${y + r}M${x - r} ${y + r}L${x + r} ${y - r}`}
+          strokeWidth={2 * px}
+        />
+      )}
+      {/* Text is counter-flipped: the plan group draws +y upwards. */}
+      <text
+        transform={`translate(${x + 10 * px} ${y + 10 * px}) scale(1 -1)`}
+        fontSize={12 * px}
+        fill="var(--primary)"
+        className="plan-snap-label"
+      >
+        {t(`editor.snap.${kind}`)}
+      </text>
+    </g>
   );
 }
 
