@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
 import type { Vec2, Wall } from "@/editor/core/plan";
+import { arrayLayout } from "@/editor/core/array";
 import type { EditorStore } from "@/editor/core/store";
 
 export function EditOverlay({ store }: { store: EditorStore }) {
@@ -19,6 +20,8 @@ export function EditOverlay({ store }: { store: EditorStore }) {
   const thickness = useStore(store, (s) => s.wallDefaults.thickness_mm);
   const drag = useStore(store, (s) => s.drag);
   const placing = useStore(store, (s) => s.placing);
+  const arrayDraft = useStore(store, (s) => s.arrayDraft);
+  const document = useStore(store, (s) => s.document);
   if (!plan) return null;
   const wallsById = new Map(plan.walls.map((w) => [w.id, w]));
   const opening = preview?.kind === "opening" ? preview : null;
@@ -142,6 +145,31 @@ export function EditOverlay({ store }: { store: EditorStore }) {
           data-testid="item-preview"
         />
       )}
+      {arrayDraft &&
+        document &&
+        arrayLayout(document, selection, arrayDraft).map((copy, i) => {
+          const item =
+            document.catalog[
+              document.objects.find((o) => o.id === copy.sourceId)?.catalog_item_rev_id ?? ""
+            ];
+          if (!item) return null;
+          return (
+            <rect
+              key={i}
+              className="plan-selected"
+              transform={`translate(${copy.position[0]} ${copy.position[1]}) rotate(${copy.rotation_ddeg / 10})`}
+              x={-item.width_mm / 2}
+              y={-item.depth_mm / 2}
+              width={item.width_mm}
+              height={item.depth_mm}
+              fill="var(--primary)"
+              fillOpacity={0.15}
+              strokeWidth={1.5 * px}
+              strokeDasharray={`${4 * px} ${3 * px}`}
+              data-testid="array-copy"
+            />
+          );
+        })}
       {preview?.kind === "column" && (
         <polygon
           className="plan-selected"

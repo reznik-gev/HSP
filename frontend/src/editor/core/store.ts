@@ -10,6 +10,7 @@
  */
 import { createStore } from "zustand/vanilla";
 
+import type { ArraySpec } from "./array";
 import type { PlanCatalogItem, WallDefaults } from "./edits";
 import { planFromApi } from "./fromApi";
 import { buildHitIndex, type HitIndex, moveObjects, withAttachments } from "./hitTest";
@@ -114,6 +115,8 @@ export interface EditorState {
   /** Applied changes not yet saved, oldest first. */
   pending: readonly PendingChange[];
   problems: readonly EditorProblem[];
+  /** The array being set up for the selection (docs/0049), shown on the plan; null if none. */
+  arrayDraft: ArraySpec | null;
   /** The typed-measurement box (docs/0045): where it opened and what was typed first. */
   measure: { sx: number; sy: number; first: string } | null;
   /** Which tab the side panel shows (docs/0090). */
@@ -147,6 +150,7 @@ export interface EditorState {
   dismissProblem(id: string): void;
   setPanelTab(tab: "properties" | "problems"): void;
   setMeasure(measure: EditorState["measure"]): void;
+  setArrayDraft(spec: ArraySpec | null): void;
   select(ids: Iterable<string>, additive?: boolean): void;
   clearSelection(): void;
   setViewport(viewport: Viewport): void;
@@ -236,6 +240,7 @@ export function createEditorStore() {
       problems: [],
       panelTab: "properties",
       measure: null,
+      arrayDraft: null,
       generation: 0,
       tool: "select",
       preview: null,
@@ -319,13 +324,14 @@ export function createEditorStore() {
       dismissProblem: (id) => set({ problems: get().problems.filter((p) => p.id !== id) }),
       setPanelTab: (panelTab) => set({ panelTab }),
       setMeasure: (measure) => set({ measure }),
+      setArrayDraft: (arrayDraft) => set({ arrayDraft }),
       select: (ids, additive = false) => {
         const { plan, selection } = get();
         if (!plan) return;
         const base = additive ? [...selection, ...ids] : [...ids];
-        set({ selection: withAttachments(plan, base) });
+        set({ selection: withAttachments(plan, base), arrayDraft: null });
       },
-      clearSelection: () => set({ selection: new Set() }),
+      clearSelection: () => set({ selection: new Set(), arrayDraft: null }),
       setViewport: (viewport) => set({ viewport }),
       setDrag: (drag) => set({ drag }),
       commitDrag: () => {
