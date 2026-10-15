@@ -12,7 +12,7 @@ import { planToScreen } from "./viewport";
 
 export { STUB_DESK_ITEM };
 
-// An L: w1 and w2 meet at (4000, 0); a stubDoor on w1; stubDesk d1 with stubMonitor m1 on it.
+// An L: w1 and w2 meet at (4000, 0); a door on w1; desk d1 with monitor m1 on it.
 export const PLAN = stubPlan({
   walls: [stubWall("w1", [0, 0], [4000, 0]), stubWall("w2", [4000, 0], [4000, 3000])],
   openings: [stubDoor("o1", "w1", 500)],
