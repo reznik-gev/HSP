@@ -563,6 +563,12 @@
       "snapHint": "Snap to the grid (G). Hold Alt to place freely.",
       "size": "Grid size",
       "cm": "{{cm}} cm"
+    },
+    "measure": {
+      "label": "Exact measurement",
+      "length": "Length",
+      "angle": "Angle",
+      "invalid": "Type a length, e.g. 350 or 3.5m."
     }
   }
 }

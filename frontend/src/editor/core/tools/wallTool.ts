@@ -2,13 +2,15 @@
  * The wall tool (docs/0044, docs/0089): click to start, click again for each corner; every
  * segment is its own wall and its own undo step, starting where the last one ended, so walls
  * join exactly. Clicking the chain's first point closes the room and ends the chain, as do
- * Enter, Escape and the right mouse button. Points snap as docs/0047 says (see snap.ts).
+ * Enter, Escape and the right mouse button. Points snap as docs/0047 says (see snap.ts); a
+ * typed length (and angle) places the next corner exactly (docs/0045).
  *
  * The chain lives in the store's preview, so switching tools always ends it.
  */
 import { addWall } from "../edits";
 import type { Vec2 } from "../plan";
-import { snapPoint, snapSettings } from "../snap";
+import { type Measure, measuredPoint } from "../measure";
+import { type SnapKind, snapPoint, snapSettings } from "../snap";
 import type { EditorStore } from "../store";
 
 const same = (p: Vec2, q: Vec2) => p[0] === q[0] && p[1] === q[1];
@@ -39,10 +41,30 @@ export class WallTool {
   }
 
   click(p: Vec2): void {
-    const s = this.store.getState();
-    if (!s.plan) return;
-    const { start, from } = this.chain();
+    if (!this.store.getState().plan) return;
     const { point, kind } = this.snap(p);
+    this.corner(point, kind);
+  }
+
+  /**
+   * Places the next corner `m` away from the last one (typed, docs/0045): in the typed
+   * direction, or towards the pointer. Returns false when no chain is being drawn.
+   */
+  placeTyped(m: Measure): boolean {
+    const preview = this.store.getState().preview;
+    if (preview?.kind !== "wall" || !preview.from) return false;
+    this.corner(measuredPoint(preview.from, preview.to, m), null);
+    return true;
+  }
+
+  /** The chain being drawn, if any: typing a length then places its next corner. */
+  drawing(): boolean {
+    return Boolean(this.chain().from);
+  }
+
+  private corner(point: Vec2, kind: SnapKind): void {
+    const s = this.store.getState();
+    const { start, from } = this.chain();
     if (!from || !start) {
       s.setPreview({ kind: "wall", start: point, from: point, to: point, snap: kind });
       return;

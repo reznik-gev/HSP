@@ -22,6 +22,7 @@ import {
 import { alongSegment } from "./geometry";
 import { viewportFor } from "./focus";
 import { type ItemShape, placeItem } from "./furnitureSnap";
+import type { Measure } from "./measure";
 import { hitTest, zoneAt } from "./hitTest";
 import type { Vec2 } from "./plan";
 import { SNAP_PX, snapPoint, snapSettings } from "./snap";
@@ -211,6 +212,7 @@ export class Interaction {
   }
 
   pointerMove(e: PointerInput): void {
+    this.lastPointer = { sx: e.sx, sy: e.sy };
     this.store.getState().setSnapFree(Boolean(e.alt));
     const s = this.store.getState();
     const g = this.gesture;
@@ -324,6 +326,40 @@ export class Interaction {
 
   wheel(sx: number, sy: number, deltaY: number): void {
     this.view.wheel(sx, sy, deltaY);
+  }
+
+  /** Where the pointer last was on the canvas (screen px), e.g. to open a box there. */
+  lastPointer: { sx: number; sy: number } = { sx: 0, sy: 0 };
+
+  /**
+   * What a typed measurement would do now (docs/0045): place the next wall corner, move what
+   * is being dragged, or nothing.
+   */
+  measureTarget(): "wall" | "move" | null {
+    const s = this.store.getState();
+    if (this.gesture.kind === "drag" && this.gesture.moved && s.drag) return "move";
+    if (s.tool === "wall" && this.wallTool.drawing()) return "wall";
+    return null;
+  }
+
+  /** Applies a typed measurement; returns false when there's nothing to apply it to. */
+  applyMeasure(m: Measure): boolean {
+    const s = this.store.getState();
+    const target = this.measureTarget();
+    if (target === "wall") return this.wallTool.placeTyped(m);
+    if (target === "move" && s.drag) {
+      // Exactly that far along the drag (docs/0045).
+      const len = Math.hypot(s.drag.dx, s.drag.dy);
+      if (!len) return false;
+      s.setDrag({
+        dx: Math.round((s.drag.dx / len) * m.lengthMm),
+        dy: Math.round((s.drag.dy / len) * m.lengthMm),
+      });
+      s.commitDrag();
+      this.gesture = { kind: "none" };
+      return true;
+    }
+    return false;
   }
 
   /** Keyboard commands; returns whether the key was used. */

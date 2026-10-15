@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 
 import { EditorTopBar } from "./EditorTopBar";
 import { GridControls } from "./GridControls";
+import { MeasureInput } from "./MeasureInput";
 import { HistorySheet } from "./publish/HistorySheet";
 import { PublishDialog } from "./publish/PublishDialog";
 import { useDraftActions } from "./publish/useDraftActions";
@@ -193,13 +194,16 @@ function Canvas({
         overlay: <EditOverlay store={store} />,
       }}
       className={cn(editable && tool !== "select" && "cursor-crosshair")}
-      // Working on the plan takes the keyboard away from any field, for the editor's shortcuts.
-      onPointerDownCapture={() => {
+      // Working on the plan takes the keyboard away from any field, for the editor's shortcuts;
+      // the boxes and bars over the plan keep it.
+      onPointerDownCapture={(e) => {
+        if (!(e.target instanceof Element) || !e.target.closest("svg[data-lod]")) return;
         if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
       }}
     >
       {editable && <ToolOptions store={store} />}
       {editable && <GridControls store={store} />}
+      {editable && <MeasureInput store={store} interaction={interaction} />}
     </PlanCanvas>
   );
 }

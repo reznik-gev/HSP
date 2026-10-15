@@ -3,7 +3,8 @@
  * - Ctrl+Z undoes, Ctrl+Shift+Z or Ctrl+Y redoes (docs/0050);
  * - a tool's letter picks it (V select, W wall, …);
  * - Escape, Enter, Delete and Backspace go to the current tool (end a wall chain, delete the
- *   selection, …).
+ *   selection, …);
+ * - a digit while drawing a wall or dragging opens the typed-measurement box (docs/0045).
  */
 import { useEffect } from "react";
 
@@ -25,6 +26,8 @@ export function useEditorKeys(store: EditorStore, interaction: Interaction, enab
         else return;
       } else if (e.altKey) {
         return;
+      } else if (/^[0-9.,]$/.test(e.key) && interaction.measureTarget()) {
+        store.getState().setMeasure({ ...interaction.lastPointer, first: e.key });
       } else {
         const tool = TOOLS.find((x) => x.key.toLowerCase() === key);
         if (tool) store.getState().setTool(tool.tool);
