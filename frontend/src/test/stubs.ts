@@ -72,6 +72,8 @@ export const STUB_MONITOR_ITEM = {
   depth_mm: 200,
   height_mm: 450,
   is_seat: false,
+  // Stands on the desk top (z = 740), so it must be mountable to be valid (docs/0081).
+  mountable: true,
   attaches_to_categories: ["desk"],
 };
 

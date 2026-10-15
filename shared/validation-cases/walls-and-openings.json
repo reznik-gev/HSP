@@ -1,0 +1,41 @@
+{
+  "rule": "walls and their doors and windows",
+  "cases": [
+    {
+      "name": "a valid wall with a door",
+      "plan": {
+        "walls": [{ "id": "w1", "a": [0, 0], "b": [4000, 0], "thickness_mm": 150, "height_mm": 3000 }],
+        "openings": [
+          { "id": "o1", "wall_id": "w1", "type": "door", "offset_mm": 3100, "width_mm": 900, "height_mm": 2100, "sill_mm": 0, "swing": "left_in" }
+        ]
+      },
+      "expect": []
+    },
+    {
+      "name": "a wall whose two ends are the same point",
+      "plan": {
+        "walls": [{ "id": "w1", "a": [500, 500], "b": [500, 500], "thickness_mm": 150, "height_mm": 3000 }]
+      },
+      "expect": [{ "code": "wall_degenerate", "element_id": "w1" }]
+    },
+    {
+      "name": "a door ending past the wall end",
+      "plan": {
+        "walls": [{ "id": "w1", "a": [0, 0], "b": [4000, 0], "thickness_mm": 150, "height_mm": 3000 }],
+        "openings": [
+          { "id": "o1", "wall_id": "w1", "type": "door", "offset_mm": 3200, "width_mm": 900, "height_mm": 2100, "sill_mm": 0, "swing": "left_in" }
+        ]
+      },
+      "expect": [{ "code": "opening_exceeds_wall", "element_id": "o1" }]
+    },
+    {
+      "name": "a window on a wall that doesn't exist",
+      "plan": {
+        "openings": [
+          { "id": "o1", "wall_id": "w9", "type": "window", "offset_mm": 0, "width_mm": 1200, "height_mm": 1200, "sill_mm": 900, "swing": "none" }
+        ]
+      },
+      "expect": [{ "code": "reference_missing", "element_id": "o1" }]
+    }
+  ]
+}

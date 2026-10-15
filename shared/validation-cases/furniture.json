@@ -1,0 +1,77 @@
+{
+  "rule": "furniture, seats and devices",
+  "catalog": {
+    "desk": { "id": "desk", "item_id": "i-desk", "key": "desk", "category": "desk", "name": "Desk", "shape": "box", "width_mm": 1600, "depth_mm": 800, "height_mm": 740, "color": null, "is_seat": true, "mountable": false, "attaches_to_categories": [], "footprint_blocks": true },
+    "dock": { "id": "dock", "item_id": "i-dock", "key": "dock", "category": "device", "name": "Docking station", "shape": "box", "width_mm": 200, "depth_mm": 80, "height_mm": 30, "color": null, "is_seat": false, "mountable": false, "attaches_to_categories": ["desk"], "footprint_blocks": false },
+    "shelf": { "id": "shelf", "item_id": "i-shelf", "key": "shelf", "category": "storage", "name": "Wall shelf", "shape": "box", "width_mm": 800, "depth_mm": 250, "height_mm": 30, "color": null, "is_seat": false, "mountable": true, "attaches_to_categories": [], "footprint_blocks": false }
+  },
+  "devices": ["laptop-1"],
+  "cases": [
+    {
+      "name": "a desk with a docking station on it and a shelf on the wall",
+      "plan": {
+        "objects": [
+          { "id": "d1", "catalog_item_rev_id": "desk", "position": [2000, 1500, 0], "rotation_ddeg": 0, "label": "A-01", "attached_to": null, "device_id": null, "allocation_mode": "assigned" },
+          { "id": "k1", "catalog_item_rev_id": "dock", "position": [2300, 1500, 0], "rotation_ddeg": 0, "label": null, "attached_to": "d1", "device_id": "laptop-1", "allocation_mode": null },
+          { "id": "s1", "catalog_item_rev_id": "shelf", "position": [0, 3000, 1500], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": null, "allocation_mode": null }
+        ]
+      },
+      "expect": []
+    },
+    {
+      "name": "an item from a catalog entry that doesn't exist",
+      "plan": {
+        "objects": [
+          { "id": "x1", "catalog_item_rev_id": "sofa", "position": [0, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": null, "allocation_mode": null }
+        ]
+      },
+      "expect": [{ "code": "reference_missing", "element_id": "x1" }]
+    },
+    {
+      "name": "a desk lifted off the floor",
+      "plan": {
+        "objects": [
+          { "id": "d1", "catalog_item_rev_id": "desk", "position": [0, 0, 300], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": null, "allocation_mode": "assigned" }
+        ]
+      },
+      "expect": [{ "code": "not_mountable", "element_id": "d1" }]
+    },
+    {
+      "name": "a seat without a use, and a shelf with one",
+      "plan": {
+        "objects": [
+          { "id": "d1", "catalog_item_rev_id": "desk", "position": [0, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": null, "allocation_mode": null },
+          { "id": "s1", "catalog_item_rev_id": "shelf", "position": [3000, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": null, "allocation_mode": "bookable" }
+        ]
+      },
+      "expect": [
+        { "code": "allocation_mode_required", "element_id": "d1" },
+        { "code": "allocation_mode_not_seat", "element_id": "s1" }
+      ]
+    },
+    {
+      "name": "a docking station on a shelf, and one on a desk that isn't there",
+      "plan": {
+        "objects": [
+          { "id": "s1", "catalog_item_rev_id": "shelf", "position": [0, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": null, "allocation_mode": null },
+          { "id": "k1", "catalog_item_rev_id": "dock", "position": [0, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": "s1", "device_id": null, "allocation_mode": null },
+          { "id": "k2", "catalog_item_rev_id": "dock", "position": [500, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": "d9", "device_id": null, "allocation_mode": null }
+        ]
+      },
+      "expect": [
+        { "code": "attach_not_allowed", "element_id": "k1" },
+        { "code": "reference_missing", "element_id": "k2" }
+      ]
+    },
+    {
+      "name": "the same device placed twice",
+      "plan": {
+        "objects": [
+          { "id": "k1", "catalog_item_rev_id": "dock", "position": [0, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": "laptop-1", "allocation_mode": null },
+          { "id": "k2", "catalog_item_rev_id": "dock", "position": [500, 0, 0], "rotation_ddeg": 0, "label": null, "attached_to": null, "device_id": "laptop-1", "allocation_mode": null }
+        ]
+      },
+      "expect": [{ "code": "device_placed_twice", "element_id": "k2" }]
+    }
+  ]
+}

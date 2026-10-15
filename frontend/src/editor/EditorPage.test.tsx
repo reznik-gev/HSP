@@ -502,6 +502,29 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     expect(screen.getByLabelText("Seat label")).toHaveValue("");
   });
 
+  it("the editor's own checks show in Problems while there's something to fix", async () => {
+    await renderApp(
+      "/floors/f3/edit",
+      backend({
+        // A desk without a seat use: the server would refuse it.
+        "GET /api/v1/floors/f3/draft": {
+          status: 200,
+          body: { ...plan(3, "draft"), objects: [{ ...DESK, allocation_mode: null }] },
+        },
+      }),
+    );
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.click(screen.getByRole("tab", { name: /Problems\s*1/ }));
+    const panel = screen.getByRole("complementary", { name: "Problems" });
+    expect(within(panel).getByText(/A seat needs a use/)).toBeVisible();
+    expect(within(panel).queryByRole("button", { name: "Dismiss" })).toBeNull();
+    // Fixing it in Properties clears it.
+    await userEvent.click(within(panel).getByRole("button", { name: /A seat needs a use/ }));
+    await userEvent.click(screen.getByRole("tab", { name: "Properties" }));
+    await userEvent.selectOptions(screen.getByLabelText("Seat use"), "Bookable");
+    expect(screen.getByRole("tab", { name: "Problems" })).toBeVisible();
+  });
+
   it("Exit saves what's waiting before leaving", async () => {
     const { routes, changesets } = saving();
     const { calls: sent } = await renderApp("/floors/f3/edit", routes);

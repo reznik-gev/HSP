@@ -1,7 +1,8 @@
 /**
- * The Problems tab (docs/0090): what the server refused (and, from phase 3b, what the editor's
- * own checks find), newest first. Clicking one selects its element and brings it into view;
- * × dismisses it. Messages are translated by code, with the server's English as a fallback.
+ * The Problems tab (docs/0090): what the editor's own checks find right now (docs/0051), which
+ * goes away once fixed, then what the server refused, newest first, which × dismisses.
+ * Clicking one selects its element and brings it into view. Messages are translated by code,
+ * with the server's English as a fallback.
  */
 import { OctagonX, TriangleAlert, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -38,7 +39,19 @@ export function ProblemsPanel({
   interaction: Interaction;
 }) {
   const { t } = useTranslation();
-  const problems = useStore(store, (s) => s.problems);
+  const refused = useStore(store, (s) => s.problems);
+  const findings = useStore(store, (s) => s.findings);
+  const problems = [
+    ...findings.map((f) => ({
+      id: `live:${f.code}:${f.elementId}`,
+      severity: f.severity,
+      code: f.code,
+      message: "",
+      elementId: f.elementId,
+      live: true,
+    })),
+    ...[...refused].reverse().map((p) => ({ ...p, live: false })),
+  ];
   const plan = useStore(store, (s) => s.plan);
   const nameOf = useElementName();
   if (!problems.length) {
@@ -46,7 +59,7 @@ export function ProblemsPanel({
   }
   return (
     <ul className="min-h-0 flex-1 divide-y overflow-y-auto">
-      {[...problems].reverse().map((p) => {
+      {problems.map((p) => {
         const name = nameOf(plan, p.elementId);
         const Icon = p.severity === "error" ? OctagonX : TriangleAlert;
         return (
@@ -72,15 +85,17 @@ export function ProblemsPanel({
                 {name ?? t("editor.problems.gone")}
               </span>
             </button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              aria-label={t("editor.problems.dismiss")}
-              onClick={() => store.getState().dismissProblem(p.id)}
-            >
-              <X aria-hidden />
-            </Button>
+            {!p.live && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                aria-label={t("editor.problems.dismiss")}
+                onClick={() => store.getState().dismissProblem(p.id)}
+              >
+                <X aria-hidden />
+              </Button>
+            )}
           </li>
         );
       })}
