@@ -8,7 +8,7 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 
 import type { Problem } from "@/api/problems";
-import type { EditorStore, ZoneTypes } from "@/editor/core/store";
+import type { EditorStore, PendingChange, ZoneTypes } from "@/editor/core/store";
 
 import { Autosave, type SaveState } from "./autosave";
 import type { EditorPlan } from "./editorPlan";
@@ -16,8 +16,10 @@ import type { EditorPlan } from "./editorPlan";
 const IDLE = createStore<SaveState>()(() => ({ status: "saved", version: null }));
 
 export interface EditSessionEvents {
-  /** Load the draft again: it changed elsewhere, or the server refused a change. */
-  onReload(reason: "stale" | "rejected", problem: Problem | null): void;
+  /** Load the draft again: it changed elsewhere. */
+  onStale(): void;
+  /** The server refused a change; it has been taken back already. */
+  onRejected(problem: Problem | null, change: PendingChange): void;
   onLockLost(): void;
 }
 
@@ -48,8 +50,8 @@ export function useEditSession(
         ? { revision: plan.revision, version: plan.version }
         : { revision: 0, version: null },
       {
-        onStale: () => events.onReload("stale", null),
-        onRejected: (problem) => events.onReload("rejected", problem),
+        onStale: () => events.onStale(),
+        onRejected: (problem, change) => events.onRejected(problem, change),
         onLockLost: () => events.onLockLost(),
       },
     );
@@ -67,7 +69,7 @@ export function useEditSession(
   // Closing the tab with changes still on their way asks first.
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (store.getState().outbox.length || autosave?.state.getState().status === "saving") {
+      if (store.getState().pending.length || autosave?.state.getState().status === "saving") {
         e.preventDefault();
       }
     };

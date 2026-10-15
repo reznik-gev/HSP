@@ -98,3 +98,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0087 | 2026-10-13 | [Frontend delivery plan: viewer first, English and Hebrew, desktop](0087-2026-10-13-frontend-delivery-plan.md) | Accepted |
 | 0088 | 2026-10-14 | [Admin screens (frontend phase 2)](0088-2026-10-14-admin-screens.md) | Accepted |
 | 0089 | 2026-10-15 | [The floor editor (frontend phase 3)](0089-2026-10-15-floor-editor.md) | Accepted |
+| 0090 | 2026-10-15 | [The editor's Problems panel and refused changes](0090-2026-10-15-problems-panel.md) | Accepted |

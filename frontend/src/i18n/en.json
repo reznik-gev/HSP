@@ -379,7 +379,7 @@
       "paused": "Not saved: editing stopped"
     },
     "reloaded": "This draft changed elsewhere, so it was loaded again.",
-    "rejected": "That change couldn't be saved, so the draft was loaded again.",
+    "rejected": "A change couldn't be saved, so it was undone. See Problems.",
     "unsavedExit": "Your latest changes aren't saved yet. Choose Exit again to leave without them.",
     "tools": {
       "label": "Tools",
@@ -471,6 +471,34 @@
       },
       "newWallThickness": "New wall thickness",
       "panel": "Properties"
+    },
+    "panel": {
+      "properties": "Properties",
+      "problems": "Problems"
+    },
+    "problems": {
+      "none": "No problems. Changes the server refuses show up here, with where they are.",
+      "error": "Error",
+      "warning": "Warning",
+      "dismiss": "Dismiss",
+      "gone": "No longer on the plan",
+      "seat": "Seat {{label}}",
+      "codes": {
+        "duplicate_id": "Something with this ID is already on the plan.",
+        "unknown_element": "This element isn't on the plan any more.",
+        "invalid_field": "A value is out of range (whole millimetres, positive sizes, rotation 0–359.9°).",
+        "wall_degenerate": "A wall needs two different ends.",
+        "polygon_invalid": "The outline crosses itself or has fewer than 3 corners.",
+        "reference_missing": "It refers to something that doesn't exist (a wall, zone type or catalog item).",
+        "opening_exceeds_wall": "The door or window doesn't fit in its wall.",
+        "attach_not_allowed": "This item can't be attached to that one.",
+        "not_mountable": "This item can only stand on the floor.",
+        "allocation_mode_required": "A seat needs a use (assigned, bookable or unavailable).",
+        "allocation_mode_not_seat": "Only seats have a use.",
+        "device_placed_twice": "This device is already placed on the floor.",
+        "zone_has_children": "Remove the zones inside this zone first.",
+        "zone_cycle": "Zones can't be inside each other in a loop."
+      }
     }
   }
 }

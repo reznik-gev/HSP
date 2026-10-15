@@ -480,7 +480,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     expect(calls(sent, "DELETE /api/v1/floors/f3/lock")).toBe(1);
   });
 
-  it("a refused change reloads the draft and says why", async () => {
+  it("a refused change is undone and listed in Problems; clicking it selects the desk", async () => {
     let loads = 0;
     await renderApp(
       "/floors/f3/edit",
@@ -493,17 +493,32 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
           status: 422,
           body: {
             type: "https://hsp.example/problems/changeset-invalid",
-            title: "Invalid",
-            detail: "The desk is off the floor.",
+            title: "Invalid changeset",
+            errors: [
+              { code: "invalid_field", message: "Bad position.", op_index: 0, element_id: "d1" },
+            ],
           },
         },
       }),
     );
     await screen.findByText("Draft 3 · Saved");
     drag([2000, 1000], [3000, 1000]);
-    expect(
-      await screen.findByText("The desk is off the floor.", {}, { timeout: 3000 }),
-    ).toBeVisible();
-    await waitFor(() => expect(loads).toBe(2));
+    const panel = await screen.findByRole("complementary", { name: "Problems" }, { timeout: 3000 });
+    expect(within(panel).getByText(/A value is out of range/)).toBeVisible();
+    expect(screen.getByRole("tab", { name: /Problems\s*1/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(await screen.findByText(/couldn't be saved, so it was undone/)).toBeVisible();
+    expect(loads).toBe(1); // nothing reloaded
+    // The desk is back where it was, and Undo has nothing left to take back.
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
+
+    await userEvent.click(within(panel).getByRole("button", { name: /A value is out of range/ }));
+    await userEvent.click(screen.getByRole("tab", { name: "Properties" }));
+    expect(screen.getByLabelText("X")).toHaveValue("200");
+    await userEvent.click(screen.getByRole("tab", { name: /Problems/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(screen.getByText(/No problems/)).toBeVisible();
   });
 });
