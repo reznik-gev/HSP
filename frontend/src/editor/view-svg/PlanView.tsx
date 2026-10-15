@@ -459,7 +459,11 @@ function SelectionLayer({
   const ids = [...selection];
   // Hide the originals in the static layer; they are redrawn (highlighted, offset) below.
   const hideCss = ids.map((id) => `#e-${id},#l-${id}`).join(",");
-  const offset = drag ? `translate(${drag.dx} ${drag.dy})` : undefined;
+  const turn = drag?.turn;
+  const offset = drag
+    ? `translate(${drag.dx} ${drag.dy})` +
+      (turn ? ` rotate(${turn.ddeg / 10} ${turn.pivot[0]} ${turn.pivot[1]})` : "")
+    : undefined;
 
   return (
     <>

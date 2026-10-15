@@ -23,6 +23,10 @@ export interface DragState {
   /** Current drag offset in plan mm (already snapped). */
   dx: number;
   dy: number;
+  /** A single item turned by a face snap (docs/0047): by how much, about which point. */
+  turn?: { ddeg: number; pivot: Vec2 };
+  /** A single attachable item: the host it now sits on, or null to detach it. */
+  attachTo?: { id: string; host: string | null };
 }
 
 export type ZoneTypes = ReadonlyMap<string, { name: string; color: string | null }>;
@@ -55,8 +59,13 @@ export type Preview =
   | { kind: "zone"; points: readonly Vec2[]; to: Vec2; snap: SnapKind }
   /** A zone corner being dragged. */
   | { kind: "vertex"; zone: string; index: number; to: Vec2; snap: SnapKind }
-  /** A catalog item about to be placed: where, and turned how far. */
-  | { kind: "item"; at: Vec2; rotation_ddeg: number }
+  /** A catalog item about to be placed: where, turned how far, and what it snapped to. */
+  | {
+      kind: "item";
+      at: Vec2;
+      rotation_ddeg: number;
+      snap?: "face" | "attach" | "grid" | null;
+    }
   /** A column about to be placed: its footprint. */
   | { kind: "column"; footprint: readonly Vec2[]; snap: SnapKind }
   | null;
@@ -152,6 +161,17 @@ export interface EditorState {
   rotatePlacing(): void;
   /** Adds a catalog revision to the document, so objects of it can be drawn (docs/0021). */
   ensureCatalog(item: PlanCatalogItem): void;
+}
+
+/** `p` turned about `pivot` by `ddeg` decidegrees, anticlockwise. */
+function rotateAbout(p: Vec2, pivot: Vec2, ddeg: number): Vec2 {
+  const r = (ddeg * Math.PI) / 1800;
+  const dx = p[0] - pivot[0];
+  const dy = p[1] - pivot[1];
+  return [
+    pivot[0] + dx * Math.cos(r) - dy * Math.sin(r),
+    pivot[1] + dx * Math.sin(r) + dy * Math.cos(r),
+  ];
 }
 
 /** Whether any element of the plan has this id. */
@@ -314,16 +334,21 @@ export function createEditorStore() {
             const footprint = c.footprint.map((p) => [p[0] + drag.dx, p[1] + drag.dy]);
             ops.push({ op: "update", kind: "column", id: c.id, data: { footprint } });
           }
+          const turn = drag.turn?.ddeg ?? 0;
           for (const id of selection) {
             const o = plan.objects[id];
-            if (!o || (drag.dx === 0 && drag.dy === 0)) continue;
-            // Whole millimetres only (docs/0029).
-            const position = [
-              Math.round(o.position[0] + drag.dx),
-              Math.round(o.position[1] + drag.dy),
-              o.position[2],
-            ];
-            ops.push({ op: "update", kind: "object", id, data: { position } });
+            const attach = drag.attachTo?.id === id ? drag.attachTo.host : undefined;
+            if (!o || (drag.dx === 0 && drag.dy === 0 && !turn && attach === undefined)) continue;
+            // Turned about the pivot, then moved; whole millimetres only (docs/0029).
+            const [x, y] = drag.turn
+              ? rotateAbout([o.position[0], o.position[1]], drag.turn.pivot, turn)
+              : [o.position[0], o.position[1]];
+            const data: Record<string, unknown> = {
+              position: [Math.round(x + drag.dx), Math.round(y + drag.dy), o.position[2]],
+            };
+            if (turn) data.rotation_ddeg = (((o.rotation_ddeg + turn) % 3600) + 3600) % 3600;
+            if (attach !== undefined && attach !== o.attached_to) data.attached_to = attach;
+            ops.push({ op: "update", kind: "object", id, data });
           }
           if (ops.length) get().perform(ops);
           return set({ drag: null });

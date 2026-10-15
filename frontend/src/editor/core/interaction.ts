@@ -21,6 +21,7 @@ import {
 } from "./edits";
 import { alongSegment } from "./geometry";
 import { viewportFor } from "./focus";
+import { type ItemShape, placeItem } from "./furnitureSnap";
 import { hitTest, zoneAt } from "./hitTest";
 import type { Vec2 } from "./plan";
 import { SNAP_PX, snapPoint, snapSettings } from "./snap";
@@ -164,6 +165,26 @@ export class Interaction {
     return "clear";
   }
 
+  /**
+   * The one item being dragged, if the selection is a single item (with whatever is attached
+   * to it), with its size and what it can sit on.
+   */
+  private singleItem() {
+    const s = this.store.getState();
+    if (!s.plan) return null;
+    const own = [...s.selection].filter((id) => {
+      const o = s.plan!.objects[id];
+      return o && !(o.attached_to && s.selection.has(o.attached_to));
+    });
+    const object = own.length === 1 ? s.plan.objects[own[0]!] : undefined;
+    if (!object || [...s.selection].some((id) => !s.plan!.objects[id])) return null;
+    const item =
+      s.document?.catalog[object.catalog_item_rev_id] ?? s.plan.catalog[object.catalog_item_rev_id];
+    if (!item) return null;
+    const shape: ItemShape = item;
+    return { object, shape, moving: new Set(s.selection) };
+  }
+
   /** A corner of a selected zone near the pointer, which can be dragged. */
   private selectedZoneCorner(p: Vec2): { zone: string; index: number; from: Vec2 } | null {
     const s = this.store.getState();
@@ -199,6 +220,27 @@ export class Interaction {
       if (!g.moved && isClick(this.downAt, e.sx, e.sy)) return;
       g.moved = true;
       const p = this.toPlan(e);
+      const single = this.singleItem();
+      if (single && s.plan) {
+        // One item: it snaps against walls and onto hosts like a newly placed one.
+        const o = single.object;
+        const from: Vec2 = [o.position[0], o.position[1]];
+        const want: Vec2 = [from[0] + p[0] - g.start[0], from[1] + p[1] - g.start[1]];
+        const placed = placeItem(s.plan, single.shape, want, o.rotation_ddeg, {
+          ...snapSettings(s, e.alt),
+          ignoreIds: single.moving,
+        });
+        const turn = placed.rotation_ddeg - o.rotation_ddeg;
+        s.setDrag({
+          dx: placed.at[0] - from[0],
+          dy: placed.at[1] - from[1],
+          turn: turn ? { ddeg: turn, pivot: from } : undefined,
+          attachTo: single.shape.attaches_to_categories?.length
+            ? { id: o.id, host: placed.attachedTo }
+            : undefined,
+        });
+        return;
+      }
       const snap = (v: number) =>
         s.gridSnap && !e.alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
       s.setDrag({ dx: snap(p[0] - g.start[0]), dy: snap(p[1] - g.start[1]) });

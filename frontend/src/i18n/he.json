@@ -573,7 +573,9 @@
     "snap": {
       "endpoint": "קצה",
       "midpoint": "אמצע",
-      "centreline": "על הקיר"
+      "centreline": "על הקיר",
+      "face": "צמוד לקיר",
+      "attach": "על פריט"
     },
     "grid": {
       "snap": "רשת",
