@@ -2,7 +2,7 @@
  * The floor editor (docs/0089): a full-screen page that holds the floor's edit lock while open.
  * It opens the draft, or the published plan when there is no draft yet, and saves every change
  * to the draft as you go. Tools: select, walls, doors, windows, columns, zones and catalog
- * items, with a Properties panel; the Problems panel arrives in the next step of phase 3a.
+ * items, with Properties and Problems panels. Publishing arrives in the next step of phase 3a.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
@@ -10,7 +10,6 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
-import { problemMessage } from "@/api/problems";
 import { Interaction } from "@/editor/core/interaction";
 import { createEditorStore, type EditorStore } from "@/editor/core/store";
 import { ViewerInteraction } from "@/editor/core/viewerInteraction";
@@ -26,6 +25,7 @@ import { EditorTopBar } from "./EditorTopBar";
 import { LockMessage } from "./LockMessage";
 import { editorPlanQuery } from "./session/editorPlan";
 import { useEditLock } from "./session/lock";
+import { problemsFromRefusal } from "./problems/fromServer";
 import { useEditSession } from "./session/useEditSession";
 import { SidePanel } from "./SidePanel";
 import { ToolOptions } from "./ToolOptions";
@@ -61,10 +61,19 @@ export function EditorPage() {
   });
   const zoneTypes = useQuery(zoneTypesQuery);
   const { autosave, save } = useEditSession(store, floorId, editorPlan.data, zoneTypes.data, held, {
-    onReload: (reason, problem) => {
-      if (reason === "stale") notify(t("editor.reloaded"));
-      else notifyError(problemMessage(problem, t("editor.rejected")));
+    onStale: () => {
+      notify(t("editor.reloaded"));
       void client.invalidateQueries({ queryKey: planQuery.queryKey });
+    },
+    // The change is already taken back; say why, and show where (docs/0090).
+    onRejected: (problem, change) => {
+      const found = problemsFromRefusal(problem, change);
+      const s = store.getState();
+      s.addProblems(found);
+      s.setPanelTab("problems");
+      const where = found.find((p) => p.elementId)?.elementId;
+      if (where) interaction.focus(where);
+      notifyError(t("editor.rejected"));
     },
     onLockLost: lock.markLost,
   });
@@ -89,7 +98,7 @@ export function EditorPage() {
   const [leaveAnyway, setLeaveAnyway] = useState(false);
   const exit = async () => {
     await autosave?.flush();
-    if (store.getState().outbox.length && !leaveAnyway) {
+    if (store.getState().pending.length && !leaveAnyway) {
       setLeaveAnyway(true);
       notifyError(t("editor.unsavedExit"));
       return;
@@ -117,7 +126,7 @@ export function EditorPage() {
         <div className="flex min-h-0 flex-1">
           <ToolStrip store={store} disabled={!held} />
           <Canvas store={store} interaction={interaction} editable={held} />
-          {held && <SidePanel store={store} />}
+          {held && <SidePanel store={store} interaction={interaction} />}
         </div>
       ) : (
         lock.state.kind === "acquiring" && (

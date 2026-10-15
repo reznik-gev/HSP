@@ -1,16 +1,17 @@
 /**
- * Autosave (docs/0089 choice 3): about a second after the last change, everything in the
- * store's outbox goes to the server as one changeset (docs/0081). One request at a time; what
- * piles up meanwhile goes in the next one.
+ * Autosave (docs/0089 choice 3): about a second after the last change, the store's pending
+ * changes go to the server one changeset each, oldest first (docs/0081). One change per
+ * changeset means a refusal names exactly the change to take back (docs/0090).
  *
- * Refusals: a stale draft or a rejected change makes the editor reload the draft; a lost lock
- * pauses saving and keeps the changes for Retry; a network failure retries every few seconds.
+ * Refusals: a stale draft makes the editor reload it; a refused change is taken back (the
+ * later ones stay) and reported; a lost lock pauses saving and keeps the changes for Retry; a
+ * network failure retries every few seconds.
  */
 import { createStore } from "zustand/vanilla";
 
 import { api } from "@/api/client";
 import { asProblem, type Problem, problemSlug } from "@/api/problems";
-import type { EditorStore } from "@/editor/core/store";
+import type { EditorStore, PendingChange } from "@/editor/core/store";
 
 export const SAVE_DELAY_MS = 1000;
 export const RETRY_MS = 5000;
@@ -28,8 +29,8 @@ export interface AutosaveEvents {
   onStale(): void;
   /** Someone took the lock, or it expired: saving waits for the lock again. */
   onLockLost(): void;
-  /** The server refused the change (e.g. a broken rule): reload the draft and say why. */
-  onRejected(problem: Problem | null): void;
+  /** The server refused a change (e.g. a broken rule); it has been taken back already. */
+  onRejected(problem: Problem | null, change: PendingChange, dropped: PendingChange[]): void;
 }
 
 export class Autosave {
@@ -51,7 +52,7 @@ export class Autosave {
     this.revision = base.revision;
     this.state.setState({ version: base.version });
     this.unsubscribe = store.subscribe((s, before) => {
-      if (s.outbox.length && s.outbox !== before.outbox) this.schedule(SAVE_DELAY_MS);
+      if (s.pending.length > before.pending.length) this.schedule(SAVE_DELAY_MS);
     });
   }
 
@@ -71,52 +72,60 @@ export class Autosave {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     while (this.sending) await this.sending;
-    if (this.stopped || this.paused || !this.store.getState().outbox.length) return;
-    this.sending = this.send().finally(() => (this.sending = null));
+    this.sending = this.sendAll().finally(() => (this.sending = null));
     await this.sending;
   }
 
-  private async send(): Promise<void> {
-    const ops = this.store.getState().takeOutbox();
+  private async sendAll(): Promise<void> {
+    while (!this.stopped && !this.paused && this.store.getState().pending.length) {
+      if (!(await this.sendFirst())) return;
+    }
+    if (!this.stopped && !this.paused) this.set("saved");
+  }
+
+  /** Sends the oldest pending change; returns whether to go on with the next one. */
+  private async sendFirst(): Promise<boolean> {
+    const change = this.store.getState().pending[0]!;
     this.set("saving");
     let result;
     try {
       result = await api.POST("/api/v1/floors/{floor_id}/draft/changesets", {
         params: { path: { floor_id: this.floorId } },
-        body: { base_revision: this.revision, ops: ops as never },
+        body: { base_revision: this.revision, ops: change.ops as never },
       });
     } catch {
-      this.store.getState().returnToOutbox(ops);
       this.set("offline");
       this.schedule(RETRY_MS);
-      return;
+      return false;
     }
-    if (this.stopped) return;
+    if (this.stopped) return false;
     const { data, error, response } = result;
     if (data) {
       this.revision = data.revision;
       this.state.setState({ version: data.version });
-      if (this.store.getState().outbox.length) this.schedule(SAVE_DELAY_MS);
-      else this.set("saved");
-      return;
+      this.store.getState().confirmFirst();
+      return true;
     }
     const problem = asProblem(error);
     const slug = problemSlug(problem);
     if (response.status === 423 || slug === "lock-required") {
-      this.store.getState().returnToOutbox(ops);
       this.pause();
       this.events.onLockLost();
-    } else if (slug === "stale-revision") {
+      return false;
+    }
+    if (slug === "stale-revision") {
       this.stop();
       this.events.onStale();
-    } else if (response.status >= 500) {
-      this.store.getState().returnToOutbox(ops);
+      return false;
+    }
+    if (response.status >= 500) {
       this.set("offline");
       this.schedule(RETRY_MS);
-    } else {
-      this.stop();
-      this.events.onRejected(problem);
+      return false;
     }
+    const taken = this.store.getState().rejectFirst();
+    if (taken) this.events.onRejected(problem, taken.rejected, taken.dropped);
+    return true;
   }
 
   /** Stops sending (the lock is gone) but keeps what's waiting. */
@@ -129,7 +138,7 @@ export class Autosave {
   resume(): void {
     if (!this.paused) return;
     this.paused = false;
-    if (this.store.getState().outbox.length) this.schedule(0);
+    if (this.store.getState().pending.length) this.schedule(0);
     else this.set("saved");
   }
 

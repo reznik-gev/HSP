@@ -4,8 +4,9 @@
  *
  * The viewer loads a ready-made plan (`loadPlan`). The editor loads the plan as the API shapes
  * it (`loadDocument`) and changes it only through operations (docs/0050): each `perform` is one
- * undo step, and everything applied (including undo and redo) goes to the outbox that autosave
- * sends to the server.
+ * undo step, and everything applied (an action, an undo or a redo) waits in `pending` until
+ * autosave has saved it, one changeset each. If the server refuses one, `rejectFirst` takes back
+ * just that change (docs/0090).
  */
 import { createStore } from "zustand/vanilla";
 
@@ -60,9 +61,29 @@ export type Preview =
   | { kind: "column"; footprint: readonly Vec2[]; snap: SnapKind }
   | null;
 
-interface Step {
+export interface Step {
   ops: Op[];
   inverse: Op[];
+}
+
+/** One applied change waiting for the server: a user action, an undo or a redo. */
+export interface PendingChange {
+  ops: Op[];
+  /** Takes the change back locally. */
+  inverse: Op[];
+  /** The undo step it belongs to. */
+  step: Step;
+  origin: "do" | "undo" | "redo";
+}
+
+/** Something the editor reports in the Problems panel (docs/0090). */
+export interface EditorProblem {
+  id: string;
+  severity: "error" | "warning";
+  code: string;
+  /** The server's English message, shown when the code has no translation. */
+  message: string;
+  elementId: string | null;
 }
 
 export interface EditorState {
@@ -79,8 +100,11 @@ export interface EditorState {
   zoneTypes: ZoneTypes;
   undoStack: readonly Step[];
   redoStack: readonly Step[];
-  /** Applied operations not yet handed to autosave, oldest first. */
-  outbox: readonly Op[];
+  /** Applied changes not yet saved, oldest first. */
+  pending: readonly PendingChange[];
+  problems: readonly EditorProblem[];
+  /** Which tab the side panel shows (docs/0090). */
+  panelTab: "properties" | "problems";
   /** Counts `loadDocument` calls, so views can tell a freshly loaded plan from an edit. */
   generation: number;
   tool: Tool;
@@ -93,16 +117,22 @@ export interface EditorState {
   placing: PlanCatalogItem | null;
   placingRotation: number;
   loadPlan(plan: Plan): void;
-  /** Opens a plan for editing; clears the history and the outbox. */
+  /** Opens a plan for editing; clears the history, pending changes and problems. */
   loadDocument(document: ApiPlan, zoneTypes: ZoneTypes): void;
   /** Applies one user action as a single undo step. */
   perform(ops: Op[]): void;
   undo(): void;
   redo(): void;
-  /** Hands the outbox to autosave and empties it. */
-  takeOutbox(): Op[];
-  /** Puts operations that failed to send back in front of the outbox. */
-  returnToOutbox(ops: Op[]): void;
+  /** The oldest pending change was saved. */
+  confirmFirst(): void;
+  /**
+   * The server refused the oldest pending change: take it back, keep the later changes that
+   * don't depend on it, and drop it from the undo history. Returns what was taken back.
+   */
+  rejectFirst(): { rejected: PendingChange; dropped: PendingChange[] } | null;
+  addProblems(problems: EditorProblem[]): void;
+  dismissProblem(id: string): void;
+  setPanelTab(tab: "properties" | "problems"): void;
   select(ids: Iterable<string>, additive?: boolean): void;
   clearSelection(): void;
   setViewport(viewport: Viewport): void;
@@ -133,22 +163,33 @@ function exists(plan: Plan, id: string): boolean {
 
 export function createEditorStore() {
   return createStore<EditorState>()((set, get) => {
-    /** Applies ops to the document and refreshes everything derived from it. */
-    const apply = (ops: readonly Op[]) => {
-      const { document, zoneTypes, selection } = get();
-      if (!document) throw new Error("no plan open for editing");
-      const result = applyOps(document, ops);
-      const plan = planFromApi(result.plan, zoneTypes);
+    /** Shows a new version of the document and refreshes everything derived from it. */
+    const show = (document: ApiPlan) => {
+      const { zoneTypes, selection } = get();
+      const plan = planFromApi(document, zoneTypes);
       set({
-        document: result.plan,
+        document,
         plan,
         hitIndex: buildHitIndex(plan),
         // Whatever was deleted can't stay selected.
         selection: new Set([...selection].filter((id) => exists(plan, id))),
         drag: null,
-        outbox: [...get().outbox, ...ops],
       });
-      return result.inverse;
+    };
+    /** Applies ops as a change waiting to be saved; returns its undo step. */
+    const apply = (ops: Op[], step: Step | null, origin: PendingChange["origin"]): Step => {
+      const { document } = get();
+      if (!document) throw new Error("no plan open for editing");
+      const result = applyOps(document, ops);
+      show(result.plan);
+      const change: PendingChange = {
+        ops,
+        inverse: result.inverse,
+        step: step ?? { ops, inverse: result.inverse },
+        origin,
+      };
+      set({ pending: [...get().pending, change] });
+      return change.step;
     };
     return {
       plan: null,
@@ -163,7 +204,9 @@ export function createEditorStore() {
       zoneTypes: new Map(),
       undoStack: [],
       redoStack: [],
-      outbox: [],
+      pending: [],
+      problems: [],
+      panelTab: "properties",
       generation: 0,
       tool: "select",
       preview: null,
@@ -184,33 +227,62 @@ export function createEditorStore() {
           drag: null,
           undoStack: [],
           redoStack: [],
-          outbox: [],
+          pending: [],
+          problems: [],
           generation: get().generation + 1,
         });
       },
       perform: (ops) => {
         if (!ops.length) return;
-        const inverse = apply(ops);
-        set({ undoStack: [...get().undoStack, { ops, inverse }], redoStack: [] });
+        const step = apply(ops, null, "do");
+        set({ undoStack: [...get().undoStack, step], redoStack: [] });
       },
       undo: () => {
         const step = get().undoStack.at(-1);
         if (!step) return;
-        apply(step.inverse);
+        apply(step.inverse, step, "undo");
         set({ undoStack: get().undoStack.slice(0, -1), redoStack: [...get().redoStack, step] });
       },
       redo: () => {
         const step = get().redoStack.at(-1);
         if (!step) return;
-        apply(step.ops);
+        apply(step.ops, step, "redo");
         set({ redoStack: get().redoStack.slice(0, -1), undoStack: [...get().undoStack, step] });
       },
-      takeOutbox: () => {
-        const ops = [...get().outbox];
-        set({ outbox: [] });
-        return ops;
+      confirmFirst: () => set({ pending: get().pending.slice(1) }),
+      rejectFirst: () => {
+        const { document, pending, undoStack, redoStack } = get();
+        const [rejected, ...later] = pending;
+        if (!document || !rejected) return null;
+        // Take back everything unsaved, newest first, then redo the later changes that still
+        // apply without the rejected one.
+        let doc = document;
+        for (const change of [...pending].reverse()) doc = applyOps(doc, change.inverse).plan;
+        const kept: PendingChange[] = [];
+        const dropped: PendingChange[] = [];
+        for (const change of later) {
+          try {
+            const result = applyOps(doc, change.ops);
+            doc = result.plan;
+            kept.push({ ...change, inverse: result.inverse });
+          } catch {
+            dropped.push(change);
+          }
+        }
+        show(doc);
+        const gone = new Set([rejected, ...dropped].map((c) => c.step));
+        // A refused undo or redo leaves the history out of step with the plan: start it over.
+        const clean = rejected.origin === "do" && dropped.every((c) => c.origin === "do");
+        set({
+          pending: kept,
+          undoStack: clean ? undoStack.filter((st) => !gone.has(st)) : [],
+          redoStack: clean ? redoStack.filter((st) => !gone.has(st)) : [],
+        });
+        return { rejected, dropped };
       },
-      returnToOutbox: (ops) => set({ outbox: [...ops, ...get().outbox] }),
+      addProblems: (problems) => set({ problems: [...get().problems, ...problems] }),
+      dismissProblem: (id) => set({ problems: get().problems.filter((p) => p.id !== id) }),
+      setPanelTab: (panelTab) => set({ panelTab }),
       select: (ids, additive = false) => {
         const { plan, selection } = get();
         if (!plan) return;

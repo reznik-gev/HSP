@@ -19,6 +19,7 @@ import {
   wallsAt,
 } from "./edits";
 import { alongSegment } from "./geometry";
+import { viewportFor } from "./focus";
 import { hitTest, zoneAt } from "./hitTest";
 import type { Vec2 } from "./plan";
 import { SNAP_PX, snapPoint } from "./snap";
@@ -265,6 +266,16 @@ export class Interaction {
       if (s.tool !== "select") this.toolAt(this.toPlan(e), true);
       else if (g.clickClears) s.clearSelection();
     }
+  }
+
+  /** Selects an element and brings it into view (clicking a problem, docs/0090). */
+  focus(id: string): void {
+    const s = this.store.getState();
+    if (!s.plan) return;
+    const viewport = viewportFor(s.plan, id, this.size);
+    if (!viewport) return;
+    s.select([id]);
+    s.setViewport(viewport);
   }
 
   wheel(sx: number, sy: number, deltaY: number): void {
