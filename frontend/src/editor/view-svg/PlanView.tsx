@@ -14,7 +14,7 @@
  * Colours come from CSS variables (index.css), so the plan follows light and dark mode. The
  * drawing never mirrors in right-to-left languages: it is geometry (docs/0087 choice 6).
  */
-import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 
 import type { PointerInput } from "@/editor/core/interaction";
@@ -63,6 +63,8 @@ export interface PlanViewProps {
   onStaticPainted?: () => void;
   /** Called after a pointer-down that changed the selection has been painted. */
   onSelectionPainted?: (sinceDownMs: number) => void;
+  /** Drawn on top, in plan millimetres (y up): the editor's handles and previews. */
+  overlay?: ReactNode;
 }
 
 const LOD_MM_PER_PX = 30;
@@ -111,6 +113,7 @@ export function PlanView({
   onHover,
   onStaticPainted,
   onSelectionPainted,
+  overlay,
 }: PlanViewProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState<[number, number]>([1, 1]);
@@ -146,7 +149,13 @@ export function PlanView({
 
   const toInput = (e: React.PointerEvent<SVGSVGElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
-    return { sx: e.clientX - r.left, sy: e.clientY - r.top, button: e.button, shift: e.shiftKey };
+    return {
+      sx: e.clientX - r.left,
+      sy: e.clientY - r.top,
+      button: e.button,
+      shift: e.shiftKey,
+      alt: e.altKey,
+    };
   };
 
   const [vx, vy, vw, vh] = viewBox(viewport, size);
@@ -215,6 +224,7 @@ export function PlanView({
             }}
           />
         )}
+        {overlay}
       </g>
     </svg>
   );

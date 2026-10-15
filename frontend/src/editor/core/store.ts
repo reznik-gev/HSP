@@ -9,10 +9,12 @@
  */
 import { createStore } from "zustand/vanilla";
 
+import type { WallDefaults } from "./edits";
 import { planFromApi } from "./fromApi";
 import { buildHitIndex, type HitIndex, moveObjects, withAttachments } from "./hitTest";
 import { type ApiPlan, applyOps, type Op } from "./operations";
-import type { Plan } from "./plan";
+import type { Plan, Vec2 } from "./plan";
+import type { SnapKind } from "./snap";
 import type { DisplayUnit } from "./units";
 import type { Viewport } from "./viewport";
 
@@ -23,6 +25,20 @@ export interface DragState {
 }
 
 export type ZoneTypes = ReadonlyMap<string, { name: string; color: string | null }>;
+
+/** The editing tools of phase 3a so far (docs/0089). */
+export type Tool = "select" | "wall";
+
+/** What a tool shows while it works, before anything is committed. */
+export type Preview =
+  /**
+   * The wall chain being drawn (docs/0044): `start` is its first point (clicking it again closes
+   * the room), `from` the last placed point (null before the first click), `to` the pointer.
+   */
+  | { kind: "wall"; start: Vec2 | null; from: Vec2 | null; to: Vec2; snap: SnapKind }
+  /** A junction being dragged: these walls' endpoints at `from` follow the pointer. */
+  | { kind: "junction"; from: Vec2; to: Vec2; walls: readonly string[]; snap: SnapKind }
+  | null;
 
 interface Step {
   ops: Op[];
@@ -47,6 +63,10 @@ export interface EditorState {
   outbox: readonly Op[];
   /** Counts `loadDocument` calls, so views can tell a freshly loaded plan from an edit. */
   generation: number;
+  tool: Tool;
+  preview: Preview;
+  /** Thickness and height for new walls. */
+  wallDefaults: WallDefaults;
   loadPlan(plan: Plan): void;
   /** Opens a plan for editing; clears the history and the outbox. */
   loadDocument(document: ApiPlan, zoneTypes: ZoneTypes): void;
@@ -65,6 +85,9 @@ export interface EditorState {
   commitDrag(): void;
   setDisplayUnit(unit: DisplayUnit): void;
   toggleGridSnap(): void;
+  setTool(tool: Tool): void;
+  setPreview(preview: Preview): void;
+  setWallDefaults(defaults: Partial<WallDefaults>): void;
 }
 
 export function createEditorStore() {
@@ -80,7 +103,9 @@ export function createEditorStore() {
         plan,
         hitIndex: buildHitIndex(plan),
         // Whatever was deleted can't stay selected.
-        selection: new Set([...selection].filter((id) => plan.objects[id])),
+        selection: new Set(
+          [...selection].filter((id) => plan.objects[id] || plan.walls.some((w) => w.id === id)),
+        ),
         drag: null,
         outbox: [...get().outbox, ...ops],
       });
@@ -101,6 +126,9 @@ export function createEditorStore() {
       redoStack: [],
       outbox: [],
       generation: 0,
+      tool: "select",
+      preview: null,
+      wallDefaults: { thickness_mm: 150, height_mm: 3000 },
       loadPlan: (plan) =>
         set({ plan, hitIndex: buildHitIndex(plan), selection: new Set(), drag: null }),
       loadDocument: (document, zoneTypes) => {
@@ -175,6 +203,9 @@ export function createEditorStore() {
       },
       setDisplayUnit: (displayUnit) => set({ displayUnit }),
       toggleGridSnap: () => set((s) => ({ gridSnap: !s.gridSnap })),
+      setTool: (tool) => set({ tool, preview: null }),
+      setPreview: (preview) => set({ preview }),
+      setWallDefaults: (defaults) => set({ wallDefaults: { ...get().wallDefaults, ...defaults } }),
     };
   });
 }
