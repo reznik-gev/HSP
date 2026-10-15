@@ -1,28 +1,28 @@
 import { describe, expect, it } from "vitest";
 
-import { apiPlan, door, wall, zone } from "@/test/fixtures";
+import { stubPlan, stubDoor, stubWall, stubZone } from "@/test/stubs";
 
 import { type ApiPlan, applyOps, diffOps } from "./operations";
 
-const base = apiPlan({ state: "published" });
+const base = stubPlan({ state: "published" });
 const tri = [
   [0, 0],
   [1, 0],
   [0, 1],
 ] as [number, number][];
-const room = (id: string, parent: string | null) => zone(id, tri, { parent_zone_id: parent });
+const room = (id: string, parent: string | null) => stubZone(id, tri, { parent_zone_id: parent });
 
 describe("diffOps (putting back a discarded draft, docs/0089)", () => {
   it("adds, changes and deletes in an order the server accepts", () => {
     const from = {
       ...base,
-      walls: [wall("w1", [0, 0], [4000, 0]), wall("w2", [0, 0], [3000, 0])],
-      openings: [door("o1", "w2", 0)],
+      walls: [stubWall("w1", [0, 0], [4000, 0]), stubWall("w2", [0, 0], [3000, 0])],
+      openings: [stubDoor("o1", "w2", 0)],
     } as unknown as ApiPlan;
     const to = {
       ...base,
-      walls: [wall("w1", [0, 0], [5000, 0]), wall("w3", [0, 0], [2000, 0])],
-      openings: [door("o2", "w3", 0)],
+      walls: [stubWall("w1", [0, 0], [5000, 0]), stubWall("w3", [0, 0], [2000, 0])],
+      openings: [stubDoor("o2", "w3", 0)],
       zones: [room("child", "parent"), room("parent", null)],
     } as unknown as ApiPlan;
     const ops = diffOps(from, to);
@@ -44,7 +44,7 @@ describe("diffOps (putting back a discarded draft, docs/0089)", () => {
   });
 
   it("nothing to do for equal plans", () => {
-    const plan = { ...base, walls: [wall("w1", [0, 0], [4000, 0])] } as unknown as ApiPlan;
+    const plan = { ...base, walls: [stubWall("w1", [0, 0], [4000, 0])] } as unknown as ApiPlan;
     expect(diffOps(plan, plan)).toEqual([]);
   });
 });

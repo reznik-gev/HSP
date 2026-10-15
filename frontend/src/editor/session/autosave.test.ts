@@ -2,15 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApiPlan, Op } from "@/editor/core/operations";
 import { createEditorStore } from "@/editor/core/store";
-import { apiPlan, desk } from "@/test/fixtures";
+import { stubPlan, stubDesk } from "@/test/stubs";
 
 import { Autosave, RETRY_MS, SAVE_DELAY_MS } from "./autosave";
 
-const PLAN = apiPlan({
+const PLAN = stubPlan({
   version: 2,
   state: "published",
   revision: 4,
-  objects: [desk("d1", [0, 0])],
+  objects: [stubDesk("d1", [0, 0])],
 }) as unknown as ApiPlan;
 const label = (l: string): Op[] => [{ op: "update", kind: "object", id: "d1", data: { label: l } }];
 type Reply = { status: number; body?: unknown };

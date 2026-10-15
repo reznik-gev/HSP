@@ -4,8 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page } from "@/test/fixtures";
-import { fakeBackend, renderApp, type Reply, type Routes } from "@/test/renderApp";
+import { page } from "@/test/stubs";
+import { stubBackend, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 import { undoUnitArchive } from "./undo";
 
@@ -165,7 +165,7 @@ describe("teams (docs/0088)", () => {
 
 describe("undoing a team archive (docs/0088)", () => {
   it("restores teams top-down, puts members back exactly, and never takes a seat back", async () => {
-    const { calls } = fakeBackend({
+    const { calls } = stubBackend({
       "POST /api/v1/org-units/rnd/restore": { status: 200, body: {} },
       "POST /api/v1/org-units/plat/restore": { status: 200, body: {} },
       // Maya was moved into the root by the archive; Omer was already in the root.

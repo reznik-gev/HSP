@@ -4,29 +4,37 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { apiPlan, desk, locationRoutes, page, ref, seatOut, wall } from "@/test/fixtures";
+import {
+  stubPlan,
+  stubDesk,
+  stubLocationRoutes,
+  page,
+  ref,
+  stubSeat,
+  stubWall,
+} from "@/test/stubs";
 import { ADMIN, renderApp, type Routes } from "@/test/renderApp";
 
-const PLAN = apiPlan({
+const PLAN = stubPlan({
   version: 2,
   state: "published",
-  walls: [wall("w1", [0, 0], [8000, 0], { thickness_mm: 200 })],
+  walls: [stubWall("w1", [0, 0], [8000, 0], { thickness_mm: 200 })],
   objects: [
-    desk("d1", [1000, 1000], { label: "A-01" }),
-    desk("d2", [3000, 1000], { label: "A-02" }),
-    desk("d3", [5000, 1000], { label: "A-03", allocation_mode: "bookable" }),
+    stubDesk("d1", [1000, 1000], { label: "A-01" }),
+    stubDesk("d2", [3000, 1000], { label: "A-02" }),
+    stubDesk("d3", [5000, 1000], { label: "A-03", allocation_mode: "bookable" }),
   ],
 });
 
 function backend(publishedVersion: number | null = 2): Routes {
   return {
-    ...locationRoutes(publishedVersion),
+    ...stubLocationRoutes(publishedVersion),
     "GET /api/v1/floors/f3/versions/2": { status: 200, body: PLAN },
     "GET /api/v1/zone-types": { status: 200, body: page([]) },
     "GET /api/v1/seats": {
       status: 200,
       body: page([
-        seatOut("d1", "A-01", {
+        stubSeat("d1", "A-01", {
           holder_person: {
             id: "p1",
             display_name: "Maya Shani",
@@ -34,7 +42,7 @@ function backend(publishedVersion: number | null = 2): Routes {
             primary_unit: ref("u1", "Platform"),
           },
         }),
-        seatOut("d2", "A-02", { holder_unit: ref("u2", "Vision") }),
+        stubSeat("d2", "A-02", { holder_unit: ref("u2", "Vision") }),
       ]),
     },
   };

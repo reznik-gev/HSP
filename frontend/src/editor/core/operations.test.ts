@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { apiPlan, desk, wall } from "@/test/fixtures";
+import { stubPlan, stubDesk, stubWall } from "@/test/stubs";
 
 import { type ApiPlan, applyOps, newId, type Op } from "./operations";
 
-const WALL = wall("w1", [0, 0], [4000, 0], { thickness_mm: 200 });
-const DESK = desk("d1", [1000, 1000], { label: "A-01" });
-const PLAN = apiPlan({ walls: [WALL], objects: [DESK] }) as unknown as ApiPlan;
+const WALL = stubWall("w1", [0, 0], [4000, 0], { thickness_mm: 200 });
+const DESK = stubDesk("d1", [1000, 1000], { label: "A-01" });
+const PLAN = stubPlan({ walls: [WALL], objects: [DESK] }) as unknown as ApiPlan;
 
 describe("plan operations (docs/0036, docs/0050)", () => {
   it("add, update and delete, without touching the original plan", () => {
