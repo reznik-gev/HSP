@@ -2,8 +2,8 @@
 server's checks. The editor's TypeScript checker runs the same files, so the two agree.
 
 The fixtures turn a case's JSON into the server's models; the test itself only runs `validate`
-and compares what it finds. Cases use short ids ("w1", "desk"); the models need UUIDs, so ids
-are mapped to UUIDs (uuid5 of the name) and findings mapped back.
+and `warnings` and compares what they find. Cases use short ids ("w1", "desk"); the models need
+UUIDs, so ids are mapped to UUIDs (uuid5 of the name) and findings mapped back.
 """
 
 import json

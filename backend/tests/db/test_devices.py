@@ -10,7 +10,7 @@ from hsp.models import new_id
 from hsp.plans.drafts import SqlDraftRepository
 from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
 from hsp.problems import ProblemException
-from tests.db.plan_helpers import add, apply, context, desk_data
+from tests.db.plan_helpers import add, apply, context, stub_desk
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ async def test_placement_follows_the_published_plan_and_blocks_delete(ctx: dict[
     s = svc(ctx)
     d = await s.create(DeviceIn(asset_tag=f"MON-{new_id().hex[:6]}"))
     desk = new_id()
-    await apply(ctx, 0, add("object", desk, **desk_data(ctx, device_id=str(d.id))))
+    await apply(ctx, 0, add("object", desk, **stub_desk(ctx, device_id=str(d.id))))
     assert (await s.get(d.id)).placement is None  # only a draft so far
     await PublishingService(
         SqlDraftRepository(ctx["db"]), SqlPublishRepository(ctx["db"]), ctx["admin"]

@@ -122,9 +122,14 @@ async def context(db: AsyncSession) -> dict[str, Any]:
 
 
 async def apply(
-    ctx: dict[str, Any], base: int, *ops: dict[str, Any], floor: uuid.UUID | None = None
+    ctx: dict[str, Any],
+    base: int,
+    *ops: dict[str, Any],
+    floor: uuid.UUID | None = None,
+    who: Principal | None = None,
 ) -> Any:
-    service = DraftsService(SqlDraftRepository(ctx["db"]), ctx["admin"])
+    """Apply a changeset as the admin holding the lock (or as `who`)."""
+    service = DraftsService(SqlDraftRepository(ctx["db"]), who or ctx["admin"])
     body = changeset.validate_python({"base_revision": base, "ops": list(ops)})
     return await service.apply(floor or ctx["floor"], body)
 
@@ -135,17 +140,53 @@ async def plan(ctx: dict[str, Any], version: int, floor: uuid.UUID | None = None
     )
 
 
+async def publish_by_hand(ctx: dict[str, Any]) -> None:
+    """Mark the floor's draft published without the publish service, to set up a published
+    version quickly."""
+    params = {"f": ctx["floor"]}
+    await ctx["db"].execute(
+        text("UPDATE floor_version SET state = 'published' WHERE floor_id = :f"), params
+    )
+    await ctx["db"].execute(text("UPDATE floor SET published_version = 1 WHERE id = :f"), params)
+
+
 def add(kind: str, element_id: uuid.UUID, **data: Any) -> dict[str, Any]:
     return {"op": "add", "kind": kind, "id": str(element_id), "data": data}
 
 
-def wall_data() -> dict[str, Any]:
+def stub_wall() -> dict[str, Any]:
+    """A 6 m wall along the x axis from the origin."""
     return {"a": [0, 0], "b": [6000, 0], "thickness_mm": 150, "height_mm": 2800}
 
 
-def desk_data(
+def stub_door(
+    wall: uuid.UUID, offset_mm: int = 1000, swing: str = "none", **extra: Any
+) -> dict[str, Any]:
+    """A 900 mm door in `wall`."""
+    return {
+        "wall_id": str(wall),
+        "type": "door",
+        "offset_mm": offset_mm,
+        "width_mm": 900,
+        "height_mm": 2100,
+        "swing": swing,
+        **extra,
+    }
+
+
+def stub_zone(ctx: dict[str, Any], x: int = 0, name: str = "Room") -> dict[str, Any]:
+    """A 4 x 3 m zone whose left edge is at `x`."""
+    return {
+        "name": name,
+        "zone_type_id": str(ctx["zone_type"]),
+        "boundary": [[x, 0], [x + 4000, 0], [x + 4000, 3000], [x, 3000]],
+    }
+
+
+def stub_desk(
     ctx: dict[str, Any], x: int = 1000, label: str | None = "D1", **extra: Any
 ) -> dict[str, Any]:
+    """A labelled, assigned 1600 x 800 desk centred at (x, 1000)."""
     return {
         "catalog_item_rev_id": str(ctx["desk_rev"]),
         "position": [x, 1000, 0],

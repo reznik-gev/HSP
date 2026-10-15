@@ -12,7 +12,7 @@ from hsp.models import new_id
 from hsp.plans.drafts import SqlDraftRepository
 from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
 from hsp.seats.assignments import AssignmentIn, SeatAssignmentService
-from tests.db.plan_helpers import add, apply, context, desk_data
+from tests.db.plan_helpers import add, apply, context, stub_desk
 
 
 async def published_seats(conn: AsyncConnection) -> dict[str, Any]:
@@ -26,19 +26,19 @@ async def published_seats(conn: AsyncConnection) -> dict[str, Any]:
     await apply(
         ctx,
         0,
-        add("object", ctx["a"], **desk_data(ctx, x=1000, label=f"A-{tag}")),
-        add("object", ctx["b"], **desk_data(ctx, x=3000, label=f"B-{tag}")),
+        add("object", ctx["a"], **stub_desk(ctx, x=1000, label=f"A-{tag}")),
+        add("object", ctx["b"], **stub_desk(ctx, x=3000, label=f"B-{tag}")),
         add(
             "object",
             ctx["bookable"],
-            **desk_data(ctx, x=5000, label=f"C-{tag}", allocation_mode="bookable"),
+            **stub_desk(ctx, x=5000, label=f"C-{tag}", allocation_mode="bookable"),
         ),
     )
     publishing = PublishingService(
         SqlDraftRepository(ctx["db"]), SqlPublishRepository(ctx["db"]), ctx["admin"]
     )
     await publishing.publish(ctx["floor"], PublishIn(base_revision=1))
-    await apply(ctx, 0, add("object", ctx["draft_only"], **desk_data(ctx, x=7000, label=None)))
+    await apply(ctx, 0, add("object", ctx["draft_only"], **stub_desk(ctx, x=7000, label=None)))
     ctx["seats"] = SeatAssignmentService(ctx["db"], ctx["admin"])
     return ctx
 
