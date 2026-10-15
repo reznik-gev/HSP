@@ -394,6 +394,25 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     expect(snap).toHaveAttribute("aria-pressed", "false");
   });
 
+  it("typing a length while drawing a wall opens a box; Enter places the corner exactly", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.keyboard("w");
+    click([0, 3000]);
+    // "3" opens the box with it; the rest goes into the box, not to the tool shortcuts.
+    await userEvent.keyboard("3");
+    const box = screen.getByRole("group", { name: "Exact measurement" });
+    expect(within(box).getByLabelText("Length")).toHaveValue("3");
+    await userEvent.keyboard("50cm");
+    await userEvent.click(within(box).getByLabelText("Angle"));
+    await userEvent.keyboard("90{Enter}");
+    expect(screen.queryByRole("group", { name: "Exact measurement" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Wall" })).toHaveAttribute("aria-pressed", "true");
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops[0]).toMatchObject({ data: { a: [0, 3000], b: [0, 6500] } });
+  });
+
   it("Exit saves what's waiting before leaving", async () => {
     const { routes, changesets } = saving();
     const { calls: sent } = await renderApp("/floors/f3/edit", routes);

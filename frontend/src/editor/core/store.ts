@@ -114,6 +114,8 @@ export interface EditorState {
   /** Applied changes not yet saved, oldest first. */
   pending: readonly PendingChange[];
   problems: readonly EditorProblem[];
+  /** The typed-measurement box (docs/0045): where it opened and what was typed first. */
+  measure: { sx: number; sy: number; first: string } | null;
   /** Which tab the side panel shows (docs/0090). */
   panelTab: "properties" | "problems";
   /** Counts loaded plans (`loadPlan`, `loadDocument`), so views can tell them from edits. */
@@ -144,6 +146,7 @@ export interface EditorState {
   addProblems(problems: EditorProblem[]): void;
   dismissProblem(id: string): void;
   setPanelTab(tab: "properties" | "problems"): void;
+  setMeasure(measure: EditorState["measure"]): void;
   select(ids: Iterable<string>, additive?: boolean): void;
   clearSelection(): void;
   setViewport(viewport: Viewport): void;
@@ -232,6 +235,7 @@ export function createEditorStore() {
       pending: [],
       problems: [],
       panelTab: "properties",
+      measure: null,
       generation: 0,
       tool: "select",
       preview: null,
@@ -314,6 +318,7 @@ export function createEditorStore() {
       addProblems: (problems) => set({ problems: [...get().problems, ...problems] }),
       dismissProblem: (id) => set({ problems: get().problems.filter((p) => p.id !== id) }),
       setPanelTab: (panelTab) => set({ panelTab }),
+      setMeasure: (measure) => set({ measure }),
       select: (ids, additive = false) => {
         const { plan, selection } = get();
         if (!plan) return;
