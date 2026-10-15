@@ -348,5 +348,27 @@
       "levelTaken": "Another floor in this building is already at this level.",
       "beingEdited": "Someone is editing a floor there. Ask them to finish first."
     }
+  },
+  "editor": {
+    "edit": "Edit floor",
+    "title": "Editing {{floor}}",
+    "exit": "Exit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "busy": "Being edited by {{name}} since {{time}}.",
+    "busyNoTime": "Being edited by {{name}}.",
+    "busyUnknown": "Someone else is editing this floor.",
+    "takeOver": "Take over",
+    "takeOverHint": "Their draft is kept, and they stop editing.",
+    "acquiring": "Opening the floor for editing…",
+    "lost": "Editing stopped: someone else took over this floor, or the connection was lost.",
+    "retry": "Try again",
+    "forbidden": "Only administrators can edit floors.",
+    "failed": "Couldn't open the floor for editing. Try again in a moment.",
+    "status": {
+      "draft": "Draft {{version}}",
+      "published": "Published version {{version}} · no changes yet",
+      "new": "Not published yet"
+    }
   }
 }

@@ -10,6 +10,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { AppShell } from "@/app/AppShell";
+import { FullScreenShell } from "@/app/FullScreenShell";
 import { Page } from "@/app/Page";
 import { FloorsPage } from "@/floors/FloorsPage";
 import { validateOrgSearch } from "@/org/search";
@@ -23,6 +24,13 @@ const shellRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: "shell",
   component: AppShell,
+});
+
+/** Full-window pages: signed in, but without the sidebar and top bar (docs/0089). */
+const fullScreenRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: "editor",
+  component: FullScreenShell,
 });
 
 const indexRoute = createRoute({
@@ -52,6 +60,11 @@ const floorPlanRoute = createRoute({
     typeof search.seat === "string" ? { seat: search.seat } : {},
   // Loaded on first visit: keeps the plan viewer out of the initial bundle.
   component: lazyRouteComponent(() => import("@/floors/FloorPlanPage"), "FloorPlanPage"),
+});
+const editorRoute = createRoute({
+  getParentRoute: () => fullScreenRoute,
+  path: "/floors/$floorId/edit",
+  component: lazyRouteComponent(() => import("@/editor/EditorPage"), "EditorPage"),
 });
 const peopleRoute = createRoute({
   getParentRoute: () => shellRoute,
@@ -103,6 +116,7 @@ export const routeTree = rootRoute.addChildren([
     importsRoute,
     seatsRoute,
   ]),
+  fullScreenRoute.addChildren([editorRoute]),
   ...benchRoutes,
 ]);
 
