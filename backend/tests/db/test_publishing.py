@@ -11,7 +11,7 @@ from hsp.models import new_id
 from hsp.plans.drafts import SqlDraftRepository
 from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
 from hsp.problems import ProblemException
-from tests.db.plan_helpers import add, apply, context, desk_data, lock, make_floor, plan, wall_data
+from tests.db.plan_helpers import add, apply, context, lock, make_floor, plan, stub_desk, stub_wall
 
 
 @pytest.fixture
@@ -42,11 +42,11 @@ async def states(ctx: dict[str, Any]) -> list[tuple[int, str]]:
 
 
 async def test_publish_supersedes_and_the_next_edit_starts_a_new_draft(ctx: dict[str, Any]) -> None:
-    await apply(ctx, 0, add("wall", new_id(), **wall_data()))
+    await apply(ctx, 0, add("wall", new_id(), **stub_wall()))
     r1 = await publish(ctx, 1)
     assert (r1.published_version, r1.superseded_version) == (1, None)
     assert (await ctx["db"].get(models.Floor, ctx["floor"])).published_version == 1
-    await apply(ctx, 0, add("wall", new_id(), **wall_data()))  # lock kept: next save starts v2
+    await apply(ctx, 0, add("wall", new_id(), **stub_wall()))  # lock kept: next save starts v2
     r2 = await publish(ctx, 1)
     assert (r2.published_version, r2.superseded_version) == (2, 1)
     assert await states(ctx) == [(1, "superseded"), (2, "published")]
@@ -56,8 +56,8 @@ async def test_publish_needs_a_draft_and_the_reviewed_revision(ctx: dict[str, An
     with pytest.raises(ProblemException) as exc:
         await publish(ctx, 0)
     assert exc.value.slug == "no-draft"
-    await apply(ctx, 0, add("wall", new_id(), **wall_data()))
-    await apply(ctx, 1, add("wall", new_id(), **wall_data()))
+    await apply(ctx, 0, add("wall", new_id(), **stub_wall()))
+    await apply(ctx, 1, add("wall", new_id(), **stub_wall()))
     with pytest.raises(ProblemException) as exc:
         await publish(ctx, 1)  # reviewer saw revision 1, the draft is at 2
     assert exc.value.slug == "stale-revision"
@@ -67,14 +67,14 @@ async def test_discard_restores_the_published_state_and_reuses_the_number(
     ctx: dict[str, Any],
 ) -> None:
     w, desk, new_desk = new_id(), new_id(), new_id()
-    await apply(ctx, 0, add("wall", w, **wall_data()), add("object", desk, **desk_data(ctx)))
+    await apply(ctx, 0, add("wall", w, **stub_wall()), add("object", desk, **stub_desk(ctx)))
     await publish(ctx, 1)
     await apply(
         ctx,
         0,
         {"op": "update", "kind": "object", "id": str(desk), "data": {"position": [3000, 1000, 0]}},
         {"op": "delete", "kind": "wall", "id": str(w)},
-        add("object", new_desk, **desk_data(ctx, x=5000, label="D2")),
+        add("object", new_desk, **stub_desk(ctx, x=5000, label="D2")),
     )
     await publishing(ctx).discard(ctx["floor"])
     await publishing(ctx).discard(ctx["floor"])  # idempotent
@@ -84,13 +84,13 @@ async def test_discard_restores_the_published_state_and_reuses_the_number(
     assert [x.id for x in latest.walls] == [w]  # the closed wall revision is open again
     assert {o.id: o.position for o in latest.objects} == {desk: (1000, 1000, 0)}
     assert await ctx["db"].get(models.FloorElement, new_desk) is None  # created in the draft: gone
-    again = await apply(ctx, 0, add("wall", new_id(), **wall_data()))
+    again = await apply(ctx, 0, add("wall", new_id(), **stub_wall()))
     assert again.version == 2  # no gap in numbering (docs/0081)
 
 
 async def test_restore_brings_back_an_old_version_exactly(ctx: dict[str, Any]) -> None:
     w, desk = new_id(), new_id()
-    await apply(ctx, 0, add("wall", w, **wall_data()), add("object", desk, **desk_data(ctx)))
+    await apply(ctx, 0, add("wall", w, **stub_wall()), add("object", desk, **stub_desk(ctx)))
     await publish(ctx, 1)
     await apply(
         ctx,
@@ -120,7 +120,7 @@ async def test_publish_conflicts_labels_devices_and_assignments(ctx: dict[str, A
     await apply(
         ctx,
         0,
-        add("object", new_id(), **desk_data(ctx, label="A-01", device_id=str(device.id))),
+        add("object", new_id(), **stub_desk(ctx, label="A-01", device_id=str(device.id))),
         floor=other,
     )
     await publish(ctx, 1, floor=other)
@@ -129,8 +129,8 @@ async def test_publish_conflicts_labels_devices_and_assignments(ctx: dict[str, A
     await apply(
         ctx,
         0,
-        add("object", seat, **desk_data(ctx, label="A-01")),
-        add("object", new_id(), **desk_data(ctx, x=3000, label="A-02", device_id=str(device.id))),
+        add("object", seat, **stub_desk(ctx, label="A-01")),
+        add("object", new_id(), **stub_desk(ctx, x=3000, label="A-02", device_id=str(device.id))),
     )
     with pytest.raises(ProblemException) as exc:
         await publish(ctx, 1)
@@ -143,7 +143,7 @@ async def test_publish_conflicts_labels_devices_and_assignments(ctx: dict[str, A
 
 async def test_publishing_frees_assigned_seats_it_removes(ctx: dict[str, Any]) -> None:
     seat = new_id()
-    await apply(ctx, 0, add("object", seat, **desk_data(ctx)))
+    await apply(ctx, 0, add("object", seat, **stub_desk(ctx)))
     await publish(ctx, 1)
     person = (
         await ctx["db"].execute(
