@@ -115,3 +115,124 @@ describe("the catalog (docs/0095)", () => {
     expect(within(nav).queryByRole("link", { name: "Catalog" })).toBeNull();
   });
 });
+
+describe("the organisation's own items (docs/0095)", () => {
+  it("creates an item from the form, with a key from its name", async () => {
+    let sent: Record<string, unknown> | undefined;
+    const made = { ...BENCH, id: "i30", name: "Standing desk" };
+    const { router } = await renderApp(
+      "/catalog",
+      backend({
+        "POST /api/v1/catalog-items": (request) => {
+          void request
+            .clone()
+            .json()
+            .then((b: Record<string, unknown>) => (sent = b));
+          return { status: 201, body: made };
+        },
+        "GET /api/v1/catalog-items/i30": { status: 200, body: made },
+      }),
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "New item" }));
+    const panel = await screen.findByRole("dialog", { name: "New item" });
+    await userEvent.type(within(panel).getByRole("textbox", { name: "Name" }), "Standing desk");
+    await userEvent.type(within(panel).getByRole("combobox", { name: "Category" }), "desk");
+    await userEvent.type(within(panel).getByRole("spinbutton", { name: "Width (cm)" }), "140");
+    await userEvent.type(within(panel).getByRole("spinbutton", { name: "Depth (cm)" }), "70.5");
+    await userEvent.type(within(panel).getByRole("spinbutton", { name: "Height (cm)" }), "110");
+    await userEvent.click(within(panel).getByRole("checkbox", { name: /A seat/ }));
+    await userEvent.click(within(panel).getByRole("button", { name: "Create item" }));
+
+    await waitFor(() => expect(router.state.location.search).toMatchObject({ item: "i30" }));
+    expect(sent).toMatchObject({
+      key: "standing_desk",
+      name: "Standing desk",
+      category: "desk",
+      width_mm: 1400,
+      depth_mm: 705,
+      height_mm: 1100,
+      is_seat: true,
+      footprint_blocks: true,
+    });
+  });
+
+  it("warns that placed items keep their size only when the change makes a new revision", async () => {
+    let sent: Record<string, unknown> | undefined;
+    await renderApp(
+      "/catalog?item=i9",
+      backend({
+        "GET /api/v1/catalog-items/i9": { status: 200, body: BENCH },
+        "PATCH /api/v1/catalog-items/i9": (request) => {
+          void request
+            .clone()
+            .json()
+            .then((b: Record<string, unknown>) => (sent = b));
+          return { status: 200, body: { ...BENCH, name: "Lab bench, long" } };
+        },
+      }),
+    );
+    const panel = await screen.findByRole("dialog", { name: "Lab bench" });
+    const name = within(panel).getByRole("textbox", { name: "Name" });
+    await userEvent.type(name, ", long");
+    expect(within(panel).queryByRole("note")).toBeNull();
+
+    const width = within(panel).getByRole("spinbutton", { name: "Width (cm)" });
+    await userEvent.clear(width);
+    await userEvent.type(width, "200");
+    expect(within(panel).getByRole("note")).toHaveTextContent(
+      "Items already on floors keep their current size",
+    );
+    await userEvent.click(within(panel).getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(sent).toMatchObject({ name: "Lab bench, long", width_mm: 2000 }));
+  });
+
+  it("explains a category the server refuses", async () => {
+    await renderApp(
+      "/catalog?new=true",
+      backend({
+        "POST /api/v1/catalog-items": {
+          status: 422,
+          body: {
+            status: 422,
+            title: "Invalid",
+            errors: [{ code: "string_pattern_mismatch", message: "bad", pointer: "/category" }],
+          },
+        },
+      }),
+    );
+    const panel = await screen.findByRole("dialog", { name: "New item" });
+    await userEvent.type(within(panel).getByRole("textbox", { name: "Name" }), "Bench");
+    await userEvent.type(within(panel).getByRole("combobox", { name: "Category" }), "9x");
+    for (const f of ["Width (cm)", "Depth (cm)", "Height (cm)"]) {
+      await userEvent.type(within(panel).getByRole("spinbutton", { name: f }), "50");
+    }
+    await userEvent.click(within(panel).getByRole("button", { name: "Create item" }));
+    expect(
+      await within(panel).findByText("Use English letters, digits and _, starting with a letter."),
+    ).toBeVisible();
+  });
+
+  it("archives an item at once, with Undo", async () => {
+    const calls: string[] = [];
+    await renderApp(
+      "/catalog?item=i9",
+      backend({
+        "GET /api/v1/catalog-items/i9": { status: 200, body: BENCH },
+        "DELETE /api/v1/catalog-items/i9": () => {
+          calls.push("archive");
+          return { status: 204 };
+        },
+        "POST /api/v1/catalog-items/i9/restore": () => {
+          calls.push("restore");
+          return { status: 200, body: BENCH };
+        },
+      }),
+    );
+    const panel = await screen.findByRole("dialog", { name: "Lab bench" });
+    await userEvent.click(within(panel).getByRole("button", { name: "Archive" }));
+    expect(await screen.findByText("Lab bench archived.")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(calls).toEqual(["archive", "restore"]));
+    expect(await screen.findByText("Lab bench restored.")).toBeVisible();
+  });
+});
