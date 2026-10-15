@@ -4,6 +4,7 @@ import {
   FileUp,
   Layers,
   Network,
+  Package,
   type LucideIcon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -18,10 +19,10 @@ import { cn } from "@/lib/utils";
 
 import { useSidebar } from "./sidebarState";
 
-/** Main areas (docs/0087, docs/0088). Later phases add Catalog and Imports. */
+/** Main areas (docs/0087, docs/0088, docs/0095). */
 const AREAS: {
-  to: "/floors" | "/seats" | "/people" | "/org" | "/imports";
-  label: "nav.floors" | "nav.seats" | "nav.people" | "nav.org" | "nav.imports";
+  to: "/floors" | "/seats" | "/people" | "/org" | "/catalog" | "/imports";
+  label: "nav.floors" | "nav.seats" | "nav.people" | "nav.org" | "nav.catalog" | "nav.imports";
   icon: LucideIcon;
   /** Hidden from viewers (docs/0088 choice 2). */
   adminOnly?: boolean;
@@ -30,6 +31,7 @@ const AREAS: {
   { to: "/seats", label: "nav.seats", icon: Armchair },
   { to: "/people", label: "nav.people", icon: Users },
   { to: "/org", label: "nav.org", icon: Network },
+  { to: "/catalog", label: "nav.catalog", icon: Package, adminOnly: true },
   { to: "/imports", label: "nav.imports", icon: FileUp, adminOnly: true },
 ];
 
