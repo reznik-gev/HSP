@@ -5,12 +5,13 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Page } from "@/app/Page";
 import { useIsAdmin } from "@/auth/admin";
+import { Button } from "@/components/ui/button";
 import { inputClass, Select } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
@@ -52,15 +53,21 @@ export function CatalogPage() {
           <option value="custom">{t("catalog.show.custom")}</option>
           <option value="archived">{t("catalog.show.archived")}</option>
         </Select>
+        <div className="ms-auto">
+          <Button onClick={() => set({ new: true, item: undefined })}>
+            <Plus aria-hidden />
+            {t("catalog.newItem")}
+          </Button>
+        </div>
       </div>
       <div className="mt-5">
         <ItemList search={search} />
       </div>
-      {search.item && (
+      {(search.item ?? search.new) && (
         <ItemPanel
-          itemId={search.item}
-          onClose={() => set({ item: undefined })}
-          onOpen={(id) => set({ item: id, show: undefined })}
+          itemId={search.item ?? null}
+          onClose={() => set({ item: undefined, new: undefined })}
+          onOpen={(id) => set({ item: id, new: undefined, show: undefined })}
         />
       )}
     </Page>
@@ -152,7 +159,7 @@ function ItemRow({ item, selected }: { item: CatalogItem; selected: boolean }) {
       <div className="min-w-0 flex-1">
         <Link
           from="/catalog"
-          search={(prev) => ({ ...prev, item: item.id })}
+          search={(prev) => ({ ...prev, item: item.id, new: undefined })}
           className="font-medium hover:text-primary hover:underline"
         >
           {item.name}

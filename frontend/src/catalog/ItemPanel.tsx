@@ -1,9 +1,11 @@
 /**
- * One catalog item in the side panel (docs/0095). Built-in items are read-only (docs/0083);
- * Make a copy turns one into a custom item to change, and opens the copy.
+ * One catalog item in the side panel (docs/0095), or a new one. Built-in items are read-only
+ * (docs/0083); Make a copy turns one into the organisation's own and opens the copy. Admins
+ * change their own items in a form and archive them, with Undo (docs/0088); an archived item is
+ * read-only until restored.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy } from "lucide-react";
+import { Archive, ArchiveRestore, Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/client";
@@ -23,6 +25,7 @@ import { notify, notifyError } from "@/lib/notify";
 
 import { type CatalogItem, categoryName, copyItem, sizeText } from "./data";
 import { FlagBadges } from "./FlagBadges";
+import { ItemForm } from "./ItemForm";
 import { ItemPreview } from "./ItemPreview";
 
 export const catalogItemQuery = (id: string) => ({
@@ -41,21 +44,27 @@ export function ItemPanel({
   onClose,
   onOpen,
 }: {
-  itemId: string;
+  /** The item to show, or null for a new one. */
+  itemId: string | null;
   onClose: () => void;
-  /** Opens another item, e.g. a copy just made. */
+  /** Opens another item, e.g. a copy just made or a new item once created. */
   onOpen: (id: string) => void;
 }) {
   const { t } = useTranslation();
-  const item = useQuery(catalogItemQuery(itemId));
+  const item = useQuery({ ...catalogItemQuery(itemId ?? ""), enabled: !!itemId });
+  const editable = item.data && !item.data.builtin && !item.data.archived_at;
   return (
     <Sheet open onOpenChange={(open) => !open && onClose()}>
       <SheetContent aria-describedby={undefined}>
         <SheetHeader>
-          <SheetTitle>{item.data?.name ?? " "}</SheetTitle>
+          <SheetTitle>{itemId ? (item.data?.name ?? " ") : t("catalog.newItem")}</SheetTitle>
           {item.data && <SheetDescription>{categoryName(t, item.data.category)}</SheetDescription>}
         </SheetHeader>
-        {item.isError ? (
+        {!itemId ? (
+          <SheetBody>
+            <ItemForm item={null} onSaved={(saved) => onOpen(saved.id)} />
+          </SheetBody>
+        ) : item.isError ? (
           <SheetBody>
             <p role="alert" className="text-destructive">
               {t("catalog.loadFailed")}
@@ -70,13 +79,19 @@ export function ItemPanel({
               {item.data.archived_at && (
                 <p className="rounded-md bg-muted px-3 py-2 text-sm">{t("catalog.archivedNote")}</p>
               )}
-              <ItemDetails item={item.data} />
+              {editable ? (
+                <ItemForm key={item.data.current_revision.id} item={item.data} onSaved={() => {}} />
+              ) : (
+                <ItemDetails item={item.data} />
+              )}
             </SheetBody>
-            {item.data.builtin && (
-              <SheetFooter>
+            <SheetFooter>
+              {item.data.builtin ? (
                 <CopyButton item={item.data} onCopied={onOpen} />
-              </SheetFooter>
-            )}
+              ) : (
+                <ArchiveButton item={item.data} />
+              )}
+            </SheetFooter>
           </>
         ) : null}
       </SheetContent>
@@ -141,6 +156,50 @@ function CopyButton({ item, onCopied }: { item: CatalogItem; onCopied: (id: stri
     <Button onClick={() => copy.mutate()} disabled={copy.isPending}>
       <Copy aria-hidden />
       {t("catalog.makeCopy")}
+    </Button>
+  );
+}
+
+/** Archives an item at once with Undo, or restores an archived one (docs/0088 choice 6). */
+function ArchiveButton({ item }: { item: CatalogItem }) {
+  const { t } = useTranslation();
+  const client = useQueryClient();
+  const refresh = () => client.invalidateQueries({ queryKey: ["catalog-items"] });
+  const restore = async () => {
+    const { error } = await api.POST("/api/v1/catalog-items/{item_id}/restore", {
+      params: { path: { item_id: item.id } },
+    });
+    await refresh();
+    if (error) notifyError(problemMessage(asProblem(error), t("common.failed")));
+    return !error;
+  };
+  const change = useMutation({
+    mutationFn: async () => {
+      if (item.archived_at) {
+        if (!(await restore())) return;
+        notify(t("catalog.restored", { name: item.name }));
+        return;
+      }
+      const { error } = await api.DELETE("/api/v1/catalog-items/{item_id}", {
+        params: { path: { item_id: item.id } },
+      });
+      await refresh();
+      if (error) {
+        notifyError(problemMessage(asProblem(error), t("common.failed")));
+        return;
+      }
+      notify(t("catalog.archived", { name: item.name }), {
+        description: t("catalog.archivedHint"),
+        undo: async () => {
+          if (await restore()) notify(t("catalog.restored", { name: item.name }));
+        },
+      });
+    },
+  });
+  return (
+    <Button variant="outline" onClick={() => change.mutate()} disabled={change.isPending}>
+      {item.archived_at ? <ArchiveRestore aria-hidden /> : <Archive aria-hidden />}
+      {t(item.archived_at ? "catalog.restore" : "catalog.archive")}
     </Button>
   );
 }

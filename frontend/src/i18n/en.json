@@ -642,7 +642,18 @@
       "shape": "Shape",
       "size": "Size (W × D × H)",
       "color": "Colour",
-      "key": "Key"
+      "key": "Key",
+      "name": "Name",
+      "category": "Category",
+      "width": "Width",
+      "depth": "Depth",
+      "height": "Height",
+      "widthCm": "Width (cm)",
+      "depthCm": "Depth (cm)",
+      "heightCm": "Height (cm)",
+      "sizeCm": "Size (cm)",
+      "flags": "What it is",
+      "attachesTo": "Can be attached to"
     },
     "shapes": {
       "box": "Box",
@@ -654,6 +665,29 @@
     "archivedNote": "This item is archived: it isn't offered in the editor, but items already placed keep working.",
     "makeCopy": "Make a copy",
     "copyName": "{{name}} (copy)",
-    "copied": "{{name}} created. Change it as you need."
+    "copied": "{{name}} created. Change it as you need.",
+    "newItem": "New item",
+    "create": "Create item",
+    "created": "{{name}} created.",
+    "saved": "{{name}} saved.",
+    "categoryHint": "Pick one, or type a new one in English letters, digits and _.",
+    "revisionNote": "Items already on floors keep their current size. Only new placements use this one.",
+    "archive": "Archive",
+    "restore": "Restore",
+    "archived": "{{name}} archived.",
+    "archivedHint": "It's no longer offered in the editor. Items already placed keep working.",
+    "restored": "{{name}} restored.",
+    "errors": {
+      "category": "Use English letters, digits and _, starting with a letter.",
+      "size": "Enter a size above 0, up to 100 m."
+    },
+    "flags": {
+      "is_seat": "A seat",
+      "is_seatHint": "Can be assigned to people and labelled.",
+      "mountable": "Can be off the floor",
+      "mountableHint": "May hang on a wall or stand on something, at a height.",
+      "footprint_blocks": "Takes floor space",
+      "footprint_blocksHint": "Checked against door swings and columns."
+    }
   }
 }
