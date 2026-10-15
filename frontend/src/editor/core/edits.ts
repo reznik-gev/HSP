@@ -12,6 +12,49 @@ export interface WallDefaults {
 
 const same = (p: Vec2, q: Vec2) => p[0] === q[0] && p[1] === q[1];
 
+export type OpeningType = "door" | "window";
+
+/** Standard sizes for new doors and windows; the Properties panel changes them. */
+export const OPENING_DEFAULTS: Record<
+  OpeningType,
+  { width_mm: number; height_mm: number; sill_mm: number; swing: string }
+> = {
+  door: { width_mm: 900, height_mm: 2100, sill_mm: 0, swing: "left_in" },
+  window: { width_mm: 1200, height_mm: 1200, sill_mm: 900, swing: "none" },
+};
+
+/** Default column: 40 × 40 cm. */
+export const COLUMN_SIZE_MM = 400;
+
+export function addOpening(type: OpeningType, wallId: string, offsetMm: number, id = newId()): Op {
+  return {
+    op: "add",
+    kind: "opening",
+    id,
+    data: { wall_id: wallId, type, offset_mm: offsetMm, ...OPENING_DEFAULTS[type] },
+  };
+}
+
+/** A square footprint centred on `c`. */
+export function squareAround(c: Vec2, size = COLUMN_SIZE_MM): Vec2[] {
+  const h = size / 2;
+  return [
+    [c[0] - h, c[1] - h],
+    [c[0] + h, c[1] - h],
+    [c[0] + h, c[1] + h],
+    [c[0] - h, c[1] + h],
+  ];
+}
+
+export function addColumn(footprint: readonly Vec2[], heightMm: number, id = newId()): Op {
+  return {
+    op: "add",
+    kind: "column",
+    id,
+    data: { footprint: footprint.map((p) => [p[0], p[1]]), height_mm: heightMm },
+  };
+}
+
 export function addWall(a: Vec2, b: Vec2, defaults: WallDefaults, id = newId()): Op {
   return {
     op: "add",
@@ -22,7 +65,7 @@ export function addWall(a: Vec2, b: Vec2, defaults: WallDefaults, id = newId()):
 }
 
 /**
- * Deletes the selected walls and objects. A wall takes its doors and windows along, and an
+ * Deletes the selected walls, doors, windows, columns and objects. A wall takes its doors and windows along, and an
  * object the objects attached to it (docs/0081 cascades), as explicit ops so undo restores them.
  */
 export function deleteSelection(plan: Plan, selection: ReadonlySet<string>): Op[] {
@@ -34,6 +77,9 @@ export function deleteSelection(plan: Plan, selection: ReadonlySet<string>): Op[
     }
   }
   for (const id of walls) ops.push({ op: "delete", kind: "wall", id });
+  for (const c of plan.columns ?? []) {
+    if (selection.has(c.id)) ops.push({ op: "delete", kind: "column", id: c.id });
+  }
   // Attached objects first, then their hosts.
   const objects = plan.objectOrder.filter((id) => {
     const o = plan.objects[id];

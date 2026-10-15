@@ -343,6 +343,23 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     expect(screen.getByRole("button", { name: "Select" })).toHaveAttribute("aria-pressed", "true");
   });
 
+  it("D picks the Door tool; clicking a wall places a door on it", async () => {
+    const { routes, changesets } = saving();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    await userEvent.keyboard("d");
+    expect(screen.getByRole("button", { name: "Door" })).toHaveAttribute("aria-pressed", "true");
+    click([6000, 0]);
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops).toEqual([
+      expect.objectContaining({
+        op: "add",
+        kind: "opening",
+        data: expect.objectContaining({ wall_id: "w1", type: "door", offset_mm: 5550 }) as unknown,
+      }),
+    ]);
+  });
+
   it("Exit saves what's waiting before leaving", async () => {
     const { routes, changesets } = saving();
     const { calls: sent } = await renderApp("/floors/f3/edit", routes);

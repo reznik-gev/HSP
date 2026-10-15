@@ -3,16 +3,20 @@
  * into these calls (screen pixels relative to the canvas, plus button and modifiers); the core
  * decides what it means for the current tool and updates the store.
  *
- * Select tool: click selects an object or a wall (Shift adds), dragging objects moves them,
- * dragging a selected wall's end moves the junction with every wall that meets there (Alt
- * detaches just that wall, docs/0044), and empty space pans. Wall tool: see WallTool. The
- * middle button always pans; the wheel zooms.
+ * Select tool: click selects (Shift adds); dragging furniture or columns moves them, dragging a
+ * door or window slides it along its wall, dragging a selected wall's end moves the junction
+ * with every wall that meets there (Alt detaches just that wall, docs/0044), and empty space
+ * pans. Drawing tools (wall, door, window, column): a click places, a drag pans; see their
+ * classes. The middle button always pans; the wheel zooms.
  */
-import { deleteSelection, moveJunction, wallsAt } from "./edits";
+import { deleteSelection, moveJunction, type OpeningType, wallsAt } from "./edits";
+import { alongSegment } from "./geometry";
 import { hitTest } from "./hitTest";
 import type { Vec2 } from "./plan";
 import { SNAP_PX, snapPoint } from "./snap";
 import type { EditorStore } from "./store";
+import { ColumnTool } from "./tools/columnTool";
+import { fitOnWall, OpeningTool } from "./tools/openingTool";
 import { WallTool } from "./tools/wallTool";
 import { panBy, screenToPlan, zoomAt } from "./viewport";
 
@@ -30,7 +34,9 @@ type Gesture =
   /** `clickClears`: a click without moving (on empty space) clears the selection. */
   | { kind: "pan"; lastSx: number; lastSy: number; clickClears?: boolean }
   | { kind: "drag"; start: Vec2; moved: boolean }
-  | { kind: "junction"; from: Vec2; walls: string[] };
+  | { kind: "junction"; from: Vec2; walls: string[] }
+  /** Sliding a door or window: `grab` is where along it the pointer took hold. */
+  | { kind: "slide"; id: string; grab: number };
 
 const DRAG_THRESHOLD_PX = 3;
 
@@ -39,9 +45,24 @@ export class Interaction {
   private size: Vec2 = [1, 1];
   private downAt: Vec2 = [0, 0];
   private readonly wallTool: WallTool;
+  private readonly openingTool: OpeningTool;
+  private readonly columnTool: ColumnTool;
 
   constructor(private readonly store: EditorStore) {
     this.wallTool = new WallTool(store);
+    this.openingTool = new OpeningTool(store);
+    this.columnTool = new ColumnTool(store);
+  }
+
+  /** The pointer moved with no button down, or a click placed something (drawing tools). */
+  private toolAt(p: Vec2, click: boolean): void {
+    const tool = this.store.getState().tool;
+    if (tool === "wall") return click ? this.wallTool.click(p) : this.wallTool.hover(p);
+    if (tool === "door" || tool === "window") {
+      const type: OpeningType = tool;
+      return click ? this.openingTool.click(p, type) : this.openingTool.hover(p, type);
+    }
+    if (tool === "column") return click ? this.columnTool.click(p) : this.columnTool.hover(p);
   }
 
   setSize(width: number, height: number): void {
@@ -61,9 +82,9 @@ export class Interaction {
       this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy };
       return "pan";
     }
-    if (s.tool === "wall") {
-      if (e.button === 2) this.wallTool.finish();
-      // A click places a corner (on release); a drag pans.
+    if (s.tool !== "select") {
+      if (e.button === 2 && s.tool === "wall") this.wallTool.finish();
+      // A click places (on release); a drag pans.
       else if (e.button === 0) this.gesture = { kind: "pan", lastSx: e.sx, lastSy: e.sy };
       return "none";
     }
@@ -80,6 +101,21 @@ export class Interaction {
     if (hit?.kind === "object") {
       if (e.shift || !s.selection.has(hit.id)) s.select([hit.id], e.shift);
       this.gesture = { kind: "drag", start: p, moved: false };
+      return "select";
+    }
+    if (hit?.kind === "column") {
+      if (e.shift || !s.selection.has(hit.id)) s.select([hit.id], e.shift);
+      this.gesture = { kind: "drag", start: p, moved: false };
+      return "select";
+    }
+    if (hit?.kind === "opening") {
+      s.select([hit.id], e.shift);
+      const o = s.plan.openings.find((x) => x.id === hit.id);
+      const w = o && s.plan.walls.find((x) => x.id === o.wall_id);
+      if (o && w) {
+        const grab = alongSegment(p, w.a, w.b).along - o.offset_mm;
+        this.gesture = { kind: "slide", id: o.id, grab };
+      }
       return "select";
     }
     if (hit?.kind === "wall") {
@@ -131,8 +167,21 @@ export class Interaction {
         ignore: g.from,
       });
       s.setPreview({ kind: "junction", from: g.from, to: point, walls: g.walls, snap: kind });
-    } else if (s.tool === "wall") {
-      this.wallTool.hover(this.toPlan(e));
+    } else if (g.kind === "slide" && s.plan) {
+      const o = s.plan.openings.find((x) => x.id === g.id);
+      const w = o && s.plan.walls.find((x) => x.id === o.wall_id);
+      if (!o || !w) return;
+      const along = alongSegment(this.toPlan(e), w.a, w.b).along - g.grab + o.width_mm / 2;
+      s.setPreview({
+        kind: "opening",
+        id: o.id,
+        type: o.type,
+        wall_id: w.id,
+        offset_mm: fitOnWall(w, along, o.width_mm) ?? o.offset_mm,
+        width_mm: o.width_mm,
+      });
+    } else if (g.kind === "none" && s.tool !== "select") {
+      this.toolAt(this.toPlan(e), false);
     }
   }
 
@@ -149,8 +198,17 @@ export class Interaction {
       if (preview?.kind === "junction" && s.plan) {
         s.perform(moveJunction(s.plan, g.walls, g.from, preview.to));
       }
+    } else if (g.kind === "slide") {
+      const preview = s.preview;
+      s.setPreview(null);
+      const o = s.plan?.openings.find((x) => x.id === g.id);
+      if (preview?.kind === "opening" && o && preview.offset_mm !== o.offset_mm) {
+        s.perform([
+          { op: "update", kind: "opening", id: o.id, data: { offset_mm: preview.offset_mm } },
+        ]);
+      }
     } else if (g.kind === "pan" && clicked && e.button === 0) {
-      if (s.tool === "wall") this.wallTool.click(this.toPlan(e));
+      if (s.tool !== "select") this.toolAt(this.toPlan(e), true);
       else if (g.clickClears) s.clearSelection();
     }
   }

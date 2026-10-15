@@ -1,11 +1,12 @@
 /**
  * What the editor draws over the plan (docs/0089): selected walls with handles on their ends,
- * the wall being drawn, a junction being dragged, and the snap marker. Plan millimetres inside
+ * selected doors, windows and columns, what a tool is about to place, a junction being
+ * dragged, and the snap marker. Plan millimetres inside
  * PlanView's y-up group; sizes meant in screen pixels are scaled by the zoom.
  */
 import { useStore } from "zustand";
 
-import type { Vec2 } from "@/editor/core/plan";
+import type { Vec2, Wall } from "@/editor/core/plan";
 import type { EditorStore } from "@/editor/core/store";
 
 export function EditOverlay({ store }: { store: EditorStore }) {
@@ -14,7 +15,10 @@ export function EditOverlay({ store }: { store: EditorStore }) {
   const preview = useStore(store, (s) => s.preview);
   const px = useStore(store, (s) => s.viewport.mmPerPx);
   const thickness = useStore(store, (s) => s.wallDefaults.thickness_mm);
+  const drag = useStore(store, (s) => s.drag);
   if (!plan) return null;
+  const wallsById = new Map(plan.walls.map((w) => [w.id, w]));
+  const opening = preview?.kind === "opening" ? preview : null;
 
   const selectedWalls = plan.walls.filter((w) => selection.has(w.id));
   const junction = preview?.kind === "junction" ? preview : null;
@@ -54,6 +58,44 @@ export function EditOverlay({ store }: { store: EditorStore }) {
               />
             );
           })}
+      {plan.openings
+        .filter((o) => selection.has(o.id) && o.id !== opening?.id)
+        .map((o) => {
+          const w = wallsById.get(o.wall_id);
+          return w ? <Span key={o.id} wall={w} offset={o.offset_mm} width={o.width_mm} /> : null;
+        })}
+      {opening?.wall_id && wallsById.get(opening.wall_id) && (
+        <Span
+          wall={wallsById.get(opening.wall_id)!}
+          offset={opening.offset_mm}
+          width={opening.width_mm}
+          testId="opening-preview"
+        />
+      )}
+      <g transform={drag ? `translate(${drag.dx} ${drag.dy})` : undefined}>
+        {(plan.columns ?? [])
+          .filter((c) => selection.has(c.id))
+          .map((c) => (
+            <polygon
+              key={c.id}
+              className="plan-selected"
+              points={c.footprint.map((p) => `${p[0]},${p[1]}`).join(" ")}
+              fill="var(--primary)"
+              fillOpacity={0.35}
+              strokeWidth={2 * px}
+            />
+          ))}
+      </g>
+      {preview?.kind === "column" && (
+        <polygon
+          className="plan-selected"
+          points={preview.footprint.map((p) => `${p[0]},${p[1]}`).join(" ")}
+          fill="var(--primary)"
+          fillOpacity={0.3}
+          strokeWidth={2 * px}
+          data-testid="column-preview"
+        />
+      )}
       {selectedWalls.flatMap((w) =>
         [moved(w.a), moved(w.b)].map((p, i) => <Handle key={`${w.id}${i}`} at={p} px={px} />),
       )}
@@ -69,7 +111,7 @@ export function EditOverlay({ store }: { store: EditorStore }) {
           data-testid="wall-preview"
         />
       )}
-      {preview && preview.snap === "endpoint" && (
+      {preview && "snap" in preview && preview.snap === "endpoint" && "to" in preview && (
         <rect
           className="plan-selected"
           x={preview.to[0] - 6 * px}
@@ -90,6 +132,35 @@ export function EditOverlay({ store }: { store: EditorStore }) {
         />
       )}
     </g>
+  );
+}
+
+/** A stretch of a wall, e.g. a selected door or one about to be placed. */
+function Span({
+  wall,
+  offset,
+  width,
+  testId,
+}: {
+  wall: Wall;
+  offset: number;
+  width: number;
+  testId?: string;
+}) {
+  const len = Math.hypot(wall.b[0] - wall.a[0], wall.b[1] - wall.a[1]) || 1;
+  const ux = (wall.b[0] - wall.a[0]) / len;
+  const uy = (wall.b[1] - wall.a[1]) / len;
+  return (
+    <line
+      className="plan-selected"
+      x1={wall.a[0] + ux * offset}
+      y1={wall.a[1] + uy * offset}
+      x2={wall.a[0] + ux * (offset + width)}
+      y2={wall.a[1] + uy * (offset + width)}
+      strokeWidth={wall.thickness_mm + 60}
+      strokeOpacity={0.5}
+      data-testid={testId}
+    />
   );
 }
 

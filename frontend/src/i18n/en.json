@@ -384,7 +384,10 @@
     "tools": {
       "label": "Tools",
       "select": "Select",
-      "wall": "Wall"
+      "wall": "Wall",
+      "door": "Door",
+      "window": "Window",
+      "column": "Column"
     }
   }
 }
