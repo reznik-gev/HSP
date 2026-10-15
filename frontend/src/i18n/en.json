@@ -478,7 +478,7 @@
       "problems": "Problems"
     },
     "problems": {
-      "none": "No problems. Changes the server refuses show up here, with where they are.",
+      "none": "No problems. The editor checks the plan as you work; changes the server refuses show up here too.",
       "error": "Error",
       "warning": "Warning",
       "dismiss": "Dismiss",

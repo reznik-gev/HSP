@@ -1,0 +1,64 @@
+{
+  "rule": "zones and columns",
+  "zone_types": ["room"],
+  "cases": [
+    {
+      "name": "a room inside an area, and a column",
+      "plan": {
+        "zones": [
+          { "id": "area", "name": "Area", "zone_type_id": "room", "parent_zone_id": null, "boundary": [[0, 0], [8000, 0], [8000, 6000], [0, 6000]] },
+          { "id": "room", "name": "Room", "zone_type_id": "room", "parent_zone_id": "area", "boundary": [[0, 0], [3000, 0], [3000, 3000], [0, 3000]] }
+        ],
+        "columns": [{ "id": "c1", "footprint": [[4000, 4000], [4400, 4000], [4400, 4400], [4000, 4400]], "height_mm": 3000 }]
+      },
+      "expect": []
+    },
+    {
+      "name": "a zone outline that crosses itself (a bow tie)",
+      "plan": {
+        "zones": [
+          { "id": "z1", "name": "Bow tie", "zone_type_id": "room", "parent_zone_id": null, "boundary": [[0, 0], [1000, 1000], [1000, 0], [0, 1000]] }
+        ]
+      },
+      "expect": [{ "code": "polygon_invalid", "element_id": "z1" }]
+    },
+    {
+      "name": "a column footprint with only two distinct corners",
+      "plan": {
+        "columns": [{ "id": "c1", "footprint": [[0, 0], [400, 0], [0, 0]], "height_mm": 3000 }]
+      },
+      "expect": [{ "code": "polygon_invalid", "element_id": "c1" }]
+    },
+    {
+      "name": "a zone of a type that doesn't exist",
+      "plan": {
+        "zones": [
+          { "id": "z1", "name": "Mystery", "zone_type_id": "lab", "parent_zone_id": null, "boundary": [[0, 0], [1000, 0], [1000, 1000]] }
+        ]
+      },
+      "expect": [{ "code": "reference_missing", "element_id": "z1" }]
+    },
+    {
+      "name": "a zone inside a parent that doesn't exist",
+      "plan": {
+        "zones": [
+          { "id": "z1", "name": "Orphan", "zone_type_id": "room", "parent_zone_id": "z9", "boundary": [[0, 0], [1000, 0], [1000, 1000]] }
+        ]
+      },
+      "expect": [{ "code": "reference_missing", "element_id": "z1" }]
+    },
+    {
+      "name": "two zones inside each other",
+      "plan": {
+        "zones": [
+          { "id": "a", "name": "A", "zone_type_id": "room", "parent_zone_id": "b", "boundary": [[0, 0], [1000, 0], [1000, 1000]] },
+          { "id": "b", "name": "B", "zone_type_id": "room", "parent_zone_id": "a", "boundary": [[0, 0], [1000, 0], [1000, 1000]] }
+        ]
+      },
+      "expect": [
+        { "code": "zone_cycle", "element_id": "a" },
+        { "code": "zone_cycle", "element_id": "b" }
+      ]
+    }
+  ]
+}

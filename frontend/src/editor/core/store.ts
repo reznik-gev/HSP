@@ -12,6 +12,7 @@ import { createStore } from "zustand/vanilla";
 
 import type { ArraySpec } from "./array";
 import type { PlanCatalogItem, WallDefaults } from "./edits";
+import { checkPlan, type Finding } from "./checks";
 import { planFromApi } from "./fromApi";
 import { parsePattern } from "./numbering";
 import { buildHitIndex, type HitIndex, moveObjects, withAttachments } from "./hitTest";
@@ -118,6 +119,8 @@ export interface EditorState {
   /** Applied changes not yet saved, oldest first. */
   pending: readonly PendingChange[];
   problems: readonly EditorProblem[];
+  /** What the editor's own checks find in the plan right now (docs/0051), live. */
+  findings: readonly Finding[];
   /** Seat numbering (docs/0049): the pattern, and the counter for the next seat. */
   numbering: { pattern: string; next: number };
   /** Seat labels used elsewhere in the building, which numbering skips (docs/0034). */
@@ -204,12 +207,16 @@ function exists(plan: Plan, id: string): boolean {
 
 export function createEditorStore() {
   return createStore<EditorState>()((set, get) => {
+    /** The editor's checks over a document (docs/0051). */
+    const check = (document: ApiPlan, zoneTypes: ZoneTypes) =>
+      checkPlan(document, { zoneTypeIds: new Set(zoneTypes.keys()), deviceIds: null });
     /** Shows a new version of the document and refreshes everything derived from it. */
     const show = (document: ApiPlan) => {
       const { zoneTypes, selection } = get();
       const plan = planFromApi(document, zoneTypes);
       set({
         document,
+        findings: check(document, zoneTypes),
         plan,
         hitIndex: buildHitIndex(plan),
         // Whatever was deleted can't stay selected.
@@ -248,6 +255,7 @@ export function createEditorStore() {
       redoStack: [],
       pending: [],
       problems: [],
+      findings: [],
       panelTab: "properties",
       measure: null,
       arrayDraft: null,
@@ -281,6 +289,7 @@ export function createEditorStore() {
           redoStack: [],
           pending: [],
           problems: [],
+          findings: check(document, zoneTypes),
           generation: get().generation + 1,
         });
       },

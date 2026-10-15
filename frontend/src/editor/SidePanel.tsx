@@ -27,7 +27,9 @@ export function SidePanel({
   const { t } = useTranslation();
   const tool = useStore(store, (s) => s.tool);
   const tab = useStore(store, (s) => s.panelTab);
-  const problems = useStore(store, (s) => s.problems);
+  const refused = useStore(store, (s) => s.problems);
+  const findings = useStore(store, (s) => s.findings);
+  const problems = [...refused, ...findings];
   const errors = problems.some((p) => p.severity === "error");
   if (tool === "item") {
     return (
