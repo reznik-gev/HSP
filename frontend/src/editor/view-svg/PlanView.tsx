@@ -13,6 +13,11 @@
  *
  * Colours come from CSS variables (index.css), so the plan follows light and dark mode. The
  * drawing never mirrors in right-to-left languages: it is geometry (docs/0087 choice 6).
+ *
+ * Heights (docs/0095): items raised off the floor have a dashed outline and a tag with their
+ * height range, windows a tag from sill to top. Tags show when zoomed in, and always for the
+ * selection. The height filter only switches an attribute on the root, so it never re-renders
+ * the plan.
  */
 import { memo, type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
@@ -28,6 +33,8 @@ import {
 } from "@/editor/core/plan";
 import type { EditorStore } from "@/editor/core/store";
 import { viewBox } from "@/editor/core/viewport";
+import { rotatedRectCorners } from "@/editor/core/geometry";
+import { isRaised, itemTag, windowTag } from "@/editor/core/heights";
 import { wallChains } from "@/editor/core/walls";
 
 export interface RenderOptions {
@@ -103,6 +110,18 @@ const PLAN_CSS = `
   .seat-free { fill: var(--seat-free); stroke: var(--seat-free-stroke); }
   .seat-bookable { fill: var(--seat-bookable); }
   .seat-unavailable { fill: var(--seat-unavailable); stroke-dasharray: 60 40; }
+  .plan-tag {
+    fill: var(--plan-ink);
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    paint-order: stroke;
+    stroke: var(--plan-paper);
+    stroke-width: 28px;
+    stroke-linejoin: round;
+  }
+  /* The height filter fades the other group rather than hiding it. */
+  svg[data-height="floor"] .plan-raised,
+  svg[data-height="raised"] .plan-floor { opacity: 0.2; }
   .hatch-bg { fill: var(--plan-hatch); }
   .hatch-line { stroke: var(--plan-wall); }
 `;
@@ -122,6 +141,7 @@ export function PlanView({
   const [size, setSize] = useState<[number, number]>([1, 1]);
   const plan = useStore(store, (s) => s.plan);
   const viewport = useStore(store, (s) => s.viewport);
+  const heightFilter = useStore(store, (s) => s.heightFilter);
   const downAt = useRef<number | null>(null);
 
   useLayoutEffect(() => {
@@ -172,6 +192,7 @@ export function PlanView({
       viewBox={`${vx} ${vy} ${vw} ${vh}`}
       data-lod={far ? "far" : "near"}
       data-seat-view={seatStates.size > 0 ? "" : undefined}
+      data-height={heightFilter}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
         downAt.current = performance.now();
@@ -320,6 +341,16 @@ const StaticLayer = memo(function StaticLayer({
             const obj = plan.objects[id];
             return obj?.label ? <Label key={id} obj={obj} /> : null;
           })}
+          {plan.objectOrder.map((id) => {
+            const obj = plan.objects[id];
+            return obj && isRaised(obj) ? (
+              <ItemTag key={id} obj={obj} item={catalogItemOf(plan, obj)} />
+            ) : null;
+          })}
+          {plan.openings.map((o) => {
+            const w = wallsById.get(o.wall_id);
+            return w && o.type === "window" ? <WindowTag key={o.id} opening={o} wall={w} /> : null;
+          })}
         </g>
       )}
     </g>
@@ -342,9 +373,11 @@ const ObjectShape = memo(function ObjectShape({
 }) {
   const domId = highlight ? undefined : `e-${obj.id}`;
   const transform = `translate(${obj.position[0]} ${obj.position[1]}) rotate(${obj.rotation_ddeg / 10})`;
+  const raised = isRaised(obj);
   const className = [
     highlight ? "plan-selected" : "plan-object",
     state ? `seat-${state}` : "plan-furniture",
+    raised ? "plan-raised" : "plan-floor",
     item.category === "monitor" && "lod-detail",
   ]
     .filter(Boolean)
@@ -355,6 +388,7 @@ const ObjectShape = memo(function ObjectShape({
     transform,
     fill: item.color, // overridden by the seat-state class, if any
     strokeWidth: highlight ? 60 : 12,
+    strokeDasharray: raised ? "60 40" : undefined,
   };
   if (item.shape === "cylinder") return <circle {...common} r={item.width_mm / 2} />;
   return (
@@ -382,6 +416,68 @@ const Label = memo(function Label({ obj, copy = false }: { obj: PlacedObject; co
     </text>
   );
 });
+
+/** A raised item's height range, just below it on screen. */
+const ItemTag = memo(function ItemTag({
+  obj,
+  item,
+  copy = false,
+}: {
+  obj: PlacedObject;
+  item: CatalogItem;
+  copy?: boolean;
+}) {
+  const corners = rotatedRectCorners(
+    [obj.position[0], obj.position[1]],
+    item.width_mm,
+    item.depth_mm,
+    obj.rotation_ddeg,
+  );
+  const bottom = Math.min(...corners.map((c) => c[1]));
+  return (
+    <text
+      id={copy ? undefined : `h-${obj.id}`}
+      className="plan-tag plan-raised"
+      transform={`translate(${obj.position[0]} ${bottom - 60}) scale(1 -1)`}
+      fontSize={140}
+      textAnchor="middle"
+      dominantBaseline="hanging"
+    >
+      {itemTag(obj, item)}
+    </text>
+  );
+});
+
+/** A window's sill-to-top range, beside it on the wall's left (looking from a to b). */
+function WindowTag({
+  opening,
+  wall,
+  copy = false,
+}: {
+  opening: Opening;
+  wall: Wall;
+  copy?: boolean;
+}) {
+  const len = Math.hypot(wall.b[0] - wall.a[0], wall.b[1] - wall.a[1]) || 1;
+  const ux = (wall.b[0] - wall.a[0]) / len;
+  const uy = (wall.b[1] - wall.a[1]) / len;
+  const along = opening.offset_mm + opening.width_mm / 2;
+  const away = wall.thickness_mm / 2 + 160;
+  const x = wall.a[0] + ux * along - uy * away;
+  const y = wall.a[1] + uy * along + ux * away;
+  return (
+    <text
+      id={copy ? undefined : `h-${opening.id}`}
+      className="plan-tag"
+      transform={`translate(${x} ${y}) scale(1 -1)`}
+      fontSize={140}
+      textAnchor="middle"
+      dominantBaseline="central"
+    >
+      {windowTag(opening)}
+    </text>
+  );
+}
 
 function Door({ opening, wall, arcs }: { opening: Opening; wall: Wall; arcs: boolean }) {
   const len = Math.hypot(wall.b[0] - wall.a[0], wall.b[1] - wall.a[1]) || 1;
@@ -458,7 +554,8 @@ function SelectionLayer({
 
   const ids = [...selection];
   // Hide the originals in the static layer; they are redrawn (highlighted, offset) below.
-  const hideCss = ids.map((id) => `#e-${id},#l-${id}`).join(",");
+  const hideCss = ids.map((id) => `#e-${id},#l-${id},#h-${id}`).join(",");
+  const walls = new Map(plan.walls.map((w) => [w.id, w]));
   const turn = drag?.turn;
   const offset = drag
     ? `translate(${drag.dx} ${drag.dy})` +
@@ -485,6 +582,22 @@ function SelectionLayer({
           ids.map((id) => {
             const obj = plan.objects[id];
             return obj?.label ? <Label key={`l${id}`} obj={obj} copy /> : null;
+          })}
+        {options.labels &&
+          ids.map((id) => {
+            const obj = plan.objects[id];
+            return obj && isRaised(obj) ? (
+              <ItemTag key={`h${id}`} obj={obj} item={catalogItemOf(plan, obj)} copy />
+            ) : null;
+          })}
+      </g>
+      <g>
+        {options.labels &&
+          plan.openings.map((o) => {
+            const w = walls.get(o.wall_id);
+            return selection.has(o.id) && w && o.type === "window" ? (
+              <WindowTag key={`h${o.id}`} opening={o} wall={w} copy />
+            ) : null;
           })}
       </g>
     </>

@@ -48,7 +48,7 @@ export function buildHitIndex(plan: Plan): HitIndex {
 }
 
 export function hitTest(plan: Plan, index: HitIndex, p: Vec2, tolerance_mm = 0): Hit | null {
-  let best: { id: string; rank: number; order: number } | null = null;
+  let best: { id: string; order: number } | null = null;
   for (const id of index.objects.queryPoint(p[0], p[1])) {
     const obj = plan.objects[id];
     if (!obj) continue;
@@ -57,11 +57,10 @@ export function hitTest(plan: Plan, index: HitIndex, p: Vec2, tolerance_mm = 0):
     const w = item.width_mm + 2 * tolerance_mm;
     const d = item.depth_mm + 2 * tolerance_mm;
     if (!pointInRotatedRect(p, c, w, d, obj.rotation_ddeg)) continue;
-    const rank = obj.attached_to ? 2 : 1;
+    // The topmost wins: the draw order already puts attached and raised items above what's
+    // below them (docs/0095).
     const order = index.drawOrder.get(id) ?? -1;
-    if (!best || rank > best.rank || (rank === best.rank && order > best.order)) {
-      best = { id, rank, order };
-    }
+    if (!best || order > best.order) best = { id, order };
   }
   if (best) return { kind: "object", id: best.id };
 

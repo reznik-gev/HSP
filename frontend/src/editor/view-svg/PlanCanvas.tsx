@@ -1,8 +1,9 @@
 /**
  * A plan filling its box, as both the floor viewer and the editor show it (docs/0042,
- * docs/0087, docs/0089): the SVG view, the zoom buttons, and an initial view that fits the
- * floor whenever a plan is loaded into the store and once the box has a size. `fitKey` asks
- * for another fit (e.g. a new seat to show); `fit` can choose a different initial view.
+ * docs/0087, docs/0089): the SVG view, the zoom buttons, the height filter (docs/0095), and an
+ * initial view that fits the floor whenever a plan is loaded into the store and once the box has
+ * a size. `fitKey` asks for another fit (e.g. a new seat to show); `fit` can choose a different
+ * initial view.
  * Anything else drawn over the canvas (tooltips, a legend, tool options) comes in as children.
  */
 import { type ComponentProps, type ReactNode, useEffect, useRef } from "react";
@@ -11,6 +12,7 @@ import { useStore } from "zustand";
 import type { EditorStore } from "@/editor/core/store";
 import { cn } from "@/lib/utils";
 
+import { HeightFilterControl } from "./HeightFilterControl";
 import { PlanView, type PlanViewProps, type RenderOptions } from "./PlanView";
 import { fitPlan, useElementSize, ZoomControls } from "./ZoomControls";
 
@@ -54,6 +56,7 @@ export function PlanCanvas({
     <div ref={canvas} className={cn("relative min-w-0 flex-1", className)} {...box}>
       <PlanView store={store} options={PLAN_OPTIONS} {...view} />
       <ZoomControls store={store} size={size} />
+      <HeightFilterControl store={store} />
       {children}
     </div>
   );
