@@ -1,7 +1,7 @@
 /**
  * What the editor draws over the plan (docs/0089): selected walls with handles on their ends,
- * selected doors, windows and columns, what a tool is about to place, a junction being
- * dragged, and the snap marker. Plan millimetres inside
+ * selected doors, windows, columns and zones (zones with handles on their corners), what a
+ * tool is about to place, a junction or zone corner being dragged, and the snap marker. Plan millimetres inside
  * PlanView's y-up group; sizes meant in screen pixels are scaled by the zoom.
  */
 import { useStore } from "zustand";
@@ -19,6 +19,10 @@ export function EditOverlay({ store }: { store: EditorStore }) {
   if (!plan) return null;
   const wallsById = new Map(plan.walls.map((w) => [w.id, w]));
   const opening = preview?.kind === "opening" ? preview : null;
+  const vertex = preview?.kind === "vertex" ? preview : null;
+  const zoneOutline = (id: string, boundary: readonly Vec2[]) =>
+    vertex?.zone === id ? boundary.map((p, i) => (i === vertex.index ? vertex.to : p)) : boundary;
+  const selectedZones = plan.zones.filter((z) => selection.has(z.id));
 
   const selectedWalls = plan.walls.filter((w) => selection.has(w.id));
   const junction = preview?.kind === "junction" ? preview : null;
@@ -27,6 +31,28 @@ export function EditOverlay({ store }: { store: EditorStore }) {
 
   return (
     <g pointerEvents="none" data-testid="edit-overlay">
+      {selectedZones.map((z) => (
+        <polygon
+          key={z.id}
+          className="plan-selected"
+          points={points(zoneOutline(z.id, z.boundary))}
+          fill="var(--primary)"
+          fillOpacity={0.12}
+          strokeWidth={2 * px}
+          data-selected-zone={z.id}
+        />
+      ))}
+      {preview?.kind === "zone" && preview.points.length > 0 && (
+        <polygon
+          className="plan-selected"
+          points={points([...preview.points, preview.to])}
+          fill="var(--primary)"
+          fillOpacity={0.12}
+          strokeWidth={2 * px}
+          strokeDasharray={`${6 * px} ${4 * px}`}
+          data-testid="zone-preview"
+        />
+      )}
       {selectedWalls.map((w) => (
         <line
           key={w.id}
@@ -96,6 +122,9 @@ export function EditOverlay({ store }: { store: EditorStore }) {
           data-testid="column-preview"
         />
       )}
+      {selectedZones.flatMap((z) =>
+        zoneOutline(z.id, z.boundary).map((p, i) => <Handle key={`${z.id}${i}`} at={p} px={px} />),
+      )}
       {selectedWalls.flatMap((w) =>
         [moved(w.a), moved(w.b)].map((p, i) => <Handle key={`${w.id}${i}`} at={p} px={px} />),
       )}
@@ -122,7 +151,7 @@ export function EditOverlay({ store }: { store: EditorStore }) {
           strokeWidth={2 * px}
         />
       )}
-      {preview?.kind === "wall" && (
+      {(preview?.kind === "wall" || preview?.kind === "zone") && (
         <circle
           className="plan-selected"
           cx={preview.to[0]}
@@ -134,6 +163,8 @@ export function EditOverlay({ store }: { store: EditorStore }) {
     </g>
   );
 }
+
+const points = (ps: readonly Vec2[]) => ps.map((p) => `${p[0]},${p[1]}`).join(" ");
 
 /** A stretch of a wall, e.g. a selected door or one about to be placed. */
 function Span({

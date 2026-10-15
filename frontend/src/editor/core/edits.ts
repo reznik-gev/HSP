@@ -2,6 +2,7 @@
  * The operations behind editing actions (docs/0050): each function returns the ops for one
  * user action, ready for `store.perform`. Pure, like the rest of the core (docs/0052).
  */
+import { isSimplePolygon } from "./geometry";
 import { newId, type Op } from "./operations";
 import type { Plan, Vec2 } from "./plan";
 
@@ -55,6 +56,41 @@ export function addColumn(footprint: readonly Vec2[], heightMm: number, id = new
   };
 }
 
+export function addZone(
+  name: string,
+  zoneTypeId: string,
+  boundary: readonly Vec2[],
+  id = newId(),
+): Op {
+  return {
+    op: "add",
+    kind: "zone",
+    id,
+    data: {
+      name,
+      zone_type_id: zoneTypeId,
+      parent_zone_id: null,
+      boundary: boundary.map((p) => [p[0], p[1]]),
+    },
+  };
+}
+
+/** Moves one corner of a zone, unless that would make its outline invalid. */
+export function moveZoneVertex(plan: Plan, zoneId: string, index: number, to: Vec2): Op[] {
+  const zone = plan.zones.find((z) => z.id === zoneId);
+  if (!zone) return [];
+  const boundary = zone.boundary.map((p, i) => (i === index ? to : p));
+  if (!isSimplePolygon(boundary)) return [];
+  return [
+    {
+      op: "update",
+      kind: "zone",
+      id: zoneId,
+      data: { boundary: boundary.map((p) => [p[0], p[1]]) },
+    },
+  ];
+}
+
 export function addWall(a: Vec2, b: Vec2, defaults: WallDefaults, id = newId()): Op {
   return {
     op: "add",
@@ -65,7 +101,8 @@ export function addWall(a: Vec2, b: Vec2, defaults: WallDefaults, id = newId()):
 }
 
 /**
- * Deletes the selected walls, doors, windows, columns and objects. A wall takes its doors and windows along, and an
+ * Deletes the selected walls, doors, windows, columns, zones and objects. A zone takes the
+ * zones nested in it (`zone_has_children`), deepest first. A wall takes its doors and windows along, and an
  * object the objects attached to it (docs/0081 cascades), as explicit ops so undo restores them.
  */
 export function deleteSelection(plan: Plan, selection: ReadonlySet<string>): Op[] {
@@ -80,6 +117,13 @@ export function deleteSelection(plan: Plan, selection: ReadonlySet<string>): Op[
   for (const c of plan.columns ?? []) {
     if (selection.has(c.id)) ops.push({ op: "delete", kind: "column", id: c.id });
   }
+  const zones: string[] = [];
+  const visit = (id: string) => {
+    for (const child of plan.zones.filter((z) => z.parent_zone_id === id)) visit(child.id);
+    if (!zones.includes(id)) zones.push(id);
+  };
+  for (const z of plan.zones) if (selection.has(z.id)) visit(z.id);
+  for (const id of zones) ops.push({ op: "delete", kind: "zone", id });
   // Attached objects first, then their hosts.
   const objects = plan.objectOrder.filter((id) => {
     const o = plan.objects[id];

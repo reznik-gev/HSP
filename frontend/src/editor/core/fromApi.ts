@@ -51,6 +51,8 @@ export function planFromApi(
         id: z.id,
         name: z.name,
         zone_type: type?.name ?? "",
+        zone_type_id: z.zone_type_id,
+        parent_zone_id: z.parent_zone_id ?? null,
         color: type?.color ?? "#cbd5e1",
         boundary: z.boundary,
       };

@@ -31,6 +31,8 @@ export interface Zone {
   id: string;
   name: string;
   zone_type: string;
+  zone_type_id?: string;
+  parent_zone_id?: string | null;
   color: string;
   boundary: readonly Vec2[];
 }

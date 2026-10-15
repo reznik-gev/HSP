@@ -85,3 +85,59 @@ export function alongSegment(p: Vec2, a: Vec2, b: Vec2): { along: number; length
     length,
   };
 }
+
+/** Do segments p1–p2 and q1–q2 cross or touch (sharing an endpoint counts)? */
+export function segmentsIntersect(p1: Vec2, p2: Vec2, q1: Vec2, q2: Vec2): boolean {
+  const cross = (a: Vec2, b: Vec2, c: Vec2) =>
+    (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+  const onSegment = (a: Vec2, b: Vec2, c: Vec2) =>
+    Math.min(a[0], b[0]) <= c[0] &&
+    c[0] <= Math.max(a[0], b[0]) &&
+    Math.min(a[1], b[1]) <= c[1] &&
+    c[1] <= Math.max(a[1], b[1]);
+  const d1 = cross(q1, q2, p1);
+  const d2 = cross(q1, q2, p2);
+  const d3 = cross(p1, p2, q1);
+  const d4 = cross(p1, p2, q2);
+  if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) {
+    return true;
+  }
+  return (
+    (d1 === 0 && onSegment(q1, q2, p1)) ||
+    (d2 === 0 && onSegment(q1, q2, p2)) ||
+    (d3 === 0 && onSegment(p1, p2, q1)) ||
+    (d4 === 0 && onSegment(p1, p2, q2))
+  );
+}
+
+/**
+ * A valid zone outline (docs/0029, `polygon_invalid` in docs/0081): at least 3 corners, no
+ * repeated corner, no zero area, and no edge crossing another.
+ */
+export function isSimplePolygon(points: readonly Vec2[]): boolean {
+  const n = points.length;
+  if (n < 3 || Math.abs(polygonArea(points)) === 0) return false;
+  const keys = new Set(points.map((p) => `${p[0]},${p[1]}`));
+  if (keys.size !== n) return false;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      // Neighbouring edges share a corner by design.
+      if (j === i + 1 || (i === 0 && j === n - 1)) continue;
+      if (segmentsIntersect(points[i]!, points[(i + 1) % n]!, points[j]!, points[(j + 1) % n]!)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+/** Signed area (positive when counter-clockwise). */
+export function polygonArea(points: readonly Vec2[]): number {
+  let sum = 0;
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i]!;
+    const b = points[(i + 1) % points.length]!;
+    sum += a[0] * b[1] - b[0] * a[1];
+  }
+  return sum / 2;
+}

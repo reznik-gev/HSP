@@ -71,9 +71,15 @@ export const PLAN = {
   catalog: { rev: DESK_ITEM, mon: MONITOR_ITEM },
 } as unknown as ApiPlan;
 
+export const ZONE_TYPES = new Map([
+  ["zt-room", { name: "Room", color: "#93c5fd" }],
+  ["zt-meet", { name: "Meeting room", color: "#c4b5fd" }],
+]);
+
 export function editing(plan: ApiPlan = PLAN) {
   const store = createEditorStore();
-  store.getState().loadDocument(plan, new Map());
+  store.getState().loadDocument(plan, ZONE_TYPES);
+  store.getState().setZoneType("zt-room");
   // 1 px = 10 mm, plan origin at the centre of an 800 × 600 canvas.
   store.getState().setViewport({ cx: 0, cy: 0, mmPerPx: 10 });
   const interaction = new Interaction(store);

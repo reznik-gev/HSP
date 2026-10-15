@@ -27,7 +27,7 @@ export interface DragState {
 export type ZoneTypes = ReadonlyMap<string, { name: string; color: string | null }>;
 
 /** The editing tools of phase 3a so far (docs/0089). */
-export type Tool = "select" | "wall" | "door" | "window" | "column";
+export type Tool = "select" | "wall" | "door" | "window" | "column" | "zone";
 
 /** What a tool shows while it works, before anything is committed. */
 export type Preview =
@@ -50,6 +50,10 @@ export type Preview =
       offset_mm: number;
       width_mm: number;
     }
+  /** A zone being drawn: the corners so far, and the pointer. */
+  | { kind: "zone"; points: readonly Vec2[]; to: Vec2; snap: SnapKind }
+  /** A zone corner being dragged. */
+  | { kind: "vertex"; zone: string; index: number; to: Vec2; snap: SnapKind }
   /** A column about to be placed: its footprint. */
   | { kind: "column"; footprint: readonly Vec2[]; snap: SnapKind }
   | null;
@@ -81,6 +85,8 @@ export interface EditorState {
   preview: Preview;
   /** Thickness and height for new walls. */
   wallDefaults: WallDefaults;
+  /** The zone type new zones get (docs/0020). */
+  zoneTypeId: string | null;
   loadPlan(plan: Plan): void;
   /** Opens a plan for editing; clears the history and the outbox. */
   loadDocument(document: ApiPlan, zoneTypes: ZoneTypes): void;
@@ -102,6 +108,7 @@ export interface EditorState {
   setTool(tool: Tool): void;
   setPreview(preview: Preview): void;
   setWallDefaults(defaults: Partial<WallDefaults>): void;
+  setZoneType(id: string): void;
 }
 
 /** Whether any element of the plan has this id. */
@@ -110,7 +117,8 @@ function exists(plan: Plan, id: string): boolean {
     plan.objects[id] ||
     plan.walls.some((w) => w.id === id) ||
     plan.openings.some((o) => o.id === id) ||
-    plan.columns?.some((c) => c.id === id),
+    plan.columns?.some((c) => c.id === id) ||
+    plan.zones.some((z) => z.id === id),
   );
 }
 
@@ -151,6 +159,7 @@ export function createEditorStore() {
       tool: "select",
       preview: null,
       wallDefaults: { thickness_mm: 150, height_mm: 3000 },
+      zoneTypeId: null,
       loadPlan: (plan) =>
         set({ plan, hitIndex: buildHitIndex(plan), selection: new Set(), drag: null }),
       loadDocument: (document, zoneTypes) => {
@@ -233,6 +242,7 @@ export function createEditorStore() {
       setTool: (tool) => set({ tool, preview: null }),
       setPreview: (preview) => set({ preview }),
       setWallDefaults: (defaults) => set({ wallDefaults: { ...get().wallDefaults, ...defaults } }),
+      setZoneType: (zoneTypeId) => set({ zoneTypeId }),
     };
   });
 }
