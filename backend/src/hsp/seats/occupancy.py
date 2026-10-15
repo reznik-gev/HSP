@@ -26,7 +26,7 @@ class Counts(BaseModel):
     bookable: int = 0
     unavailable: int = 0
 
-    def add(self, other: "Counts") -> None:
+    def add(self, other: Counts) -> None:
         for field in Counts.model_fields:
             setattr(self, field, getattr(self, field) + getattr(other, field))
 

@@ -20,7 +20,7 @@ EDITABLE = ("name", "address", "time_zone")
 def validate_time_zone(tz: str) -> str:
     try:
         zoneinfo.ZoneInfo(tz)
-    except (zoneinfo.ZoneInfoNotFoundError, ValueError):
+    except zoneinfo.ZoneInfoNotFoundError, ValueError:
         raise common.invalid_field(
             "time_zone_unknown", f"Unknown IANA time zone: {tz}", "/time_zone"
         ) from None

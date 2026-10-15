@@ -7,7 +7,7 @@ Every design decision is recorded in **[docs/decisions/](docs/decisions/README.m
 ## Repository layout ([0018](docs/decisions/0018-2026-10-08-repository-layout.md))
 | Path | What |
 |---|---|
-| [`backend/`](backend/README.md) | FastAPI service, SQLAlchemy models, Alembic migrations (Python 3.13, uv) |
+| [`backend/`](backend/README.md) | FastAPI service, SQLAlchemy models, Alembic migrations (Python 3.14, uv) |
 | [`frontend/`](frontend/README.md) | React + TypeScript app with the headless editor core (pnpm, Vite) |
 | `deploy/` | Docker Compose: `compose.dev.yml` for local development. Production stack and offline bundle to follow ([0054](docs/decisions/0054-2026-10-08-release-distribution.md), [0055](docs/decisions/0055-2026-10-08-deployment-target.md)) |
 | `shared/` | Language-neutral validation test cases ([0051](docs/decisions/0051-2026-10-08-validation-feedback.md)) |

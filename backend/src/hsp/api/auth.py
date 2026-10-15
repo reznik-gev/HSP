@@ -121,7 +121,7 @@ async def callback(
         saved = json.loads(
             TokenCipher(settings.session_key()).decrypt(raw, ttl=settings.login_max_age_s)
         )
-    except (TokenDecryptError, ValueError):
+    except TokenDecryptError, ValueError:
         raise _login_failed("login-expired", "Login took too long. Try again.") from None
     if error:
         raise _login_failed("login-denied", error_description or error)
