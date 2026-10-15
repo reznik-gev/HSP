@@ -2,7 +2,7 @@
  * A small plan and an editing store driven through `Interaction`, for core tests. 1 px = 10 mm,
  * with plan (0, 0) at the centre of an 800 × 600 canvas.
  */
-import { apiPlan, desk, DESK_ITEM, door, monitor, wall } from "@/test/fixtures";
+import { stubPlan, stubDesk, STUB_DESK_ITEM, stubDoor, stubMonitor, stubWall } from "@/test/stubs";
 
 import { Interaction, type PointerInput } from "./interaction";
 import type { ApiPlan } from "./operations";
@@ -10,13 +10,13 @@ import type { Vec2 } from "./plan";
 import { createEditorStore } from "./store";
 import { planToScreen } from "./viewport";
 
-export { DESK_ITEM };
+export { STUB_DESK_ITEM };
 
-// An L: w1 and w2 meet at (4000, 0); a door on w1; desk d1 with monitor m1 on it.
-export const PLAN = apiPlan({
-  walls: [wall("w1", [0, 0], [4000, 0]), wall("w2", [4000, 0], [4000, 3000])],
-  openings: [door("o1", "w1", 500)],
-  objects: [desk("d1", [2000, 1500], { label: "A-01" }), monitor("m1", "d1", [2000, 1700])],
+// An L: w1 and w2 meet at (4000, 0); a stubDoor on w1; stubDesk d1 with stubMonitor m1 on it.
+export const PLAN = stubPlan({
+  walls: [stubWall("w1", [0, 0], [4000, 0]), stubWall("w2", [4000, 0], [4000, 3000])],
+  openings: [stubDoor("o1", "w1", 500)],
+  objects: [stubDesk("d1", [2000, 1500], { label: "A-01" }), stubMonitor("m1", "d1", [2000, 1700])],
 }) as unknown as ApiPlan;
 
 export const ZONE_TYPES = new Map([

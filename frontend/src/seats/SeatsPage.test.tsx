@@ -4,10 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page, ref, seatOut } from "@/test/fixtures";
+import { page, ref, stubSeat } from "@/test/stubs";
 import { renderApp, type Reply } from "@/test/renderApp";
 
-const MAYA_SEAT = seatOut("d2", "HT-3-02", {
+const MAYA_SEAT = stubSeat("d2", "HT-3-02", {
   holder_person: {
     id: "p1",
     display_name: "Maya Shani",

@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page } from "@/test/fixtures";
+import { page } from "@/test/stubs";
 import { ADMIN, renderApp } from "@/test/renderApp";
 
 const SITE = { id: "s1", name: "Tel Aviv HQ", time_zone: "Asia/Jerusalem", address: null };

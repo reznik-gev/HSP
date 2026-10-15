@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { apiPlan, desk, monitor, wall, zone } from "@/test/fixtures";
+import { stubPlan, stubDesk, stubMonitor, stubWall, stubZone } from "@/test/stubs";
 
 import { isSeat, planBounds, planFromApi } from "./fromApi";
 import { createEditorStore } from "./store";
 import { ViewerInteraction } from "./viewerInteraction";
 
-const API_PLAN = apiPlan({
+const API_PLAN = stubPlan({
   version: 2,
   state: "published",
-  walls: [wall("w1", [0, 0], [10000, 0], { thickness_mm: 200 })],
+  walls: [stubWall("w1", [0, 0], [10000, 0], { thickness_mm: 200 })],
   columns: [
     {
       id: "c1",
@@ -23,7 +23,7 @@ const API_PLAN = apiPlan({
     },
   ],
   zones: [
-    zone(
+    stubZone(
       "z1",
       [
         [0, 0],
@@ -33,8 +33,11 @@ const API_PLAN = apiPlan({
       { name: "Pod" },
     ),
   ],
-  // The monitor comes first on purpose: attached items are drawn after their hosts.
-  objects: [monitor("mon", "desk", [3000, 3000]), desk("desk", [3000, 3000], { label: "A-01" })],
+  // The stubMonitor comes first on purpose: attached items are drawn after their hosts.
+  objects: [
+    stubMonitor("mon", "desk", [3000, 3000]),
+    stubDesk("desk", [3000, 3000], { label: "A-01" }),
+  ],
 });
 
 function setup() {
@@ -55,7 +58,7 @@ function setup() {
 const ON_DESK = { sx: 800, sy: 200, button: 0, shift: false };
 
 describe("plan viewer core (docs/0087)", () => {
-  it("converts the API plan: zone colours, seat mode, monitors drawn on top", () => {
+  it("converts the API plan: stubZone colours, seat mode, monitors drawn on top", () => {
     const { plan } = setup();
     expect(plan.zones[0]?.color).toBe("#86efac");
     expect(plan.objects.desk?.allocation_mode).toBe("assigned");
@@ -66,7 +69,7 @@ describe("plan viewer core (docs/0087)", () => {
     expect(planBounds(plan)).toEqual({ minX: -500, minY: -500, maxX: 10500, maxY: 5500 });
   });
 
-  it("a click on the monitor selects the desk it stands on; a click elsewhere clears", () => {
+  it("a click on the stubMonitor selects the stubDesk it stands on; a click elsewhere clears", () => {
     const { store, viewer } = setup();
     expect(viewer.seatAt(ON_DESK.sx, ON_DESK.sy)).toBe("desk");
     viewer.pointerDown(ON_DESK);

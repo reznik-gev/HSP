@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { PlanCatalogItem } from "./edits";
-import { DESK_ITEM, editing } from "./testPlan";
+import { STUB_DESK_ITEM, editing } from "./testPlan";
 
 const CHAIR = {
-  ...DESK_ITEM,
+  ...STUB_DESK_ITEM,
   id: "rev-chair",
   item_id: "chair",
   key: "task_chair",
@@ -34,7 +34,7 @@ describe("the item tool (docs/0021, docs/0089)", () => {
       label: null,
       allocation_mode: null,
     });
-    store.getState().setPlacing(DESK_ITEM as unknown as PlanCatalogItem);
+    store.getState().setPlacing(STUB_DESK_ITEM as unknown as PlanCatalogItem);
     click([-1000, -3000]);
     expect(store.getState().document!.objects.at(-1)).toMatchObject({
       allocation_mode: "assigned",

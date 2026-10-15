@@ -1,7 +1,12 @@
 /**
- * Shared test data, like pytest's conftest.py: small builders with realistic defaults, so a
- * test spells out only the values it actually checks (a desk's position or label, a floor's
- * published version) and everything else stays in one place.
+ * Stubs shared by the tests, like pytest's conftest.py: small builders with realistic defaults,
+ * so a test spells out only the values it actually checks (a desk's position or label, a
+ * floor's published version) and everything else stays in one place.
+ *
+ * Naming follows the usual test-double vocabulary (https://martinfowler.com/bliki/TestDouble.html):
+ * these are **stubs**, canned answers the stubbed API hands back (`stubPlan`, `STUB_SITE`, …), not
+ * fakes (working shortcut implementations) or mocks (objects that check how they're called).
+ * `page` and `ref` aren't doubles: they only build the API's response shapes.
  *
  * Plain data with no app imports, so both node tests (the editor core) and jsdom screen tests
  * can use it. The world they describe:
@@ -17,9 +22,9 @@ export const ref = (id: string, name: string) => ({ id, name });
 
 // --- Locations ------------------------------------------------------------------------------
 
-export const SITE = { id: "s1", name: "Tel Aviv HQ" };
-export const BUILDING = { id: "b1", name: "Harbor Tower", code: "HT", site_id: "s1" };
-export const floor = (publishedVersion: number | null = 2) => ({
+export const STUB_SITE = { id: "s1", name: "Tel Aviv HQ" };
+export const STUB_BUILDING = { id: "b1", name: "Harbor Tower", code: "HT", site_id: "s1" };
+export const stubFloor = (publishedVersion: number | null = 2) => ({
   id: "f3",
   name: "Floor 3",
   building_id: "b1",
@@ -27,18 +32,18 @@ export const floor = (publishedVersion: number | null = 2) => ({
 });
 
 /** What the floor page and the editor read to show where floor f3 is. */
-export function locationRoutes(publishedVersion: number | null = 2): Routes {
+export function stubLocationRoutes(publishedVersion: number | null = 2): Routes {
   return {
-    "GET /api/v1/floors/f3": { status: 200, body: floor(publishedVersion) },
-    "GET /api/v1/buildings/b1": { status: 200, body: BUILDING },
-    "GET /api/v1/sites/s1": { status: 200, body: SITE },
+    "GET /api/v1/floors/f3": { status: 200, body: stubFloor(publishedVersion) },
+    "GET /api/v1/buildings/b1": { status: 200, body: STUB_BUILDING },
+    "GET /api/v1/sites/s1": { status: 200, body: STUB_SITE },
   };
 }
 
 // --- Catalog and zone types -----------------------------------------------------------------
 
 /** A desk as a plan's catalog carries it (one revision of the item, docs/0021). */
-export const DESK_ITEM = {
+export const STUB_DESK_ITEM = {
   id: "rev-desk",
   item_id: "i1",
   key: "desk",
@@ -55,8 +60,8 @@ export const DESK_ITEM = {
   footprint_blocks: true,
 };
 
-export const MONITOR_ITEM = {
-  ...DESK_ITEM,
+export const STUB_MONITOR_ITEM = {
+  ...STUB_DESK_ITEM,
   id: "rev-mon",
   item_id: "i2",
   key: "monitor",
@@ -70,7 +75,7 @@ export const MONITOR_ITEM = {
 };
 
 /** A catalog item as GET /catalog-items lists it. */
-export const catalogItemOut = (item: typeof DESK_ITEM) => ({
+export const stubCatalogItemOut = (item: typeof STUB_DESK_ITEM) => ({
   id: item.item_id,
   key: item.key,
   name: item.name,
@@ -80,7 +85,7 @@ export const catalogItemOut = (item: typeof DESK_ITEM) => ({
   current_revision: { ...item, rev_no: 1, model_key: null },
 });
 
-export const ZONE_TYPES = [
+export const STUB_ZONE_TYPES = [
   { id: "zt1", name: "Room", color: "#93c5fd", is_enclosed: true },
   { id: "zt2", name: "Meeting room", color: "#c4b5fd", is_enclosed: true },
 ];
@@ -89,7 +94,7 @@ export const ZONE_TYPES = [
 
 type Point = [number, number];
 
-export const wall = (id: string, a: Point, b: Point, over: object = {}) => ({
+export const stubWall = (id: string, a: Point, b: Point, over: object = {}) => ({
   id,
   a,
   b,
@@ -98,7 +103,7 @@ export const wall = (id: string, a: Point, b: Point, over: object = {}) => ({
   ...over,
 });
 
-export const door = (id: string, wallId: string, offset: number, over: object = {}) => ({
+export const stubDoor = (id: string, wallId: string, offset: number, over: object = {}) => ({
   id,
   wall_id: wallId,
   type: "door",
@@ -111,9 +116,9 @@ export const door = (id: string, wallId: string, offset: number, over: object = 
 });
 
 /** A desk (a seat, assigned by default) centred on `at`. */
-export const desk = (id: string, at: Point, over: object = {}) => ({
+export const stubDesk = (id: string, at: Point, over: object = {}) => ({
   id,
-  catalog_item_rev_id: DESK_ITEM.id,
+  catalog_item_rev_id: STUB_DESK_ITEM.id,
   position: [at[0], at[1], 0],
   rotation_ddeg: 0,
   label: null as string | null,
@@ -123,15 +128,15 @@ export const desk = (id: string, at: Point, over: object = {}) => ({
 });
 
 /** A monitor standing on desk `on`. */
-export const monitor = (id: string, on: string, at: Point) => ({
-  ...desk(id, at),
-  catalog_item_rev_id: MONITOR_ITEM.id,
+export const stubMonitor = (id: string, on: string, at: Point) => ({
+  ...stubDesk(id, at),
+  catalog_item_rev_id: STUB_MONITOR_ITEM.id,
   position: [at[0], at[1], 740],
   attached_to: on,
   allocation_mode: null,
 });
 
-export const zone = (id: string, boundary: Point[], over: object = {}) => ({
+export const stubZone = (id: string, boundary: Point[], over: object = {}) => ({
   id,
   name: id,
   zone_type_id: "zt1",
@@ -141,7 +146,7 @@ export const zone = (id: string, boundary: Point[], over: object = {}) => ({
 });
 
 /** A whole floor plan as the API returns it; the catalog knows desks and monitors. */
-export const apiPlan = (over: object = {}) => ({
+export const stubPlan = (over: object = {}) => ({
   floor_id: "f3",
   version: 1,
   state: "draft",
@@ -151,19 +156,22 @@ export const apiPlan = (over: object = {}) => ({
   columns: [] as object[],
   zones: [] as object[],
   objects: [] as object[],
-  catalog: { [DESK_ITEM.id]: DESK_ITEM, [MONITOR_ITEM.id]: MONITOR_ITEM } as Record<string, object>,
+  catalog: {
+    [STUB_DESK_ITEM.id]: STUB_DESK_ITEM,
+    [STUB_MONITOR_ITEM.id]: STUB_MONITOR_ITEM,
+  } as Record<string, object>,
   ...over,
 });
 
 // --- Seats (GET /seats, docs/0085) ----------------------------------------------------------
 
 /** A seat on floor f3; `holder` sets holder_person or holder_unit. */
-export const seatOut = (id: string, label: string, holder: object = {}) => ({
+export const stubSeat = (id: string, label: string, holder: object = {}) => ({
   id,
   label,
   allocation_mode: "assigned",
-  site: ref(SITE.id, SITE.name),
-  building: ref(BUILDING.id, BUILDING.name),
+  site: ref(STUB_SITE.id, STUB_SITE.name),
+  building: ref(STUB_BUILDING.id, STUB_BUILDING.name),
   floor: ref("f3", "Floor 3"),
   holder_person: null,
   holder_unit: null,

@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page, seatOut } from "@/test/fixtures";
+import { page, stubSeat } from "@/test/stubs";
 import { ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 const unit = (id: string, name: string, parent_id: string | null) => ({
@@ -29,7 +29,7 @@ const MAYA = {
   primary_unit_id: "u1",
   memberships: [{ unit_id: "u1", position_id: null, is_primary: true, primary_override: false }],
 };
-const SEAT = seatOut("d2", "HT-3-02");
+const SEAT = stubSeat("d2", "HT-3-02");
 
 function backend(extra: Routes = {}): Routes {
   return {

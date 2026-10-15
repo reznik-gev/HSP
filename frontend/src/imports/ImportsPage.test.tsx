@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page } from "@/test/fixtures";
+import { page } from "@/test/stubs";
 import { ADMIN, renderApp, type Reply } from "@/test/renderApp";
 
 import { templateCsv } from "./templates";
