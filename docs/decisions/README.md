@@ -104,3 +104,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0093 | 2026-10-16 | [Stacked PRs with GitHub's own stacks (`gh stack`)](0093-2026-10-16-github-stacked-prs.md) | Accepted |
 | 0094 | 2026-10-16 | [Move the 3D view past v1; show heights in 2D instead](0094-2026-10-16-3d-view-after-v1.md) | Accepted |
 | 0095 | 2026-10-16 | [Heights on the plan, Catalog and Devices screens (frontend phase 3c)](0095-2026-10-16-heights-catalog-and-devices.md) | Accepted |
+| 0096 | 2026-10-16 | [Test data and test-double conventions](0096-2026-10-16-test-conventions.md) | Accepted |

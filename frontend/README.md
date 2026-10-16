@@ -17,7 +17,7 @@ React + TypeScript single-page app ([0011](../docs/decisions/0011-2026-10-08-fro
 | Dev server (http://localhost:5173) | `pnpm dev`. It proxies `/api` and `/auth`, giving one origin like production ([0038](../docs/decisions/0038-2026-10-08-api-authentication.md)) |
 | Regenerate API types               | `pnpm api:types` (after `backend/openapi.json` changes; commit the result)                                                                     |
 | Lint / format / types              | `pnpm lint` · `pnpm format` · `pnpm typecheck`                                                                                                 |
-| Tests                              | `pnpm test` (`pnpm test:watch` while developing)                                                                                               |
+| Tests                              | `pnpm test` (`pnpm test:watch` while developing); how to write them: [docs/guides/testing.md](../docs/guides/testing.md)                       |
 | Production build                   | `pnpm build`                                                                                                                                   |
 
 ## Layout
