@@ -10,6 +10,8 @@ import {
   stubLocationRoutes,
   page,
   ref,
+  STUB_MAYA,
+  stubPersonHolder,
   stubMonitor,
   stubSeat,
   stubWall,
@@ -36,14 +38,7 @@ function backend(publishedVersion: number | null = 2): Routes {
     "GET /api/v1/seats": {
       status: 200,
       body: page([
-        stubSeat("d1", "A-01", {
-          holder_person: {
-            id: "p1",
-            display_name: "Maya Shani",
-            email: "maya@acme.example",
-            primary_unit: ref("u1", "Platform"),
-          },
-        }),
+        stubSeat("d1", "A-01", stubPersonHolder(STUB_MAYA)),
         stubSeat("d2", "A-02", { holder_unit: ref("u2", "Vision") }),
       ]),
     },

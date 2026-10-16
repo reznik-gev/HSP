@@ -11,6 +11,7 @@
  * Plain data with no app imports, so both node tests (the editor core) and jsdom screen tests
  * can use it. The world they describe:
  *   Tel Aviv HQ (s1) › Harbor Tower (b1, code HT) › Floor 3 (f3)
+ *   Acme (u0) › Platform (u1), Vision (u2)
  *   Maya Shani (p1) in the Platform team (u1), with monitor MON-0412 (dev1) on floor f3
  */
 import type { Routes } from "./renderApp";
@@ -215,7 +216,36 @@ export const stubSeat = (id: string, label: string, holder: object = {}) => ({
   ...holder,
 });
 
-// --- People and devices (docs/0084, docs/0083) ----------------------------------------------
+// --- Teams, people and devices (docs/0084, docs/0083) --------------------------------------
+
+/** An org unit (a team, division…) under `parentId`, created by hand. */
+export const stubUnit = (id: string, name: string, parentId: string | null, over: object = {}) => ({
+  id,
+  name,
+  parent_id: parentId,
+  level_label: null as string | null,
+  color: null as string | null,
+  external_id: null as string | null,
+  archived_at: null as string | null,
+  source: "manual",
+  ...over,
+});
+
+/** Acme (u0) with its teams Platform (u1) and Vision (u2). */
+export const STUB_UNITS = [
+  stubUnit("u0", "Acme", null),
+  stubUnit("u1", "Platform", "u0"),
+  stubUnit("u2", "Vision", "u0"),
+];
+
+/** A person's membership of `unitId`: their primary team unless `over` says otherwise. */
+export const stubMembership = (unitId: string, over: object = {}) => ({
+  unit_id: unitId,
+  position_id: null as string | null,
+  is_primary: true,
+  primary_override: false,
+  ...over,
+});
 
 /** A person as GET /people returns them: active, in no team unless `over` says otherwise. */
 export const stubPerson = (id: string, name: string, over: object = {}) => ({
@@ -236,8 +266,22 @@ export const STUB_MAYA = stubPerson("p1", "Maya Shani", {
   title: "Backend Engineer",
   external_id: "E102",
   primary_unit_id: "u1",
-  memberships: [{ unit_id: "u1", position_id: null, is_primary: true, primary_override: false }],
+  memberships: [stubMembership("u1")],
 });
+
+/** `person` as a seat's holder (GET /seats), with their primary team from STUB_UNITS; spread it
+ *  into stubSeat's `holder`. */
+export const stubPersonHolder = (person: ReturnType<typeof stubPerson>) => {
+  const team = STUB_UNITS.find((u) => u.id === person.primary_unit_id);
+  return {
+    holder_person: {
+      id: person.id,
+      display_name: person.display_name,
+      email: person.email,
+      primary_unit: team ? ref(team.id, team.name) : null,
+    },
+  };
+};
 
 /** A device as GET /devices returns it: not issued and not placed unless `over` says so. */
 export const stubDevice = (id: string, assetTag: string, over: object = {}) => ({

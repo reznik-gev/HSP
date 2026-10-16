@@ -4,17 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page, ref, stubSeat } from "@/test/stubs";
+import { page, STUB_MAYA, stubPersonHolder, stubSeat } from "@/test/stubs";
 import { renderApp, type Reply } from "@/test/renderApp";
 
-const MAYA_SEAT = stubSeat("d2", "HT-3-02", {
-  holder_person: {
-    id: "p1",
-    display_name: "Maya Shani",
-    email: "maya@acme.example",
-    primary_unit: ref("u1", "Platform"),
-  },
-});
+const MAYA_SEAT = stubSeat("d2", "HT-3-02", stubPersonHolder(STUB_MAYA));
 
 afterEach(async () => {
   cleanup();
