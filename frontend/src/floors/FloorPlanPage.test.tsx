@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, screen, within } from "@testing-library/react";
+import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -10,6 +10,7 @@ import {
   stubLocationRoutes,
   page,
   ref,
+  stubMonitor,
   stubSeat,
   stubWall,
 } from "@/test/stubs";
@@ -23,6 +24,7 @@ const PLAN = stubPlan({
     stubDesk("d1", [1000, 1000], { label: "A-01" }),
     stubDesk("d2", [3000, 1000], { label: "A-02" }),
     stubDesk("d3", [5000, 1000], { label: "A-03", allocation_mode: "bookable" }),
+    stubMonitor("m1", "d3", [5000, 1200]),
   ],
 });
 
@@ -74,6 +76,15 @@ describe("floor plan viewer (docs/0087)", () => {
     expect(panel).toHaveTextContent("Maya Shani");
     expect(panel).toHaveTextContent("Platform");
     await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("complementary", { name: "Seat details" })).toBeNull();
+  });
+
+  it("a link to an item that isn't a seat (a device's monitor) highlights it", async () => {
+    await renderApp("/floors/f3?seat=m1", backend());
+    await screen.findByRole("heading", { name: "Floor 3" });
+    await waitFor(() =>
+      expect(document.querySelector("svg[data-lod] .plan-selected")).not.toBeNull(),
+    );
     expect(screen.queryByRole("complementary", { name: "Seat details" })).toBeNull();
   });
 

@@ -3282,6 +3282,10 @@ export interface operations {
                 /** @description Search asset tag or serial number */
                 q?: string | null;
                 assigned_person_id?: string | null;
+                /** @description Only devices placed (or not) in a published floor plan */
+                placed?: boolean | null;
+                /** @description Only devices issued (or not) to a person */
+                issued?: boolean | null;
                 /** @description Page size */
                 limit?: number;
                 /** @description `next_cursor` from the previous page */

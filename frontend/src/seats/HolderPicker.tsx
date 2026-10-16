@@ -17,7 +17,17 @@ export type Holder =
   | { kind: "person"; id: string; name: string; detail: string }
   | { kind: "unit"; id: string; name: string; detail: string | null };
 
-export function HolderPicker({ onPick }: { onPick: (holder: Holder) => void }) {
+export function HolderPicker({
+  onPick,
+  teams = true,
+  label,
+}: {
+  onPick: (holder: Holder) => void;
+  /** Offer teams as well as people (a device is issued to a person only). */
+  teams?: boolean;
+  /** The field's accessible name, if not "who gets the seat". */
+  label?: string;
+}) {
   const { t, i18n } = useTranslation();
   const id = useId();
   const [q, setQ] = useState("");
@@ -43,7 +53,7 @@ export function HolderPicker({ onPick }: { onPick: (holder: Holder) => void }) {
           name: p.display_name,
           detail: p.email,
         })),
-        ...(units.data ?? [])
+        ...(teams ? (units.data ?? []) : [])
           .filter(
             (u) =>
               !u.archived_at && u.name.toLocaleLowerCase(i18n.resolvedLanguage).includes(needle),
@@ -65,8 +75,8 @@ export function HolderPicker({ onPick }: { onPick: (holder: Holder) => void }) {
         aria-controls={`${id}-list`}
         aria-activedescendant={options.length ? `${id}-${active}` : undefined}
         aria-autocomplete="list"
-        aria-label={t("assign.pickLabel")}
-        placeholder={t("assign.pickPlaceholder")}
+        aria-label={label ?? t("assign.pickLabel")}
+        placeholder={t(teams ? "assign.pickPlaceholder" : "assign.pickPersonPlaceholder")}
         value={q}
         className={inputClass}
         onChange={(e) => {

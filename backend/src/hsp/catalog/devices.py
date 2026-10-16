@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, or_, select
+from sqlalchemy import Select, and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
@@ -62,23 +62,32 @@ class DevicesService:
     def _tenant(self) -> uuid.UUID:
         return self.principal.tenant_id
 
-    async def _placements(self, device_ids: list[uuid.UUID]) -> dict[uuid.UUID, Placement]:
-        if not device_ids:
-            return {}
+    def _in_published_plans(self, *columns: Any) -> Select[Any]:
+        """Placed objects with a device in the floors' published versions, selecting `columns`."""
         f, r, e = models.Floor, models.ObjectRev, models.FloorElement
-        rows = await self.db.execute(
-            select(r.device_id, f.id, f.name, r.element_id, f.published_version)
+        return (
+            select(*columns)
             .join(e, e.id == r.element_id)
             .join(f, f.id == e.floor_id)
             .where(
                 f.tenant_id == self._tenant,
                 f.published_version.is_not(None),
-                r.device_id.in_(device_ids),
+                r.device_id.is_not(None),
                 and_(
                     r.from_version <= f.published_version,
                     or_(r.to_version.is_(None), r.to_version > f.published_version),
                 ),
             )
+        )
+
+    async def _placements(self, device_ids: list[uuid.UUID]) -> dict[uuid.UUID, Placement]:
+        if not device_ids:
+            return {}
+        f, r = models.Floor, models.ObjectRev
+        rows = await self.db.execute(
+            self._in_published_plans(
+                r.device_id, f.id, f.name, r.element_id, f.published_version
+            ).where(r.device_id.in_(device_ids))
         )
         return {
             d: Placement(floor_id=fid, floor_name=name, element_id=el, version=v)
@@ -160,6 +169,8 @@ class DevicesService:
         assigned_person_id: uuid.UUID | None,
         after: uuid.UUID | None,
         limit: int,
+        placed: bool | None = None,
+        issued: bool | None = None,
     ) -> list[DeviceOut]:
         query = select(models.Device).where(models.Device.tenant_id == self._tenant)
         if q:
@@ -172,6 +183,14 @@ class DevicesService:
             )
         if assigned_person_id is not None:
             query = query.where(models.Device.assigned_person_id == assigned_person_id)
+        if issued is not None:
+            person = models.Device.assigned_person_id
+            query = query.where(person.is_not(None) if issued else person.is_(None))
+        if placed is not None:
+            in_plans = self._in_published_plans(models.ObjectRev.device_id)
+            query = query.where(
+                models.Device.id.in_(in_plans) if placed else models.Device.id.not_in(in_plans)
+            )
         if after is not None:
             query = query.where(models.Device.id > after)
         return await self._out(

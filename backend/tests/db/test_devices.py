@@ -61,6 +61,26 @@ async def test_placement_follows_the_published_plan_and_blocks_delete(ctx: dict[
     assert exc.value.slug == "in-use"
 
 
+async def test_filter_by_placed_and_issued(ctx: dict[str, Any]) -> None:
+    s = svc(ctx)
+    tag = f"F-{new_id().hex[:6]}"
+    placed = await s.create(DeviceIn(asset_tag=f"{tag}-placed"))
+    loose = await s.create(DeviceIn(asset_tag=f"{tag}-loose"))
+    await apply(ctx, 0, add("object", new_id(), **stub_desk(ctx, device_id=str(placed.id))))
+    await PublishingService(
+        SqlDraftRepository(ctx["db"]), SqlPublishRepository(ctx["db"]), ctx["admin"]
+    ).publish(ctx["floor"], PublishIn(base_revision=1))
+
+    async def ids(**filters: Any) -> set[Any]:
+        rows = await s.list(q=tag, assigned_person_id=None, after=None, limit=10, **filters)
+        return {d.id for d in rows}
+
+    assert await ids(placed=True) == {placed.id}
+    assert await ids(placed=False) == {loose.id}
+    assert await ids(issued=True) == set()
+    assert await ids(issued=False) == {placed.id, loose.id}
+
+
 async def test_unplaced_device_can_be_deleted_and_patch_audits_changes(ctx: dict[str, Any]) -> None:
     s = svc(ctx)
     d = await s.create(DeviceIn(asset_tag=f"DOCK-{new_id().hex[:6]}"))

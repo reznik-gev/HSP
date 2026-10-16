@@ -14,6 +14,7 @@ import { FullScreenShell } from "@/app/FullScreenShell";
 import { Page } from "@/app/Page";
 import { FloorsPage } from "@/floors/FloorsPage";
 import { validateCatalogSearch } from "@/catalog/search";
+import { validateDevicesSearch } from "@/devices/search";
 import { validateOrgSearch } from "@/org/search";
 import { validatePeopleSearch } from "@/people/search";
 import { SeatsPage } from "@/seats/SeatsPage";
@@ -92,6 +93,12 @@ const catalogRoute = createRoute({
   validateSearch: validateCatalogSearch,
   component: lazyRouteComponent(() => import("@/catalog/CatalogPage"), "CatalogPage"),
 });
+const devicesRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/devices",
+  validateSearch: validateDevicesSearch,
+  component: lazyRouteComponent(() => import("@/devices/DevicesPage"), "DevicesPage"),
+});
 const seatsRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "/seats",
@@ -122,6 +129,7 @@ export const routeTree = rootRoute.addChildren([
     orgRoute,
     importsRoute,
     catalogRoute,
+    devicesRoute,
     seatsRoute,
   ]),
   fullScreenRoute.addChildren([editorRoute]),

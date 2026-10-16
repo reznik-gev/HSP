@@ -12,7 +12,8 @@
     "people": "People",
     "org": "Teams",
     "imports": "Imports",
-    "catalog": "Catalog"
+    "catalog": "Catalog",
+    "devices": "Devices"
   },
   "settings": {
     "language": "Language",
@@ -245,7 +246,8 @@
     "movedOff": "{{name}} no longer has this seat",
     "undone": "{{seat}} is back as it was",
     "undoSkipped": "{{seat}} changed again meanwhile, so it was left as it is",
-    "inactive": "Seats go only to active people and teams."
+    "inactive": "Seats go only to active people and teams.",
+    "pickPersonPlaceholder": "Type a name or email"
   },
   "imports": {
     "title": "Imports",
@@ -715,5 +717,49 @@
     "deleted": "{{name}} deleted.",
     "restored": "{{name}} added back.",
     "inUse": "Zones on floors use this type, now or in earlier versions, so it can't be deleted. You can rename it instead."
+  },
+  "devices": {
+    "title": "Devices",
+    "adminsOnly": "Only administrators can manage devices.",
+    "search": "Search by asset tag or serial number",
+    "filters": {
+      "placed": "Placed or not",
+      "placedYes": "Placed on a floor",
+      "placedNo": "Not placed",
+      "issued": "Issued or not",
+      "issuedYes": "Issued to someone",
+      "issuedNo": "Not issued"
+    },
+    "columns": {
+      "tag": "Asset tag",
+      "serial": "Serial number",
+      "issuedTo": "Issued to",
+      "placed": "Placed on"
+    },
+    "none": "No devices match.",
+    "loadFailed": "Couldn't load devices. Reload the page to try again.",
+    "noTag": "No asset tag",
+    "showOnPlan": "Show on plan",
+    "new": "New device",
+    "create": "Add device",
+    "created": "Device added.",
+    "saved": "Device saved.",
+    "placement": "Where it is",
+    "notPlaced": "Not placed on any published floor.",
+    "placeHint": "Devices are placed in the floor editor, from an item's Device field.",
+    "details": "Details",
+    "fields": {
+      "tag": "Asset tag",
+      "serial": "Serial number",
+      "notes": "Notes",
+      "issuedTo": "Issued to"
+    },
+    "pickPerson": "Who it's issued to",
+    "notIssued": "Not issued",
+    "tagTaken": "Another device has this asset tag.",
+    "delete": "Delete",
+    "deleted": "{{tag}} deleted.",
+    "restored": "Device added back.",
+    "inUse": "This device is in a floor's history (now or in an earlier version), so it can't be deleted."
   }
 }
