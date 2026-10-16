@@ -15,7 +15,7 @@ import {
   stubWall,
   STUB_ZONE_TYPES,
 } from "@/test/stubs";
-import { ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
+import { AS_VIEWER, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 import { HEARTBEAT_MS } from "./session/lock";
 
@@ -147,7 +147,7 @@ describe("when someone else is editing (docs/0016)", () => {
     await renderApp(
       "/floors/f3/edit",
       backend({
-        "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } },
+        ...AS_VIEWER,
         "POST /api/v1/floors/f3/lock": { status: 403, body: { title: "Forbidden" } },
       }),
     );
@@ -175,10 +175,7 @@ describe("Edit floor on the floor page (docs/0089)", () => {
   });
 
   it("viewers see no Edit floor", async () => {
-    await renderApp(
-      "/floors/f3",
-      backend({ "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } } }),
-    );
+    await renderApp("/floors/f3", backend({ ...AS_VIEWER }));
     await screen.findByRole("heading", { name: "Floor 3" });
     expect(screen.queryByRole("link", { name: "Edit floor" })).toBeNull();
   });

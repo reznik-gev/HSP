@@ -4,34 +4,27 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { ADMIN, renderApp, type Routes } from "@/test/renderApp";
-import { page, STUB_DESK_ITEM, STUB_MONITOR_ITEM, stubCatalogItemOut } from "@/test/stubs";
+import { AS_VIEWER, renderApp, type Routes } from "@/test/renderApp";
+import {
+  STUB_DESK_ITEM,
+  STUB_MONITOR_ITEM,
+  stubCatalogItemOut,
+  stubCatalogRoutes,
+  stubCustomItemOut,
+} from "@/test/stubs";
 
 const DESK = stubCatalogItemOut(STUB_DESK_ITEM);
-const MONITOR = stubCatalogItemOut(STUB_MONITOR_ITEM);
-/** The organisation's own item, in a category of its own. */
-const BENCH = {
-  ...stubCatalogItemOut({ ...STUB_DESK_ITEM, id: "rev-bench", item_id: "i9" }),
-  key: "lab_bench",
-  category: "lab_bench",
-  name: "Lab bench",
-  builtin: false,
-};
 
-function backend(extra: Routes = {}): Routes {
-  return {
-    "GET /api/v1/catalog-items": (request) => {
-      const archived = new URL(request.url).searchParams.get("include_archived") === "true";
-      const old = { ...BENCH, id: "i8", name: "Old bench", archived_at: "2026-10-01T00:00:00Z" };
-      return {
-        status: 200,
-        body: page(archived ? [DESK, MONITOR, BENCH, old] : [DESK, MONITOR, BENCH]),
-      };
-    },
-    "GET /api/v1/catalog-items/i1": { status: 200, body: DESK },
-    ...extra,
-  };
-}
+/** Two built-in items, the organisation's lab bench (i9) and an archived bench (i8). */
+const backend = (extra: Routes = {}): Routes => ({
+  ...stubCatalogRoutes([
+    DESK,
+    stubCatalogItemOut(STUB_MONITOR_ITEM),
+    stubCustomItemOut("i9"),
+    stubCustomItemOut("i8", { name: "Old bench", archived_at: "2026-10-01T00:00:00Z" }),
+  ]),
+  ...extra,
+});
 
 afterEach(async () => {
   cleanup();
@@ -116,10 +109,7 @@ describe("the catalog (docs/0095)", () => {
   });
 
   it("isn't offered to viewers", async () => {
-    await renderApp("/catalog", {
-      ...backend(),
-      "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } },
-    });
+    await renderApp("/catalog", { ...backend(), ...AS_VIEWER });
     expect(await screen.findByText("Only administrators can manage the catalog.")).toBeVisible();
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(within(nav).queryByRole("link", { name: "Catalog" })).toBeNull();

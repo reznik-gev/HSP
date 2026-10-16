@@ -22,6 +22,11 @@ export const ADMIN: Me = {
 export type Reply = { status: number; body?: unknown };
 export type Routes = Record<string, Reply | ((request: Request) => Reply)>;
 
+/** Signed in as a viewer rather than an admin: spread over a test's routes (docs/0088). */
+export const AS_VIEWER: Routes = {
+  "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } },
+};
+
 /**
  * Stands in for the API: answers each "METHOD /path" with the canned reply in `routes` (a stub)
  * and records every request it receives (a spy), so tests can check what was sent.

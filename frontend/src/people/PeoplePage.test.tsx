@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { page, stubSeat } from "@/test/stubs";
-import { ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
+import { AS_VIEWER, ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 const unit = (id: string, name: string, parent_id: string | null) => ({
   id,
@@ -58,8 +58,6 @@ function backend(extra: Routes = {}): Routes {
   };
 }
 
-const asViewer = { "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } } };
-
 afterEach(async () => {
   cleanup();
   vi.unstubAllGlobals();
@@ -80,7 +78,7 @@ describe("people (docs/0088)", () => {
   });
 
   it("a viewer sees a person's teams, seats and devices but can't change anything", async () => {
-    await renderApp("/people?person=p1", { ...backend(), ...asViewer });
+    await renderApp("/people?person=p1", { ...backend(), ...AS_VIEWER });
     const panel = await screen.findByRole("dialog", { name: "Maya Shani" });
     expect(await within(panel).findByText("HT-3-02")).toBeInTheDocument();
     expect(within(panel).getByText("MON-0412")).toBeInTheDocument();

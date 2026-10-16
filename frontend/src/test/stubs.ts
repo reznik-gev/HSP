@@ -88,6 +88,31 @@ export const stubCatalogItemOut = (item: typeof STUB_DESK_ITEM) => ({
   current_revision: { ...item, rev_no: 1, model_key: null },
 });
 
+/** One of the organisation's own catalog items (docs/0083): a lab bench unless `over` says
+ *  otherwise, with item id `id`. */
+export const stubCustomItemOut = (id: string, over: object = {}) => ({
+  ...stubCatalogItemOut({ ...STUB_DESK_ITEM, id: `rev-${id}`, item_id: id }),
+  key: "lab_bench",
+  category: "lab_bench",
+  name: "Lab bench",
+  builtin: false,
+  ...over,
+});
+
+/** The catalog API serving `items`: the list (archived ones only when asked for) and each item
+ *  on its own. */
+export function stubCatalogRoutes(items: ReturnType<typeof stubCatalogItemOut>[]): Routes {
+  return {
+    "GET /api/v1/catalog-items": (request) => {
+      const archived = new URL(request.url).searchParams.get("include_archived") === "true";
+      return { status: 200, body: page(items.filter((i) => archived || !i.archived_at)) };
+    },
+    ...Object.fromEntries(
+      items.map((i) => [`GET /api/v1/catalog-items/${i.id}`, { status: 200, body: i }]),
+    ),
+  };
+}
+
 export const STUB_ZONE_TYPES = [
   { id: "zt1", name: "Room", color: "#93c5fd", is_enclosed: true },
   { id: "zt2", name: "Meeting room", color: "#c4b5fd", is_enclosed: true },

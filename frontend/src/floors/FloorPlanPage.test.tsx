@@ -13,7 +13,7 @@ import {
   stubSeat,
   stubWall,
 } from "@/test/stubs";
-import { ADMIN, renderApp, type Routes } from "@/test/renderApp";
+import { AS_VIEWER, renderApp, type Routes } from "@/test/renderApp";
 
 const PLAN = stubPlan({
   version: 2,
@@ -163,7 +163,7 @@ describe("assigning seats on the plan (docs/0088)", () => {
 
     await renderApp("/floors/f3?seat=d1", {
       ...backend(),
-      "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } },
+      ...AS_VIEWER,
     });
     const viewerPanel = await screen.findByRole("complementary", { name: "Seat details" });
     expect(within(viewerPanel).queryByRole("button", { name: "Change" })).toBeNull();
