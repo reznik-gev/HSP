@@ -15,6 +15,15 @@ const square: [number, number][] = [
   [0, 1000],
 ];
 
+/** A zone inside another, with a wall and a door. */
+const NESTED_ZONES = stubPlan({
+  walls: [stubWall("w", [0, 0], [3000, 0])],
+  openings: [stubDoor("o", "w", 0)],
+  zones: [stubZone("outer", square), stubZone("inner", square, { parent_zone_id: "outer" })],
+}) as unknown as ApiPlan;
+/** Another floor, with nothing on it and nothing in its catalog yet. */
+const EMPTY_FLOOR = stubPlan({ catalog: {} }) as unknown as ApiPlan;
+
 describe("copying (docs/0049)", () => {
   it("takes what's attached to selected items, and doors only with their wall", () => {
     const f = copyFragment(doc(), new Set(["d1", "w2"]))!;
@@ -51,12 +60,7 @@ describe("pasting (docs/0049)", () => {
   });
 
   it("an attached item copied without its host stands alone; a zone without its parent too", () => {
-    const plan = stubPlan({
-      walls: [stubWall("w", [0, 0], [3000, 0])],
-      openings: [stubDoor("o", "w", 0)],
-      zones: [stubZone("outer", square), stubZone("inner", square, { parent_zone_id: "outer" })],
-    }) as unknown as ApiPlan;
-    const zoneOnly = copyFragment(plan, new Set(["inner"]))!;
+    const zoneOnly = copyFragment(NESTED_ZONES, new Set(["inner"]))!;
     const zoneOps = pasteOps(zoneOnly, [0, 0]).ops;
     expect(zoneOps[0]).toMatchObject({ kind: "zone", data: { parent_zone_id: null } });
     const monitorOnly = copyFragment(doc(), new Set(["m1"]))!;
@@ -72,7 +76,7 @@ describe("pasting (docs/0049)", () => {
 describe("Ctrl+C, Ctrl+V on another floor", () => {
   it("pastes into a different plan, bringing the catalog entries it needs", () => {
     const f = copyFragment(doc(), new Set(["d1"]))!;
-    const other = editing(stubPlan({ catalog: {} }) as unknown as ApiPlan).store;
+    const other = editing(EMPTY_FLOOR).store;
     for (const item of Object.values(f.catalog)) other.getState().ensureCatalog(item);
     const { ops, ids } = pasteOps(f, [0, 0]);
     other.getState().perform(ops);

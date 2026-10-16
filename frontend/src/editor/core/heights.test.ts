@@ -16,6 +16,16 @@ import type { ApiPlan } from "./operations";
 import type { Opening } from "./plan";
 import { editing } from "./testPlan";
 
+const DOOR = stubDoor("o1", "w1", 500) as Opening;
+const WINDOW: Opening = { ...DOOR, type: "window", sill_mm: 900, height_mm: 1200 };
+/** A screen, a monitor on desk d1, and two desks, listed top first. */
+const STACKED = [
+  stubScreen("shelf", [0, 0]),
+  stubMonitor("m1", "d1", [0, 0]),
+  stubDesk("d1", [0, 0]),
+  stubDesk("d2", [3000, 0]),
+];
+
 describe("height helpers", () => {
   it("counts an item as raised only when it's off the floor on its own", () => {
     expect(isRaised({ position: [0, 0, 1400], attached_to: null })).toBe(true);
@@ -31,24 +41,17 @@ describe("height helpers", () => {
   });
 
   it("tags windows from sill to top, and not doors", () => {
-    const door = stubDoor("o1", "w1", 500) as Opening;
-    expect(windowTag(door)).toBeNull();
-    expect(windowTag({ ...door, type: "window", sill_mm: 900, height_mm: 1200 })).toBe("0.90–2.10");
+    expect(windowTag(DOOR)).toBeNull();
+    expect(windowTag(WINDOW)).toBe("0.90–2.10");
   });
 
   it("stacks things by the height they stand at, keeping ties in order", () => {
-    const objects = [
-      stubScreen("shelf", [0, 0]),
-      stubMonitor("m1", "d1", [0, 0]),
-      stubDesk("d1", [0, 0]),
-      stubDesk("d2", [3000, 0]),
-    ];
     const heights: Record<string, number> = {
       [STUB_DESK_ITEM.id]: STUB_DESK_ITEM.height_mm,
       [STUB_MONITOR_ITEM.id]: STUB_MONITOR_ITEM.height_mm,
     };
     // Desks on the floor, the monitor on its desk (740), the screen at 1400.
-    expect(stackingOrder(objects, (rev) => heights[rev] ?? 0)).toEqual(["d1", "d2", "m1", "shelf"]);
+    expect(stackingOrder(STACKED, (rev) => heights[rev] ?? 0)).toEqual(["d1", "d2", "m1", "shelf"]);
   });
 });
 
