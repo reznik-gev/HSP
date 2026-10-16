@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { page } from "@/test/stubs";
-import { ADMIN, renderApp } from "@/test/renderApp";
+import { AS_VIEWER, renderApp } from "@/test/renderApp";
 
 const SITE = { id: "s1", name: "Tel Aviv HQ", time_zone: "Asia/Jerusalem", address: null };
 const counts = (total: number, people: number, units: number, free: number, bookable: number) => ({
@@ -125,7 +125,7 @@ describe("floors page (docs/0085, docs/0087)", () => {
   it("viewers get no location actions", async () => {
     await renderApp("/floors", {
       ...withSite,
-      "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } },
+      ...AS_VIEWER,
     });
     await screen.findByRole("row", { name: /Floor 3/ });
     expect(screen.queryByRole("button", { name: "Add site" })).toBeNull();
