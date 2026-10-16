@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page } from "@/test/stubs";
+import { page, stubAssignment } from "@/test/stubs";
 import { AS_VIEWER, renderApp } from "@/test/renderApp";
 
 const SITE = { id: "s1", name: "Tel Aviv HQ", time_zone: "Asia/Jerusalem", address: null };
@@ -33,6 +33,14 @@ const OCCUPANCY = {
     },
     { id: "b2", name: "Annex", code: "AX", counts: counts(0, 0, 0, 0, 0), floors: [] },
   ],
+};
+
+const HAIFA = { ...SITE, id: "s2", name: "Haifa" };
+/** Archiving floor 3 freed Maya's seat d1. */
+const FLOOR_3_ARCHIVED = {
+  archived: [{ kind: "floor", id: "f3", name: "Floor 3" }],
+  freed_seats: [{ seat_id: "d1", holder_person_id: "p1", holder_unit_id: null }],
+  moved_members: [],
 };
 
 afterEach(async () => {
@@ -90,18 +98,11 @@ describe("floors page (docs/0085, docs/0087)", () => {
       ...withSite,
       "POST /api/v1/sites": (r: Request) => {
         posted = r;
-        return { status: 201, body: { ...SITE, id: "s2", name: "Haifa" } };
+        return { status: 201, body: HAIFA };
       },
-      "DELETE /api/v1/floors/f3": {
-        status: 200,
-        body: {
-          archived: [{ kind: "floor", id: "f3", name: "Floor 3" }],
-          freed_seats: [{ seat_id: "d1", holder_person_id: "p1", holder_unit_id: null }],
-          moved_members: [],
-        },
-      },
+      "DELETE /api/v1/floors/f3": { status: 200, body: FLOOR_3_ARCHIVED },
       "POST /api/v1/floors/f3/restore": { status: 200, body: {} },
-      "GET /api/v1/seats/d1/assignment": { status: 200, body: { assignment: null } },
+      "GET /api/v1/seats/d1/assignment": stubAssignment(),
       "PUT /api/v1/seats/d1/assignment": { status: 200, body: {} },
     });
     await userEvent.click(await screen.findByRole("button", { name: "Add site" }));

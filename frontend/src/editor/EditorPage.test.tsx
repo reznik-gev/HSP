@@ -72,6 +72,9 @@ const PUBLISH_CONFLICTS = stubProblem(409, "publish-conflicts", {
   errors: [{ code: "seat_label_duplicate", message: "A-01 is used twice.", element_id: "d1" }],
 });
 const EMPTY_DIFF = { added: [], changed: [], removed: [] };
+/** The server's answer to a saved changeset: draft 3 at `revision`. */
+const saved = (revision: number) => ({ floor_id: "f3", version: 3, revision, cascaded: [] });
+const GRID_50_CM = { grid_mm: 500 };
 /** Maya's seat B-02, which the draft removes. */
 const MAYAS_SEAT = stubSeat("d9", "B-02", stubPersonHolder(STUB_MAYA));
 const calls = (list: Request[], key: string) =>
@@ -234,10 +237,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
       "GET /api/v1/floors/f3/draft": { status: 200, body: withDesk(plan(3, "draft")) },
       "POST /api/v1/floors/f3/draft/changesets": (request) => {
         void request.json().then((b) => changesets.push(b as never));
-        return {
-          status: 200,
-          body: { floor_id: "f3", version: 3, revision: ++revision, cascaded: [] },
-        };
+        return { status: 200, body: saved(++revision) };
       },
     });
     return { routes, changesets };
@@ -393,7 +393,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     const { routes } = saving();
     const { calls: sent } = await renderApp("/floors/f3/edit", {
       ...routes,
-      "GET /api/v1/me/preferences": { status: 200, body: { grid_mm: 500 } },
+      "GET /api/v1/me/preferences": { status: 200, body: GRID_50_CM },
     });
     await screen.findByText("Draft 3 · Saved");
     const size = screen.getByRole("combobox", { name: "Grid size" });
@@ -657,7 +657,7 @@ describe("publishing, discarding and history (docs/0082, docs/0089)", () => {
         "POST /api/v1/floors/f3/draft/changesets": (request) => {
           void request.json().then((b) => restored.push(b as never));
           draft = withDesk(plan(3, "draft"));
-          return { status: 200, body: { floor_id: "f3", version: 3, revision: 4, cascaded: [] } };
+          return { status: 200, body: saved(4) };
         },
       }),
     );

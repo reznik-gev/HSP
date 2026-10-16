@@ -4,7 +4,14 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page, stubMembership, stubPerson, stubUnit } from "@/test/stubs";
+import {
+  page,
+  stubAssignment,
+  stubMembership,
+  stubPerson,
+  stubProblem,
+  stubUnit,
+} from "@/test/stubs";
 import { spyBackend, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 import { undoUnitArchive } from "./undo";
@@ -53,6 +60,7 @@ const ARCHIVE_REPORT = {
     { seat_id: "s2", holder_person_id: null, holder_unit_id: "plat" },
   ],
 };
+const UNIT_CYCLE = stubProblem(409, "unit-cycle");
 const MAYA_AFTER_ARCHIVE = stubPerson("p1", "Maya", { memberships: [primary("u0")] });
 const OMER_AFTER_ARCHIVE = stubPerson("p2", "Omer", {
   memberships: [primary("u0"), stubMembership("ops", { is_primary: false })],
@@ -122,10 +130,7 @@ describe("teams (docs/0088)", () => {
     await renderApp(
       "/org?unit=rnd",
       backend({
-        "PATCH /api/v1/org-units/rnd": {
-          status: 409,
-          body: { type: "/problems/unit-cycle", title: "Cycle" },
-        },
+        "PATCH /api/v1/org-units/rnd": UNIT_CYCLE,
       }),
     );
     const panel = await screen.findByRole("dialog", { name: "R&D" });
@@ -182,8 +187,9 @@ describe("undoing a team archive (docs/0088)", () => {
       "GET /api/v1/people/p2": { status: 200, body: OMER_AFTER_ARCHIVE },
       "PUT /api/v1/people/p1/memberships": { status: 200, body: {} },
       "PUT /api/v1/people/p2/memberships": { status: 200, body: {} },
-      "GET /api/v1/seats/s1/assignment": { status: 200, body: { assignment: null } },
-      "GET /api/v1/seats/s2/assignment": { status: 200, body: { assignment: { x: 1 } } },
+      "GET /api/v1/seats/s1/assignment": stubAssignment(),
+      // s2 was given to someone else meanwhile, so Undo leaves it alone.
+      "GET /api/v1/seats/s2/assignment": stubAssignment({ holder_person_id: "p5" }),
       "PUT /api/v1/seats/s1/assignment": { status: 200, body: {} },
     });
     const result = await undoUnitArchive(ARCHIVE_REPORT);

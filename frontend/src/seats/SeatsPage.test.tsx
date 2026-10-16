@@ -8,6 +8,10 @@ import { page, STUB_MAYA, stubPersonHolder, stubSeat } from "@/test/stubs";
 import { renderApp, type Reply } from "@/test/renderApp";
 
 const MAYA_SEAT = stubSeat("d2", "HT-3-02", stubPersonHolder(STUB_MAYA));
+const BOOKABLE_SEAT = { ...stubSeat("d5", "HT-3-05"), allocation_mode: "bookable" };
+const FREE_SEAT = stubSeat("d6", "HT-3-06");
+/** The search's second page. */
+const SECOND_PAGE_SEAT = stubSeat("d3", "HT-3-03", stubPersonHolder(STUB_MAYA));
 
 afterEach(async () => {
   cleanup();
@@ -44,12 +48,8 @@ describe("where does X sit? (docs/0085, docs/0087)", () => {
   });
 
   it("seats nobody holds say whether they are free or bookable", async () => {
-    const empty = { ...MAYA_SEAT, holder_person: null };
     await renderApp("/seats?q=ht", {
-      "GET /api/v1/seats": seats([
-        { ...empty, id: "d5", label: "HT-3-05", allocation_mode: "bookable" },
-        { ...empty, id: "d6", label: "HT-3-06" },
-      ]),
+      "GET /api/v1/seats": seats([BOOKABLE_SEAT, FREE_SEAT]),
     });
     expect(await screen.findByRole("row", { name: /HT-3-05/ })).toHaveTextContent("Bookable");
     expect(screen.getByRole("row", { name: /HT-3-06/ })).toHaveTextContent("Free");
@@ -66,10 +66,7 @@ describe("where does X sit? (docs/0085, docs/0087)", () => {
       "GET /api/v1/seats": (request) => {
         calls += 1;
         const second = new URL(request.url).searchParams.get("cursor") === "next";
-        return seats(
-          [{ ...MAYA_SEAT, id: second ? "d3" : "d2", label: second ? "HT-3-03" : "HT-3-02" }],
-          second ? null : "next",
-        )(request);
+        return seats(second ? [SECOND_PAGE_SEAT] : [MAYA_SEAT], second ? null : "next")(request);
       },
     });
     await userEvent.click(await screen.findByRole("button", { name: "Show more" }));

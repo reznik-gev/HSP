@@ -14,13 +14,13 @@ afterEach(async () => {
   useTheme.setState({ choice: "system" });
 });
 
+const HEBREW_DARK = { language: "he", theme: "dark", display_units: null };
+const ENGLISH_IN_METRES = { language: "en", theme: null, display_units: "m" };
+
 describe("saved preferences (docs/0046, docs/0087)", () => {
   it("applies the user's saved language and theme after sign-in", async () => {
     await renderApp("/floors", {
-      "GET /api/v1/me/preferences": {
-        status: 200,
-        body: { language: "he", theme: "dark", display_units: null },
-      },
+      "GET /api/v1/me/preferences": { status: 200, body: HEBREW_DARK },
     });
     expect(await screen.findByRole("heading", { name: "קומות" })).toBeInTheDocument();
     expect(document.documentElement).toHaveAttribute("dir", "rtl");
@@ -29,10 +29,7 @@ describe("saved preferences (docs/0046, docs/0087)", () => {
 
   it("saves a new choice to the server, keeping the others", async () => {
     const { calls } = await renderApp("/floors", {
-      "GET /api/v1/me/preferences": {
-        status: 200,
-        body: { language: "en", theme: null, display_units: "m" },
-      },
+      "GET /api/v1/me/preferences": { status: 200, body: ENGLISH_IN_METRES },
     });
     await userEvent.click(await screen.findByRole("button", { name: "Appearance" }));
     await userEvent.click(screen.getByRole("menuitem", { name: "Dark" }));
