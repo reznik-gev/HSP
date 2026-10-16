@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { renderApp, type Routes } from "@/test/renderApp";
-import { page, STUB_ZONE_TYPES } from "@/test/stubs";
+import { page, STUB_ZONE_TYPES, stubCatalogRoutes } from "@/test/stubs";
 
 const [ROOM, MEETING] = STUB_ZONE_TYPES as [
   (typeof STUB_ZONE_TYPES)[number],
@@ -14,7 +14,7 @@ const [ROOM, MEETING] = STUB_ZONE_TYPES as [
 
 function backend(extra: Routes = {}): Routes {
   return {
-    "GET /api/v1/catalog-items": { status: 200, body: page([]) },
+    ...stubCatalogRoutes([]),
     "GET /api/v1/zone-types": { status: 200, body: page(STUB_ZONE_TYPES) },
     ...extra,
   };
