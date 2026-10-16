@@ -1,5 +1,5 @@
 /**
- * Render the real app at a path, against a stubbed backend (stubBackend) (docs/0087 choice 8). `routes` maps
+ * Render the real app at a path, against a stubbed backend (spyBackend) (docs/0087 choice 8). `routes` maps
  * "METHOD /path" to a JSON body or a status; anything else answers 404.
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -31,7 +31,7 @@ export const AS_VIEWER: Routes = {
  * Stands in for the API: answers each "METHOD /path" with the canned reply in `routes` (a stub)
  * and records every request it receives (a spy), so tests can check what was sent.
  */
-export function stubBackend(routes: Routes) {
+export function spyBackend(routes: Routes) {
   const calls: Request[] = [];
   const fetchMock = vi.fn((input: RequestInfo | URL) => {
     const request = input instanceof Request ? input : new Request(String(input));
@@ -51,7 +51,7 @@ export function stubBackend(routes: Routes) {
 }
 
 export async function renderApp(path: string, routes: Routes = {}) {
-  const backend = stubBackend({
+  const backend = spyBackend({
     "GET /api/v1/auth/me": { status: 200, body: ADMIN },
     "GET /api/v1/me/preferences": { status: 200, body: {} },
     "PUT /api/v1/me/preferences": { status: 200, body: {} },

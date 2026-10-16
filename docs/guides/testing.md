@@ -28,12 +28,12 @@ We use the usual vocabulary ([Martin Fowler, *Test Double*](https://martinfowler
 
 | Double | Means | Ours |
 |---|---|---|
-| **Stub** | Canned data or canned answers. | `frontend/src/test/stubs.ts`, `backend/tests/stubs.py`, the `stub_*` builders in `backend/tests/db/plan_helpers.py`, and the stubbed API in `renderApp`. |
+| **Stub** | Canned data or canned answers. | `frontend/src/test/stubs.ts`, `backend/tests/stubs.py`, and the `stub_*` builders in `backend/tests/db/plan_helpers.py`. |
 | **Fake** | A working, simplified implementation. | `backend/tests/fakes.py`: `InMemoryLocationsRepository`, `InMemoryPlanRepository`, and so on. |
-| **Spy** | Records how it was called, for the test to check afterwards. | `stubBackend` records every request in `calls`. |
+| **Spy** | Records how it was called, for the test to check afterwards. | `spyBackend` (used by `renderApp`) answers with canned replies and records every request in `calls`. |
 | **Mock** | Expects particular calls and fails the test itself if they don't come. | Not used: we check results and recorded requests instead. |
 
-Names say which kind a thing is:
+Names say which kind a thing is, and a double that does several jobs is **named after the strongest one** (mock > spy > fake > stub): `spyBackend` gives canned answers like a stub, but it also records calls, so it's a spy.
 - `STUB_DESK_ITEM`, `STUB_MAYA`: one named thing in the shared world (below). Constants in capitals.
 - `stubDesk(id, at, over)`, `stub_desk(ctx, ...)`: a builder with realistic defaults. It takes only what usually differs, plus `over` (`**over` in Python) for anything else.
 - `stubCatalogRoutes(items)`, `stubDeviceRoutes(devices)`: the stubbed API for one area. `AS_VIEWER` signs the test in as a viewer instead of an admin.
@@ -41,10 +41,11 @@ Names say which kind a thing is:
 
 ## The rules
 
-### 1. Test data comes from shared stubs and fixtures
-A test spells out **only the values it checks**. Everything else comes from a shared stub or fixture, so a test reads as its behaviour, not as setup.
-- If two test files need the same thing, it belongs in `stubs.ts` / `stubs.py` (or a shared fixture), not in either file.
-- A value used by one test only is built **with** a stub, changing just what matters: `stubDesk("d3", [5000, 1000], { allocation_mode: "bookable" })`, `stubDevice("dev9", "LAP-1")`. Don't copy a whole object literal into the test.
+### 1. All test data is fixturized; only what's shared is shared
+**No test data is defined inside a test.** A test body acts and asserts, spelling out only the values it checks; the data comes from fixtures and stubs defined outside it. Where they live depends on who uses them:
+- **Used by one file** (one test or several): defined **at the top of that file**, as a module-level constant, builder or fixture, e.g. `const LOOSE = stubDevice("dev2", "DOCK-0007")`.
+- **Used by more than one file:** in the shared modules, `stubs.ts` / `stubs.py` or a shared `conftest.py`.
+- Build values **with** the stub builders, changing only what matters (`stubDesk("d3", [5000, 1000], { allocation_mode: "bookable" })`), rather than writing whole object literals.
 - Response shapes come from builders too (`page(items)`, `ref(id, name)`), so a change to the API shape is one edit.
 
 ### 2. One shared world
@@ -90,8 +91,9 @@ A plan rule (an error or a warning) is changed by **editing the cases** in `shar
 Only key flows (signing in and finding a seat; drawing and publishing a floor). Each test **creates its own data through the API and archives it afterwards**, so it runs against any dev database.
 
 ## Review checklist
-- Does the test spell out only what it checks? Is any object literal or setup a copy of a shared stub?
-- Would a second test file need this data? Then it's in the shared stubs or a fixture.
+- Is any test data defined inside a test body? It belongs at the top of the file, or in the shared stubs.
+- Is data used by more than one file shared, and data used by one file kept in that file?
+- Is a double named after its strongest role (mock > spy > fake > stub)?
 - Python: is setup in fixtures, with the test body only acting and asserting? Is the file about one area?
 - Screen tests: queried by role and name? Waits for state, not for time? Both languages where text matters?
 - New database constraint or query: is there a database test?

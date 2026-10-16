@@ -12,12 +12,12 @@
 
 These are now written down, so tests are written that way the first time and reviews can point to one place.
 
-0061 also planned to stub the frontend's API with MSW. The frontend instead uses its own `stubBackend`: a small stub and spy on `fetch`, which does all the tests need without another library.
+0061 also planned to stub the frontend's API with MSW. The frontend instead uses its own `spyBackend`: a small spy on `fetch` that answers with canned replies, which does all the tests need without another library.
 
 ## Decision
-1. **Test data comes from shared stubs and fixtures.** A test spells out only the values it checks. Data needed by more than one test file lives in `frontend/src/test/stubs.ts`, `backend/tests/stubs.py` or a shared fixture. A one-off value is built with a stub, changing only what matters.
+1. **All test data is fixturized; only what's shared is shared.** No test data is defined inside a test: the body acts and asserts. Data used by one file is defined at the top of that file; data used by more than one file lives in `frontend/src/test/stubs.ts`, `backend/tests/stubs.py` or a shared fixture. Values are built with the stub builders, changing only what matters.
 2. **One shared world** of stub data: Tel Aviv HQ › Harbor Tower › Floor 3; Maya Shani in the Platform team, with monitor MON-0412. Tests extend it rather than invent parallel data.
-3. **Test doubles are named by kind** ([Fowler](https://martinfowler.com/bliki/TestDouble.html)): `STUB_*` / `stub*` / `stub_*` for stubs, `InMemory*` for fakes. `stubBackend` is a stub and spy. Mocks that check their own calls aren't used.
+3. **Test doubles are named by kind** ([Fowler](https://martinfowler.com/bliki/TestDouble.html)), after the strongest role a double plays (mock > spy > fake > stub): `STUB_*` / `stub*` / `stub_*` for stubs, `InMemory*` for fakes, `spyBackend` for the API spy (it also answers with canned replies). Mocks that check their own calls aren't used.
 4. **Backend:** setup in pytest fixtures (function-level by default, in a `conftest.py` beside the tests); the test body acts and asserts; test files are split by area.
 5. **Frontend:** screen tests render the whole app with `renderApp`, query by role and accessible name, check sent requests through the spy, and wait for state rather than time.
 6. **[docs/guides/testing.md](../guides/testing.md)** explains these with examples and a review checklist. It is updated when a convention changes.
