@@ -14,13 +14,20 @@
  *   Acme (u0) › Platform (u1), Vision (u2)
  *   Maya Shani (p1) in the Platform team (u1), with monitor MON-0412 (dev1) on floor f3
  */
-import type { Routes } from "./renderApp";
+import type { Reply, Routes } from "./renderApp";
 
 /** The API's list envelope (docs/0040), as a single page. */
 export const page = <T>(items: T[]) => ({ items, next_cursor: null });
 
 /** An `{ id, name }` reference, as the API nests sites, buildings, floors and units. */
 export const ref = (id: string, name: string) => ({ id, name });
+
+/** The API refusing a request (RFC 9457 Problem Details, docs/0037). `slug` is the problem
+ *  type's last part (`in-use`, `key-taken`…); `over` adds a title, detail or field errors. */
+export const stubProblem = (status: number, slug: string, over: object = {}): Reply => ({
+  status,
+  body: { status, type: `/problems/${slug}`, title: slug, ...over },
+});
 
 // --- Locations ------------------------------------------------------------------------------
 
@@ -115,9 +122,18 @@ export function stubCatalogRoutes(items: ReturnType<typeof stubCatalogItemOut>[]
   };
 }
 
+/** A zone type (docs/0020): an enclosed room in light blue unless `over` says otherwise. */
+export const stubZoneType = (id: string, name: string, over: object = {}) => ({
+  id,
+  name,
+  color: "#93c5fd" as string | null,
+  is_enclosed: true,
+  ...over,
+});
+
 export const STUB_ZONE_TYPES = [
-  { id: "zt1", name: "Room", color: "#93c5fd", is_enclosed: true },
-  { id: "zt2", name: "Meeting room", color: "#c4b5fd", is_enclosed: true },
+  stubZoneType("zt1", "Room"),
+  stubZoneType("zt2", "Meeting room", { color: "#c4b5fd" }),
 ];
 
 // --- Plan elements (docs/0029, docs/0036) ---------------------------------------------------

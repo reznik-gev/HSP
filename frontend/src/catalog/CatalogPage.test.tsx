@@ -11,16 +11,30 @@ import {
   stubCatalogItemOut,
   stubCatalogRoutes,
   stubCustomItemOut,
+  stubProblem,
 } from "@/test/stubs";
 
 const DESK = stubCatalogItemOut(STUB_DESK_ITEM);
+const BENCH = stubCustomItemOut("i9");
+/** A copy of the desk; an earlier copy already took the key desk_copy. */
+const DESK_COPY = stubCustomItemOut("i20", {
+  key: "desk_copy_2",
+  category: "desk",
+  name: "Desk 160 x 80 (copy)",
+});
+const STANDING_DESK = stubCustomItemOut("i30", { name: "Standing desk" });
+const BENCH_RENAMED = stubCustomItemOut("i9", { name: "Lab bench, long" });
+const KEY_TAKEN = stubProblem(409, "key-taken");
+const CATEGORY_REFUSED = stubProblem(422, "request-invalid", {
+  errors: [{ code: "string_pattern_mismatch", message: "bad", pointer: "/category" }],
+});
 
 /** Two built-in items, the organisation's lab bench (i9) and an archived bench (i8). */
 const backend = (extra: Routes = {}): Routes => ({
   ...stubCatalogRoutes([
     DESK,
     stubCatalogItemOut(STUB_MONITOR_ITEM),
-    stubCustomItemOut("i9"),
+    BENCH,
     stubCustomItemOut("i8", { name: "Old bench", archived_at: "2026-10-01T00:00:00Z" }),
   ]),
   ...extra,
@@ -72,27 +86,15 @@ describe("the catalog (docs/0095)", () => {
 
   it("opens a built-in item read-only, and copies it into the organisation's own", async () => {
     const posted: Promise<{ key: string; name: string }>[] = [];
-    const copy = {
-      ...DESK,
-      id: "i20",
-      key: "desk_copy_2",
-      name: "Desk 160 x 80 (copy)",
-      builtin: false,
-    };
     const { router } = await renderApp(
       "/catalog",
       backend({
         "POST /api/v1/catalog-items": (request) => {
           posted.push(request.clone().json() as Promise<{ key: string; name: string }>);
           // The first key is taken (an earlier copy), so the next one is tried.
-          return posted.length === 1
-            ? {
-                status: 409,
-                body: { status: 409, type: "/problems/key-taken", title: "Key taken" },
-              }
-            : { status: 201, body: copy };
+          return posted.length === 1 ? KEY_TAKEN : { status: 201, body: DESK_COPY };
         },
-        "GET /api/v1/catalog-items/i20": { status: 200, body: copy },
+        "GET /api/v1/catalog-items/i20": { status: 200, body: DESK_COPY },
       }),
     );
     await userEvent.click(await screen.findByRole("link", { name: "Desk 160 x 80" }));
@@ -119,7 +121,6 @@ describe("the catalog (docs/0095)", () => {
 describe("the organisation's own items (docs/0095)", () => {
   it("creates an item from the form, with a key from its name", async () => {
     let sent: Record<string, unknown> | undefined;
-    const made = stubCustomItemOut("i30", { name: "Standing desk" });
     const { router } = await renderApp(
       "/catalog",
       backend({
@@ -128,9 +129,9 @@ describe("the organisation's own items (docs/0095)", () => {
             .clone()
             .json()
             .then((b: Record<string, unknown>) => (sent = b));
-          return { status: 201, body: made };
+          return { status: 201, body: STANDING_DESK };
         },
-        "GET /api/v1/catalog-items/i30": { status: 200, body: made },
+        "GET /api/v1/catalog-items/i30": { status: 200, body: STANDING_DESK },
       }),
     );
     await userEvent.click(await screen.findByRole("button", { name: "New item" }));
@@ -166,7 +167,7 @@ describe("the organisation's own items (docs/0095)", () => {
             .clone()
             .json()
             .then((b: Record<string, unknown>) => (sent = b));
-          return { status: 200, body: stubCustomItemOut("i9", { name: "Lab bench, long" }) };
+          return { status: 200, body: BENCH_RENAMED };
         },
       }),
     );
@@ -189,14 +190,7 @@ describe("the organisation's own items (docs/0095)", () => {
     await renderApp(
       "/catalog?new=true",
       backend({
-        "POST /api/v1/catalog-items": {
-          status: 422,
-          body: {
-            status: 422,
-            title: "Invalid",
-            errors: [{ code: "string_pattern_mismatch", message: "bad", pointer: "/category" }],
-          },
-        },
+        "POST /api/v1/catalog-items": CATEGORY_REFUSED,
       }),
     );
     const panel = await screen.findByRole("dialog", { name: "New item" });
@@ -222,7 +216,7 @@ describe("the organisation's own items (docs/0095)", () => {
         },
         "POST /api/v1/catalog-items/i9/restore": () => {
           calls.push("restore");
-          return { status: 200, body: stubCustomItemOut("i9") };
+          return { status: 200, body: BENCH };
         },
       }),
     );
