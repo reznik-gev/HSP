@@ -5193,6 +5193,42 @@
             }
           },
           {
+            "description": "Only devices placed (or not) in a published floor plan",
+            "in": "query",
+            "name": "placed",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only devices placed (or not) in a published floor plan",
+              "title": "Placed"
+            }
+          },
+          {
+            "description": "Only devices issued (or not) to a person",
+            "in": "query",
+            "name": "issued",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only devices issued (or not) to a person",
+              "title": "Issued"
+            }
+          },
+          {
             "description": "Page size",
             "in": "query",
             "name": "limit",

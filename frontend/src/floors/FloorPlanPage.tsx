@@ -126,13 +126,14 @@ function Viewer({
   const selection = useStore(store, (s) => s.selection);
   const selected = [...selection].find((id) => states.has(id)) ?? null;
 
-  // Load the plan, then either centre the requested seat or fit the whole floor.
+  // Load the plan, then either centre the requested item or fit the whole floor. The item is
+  // usually a seat (its panel opens); a device's item, e.g. a monitor, is only highlighted.
   useEffect(() => {
     store.getState().loadPlan(plan);
   }, [store, plan]);
   const fit = (s: typeof store, size: [number, number]) => {
     const obj = focusSeat ? plan.objects[focusSeat] : undefined;
-    if (obj && states.has(obj.id)) {
+    if (obj) {
       s.getState().select([obj.id]);
       // Close enough to read labels, far enough to see the neighbours.
       s.getState().setViewport({ cx: obj.position[0], cy: obj.position[1], mmPerPx: 14 });

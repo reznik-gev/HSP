@@ -29,14 +29,27 @@ async def list_devices(
     service: Service,
     q: Annotated[str | None, Query(description="Search asset tag or serial number")] = None,
     assigned_person_id: Annotated[uuid.UUID | None, Query()] = None,
+    placed: Annotated[
+        bool | None, Query(description="Only devices placed (or not) in a published floor plan")
+    ] = None,
+    issued: Annotated[
+        bool | None, Query(description="Only devices issued (or not) to a person")
+    ] = None,
     limit: LimitParam = DEFAULT_LIMIT,
     cursor: CursorParam = None,
 ) -> Page[DeviceOut]:
     """Devices with their current placement ("where is MON-0412?")."""
-    filters = {"q": q, "assigned_person_id": assigned_person_id}
+    filters = {
+        "q": q,
+        "assigned_person_id": assigned_person_id,
+        "placed": placed,
+        "issued": issued,
+    }
     rows = await service.list(
         q=q,
         assigned_person_id=assigned_person_id,
+        placed=placed,
+        issued=issued,
         after=decode_cursor(cursor, filters),
         limit=limit + 1,
     )
