@@ -12,10 +12,14 @@ import subprocess
 import sys
 from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, create_async_engine
+
+from tests.db.plan_helpers import context
+from tests.db.seat_helpers import published_seats
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 TEST_DB_URL = os.environ.get("HSP_TEST_DATABASE_URL")
@@ -56,3 +60,23 @@ async def conn(engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
             yield connection
         finally:
             await trans.rollback()
+
+
+@pytest.fixture
+def db(conn: AsyncConnection) -> AsyncSession:
+    """A session inside the test's transaction; its commits are savepoints, rolled back after."""
+    return AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+
+
+@pytest.fixture
+async def ctx(db: AsyncSession) -> dict[str, Any]:
+    """A new floor in the default tenant whose edit lock the admin "alice" holds, with the stock
+    desk and a zone type to place (tests/db/plan_helpers.py)."""
+    return await context(db)
+
+
+@pytest.fixture
+async def seat_floor(db: AsyncSession) -> dict[str, Any]:
+    """A floor whose published plan has two assigned seats (a, b), a bookable one, and a seat
+    only in the draft (draft_only) (tests/db/seat_helpers.py)."""
+    return await published_seats(db)

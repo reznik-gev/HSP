@@ -4,21 +4,13 @@ from typing import Any
 
 import pytest
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from hsp import models
 from hsp.models import new_id
 from hsp.plans.drafts import SqlDraftRepository
 from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
 from hsp.problems import ProblemException
-from tests.db.plan_helpers import add, apply, context, lock, make_floor, plan, stub_desk, stub_wall
-
-
-@pytest.fixture
-async def ctx(conn: AsyncConnection) -> dict[str, Any]:
-    return await context(
-        AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
-    )
+from tests.db.plan_helpers import add, apply, lock, make_floor, plan, stub_desk, stub_wall
 
 
 def publishing(ctx: dict[str, Any]) -> PublishingService:

@@ -5,7 +5,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp.locations.repository import SqlLocationsRepository
 from hsp.models import Building, Site, Tenant, new_id
@@ -34,8 +34,7 @@ def _site(tenant_id: uuid.UUID, name: str, archived: bool = False) -> Site:
     )
 
 
-async def test_list_sites_pages_filters_and_scopes(conn: AsyncConnection) -> None:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+async def test_list_sites_pages_filters_and_scopes(db: AsyncSession) -> None:
     repo = SqlLocationsRepository(db)
     mine, theirs = await _tenant(db, "default"), await _tenant(db, "other")
     sites = [_site(mine, f"S{i}") for i in range(5)]
@@ -52,8 +51,7 @@ async def test_list_sites_pages_filters_and_scopes(conn: AsyncConnection) -> Non
     assert await repo.get_site(theirs, sites[0].id) is None  # tenant scoping
 
 
-async def test_active_buildings(conn: AsyncConnection) -> None:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+async def test_active_buildings(db: AsyncSession) -> None:
     repo = SqlLocationsRepository(db)
     tenant = await _tenant(db, "default")
     site = _site(tenant, "HQ")
@@ -77,8 +75,7 @@ async def test_active_buildings(conn: AsyncConnection) -> None:
     assert [b.code for b in await repo.active_buildings(tenant, site.id)] == ["A"]
 
 
-async def test_buildings_filter_and_code_lookup(conn: AsyncConnection) -> None:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+async def test_buildings_filter_and_code_lookup(db: AsyncSession) -> None:
     repo = SqlLocationsRepository(db)
     tenant = await _tenant(db, "default")
     s1, s2 = _site(tenant, "One"), _site(tenant, "Two")
@@ -114,10 +111,9 @@ async def test_buildings_filter_and_code_lookup(conn: AsyncConnection) -> None:
     assert await repo.building_with_code(tenant, s2.id, "B") is None
 
 
-async def test_floors_filter_and_level_lookup(conn: AsyncConnection) -> None:
+async def test_floors_filter_and_level_lookup(db: AsyncSession) -> None:
     from hsp.models import Floor
 
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
     repo = SqlLocationsRepository(db)
     tenant = await _tenant(db, "default")
     s = _site(tenant, "HQ")

@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
 from hsp.models import new_id
@@ -15,12 +15,10 @@ from hsp.seats.assignments import AssignmentIn, SeatAssignmentService
 from tests.db.plan_helpers import add, apply, context, stub_desk
 
 
-async def published_seats(conn: AsyncConnection) -> dict[str, Any]:
+async def published_seats(db: AsyncSession) -> dict[str, Any]:
     """A floor whose published plan has two assigned seats (a, b), a bookable one, and a seat
     that exists only in the draft (draft_only)."""
-    ctx = await context(
-        AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
-    )
+    ctx = await context(db)
     tag = new_id().hex[-6:]
     ctx["a"], ctx["b"], ctx["bookable"], ctx["draft_only"] = (new_id() for _ in range(4))
     await apply(

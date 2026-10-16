@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 from geoalchemy2.elements import WKTElement
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
 from hsp.models import new_id
@@ -79,8 +79,7 @@ def _element(
     return e.id
 
 
-async def test_version_ranges_and_geometry(conn: AsyncConnection) -> None:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+async def test_version_ranges_and_geometry(db: AsyncSession) -> None:
     tenant, floor_id, desk_rev = await _setup(db)
 
     # A wall present in every version; a zone added in v2; a desk moved in v3 (draft).
