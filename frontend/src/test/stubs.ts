@@ -139,6 +139,14 @@ export const stubMonitor = (id: string, on: string, at: Point) => ({
   allocation_mode: null,
 });
 
+/** A screen hung on a wall: a monitor on its own, `z` mm off the floor (docs/0095). */
+export const stubScreen = (id: string, at: Point, z = 1400) => ({
+  ...stubDesk(id, at),
+  catalog_item_rev_id: STUB_MONITOR_ITEM.id,
+  position: [at[0], at[1], z],
+  allocation_mode: null,
+});
+
 export const stubZone = (id: string, boundary: Point[], over: object = {}) => ({
   id,
   name: id,
