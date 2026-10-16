@@ -4,7 +4,14 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page, stubSeat } from "@/test/stubs";
+import {
+  page,
+  STUB_MAYA,
+  STUB_MAYAS_MONITOR,
+  stubDeviceRoutes,
+  stubPerson,
+  stubSeat,
+} from "@/test/stubs";
 import { AS_VIEWER, ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 const unit = (id: string, name: string, parent_id: string | null) => ({
@@ -18,41 +25,15 @@ const unit = (id: string, name: string, parent_id: string | null) => ({
   source: "manual",
 });
 const UNITS = [unit("u0", "Acme", null), unit("u1", "Platform", "u0"), unit("u2", "Vision", "u0")];
-const MAYA = {
-  id: "p1",
-  display_name: "Maya Shani",
-  email: "maya@acme.example",
-  title: "Backend Engineer",
-  external_id: "E102",
-  active: true,
-  source: "manual",
-  primary_unit_id: "u1",
-  memberships: [{ unit_id: "u1", position_id: null, is_primary: true, primary_override: false }],
-};
 const SEAT = stubSeat("d2", "HT-3-02");
 
 function backend(extra: Routes = {}): Routes {
   return {
     "GET /api/v1/org-units": { status: 200, body: page(UNITS) },
-    "GET /api/v1/people": { status: 200, body: page([MAYA]) },
-    "GET /api/v1/people/p1": { status: 200, body: MAYA },
+    "GET /api/v1/people": { status: 200, body: page([STUB_MAYA]) },
+    "GET /api/v1/people/p1": { status: 200, body: STUB_MAYA },
     "GET /api/v1/seats": { status: 200, body: page([SEAT]) },
-    "GET /api/v1/devices": {
-      status: 200,
-      body: {
-        items: [
-          {
-            id: "dev1",
-            asset_tag: "MON-0412",
-            serial_number: null,
-            notes: null,
-            assigned_person_id: "p1",
-            placement: { floor_id: "f3", floor_name: "Floor 3", element_id: "e", version: 2 },
-          },
-        ],
-        next_cursor: null,
-      },
-    },
+    ...stubDeviceRoutes([STUB_MAYAS_MONITOR]),
     "GET /api/v1/org-units/u1/positions": { status: 200, body: page([]) },
     ...extra,
   };
@@ -96,8 +77,8 @@ describe("people (docs/0088)", () => {
         "POST /api/v1/people": (): Reply =>
           ++attempts === 1
             ? { status: 409, body: { type: "/problems/email-taken", title: "Email already used" } }
-            : { status: 201, body: { ...MAYA, id: "p9", display_name: "Dana Cohen" } },
-        "GET /api/v1/people/p9": { status: 200, body: { ...MAYA, id: "p9" } },
+            : { status: 201, body: stubPerson("p9", "Dana Cohen") },
+        "GET /api/v1/people/p9": { status: 200, body: stubPerson("p9", "Dana Cohen") },
       }),
     );
     await userEvent.click(await screen.findByRole("button", { name: "New person" }));
@@ -120,14 +101,14 @@ describe("people (docs/0088)", () => {
         "DELETE /api/v1/people/p1": {
           status: 200,
           body: {
-            person: { ...MAYA, active: false },
+            person: { ...STUB_MAYA, active: false },
             freed_seats: [
               { seat_id: "d2", holder_person_id: "p1", holder_unit_id: null },
               { seat_id: "d7", holder_person_id: "p1", holder_unit_id: null },
             ],
           },
         },
-        "POST /api/v1/people/p1/reactivate": { status: 200, body: MAYA },
+        "POST /api/v1/people/p1/reactivate": { status: 200, body: STUB_MAYA },
         "GET /api/v1/seats/d2/assignment": {
           status: 200,
           body: { seat_id: "d2", label: "A", floor_id: "f3", assignment: seatState.d2 },
