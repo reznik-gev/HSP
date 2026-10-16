@@ -11,6 +11,10 @@ import {
   STUB_DESK_ITEM,
   stubLocationRoutes,
   page,
+  ref,
+  STUB_MAYA,
+  stubPersonHolder,
+  stubProblem,
   stubSeat,
   stubWall,
   STUB_ZONE_TYPES,
@@ -27,6 +31,7 @@ const plan = (version: number, state: string) =>
 const DESK = stubDesk("d1", [2000, 1000], { label: "A-01" });
 const withDesk = (p: ReturnType<typeof plan>) => ({ ...p, objects: [DESK] });
 const LOCK_FREE = { floor_id: "f3", locked: false, is_mine: false };
+const LOCK_MINE = { ...LOCK_FREE, locked: true, is_mine: true };
 const LOCK_DANA = {
   floor_id: "f3",
   locked: true,
@@ -40,10 +45,7 @@ function backend(over: Routes = {}, publishedVersion: number | null = 2): Routes
     ...stubLocationRoutes(publishedVersion),
     "GET /api/v1/zone-types": { status: 200, body: page(STUB_ZONE_TYPES) },
     "GET /api/v1/catalog-items": { status: 200, body: page([stubCatalogItemOut(STUB_DESK_ITEM)]) },
-    "POST /api/v1/floors/f3/lock": {
-      status: 200,
-      body: { ...LOCK_FREE, locked: true, is_mine: true },
-    },
+    "POST /api/v1/floors/f3/lock": { status: 200, body: LOCK_MINE },
     "GET /api/v1/floors/f3/lock": { status: 200, body: LOCK_FREE },
     "DELETE /api/v1/floors/f3/lock": { status: 204 },
     "GET /api/v1/floors/f3/draft": { status: 200, body: plan(3, "draft") },
@@ -53,7 +55,25 @@ function backend(over: Routes = {}, publishedVersion: number | null = 2): Routes
   };
 }
 
-const NO_DRAFT: Reply = { status: 404, body: { type: "/problems/no-draft", title: "No draft" } };
+const NO_DRAFT = stubProblem(404, "no-draft");
+const FLOOR_LOCKED = stubProblem(423, "floor-locked");
+const FORBIDDEN = stubProblem(403, "forbidden");
+/** HT-3-01, already used on another floor of the building. */
+const SEAT_ON_FLOOR_2 = { ...stubSeat("x9", "HT-3-01"), floor: ref("f2", "Floor 2") };
+/** Draft 3 with a desk that has no seat use: the server would refuse it. */
+const DRAFT_DESK_WITHOUT_USE = {
+  ...plan(3, "draft"),
+  objects: [{ ...DESK, allocation_mode: null }],
+};
+const CHANGESET_REFUSED = stubProblem(422, "changeset-invalid", {
+  errors: [{ code: "invalid_field", message: "Bad position.", op_index: 0, element_id: "d1" }],
+});
+const PUBLISH_CONFLICTS = stubProblem(409, "publish-conflicts", {
+  errors: [{ code: "seat_label_duplicate", message: "A-01 is used twice.", element_id: "d1" }],
+});
+const EMPTY_DIFF = { added: [], changed: [], removed: [] };
+/** Maya's seat B-02, which the draft removes. */
+const MAYAS_SEAT = stubSeat("d9", "B-02", stubPersonHolder(STUB_MAYA));
 const calls = (list: Request[], key: string) =>
   list.filter((r) => `${r.method} ${new URL(r.url).pathname}` === key).length;
 
@@ -105,9 +125,7 @@ describe("when someone else is editing (docs/0016)", () => {
       "/floors/f3/edit",
       backend({
         "POST /api/v1/floors/f3/lock": () =>
-          lockedByDana
-            ? { status: 423, body: { type: "/problems/floor-locked", title: "Locked" } }
-            : { status: 200, body: { ...LOCK_FREE, locked: true, is_mine: true } },
+          lockedByDana ? FLOOR_LOCKED : { status: 200, body: LOCK_MINE },
         "GET /api/v1/floors/f3/lock": { status: 200, body: LOCK_DANA },
         "POST /api/v1/floors/f3/lock/force-release": () => {
           lockedByDana = false;
@@ -129,9 +147,7 @@ describe("when someone else is editing (docs/0016)", () => {
       "/floors/f3/edit",
       backend({
         "POST /api/v1/floors/f3/lock": () =>
-          taken
-            ? { status: 423, body: { type: "/problems/floor-locked", title: "Locked" } }
-            : { status: 200, body: { ...LOCK_FREE, locked: true, is_mine: true } },
+          taken ? FLOOR_LOCKED : { status: 200, body: LOCK_MINE },
       }),
     );
     await screen.findByText("Draft 3 · Saved");
@@ -148,7 +164,7 @@ describe("when someone else is editing (docs/0016)", () => {
       "/floors/f3/edit",
       backend({
         ...AS_VIEWER,
-        "POST /api/v1/floors/f3/lock": { status: 403, body: { title: "Forbidden" } },
+        "POST /api/v1/floors/f3/lock": FORBIDDEN,
       }),
     );
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -461,11 +477,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     const { routes, changesets } = saving();
     await renderApp("/floors/f3/edit", {
       ...routes,
-      // HT-3-01 is already used on another floor of the building.
-      "GET /api/v1/seats": {
-        status: 200,
-        body: page([{ ...stubSeat("x9", "HT-3-01"), floor: { id: "f2", name: "Floor 2" } }]),
-      },
+      "GET /api/v1/seats": { status: 200, body: page([SEAT_ON_FLOOR_2]) },
     });
     await screen.findByText("Draft 3 · Saved");
     await userEvent.keyboard("l");
@@ -503,11 +515,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
     await renderApp(
       "/floors/f3/edit",
       backend({
-        // A desk without a seat use: the server would refuse it.
-        "GET /api/v1/floors/f3/draft": {
-          status: 200,
-          body: { ...plan(3, "draft"), objects: [{ ...DESK, allocation_mode: null }] },
-        },
+        "GET /api/v1/floors/f3/draft": { status: 200, body: DRAFT_DESK_WITHOUT_USE },
       }),
     );
     await screen.findByText("Draft 3 · Saved");
@@ -542,16 +550,7 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
           loads++;
           return { status: 200, body: withDesk(plan(3, "draft")) };
         },
-        "POST /api/v1/floors/f3/draft/changesets": {
-          status: 422,
-          body: {
-            type: "https://hsp.example/problems/changeset-invalid",
-            title: "Invalid changeset",
-            errors: [
-              { code: "invalid_field", message: "Bad position.", op_index: 0, element_id: "d1" },
-            ],
-          },
-        },
+        "POST /api/v1/floors/f3/draft/changesets": CHANGESET_REFUSED,
       }),
     );
     await screen.findByText("Draft 3 · Saved");
@@ -577,11 +576,6 @@ describe("editing and saving (docs/0050, docs/0089 choice 3)", () => {
 });
 
 describe("publishing, discarding and history (docs/0082, docs/0089)", () => {
-  const EMPTY_DIFF = { added: [], changed: [], removed: [] };
-  const holderSeat = stubSeat("d9", "B-02", {
-    holder_person: { id: "p1", display_name: "Maya Cohen", email: "maya@acme.example" },
-  });
-
   function publishing(publish: Reply) {
     const published: unknown[] = [];
     const routes = backend({
@@ -599,7 +593,7 @@ describe("publishing, discarding and history (docs/0082, docs/0089)", () => {
           objects: { added: [DESK], changed: [], removed: [{ id: "d9" }] },
         },
       },
-      "GET /api/v1/seats": { status: 200, body: page([holderSeat]) },
+      "GET /api/v1/seats": { status: 200, body: page([MAYAS_SEAT]) },
       "POST /api/v1/floors/f3/draft/publish": (request) => {
         void request.json().then((b) => published.push(b));
         return publish;
@@ -627,7 +621,7 @@ describe("publishing, discarding and history (docs/0082, docs/0089)", () => {
       expect.arrayContaining(["Added: 1 item", "Removed: 1 item"]),
     );
     expect(within(dialog).getByText("1 assigned seat will be freed:")).toBeVisible();
-    expect(within(dialog).getByText(/B-02: Maya Cohen/)).toBeVisible();
+    expect(within(dialog).getByText(/B-02: Maya Shani/)).toBeVisible();
     await userEvent.type(within(dialog).getByLabelText(/Note/), "New desks");
     await userEvent.click(within(dialog).getByRole("button", { name: "Publish" }));
     expect(await screen.findByRole("heading", { name: "Floor 3" })).toBeVisible();
@@ -636,16 +630,7 @@ describe("publishing, discarding and history (docs/0082, docs/0089)", () => {
   });
 
   it("publish conflicts are listed in Problems", async () => {
-    const { routes } = publishing({
-      status: 409,
-      body: {
-        type: "https://hsp.example/problems/publish-conflicts",
-        title: "Can't publish",
-        errors: [
-          { code: "seat_label_duplicate", message: "A-01 is used twice.", element_id: "d1" },
-        ],
-      },
-    });
+    const { routes } = publishing(PUBLISH_CONFLICTS);
     await renderApp("/floors/f3/edit", routes);
     await screen.findByText("Draft 3 · Saved");
     await userEvent.click(screen.getByRole("button", { name: "Publish" }));

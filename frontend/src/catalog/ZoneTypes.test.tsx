@@ -5,12 +5,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { renderApp, type Routes } from "@/test/renderApp";
-import { page, STUB_ZONE_TYPES, stubCatalogRoutes } from "@/test/stubs";
+import { page, STUB_ZONE_TYPES, stubCatalogRoutes, stubProblem, stubZoneType } from "@/test/stubs";
 
 const [ROOM, MEETING] = STUB_ZONE_TYPES as [
   (typeof STUB_ZONE_TYPES)[number],
   (typeof STUB_ZONE_TYPES)[number],
 ];
+
+const PHONE_BOOTH = stubZoneType("zt9", "Phone booth", { color: "#cbd5e1" });
+/** Meeting room added back by Undo, under a new id. */
+const MEETING_AGAIN = { ...MEETING, id: "zt3" };
+const IN_USE = stubProblem(409, "in-use");
 
 function backend(extra: Routes = {}): Routes {
   return {
@@ -42,7 +47,6 @@ describe("zone types (docs/0095)", () => {
 
   it("adds one", async () => {
     let sent: unknown;
-    const made = { id: "zt9", name: "Phone booth", color: "#cbd5e1", is_enclosed: true };
     const { router } = await renderApp(
       "/catalog?tab=zones",
       backend({
@@ -51,7 +55,7 @@ describe("zone types (docs/0095)", () => {
             .clone()
             .json()
             .then((b: unknown) => (sent = b));
-          return { status: 201, body: made };
+          return { status: 201, body: PHONE_BOOTH };
         },
       }),
     );
@@ -68,10 +72,7 @@ describe("zone types (docs/0095)", () => {
     await renderApp(
       "/catalog?tab=zones&zone=zt1",
       backend({
-        "DELETE /api/v1/zone-types/zt1": {
-          status: 409,
-          body: { status: 409, type: "/problems/in-use", title: "Zone type in use" },
-        },
+        "DELETE /api/v1/zone-types/zt1": IN_USE,
       }),
     );
     const panel = await screen.findByRole("dialog", { name: "Room" });
@@ -90,7 +91,7 @@ describe("zone types (docs/0095)", () => {
         },
         "POST /api/v1/zone-types": () => {
           calls.push("add");
-          return { status: 201, body: { ...MEETING, id: "zt3" } };
+          return { status: 201, body: MEETING_AGAIN };
         },
       }),
     );

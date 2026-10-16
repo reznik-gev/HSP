@@ -5,10 +5,22 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { AS_VIEWER, renderApp, type Routes } from "@/test/renderApp";
-import { page, STUB_MAYA, STUB_MAYAS_MONITOR, stubDevice, stubDeviceRoutes } from "@/test/stubs";
+import {
+  page,
+  STUB_MAYA,
+  STUB_MAYAS_MONITOR,
+  stubDevice,
+  stubDeviceRoutes,
+  stubProblem,
+} from "@/test/stubs";
 
 /** A docking station nobody has, not placed. */
 const LOOSE = stubDevice("dev2", "DOCK-0007");
+const NEW_LAPTOP = stubDevice("dev9", "LAP-1");
+/** The docking station added back by Undo, under a new id. */
+const LOOSE_AGAIN = stubDevice("dev3", "DOCK-0007");
+const TAG_TAKEN = stubProblem(409, "asset-tag-taken");
+const IN_USE = stubProblem(409, "in-use");
 
 function backend(extra: Routes = {}): Routes {
   return {
@@ -74,12 +86,9 @@ describe("devices (docs/0095)", () => {
             .clone()
             .json()
             .then((b: unknown) => (sent = b));
-          return { status: 201, body: stubDevice("dev9", "LAP-1") };
+          return { status: 201, body: NEW_LAPTOP };
         },
-        "GET /api/v1/devices/dev9": {
-          status: 200,
-          body: stubDevice("dev9", "LAP-1"),
-        },
+        "GET /api/v1/devices/dev9": { status: 200, body: NEW_LAPTOP },
       }),
     );
     await userEvent.click(await screen.findByRole("button", { name: "New device" }));
@@ -105,10 +114,7 @@ describe("devices (docs/0095)", () => {
     await renderApp(
       "/devices?device=dev2",
       backend({
-        "PATCH /api/v1/devices/dev2": {
-          status: 409,
-          body: { status: 409, type: "/problems/asset-tag-taken", title: "Asset tag already used" },
-        },
+        "PATCH /api/v1/devices/dev2": TAG_TAKEN,
       }),
     );
     const panel = await screen.findByRole("dialog", { name: "DOCK-0007" });
@@ -123,10 +129,7 @@ describe("devices (docs/0095)", () => {
     await renderApp(
       "/devices?device=dev1",
       backend({
-        "DELETE /api/v1/devices/dev1": {
-          status: 409,
-          body: { status: 409, type: "/problems/in-use", title: "Device in use" },
-        },
+        "DELETE /api/v1/devices/dev1": IN_USE,
       }),
     );
     const panel = await screen.findByRole("dialog", { name: "MON-0412" });
@@ -146,7 +149,7 @@ describe("devices (docs/0095)", () => {
         },
         "POST /api/v1/devices": () => {
           calls.push("add");
-          return { status: 201, body: stubDevice("dev3", "DOCK-0007") };
+          return { status: 201, body: LOOSE_AGAIN };
         },
       }),
     );
