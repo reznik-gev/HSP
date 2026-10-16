@@ -688,6 +688,32 @@
       "mountableHint": "May hang on a wall or stand on something, at a height.",
       "footprint_blocks": "Takes floor space",
       "footprint_blocksHint": "Checked against door swings and columns."
+    },
+    "tabs": {
+      "label": "Catalog sections",
+      "items": "Items",
+      "zones": "Zone types"
     }
+  },
+  "zoneTypes": {
+    "new": "New zone type",
+    "create": "Create zone type",
+    "created": "{{name}} created.",
+    "saved": "{{name}} saved.",
+    "none": "No zone types yet.",
+    "loadFailed": "Couldn't load the zone types. Reload the page to try again.",
+    "gone": "This zone type no longer exists.",
+    "enclosed": "Enclosed room",
+    "enclosedHint": "A room with walls and a door, like an office or a meeting room, rather than an open area.",
+    "fields": {
+      "name": "Name",
+      "color": "Colour",
+      "enclosed": "An enclosed room"
+    },
+    "nameTaken": "There's already a zone type with this name.",
+    "delete": "Delete",
+    "deleted": "{{name}} deleted.",
+    "restored": "{{name}} added back.",
+    "inUse": "Zones on floors use this type, now or in earlier versions, so it can't be deleted. You can rename it instead."
   }
 }

@@ -1,7 +1,8 @@
 /**
- * The Catalog (docs/0095, admins): every item by category, with search and a Built-in /
- * Custom / Archived filter, and the open item in a side panel. Search, filter and the open
- * item live in the address, like the People page (docs/0088).
+ * The Catalog (docs/0095, admins), in two tabs. **Items:** every item by category, with search
+ * and a Built-in / Custom / Archived filter, and the open item in a side panel. **Zone types:**
+ * the kinds of zone a floor can have. The tab, filters and the open item live in the address,
+ * like the People page (docs/0088).
  */
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
@@ -20,6 +21,7 @@ import { FlagBadges } from "./FlagBadges";
 import { ItemPanel } from "./ItemPanel";
 import { ItemPreview } from "./ItemPreview";
 import type { CatalogSearch, CatalogShow } from "./search";
+import { ZoneTypeList, ZoneTypePanel } from "./ZoneTypes";
 
 const route = getRouteApi("/shell/catalog");
 
@@ -38,8 +40,73 @@ export function CatalogPage() {
       </Page>
     );
   }
+  const tab = search.tab ?? "items";
   return (
     <Page title={t("catalog.title")}>
+      <div role="tablist" aria-label={t("catalog.tabs.label")} className="mb-5 flex gap-1 border-b">
+        {(["items", "zones"] as const).map((k) => (
+          <button
+            key={k}
+            role="tab"
+            type="button"
+            aria-selected={k === tab}
+            onClick={() =>
+              void navigate({ search: k === "zones" ? { tab: "zones" } : {}, replace: true })
+            }
+            className={cn(
+              "-mb-px border-b-2 px-4 py-2 text-sm",
+              k === tab
+                ? "border-primary font-medium text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t(`catalog.tabs.${k}`)}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel">
+        {tab === "zones" ? (
+          <ZonesTab search={search} set={set} />
+        ) : (
+          <ItemsTab search={search} set={set} />
+        )}
+      </div>
+    </Page>
+  );
+}
+
+type SetSearch = (change: Partial<CatalogSearch>) => void;
+
+function ZonesTab({ search, set }: { search: CatalogSearch; set: SetSearch }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <div className="flex">
+        <div className="ms-auto">
+          <Button onClick={() => set({ new: true, zone: undefined })}>
+            <Plus aria-hidden />
+            {t("zoneTypes.new")}
+          </Button>
+        </div>
+      </div>
+      <div className="mt-5">
+        <ZoneTypeList selected={search.zone} onOpen={(id) => set({ zone: id, new: undefined })} />
+      </div>
+      {(search.zone ?? search.new) && (
+        <ZoneTypePanel
+          zoneTypeId={search.zone ?? null}
+          onClose={() => set({ zone: undefined, new: undefined })}
+          onOpen={(id) => set({ zone: id, new: undefined })}
+        />
+      )}
+    </>
+  );
+}
+
+function ItemsTab({ search, set }: { search: CatalogSearch; set: SetSearch }) {
+  const { t } = useTranslation();
+  return (
+    <>
       <div className="flex flex-wrap items-center gap-3">
         <SearchBox value={search.q ?? ""} onChange={(q) => set({ q: q || undefined })} />
         <Select
@@ -70,7 +137,7 @@ export function CatalogPage() {
           onOpen={(id) => set({ item: id, new: undefined, show: undefined })}
         />
       )}
-    </Page>
+    </>
   );
 }
 
