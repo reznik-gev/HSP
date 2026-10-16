@@ -219,6 +219,12 @@ export const stubPlan = (over: object = {}) => ({
 
 // --- Seats (GET /seats, docs/0085) ----------------------------------------------------------
 
+/** GET /seats/{id}/assignment: free (null), or held as `holder` says (holder_person_id...). */
+export const stubAssignment = (holder: object | null = null): Reply => ({
+  status: 200,
+  body: { assignment: holder && { holder_person_id: null, holder_unit_id: null, ...holder } },
+});
+
 /** A seat on floor f3; `holder` sets holder_person or holder_unit. */
 export const stubSeat = (id: string, label: string, holder: object = {}) => ({
   id,

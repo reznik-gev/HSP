@@ -10,12 +10,24 @@ import {
   STUB_MAYAS_MONITOR,
   stubDeviceRoutes,
   stubPerson,
+  stubProblem,
   stubSeat,
   STUB_UNITS,
 } from "@/test/stubs";
 import { AS_VIEWER, ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 const SEAT = stubSeat("d2", "HT-3-02");
+
+const DANA = stubPerson("p9", "Dana Cohen");
+const EMAIL_TAKEN = stubProblem(409, "email-taken");
+/** Deactivating Maya freed her seats d2 and d7. */
+const MAYA_DEACTIVATED = {
+  person: { ...STUB_MAYA, active: false },
+  freed_seats: [
+    { seat_id: "d2", holder_person_id: "p1", holder_unit_id: null },
+    { seat_id: "d7", holder_person_id: "p1", holder_unit_id: null },
+  ],
+};
 
 function backend(extra: Routes = {}): Routes {
   return {
@@ -65,10 +77,8 @@ describe("people (docs/0088)", () => {
       "/people",
       backend({
         "POST /api/v1/people": (): Reply =>
-          ++attempts === 1
-            ? { status: 409, body: { type: "/problems/email-taken", title: "Email already used" } }
-            : { status: 201, body: stubPerson("p9", "Dana Cohen") },
-        "GET /api/v1/people/p9": { status: 200, body: stubPerson("p9", "Dana Cohen") },
+          ++attempts === 1 ? EMAIL_TAKEN : { status: 201, body: DANA },
+        "GET /api/v1/people/p9": { status: 200, body: DANA },
       }),
     );
     await userEvent.click(await screen.findByRole("button", { name: "New person" }));
@@ -88,16 +98,7 @@ describe("people (docs/0088)", () => {
     const { calls } = await renderApp(
       "/people?person=p1",
       backend({
-        "DELETE /api/v1/people/p1": {
-          status: 200,
-          body: {
-            person: { ...STUB_MAYA, active: false },
-            freed_seats: [
-              { seat_id: "d2", holder_person_id: "p1", holder_unit_id: null },
-              { seat_id: "d7", holder_person_id: "p1", holder_unit_id: null },
-            ],
-          },
-        },
+        "DELETE /api/v1/people/p1": { status: 200, body: MAYA_DEACTIVATED },
         "POST /api/v1/people/p1/reactivate": { status: 200, body: STUB_MAYA },
         "GET /api/v1/seats/d2/assignment": {
           status: 200,

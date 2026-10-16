@@ -11,6 +11,8 @@ import {
   page,
   ref,
   STUB_MAYA,
+  stubAssignment,
+  stubPerson,
   stubPersonHolder,
   stubMonitor,
   stubSeat,
@@ -29,6 +31,14 @@ const PLAN = stubPlan({
     stubMonitor("m1", "d3", [5000, 1200]),
   ],
 });
+
+const YONI = stubPerson("p7", "Yoni Peretz");
+/** What the person picker searches: Yoni, and no teams. */
+const PEOPLE_TO_PICK: Routes = {
+  "GET /api/v1/people": { status: 200, body: page([YONI]) },
+  "GET /api/v1/org-units": { status: 200, body: page([]) },
+};
+const NOTHING_ELSE_FREED = { freed_seats: [] };
 
 function backend(publishedVersion: number | null = 2): Routes {
   return {
@@ -108,39 +118,13 @@ describe("floor plan viewer (docs/0087)", () => {
 });
 
 describe("assigning seats on the plan (docs/0088)", () => {
-  const people = {
-    "GET /api/v1/people": {
-      status: 200,
-      body: {
-        items: [
-          {
-            id: "p7",
-            display_name: "Yoni Peretz",
-            email: "yoni@acme.example",
-            title: null,
-            external_id: null,
-            active: true,
-            source: "manual",
-            primary_unit_id: null,
-            memberships: [],
-          },
-        ],
-        next_cursor: null,
-      },
-    },
-    "GET /api/v1/org-units": { status: 200, body: page([]) },
-  };
-
   it("an admin reassigns Maya's seat to Yoni; the notice says Maya lost it; Undo puts her back", async () => {
     const { calls } = await renderApp("/floors/f3?seat=d1", {
       ...backend(),
-      ...people,
+      ...PEOPLE_TO_PICK,
       "PUT /api/v1/seats/d1/assignment": { status: 200, body: {} },
       // Undo checks the seat still has Yoni before putting Maya back.
-      "GET /api/v1/seats/d1/assignment": {
-        status: 200,
-        body: { assignment: { holder_person_id: "p7", holder_unit_id: null } },
-      },
+      "GET /api/v1/seats/d1/assignment": stubAssignment({ holder_person_id: YONI.id }),
     });
     const panel = await screen.findByRole("complementary", { name: "Seat details" });
     await userEvent.click(within(panel).getByRole("button", { name: "Change" }));
@@ -159,7 +143,7 @@ describe("assigning seats on the plan (docs/0088)", () => {
   it("freeing a seat offers Undo; viewers see no seat actions", async () => {
     await renderApp("/floors/f3?seat=d1", {
       ...backend(),
-      "DELETE /api/v1/seats/d1/assignment": { status: 200, body: { freed_seats: [] } },
+      "DELETE /api/v1/seats/d1/assignment": { status: 200, body: NOTHING_ELSE_FREED },
     });
     const panel = await screen.findByRole("complementary", { name: "Seat details" });
     await userEvent.click(within(panel).getByRole("button", { name: "Unassign" }));

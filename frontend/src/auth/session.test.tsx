@@ -22,6 +22,9 @@ afterEach(() => {
   useSessionExpired.setState({ expired: false });
 });
 
+/** Signing out of HSP sends the browser on to Keycloak's logout. */
+const SIGNED_OUT = { logout_url: "/auth/realms/hsp/logout" };
+
 describe("session (docs/0038, docs/0087)", () => {
   it("sends a signed-out visitor to sign in, coming back to the same page", async () => {
     window.history.replaceState(null, "", "/seats?q=maya");
@@ -32,7 +35,7 @@ describe("session (docs/0038, docs/0087)", () => {
 
   it("shows who is signed in, and signs out of HSP and Keycloak", async () => {
     const { calls } = await renderApp("/floors", {
-      "POST /api/v1/auth/logout": { status: 200, body: { logout_url: "/auth/realms/hsp/logout" } },
+      "POST /api/v1/auth/logout": { status: 200, body: SIGNED_OUT },
     });
     await userEvent.click(await screen.findByRole("button", { name: "Account: Noa Barak" }));
     expect(screen.getByText("noa@acme.example")).toBeInTheDocument();
