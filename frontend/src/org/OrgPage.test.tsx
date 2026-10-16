@@ -4,49 +4,59 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { page } from "@/test/stubs";
+import { page, stubMembership, stubPerson, stubUnit } from "@/test/stubs";
 import { spyBackend, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 import { undoUnitArchive } from "./undo";
 
-const unit = (id: string, name: string, parent_id: string | null, level: string | null = null) => ({
-  id,
-  name,
-  parent_id,
-  level_label: level,
-  color: null,
-  external_id: null,
-  archived_at: null,
-  source: "manual",
-});
+/** A deeper tree than the shared one, with levels: Acme › R&D › Platform, and Operations. */
 const UNITS = [
-  unit("u0", "Acme", null, "Company"),
-  unit("rnd", "R&D", "u0", "Division"),
-  unit("plat", "Platform", "rnd", "Team"),
-  unit("ops", "Operations", "u0", "Division"),
+  stubUnit("u0", "Acme", null, { level_label: "Company" }),
+  stubUnit("rnd", "R&D", "u0", { level_label: "Division" }),
+  stubUnit("plat", "Platform", "rnd", { level_label: "Team" }),
+  stubUnit("ops", "Operations", "u0", { level_label: "Division" }),
 ];
-const membership = (unit_id: string, is_primary = true) => ({
-  unit_id,
-  position_id: null,
-  is_primary,
-  primary_override: is_primary,
-});
-const person = (id: string, name: string, memberships: object[]) => ({
-  id,
-  display_name: name,
-  email: `${id}@acme.example`,
-  title: null,
-  external_id: null,
-  active: true,
-  source: "manual",
-  primary_unit_id: null,
-  memberships,
-});
+const primary = (unitId: string) => stubMembership(unitId, { primary_override: true });
 const PEOPLE = [
-  person("p1", "Maya", [membership("plat")]),
-  person("p2", "Omer", [membership("plat"), membership("rnd", false)]),
-  person("p3", "Avi", [membership("ops")]),
+  stubPerson("p1", "Maya", { memberships: [primary("plat")] }),
+  stubPerson("p2", "Omer", {
+    memberships: [primary("plat"), stubMembership("rnd", { is_primary: false })],
+  }),
+  stubPerson("p3", "Avi", { memberships: [primary("ops")] }),
 ];
+
+/** Archiving R&D took Platform with it, moved Maya and Omer into the root (Omer was already in
+ *  it) and freed two seats Platform held. */
+const ARCHIVE_REPORT = {
+  archived: [
+    { kind: "org_unit", id: "rnd", name: "R&D" },
+    { kind: "org_unit", id: "plat", name: "Platform" },
+  ],
+  moved_members: [
+    {
+      person_id: "p1",
+      from_unit_ids: ["plat"],
+      to_unit_id: "u0",
+      previous: [{ unit_id: "plat", position_id: "pos1", is_primary: true }],
+      merged: false,
+    },
+    {
+      person_id: "p2",
+      from_unit_ids: ["rnd"],
+      to_unit_id: "u0",
+      previous: [{ unit_id: "rnd", position_id: null, is_primary: false }],
+      merged: true,
+    },
+  ],
+  freed_seats: [
+    { seat_id: "s1", holder_person_id: null, holder_unit_id: "plat" },
+    { seat_id: "s2", holder_person_id: null, holder_unit_id: "plat" },
+  ],
+};
+const MAYA_AFTER_ARCHIVE = stubPerson("p1", "Maya", { memberships: [primary("u0")] });
+const OMER_AFTER_ARCHIVE = stubPerson("p2", "Omer", {
+  memberships: [primary("u0"), stubMembership("ops", { is_primary: false })],
+});
 
 function backend(extra: Routes = {}): Routes {
   return {
@@ -168,44 +178,15 @@ describe("undoing a team archive (docs/0088)", () => {
     const { calls } = spyBackend({
       "POST /api/v1/org-units/rnd/restore": { status: 200, body: {} },
       "POST /api/v1/org-units/plat/restore": { status: 200, body: {} },
-      // Maya was moved into the root by the archive; Omer was already in the root.
-      "GET /api/v1/people/p1": { status: 200, body: person("p1", "Maya", [membership("u0")]) },
-      "GET /api/v1/people/p2": {
-        status: 200,
-        body: person("p2", "Omer", [membership("u0"), membership("ops", false)]),
-      },
+      "GET /api/v1/people/p1": { status: 200, body: MAYA_AFTER_ARCHIVE },
+      "GET /api/v1/people/p2": { status: 200, body: OMER_AFTER_ARCHIVE },
       "PUT /api/v1/people/p1/memberships": { status: 200, body: {} },
       "PUT /api/v1/people/p2/memberships": { status: 200, body: {} },
       "GET /api/v1/seats/s1/assignment": { status: 200, body: { assignment: null } },
       "GET /api/v1/seats/s2/assignment": { status: 200, body: { assignment: { x: 1 } } },
       "PUT /api/v1/seats/s1/assignment": { status: 200, body: {} },
     });
-    const result = await undoUnitArchive({
-      archived: [
-        { kind: "org_unit", id: "rnd", name: "R&D" },
-        { kind: "org_unit", id: "plat", name: "Platform" },
-      ],
-      moved_members: [
-        {
-          person_id: "p1",
-          from_unit_ids: ["plat"],
-          to_unit_id: "u0",
-          previous: [{ unit_id: "plat", position_id: "pos1", is_primary: true }],
-          merged: false,
-        },
-        {
-          person_id: "p2",
-          from_unit_ids: ["rnd"],
-          to_unit_id: "u0",
-          previous: [{ unit_id: "rnd", position_id: null, is_primary: false }],
-          merged: true,
-        },
-      ],
-      freed_seats: [
-        { seat_id: "s1", holder_person_id: null, holder_unit_id: "plat" },
-        { seat_id: "s2", holder_person_id: null, holder_unit_id: "plat" },
-      ],
-    });
+    const result = await undoUnitArchive(ARCHIVE_REPORT);
     const paths = calls.map((r) => `${r.method} ${new URL(r.url).pathname}`);
     expect(paths.slice(0, 2)).toEqual([
       "POST /api/v1/org-units/rnd/restore",

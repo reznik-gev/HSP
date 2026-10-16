@@ -11,25 +11,15 @@ import {
   stubDeviceRoutes,
   stubPerson,
   stubSeat,
+  STUB_UNITS,
 } from "@/test/stubs";
 import { AS_VIEWER, ADMIN, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
-const unit = (id: string, name: string, parent_id: string | null) => ({
-  id,
-  name,
-  parent_id,
-  level_label: null,
-  color: null,
-  external_id: null,
-  archived_at: null,
-  source: "manual",
-});
-const UNITS = [unit("u0", "Acme", null), unit("u1", "Platform", "u0"), unit("u2", "Vision", "u0")];
 const SEAT = stubSeat("d2", "HT-3-02");
 
 function backend(extra: Routes = {}): Routes {
   return {
-    "GET /api/v1/org-units": { status: 200, body: page(UNITS) },
+    "GET /api/v1/org-units": { status: 200, body: page(STUB_UNITS) },
     "GET /api/v1/people": { status: 200, body: page([STUB_MAYA]) },
     "GET /api/v1/people/p1": { status: 200, body: STUB_MAYA },
     "GET /api/v1/seats": { status: 200, body: page([SEAT]) },
