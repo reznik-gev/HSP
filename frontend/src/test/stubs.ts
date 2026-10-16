@@ -11,6 +11,7 @@
  * Plain data with no app imports, so both node tests (the editor core) and jsdom screen tests
  * can use it. The world they describe:
  *   Tel Aviv HQ (s1) › Harbor Tower (b1, code HT) › Floor 3 (f3)
+ *   Maya Shani (p1) in the Platform team (u1), with monitor MON-0412 (dev1) on floor f3
  */
 import type { Routes } from "./renderApp";
 
@@ -213,3 +214,55 @@ export const stubSeat = (id: string, label: string, holder: object = {}) => ({
   holder_unit: null,
   ...holder,
 });
+
+// --- People and devices (docs/0084, docs/0083) ----------------------------------------------
+
+/** A person as GET /people returns them: active, in no team unless `over` says otherwise. */
+export const stubPerson = (id: string, name: string, over: object = {}) => ({
+  id,
+  display_name: name,
+  email: `${name.split(" ")[0]!.toLowerCase()}@acme.example`,
+  title: null as string | null,
+  external_id: null as string | null,
+  active: true,
+  source: "manual",
+  primary_unit_id: null as string | null,
+  memberships: [] as object[],
+  ...over,
+});
+
+/** Maya Shani (p1), a backend engineer in the Platform team (u1). */
+export const STUB_MAYA = stubPerson("p1", "Maya Shani", {
+  title: "Backend Engineer",
+  external_id: "E102",
+  primary_unit_id: "u1",
+  memberships: [{ unit_id: "u1", position_id: null, is_primary: true, primary_override: false }],
+});
+
+/** A device as GET /devices returns it: not issued and not placed unless `over` says so. */
+export const stubDevice = (id: string, assetTag: string, over: object = {}) => ({
+  id,
+  asset_tag: assetTag as string | null,
+  serial_number: null as string | null,
+  notes: null as string | null,
+  assigned_person_id: null as string | null,
+  placement: null as object | null,
+  ...over,
+});
+
+/** Maya's monitor MON-0412 (dev1), placed on floor f3 as element m1. */
+export const STUB_MAYAS_MONITOR = stubDevice("dev1", "MON-0412", {
+  serial_number: "SN-77",
+  assigned_person_id: STUB_MAYA.id,
+  placement: { floor_id: "f3", floor_name: "Floor 3", element_id: "m1", version: 2 },
+});
+
+/** The devices API serving `devices`: the list and each device on its own. */
+export function stubDeviceRoutes(devices: ReturnType<typeof stubDevice>[]): Routes {
+  return {
+    "GET /api/v1/devices": { status: 200, body: page(devices) },
+    ...Object.fromEntries(
+      devices.map((d) => [`GET /api/v1/devices/${d.id}`, { status: 200, body: d }]),
+    ),
+  };
+}

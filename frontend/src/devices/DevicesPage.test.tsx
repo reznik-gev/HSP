@@ -4,44 +4,17 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
-import { ADMIN, renderApp, type Routes } from "@/test/renderApp";
-import { page } from "@/test/stubs";
+import { AS_VIEWER, renderApp, type Routes } from "@/test/renderApp";
+import { page, STUB_MAYA, STUB_MAYAS_MONITOR, stubDevice, stubDeviceRoutes } from "@/test/stubs";
 
-const MAYA = {
-  id: "p1",
-  display_name: "Maya Shani",
-  email: "maya@acme.example",
-  title: null,
-  external_id: null,
-  active: true,
-  source: "manual",
-  primary_unit_id: null,
-  memberships: [],
-};
-const PLACED = {
-  id: "dev1",
-  asset_tag: "MON-0412",
-  serial_number: "SN-77",
-  notes: null,
-  assigned_person_id: "p1",
-  placement: { floor_id: "f3", floor_name: "Floor 3", element_id: "m1", version: 2 },
-};
-const LOOSE = {
-  id: "dev2",
-  asset_tag: "DOCK-0007",
-  serial_number: null,
-  notes: null,
-  assigned_person_id: null,
-  placement: null,
-};
+/** A docking station nobody has, not placed. */
+const LOOSE = stubDevice("dev2", "DOCK-0007");
 
 function backend(extra: Routes = {}): Routes {
   return {
-    "GET /api/v1/devices": { status: 200, body: page([PLACED, LOOSE]) },
-    "GET /api/v1/devices/dev1": { status: 200, body: PLACED },
-    "GET /api/v1/devices/dev2": { status: 200, body: LOOSE },
-    "GET /api/v1/people/p1": { status: 200, body: MAYA },
-    "GET /api/v1/people": { status: 200, body: page([MAYA]) },
+    ...stubDeviceRoutes([STUB_MAYAS_MONITOR, LOOSE]),
+    "GET /api/v1/people/p1": { status: 200, body: STUB_MAYA },
+    "GET /api/v1/people": { status: 200, body: page([STUB_MAYA]) },
     "GET /api/v1/org-units": { status: 200, body: page([]) },
     ...extra,
   };
@@ -101,11 +74,11 @@ describe("devices (docs/0095)", () => {
             .clone()
             .json()
             .then((b: unknown) => (sent = b));
-          return { status: 201, body: { ...LOOSE, id: "dev9", asset_tag: "LAP-1" } };
+          return { status: 201, body: stubDevice("dev9", "LAP-1") };
         },
         "GET /api/v1/devices/dev9": {
           status: 200,
-          body: { ...LOOSE, id: "dev9", asset_tag: "LAP-1" },
+          body: stubDevice("dev9", "LAP-1"),
         },
       }),
     );
@@ -173,7 +146,7 @@ describe("devices (docs/0095)", () => {
         },
         "POST /api/v1/devices": () => {
           calls.push("add");
-          return { status: 201, body: { ...LOOSE, id: "dev3" } };
+          return { status: 201, body: stubDevice("dev3", "DOCK-0007") };
         },
       }),
     );
@@ -184,10 +157,7 @@ describe("devices (docs/0095)", () => {
   });
 
   it("isn't offered to viewers", async () => {
-    await renderApp("/devices", {
-      ...backend(),
-      "GET /api/v1/auth/me": { status: 200, body: { ...ADMIN, is_admin: false } },
-    });
+    await renderApp("/devices", { ...backend(), ...AS_VIEWER });
     expect(await screen.findByText("Only administrators can manage devices.")).toBeVisible();
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(within(nav).queryByRole("link", { name: "Devices" })).toBeNull();
