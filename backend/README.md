@@ -37,3 +37,4 @@ tests/db/          DB integration tests (docs/0061), need HSP_TEST_DATABASE_URL
 - Lengths are integer **mm**, rotation is integer **decidegrees**, and geometry is PostGIS SRID 0 on a whole-mm grid ([0029](../docs/decisions/0029-2026-10-08-geometry-representation.md)).
 - IDs are UUIDv7, generated in the app ([0030](../docs/decisions/0030-2026-10-08-primary-keys.md)).
 - Every new DB constraint or non-trivial query must come with a test in `tests/db` ([0061](../docs/decisions/0061-2026-10-08-test-strategy.md)).
+- How to write tests (stubs, fakes, fixtures): [docs/guides/testing.md](../docs/guides/testing.md).
