@@ -7,6 +7,7 @@ import {
   stubDoor,
   stubMonitor,
   stubPlan,
+  stubScreen,
   stubWall,
 } from "@/test/stubs";
 
@@ -14,14 +15,6 @@ import { heightTag, isRaised, itemTag, metres, stackingOrder, windowTag } from "
 import type { ApiPlan } from "./operations";
 import type { Opening } from "./plan";
 import { editing } from "./testPlan";
-
-/** A screen hung on the wall: not attached to anything, 1.4 m off the floor. */
-const screen = (id: string, at: [number, number]) => ({
-  ...stubDesk(id, at),
-  catalog_item_rev_id: STUB_MONITOR_ITEM.id,
-  position: [at[0], at[1], 1400],
-  allocation_mode: null,
-});
 
 describe("height helpers", () => {
   it("counts an item as raised only when it's off the floor on its own", () => {
@@ -45,7 +38,7 @@ describe("height helpers", () => {
 
   it("stacks things by the height they stand at, keeping ties in order", () => {
     const objects = [
-      screen("shelf", [0, 0]),
+      stubScreen("shelf", [0, 0]),
       stubMonitor("m1", "d1", [0, 0]),
       stubDesk("d1", [0, 0]),
       stubDesk("d2", [3000, 0]),
@@ -62,7 +55,7 @@ describe("height helpers", () => {
 describe("raised items on the plan", () => {
   const plan = stubPlan({
     walls: [stubWall("w1", [0, 0], [4000, 0])],
-    objects: [screen("s1", [2000, 1500]), stubDesk("d1", [2000, 1500], { label: "A-01" })],
+    objects: [stubScreen("s1", [2000, 1500]), stubDesk("d1", [2000, 1500], { label: "A-01" })],
   }) as unknown as ApiPlan;
 
   it("draws a raised item above the desk under it", () => {

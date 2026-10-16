@@ -8,7 +8,7 @@ import i18n from "@/i18n";
 import { createEditorStore } from "@/editor/core/store";
 import type { ApiPlan } from "@/editor/core/operations";
 import { ViewerInteraction } from "@/editor/core/viewerInteraction";
-import { STUB_MONITOR_ITEM, stubDesk, stubDoor, stubPlan, stubWall } from "@/test/stubs";
+import { stubDesk, stubDoor, stubPlan, stubScreen, stubWall } from "@/test/stubs";
 
 import { PlanCanvas } from "./PlanCanvas";
 
@@ -30,19 +30,12 @@ function show(objects: object[]) {
   return { store, svg: container.querySelector("svg[data-lod]")! };
 }
 
-const hung = {
-  ...stubDesk("s1", [2000, 1500]),
-  catalog_item_rev_id: STUB_MONITOR_ITEM.id,
-  position: [2000, 1500, 1400],
-  allocation_mode: null,
-};
-
 afterEach(cleanup);
 
 describe("heights on the plan", () => {
   it("draws a raised item dashed, with its height range", async () => {
     await i18n.changeLanguage("en");
-    const { svg } = show([hung, stubDesk("d1", [2000, 3000])]);
+    const { svg } = show([stubScreen("s1", [2000, 1500]), stubDesk("d1", [2000, 3000])]);
     expect(svg.querySelector("#e-s1")).toHaveAttribute("stroke-dasharray");
     expect(svg.querySelector("#e-d1")).not.toHaveAttribute("stroke-dasharray");
     expect(svg.querySelector("#h-s1")).toHaveTextContent("1.40–1.85");
@@ -61,7 +54,7 @@ describe("heights on the plan", () => {
     expect(screen.queryByRole("group", { name: "Height" })).toBeNull();
     cleanup();
 
-    const { svg } = show([hung, stubDesk("d1", [2000, 3000])]);
+    const { svg } = show([stubScreen("s1", [2000, 1500]), stubDesk("d1", [2000, 3000])]);
     const filter = screen.getByRole("group", { name: "Height" });
     expect(svg).toHaveAttribute("data-height", "all");
     await userEvent.click(within(filter).getByRole("button", { name: "Raised" }));
