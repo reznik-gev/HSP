@@ -8,7 +8,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from hsp import models
 from hsp.locations.repository import SqlLocationsRepository
@@ -50,8 +50,7 @@ async def _floor(db: AsyncSession) -> tuple[uuid.UUID, uuid.UUID]:
     return tenant, floor.id
 
 
-async def test_acquire_heartbeat_block_takeover(conn: AsyncConnection) -> None:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+async def test_acquire_heartbeat_block_takeover(db: AsyncSession) -> None:
     tenant, floor = await _floor(db)
     repo = SqlLockRepository(db)
     t0 = datetime.now(UTC)

@@ -11,8 +11,7 @@ from hsp.auth.tokens import TokenCipher, hash_token
 from hsp.config import DEV_SESSION_ENCRYPTION_KEY
 
 
-async def test_round_trip_encrypted_at_rest(conn: AsyncConnection) -> None:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint")
+async def test_round_trip_encrypted_at_rest(conn: AsyncConnection, db: AsyncSession) -> None:
     store = SqlSessionStore(db, TokenCipher(DEV_SESSION_ENCRYPTION_KEY))
     tenant_id = (
         await conn.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))
@@ -52,8 +51,7 @@ async def test_round_trip_encrypted_at_rest(conn: AsyncConnection) -> None:
     assert await store.get(hash_token("cookie")) is None
 
 
-async def test_rotated_key_invalidates_session(conn: AsyncConnection) -> None:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint")
+async def test_rotated_key_invalidates_session(conn: AsyncConnection, db: AsyncSession) -> None:
     tenant_id = (
         await conn.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))
     ).scalar_one()

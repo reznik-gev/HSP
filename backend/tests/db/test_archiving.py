@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
 from hsp.auth.principal import ADMIN_ROLE, Principal
@@ -16,19 +16,19 @@ from tests.db.plan_helpers import make_floor, new_tenant
 
 
 @pytest.fixture
-async def ctx(conn: AsyncConnection) -> dict[str, Any]:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+async def own_tenant(db: AsyncSession) -> dict[str, Any]:
+    """A floor in a tenant of its own, and its admin."""
     tenant = await new_tenant(db)
     floor, building = await make_floor(db, tenant)
     admin = Principal("alice", "Alice", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c")
     return {"db": db, "tenant": tenant, "floor": floor, "building": building, "admin": admin}
 
 
-async def test_building_archive_frees_seats_on_all_its_floors(ctx: dict[str, Any]) -> None:
-    db, tenant = ctx["db"], ctx["tenant"]
-    second, _ = await make_floor(db, tenant, ctx["building"], level=1)
+async def test_building_archive_frees_seats_on_all_its_floors(own_tenant: dict[str, Any]) -> None:
+    db, tenant = own_tenant["db"], own_tenant["tenant"]
+    second, _ = await make_floor(db, tenant, own_tenant["building"], level=1)
     seats = []
-    for floor in (ctx["floor"], second):
+    for floor in (own_tenant["floor"], second):
         seat = models.FloorElement(id=new_id(), tenant_id=tenant, floor_id=floor, kind="object")
         db.add(seat)
         await db.flush()
@@ -45,8 +45,8 @@ async def test_building_archive_frees_seats_on_all_its_floors(ctx: dict[str, Any
         seats.append(seat.id)
     await db.flush()
 
-    service = BuildingsService(SqlLocationsRepository(db), ctx["admin"])
-    report = await service.archive(ctx["building"])
+    service = BuildingsService(SqlLocationsRepository(db), own_tenant["admin"])
+    report = await service.archive(own_tenant["building"])
     assert [a.kind for a in report.archived] == ["building", "floor", "floor"]
     assert sorted(f.seat_id for f in report.freed_seats) == sorted(seats)
     left = await db.scalars(

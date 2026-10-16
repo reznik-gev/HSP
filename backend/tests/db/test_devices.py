@@ -3,21 +3,13 @@
 from typing import Any
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from hsp.catalog.devices import DeviceIn, DevicesService
 from hsp.models import new_id
 from hsp.plans.drafts import SqlDraftRepository
 from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
 from hsp.problems import ProblemException
-from tests.db.plan_helpers import add, apply, context, stub_desk
-
-
-@pytest.fixture
-async def ctx(conn: AsyncConnection) -> dict[str, Any]:
-    return await context(
-        AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
-    )
+from tests.db.plan_helpers import add, apply, stub_desk
 
 
 def svc(ctx: dict[str, Any]) -> DevicesService:

@@ -4,20 +4,12 @@ from typing import Any
 
 import pytest
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from hsp.auth.principal import ADMIN_ROLE, Principal
 from hsp.catalog.items import CatalogItemIn, CatalogService, ZoneTypeIn
 from hsp.models import new_id
 from hsp.problems import ProblemException
-from tests.db.plan_helpers import add, apply, context
-
-
-@pytest.fixture
-async def ctx(conn: AsyncConnection) -> dict[str, Any]:
-    return await context(
-        AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
-    )
+from tests.db.plan_helpers import add, apply
 
 
 def svc(ctx: dict[str, Any]) -> CatalogService:

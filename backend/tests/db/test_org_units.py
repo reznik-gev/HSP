@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
 from hsp.auth.principal import ADMIN_ROLE, Principal
@@ -17,8 +17,7 @@ from tests.db.plan_helpers import make_floor, new_tenant
 
 
 @pytest.fixture
-async def svc(conn: AsyncConnection) -> UnitsService:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+async def svc(db: AsyncSession) -> UnitsService:
     # A fresh tenant per test: the single-root rule is per tenant.
     tenant = await new_tenant(db)
     return UnitsService(

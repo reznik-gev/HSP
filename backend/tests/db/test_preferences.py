@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
 from hsp.auth.principal import Principal
@@ -15,8 +15,8 @@ from tests.db.plan_helpers import new_tenant
 
 
 @pytest.fixture
-async def ctx(conn: AsyncConnection) -> dict[str, Any]:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+async def users(db: AsyncSession) -> dict[str, Any]:
+    """A tenant of its own, and `as_user(subject)` for the preferences of any user in it."""
     tenant = await new_tenant(db)
 
     def as_user(subject: str) -> PreferencesService:
@@ -27,8 +27,8 @@ async def ctx(conn: AsyncConnection) -> dict[str, Any]:
     return {"db": db, "as_user": as_user, "tenant": tenant}
 
 
-async def test_defaults_then_saved_per_user(ctx: dict[str, Any]) -> None:
-    noa, eli = ctx["as_user"]("noa"), ctx["as_user"]("eli")
+async def test_defaults_then_saved_per_user(users: dict[str, Any]) -> None:
+    noa, eli = users["as_user"]("noa"), users["as_user"]("eli")
     assert await noa.get() == Preferences()  # nothing chosen yet
     await noa.put(Preferences(language="he", theme="dark", display_units="m", grid_mm=100))
     assert await noa.get() == Preferences(
@@ -40,13 +40,13 @@ async def test_defaults_then_saved_per_user(ctx: dict[str, Any]) -> None:
     assert await noa.get() == Preferences(language="en")
 
 
-async def test_other_keys_in_the_profile_are_kept(ctx: dict[str, Any]) -> None:
-    ctx["db"].add(
-        models.UserProfile(tenant_id=ctx["tenant"], subject="noa", preferences={"future_key": 1})
+async def test_other_keys_in_the_profile_are_kept(users: dict[str, Any]) -> None:
+    users["db"].add(
+        models.UserProfile(tenant_id=users["tenant"], subject="noa", preferences={"future_key": 1})
     )
-    await ctx["db"].flush()
-    await ctx["as_user"]("noa").put(Preferences(theme="light"))
-    profile = await ctx["db"].scalar(
+    await users["db"].flush()
+    await users["as_user"]("noa").put(Preferences(theme="light"))
+    profile = await users["db"].scalar(
         select(models.UserProfile).where(models.UserProfile.subject == "noa")
     )
     assert profile is not None and profile.preferences["future_key"] == 1

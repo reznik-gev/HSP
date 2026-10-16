@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from openpyxl import Workbook
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
 from hsp.auth.principal import ADMIN_ROLE, Principal
@@ -50,8 +50,7 @@ PEOPLE = [
 
 
 @pytest.fixture
-async def svc(conn: AsyncConnection) -> ImportService:
-    db = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+async def svc(db: AsyncSession) -> ImportService:
     tenant = await new_tenant(db)
     return ImportService(
         db, Principal("a", "A", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c")
