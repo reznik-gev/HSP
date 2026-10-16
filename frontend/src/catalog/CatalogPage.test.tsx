@@ -119,7 +119,7 @@ describe("the catalog (docs/0095)", () => {
 describe("the organisation's own items (docs/0095)", () => {
   it("creates an item from the form, with a key from its name", async () => {
     let sent: Record<string, unknown> | undefined;
-    const made = { ...BENCH, id: "i30", name: "Standing desk" };
+    const made = stubCustomItemOut("i30", { name: "Standing desk" });
     const { router } = await renderApp(
       "/catalog",
       backend({
@@ -161,13 +161,12 @@ describe("the organisation's own items (docs/0095)", () => {
     await renderApp(
       "/catalog?item=i9",
       backend({
-        "GET /api/v1/catalog-items/i9": { status: 200, body: BENCH },
         "PATCH /api/v1/catalog-items/i9": (request) => {
           void request
             .clone()
             .json()
             .then((b: Record<string, unknown>) => (sent = b));
-          return { status: 200, body: { ...BENCH, name: "Lab bench, long" } };
+          return { status: 200, body: stubCustomItemOut("i9", { name: "Lab bench, long" }) };
         },
       }),
     );
@@ -217,14 +216,13 @@ describe("the organisation's own items (docs/0095)", () => {
     await renderApp(
       "/catalog?item=i9",
       backend({
-        "GET /api/v1/catalog-items/i9": { status: 200, body: BENCH },
         "DELETE /api/v1/catalog-items/i9": () => {
           calls.push("archive");
           return { status: 204 };
         },
         "POST /api/v1/catalog-items/i9/restore": () => {
           calls.push("restore");
-          return { status: 200, body: BENCH };
+          return { status: 200, body: stubCustomItemOut("i9") };
         },
       }),
     );
