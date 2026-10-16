@@ -62,10 +62,12 @@ describe("the catalog (docs/0095)", () => {
     expect(screen.getByRole("region", { name: "Monitors" })).toBeVisible();
 
     await userEvent.clear(screen.getByRole("searchbox", { name: "Search the catalog" }));
+    // The search applies after a short pause; wait for it to clear before filtering.
+    await waitFor(() => expect(router.state.location.search).not.toHaveProperty("q"));
     await userEvent.selectOptions(screen.getByRole("combobox", { name: "Show" }), "Our own");
     await waitFor(() => expect(router.state.location.search).toMatchObject({ show: "custom" }));
     await waitFor(() => expect(screen.queryByRole("region", { name: "Monitors" })).toBeNull());
-    expect(screen.getByText("Lab bench")).toBeVisible();
+    expect(await screen.findByText("Lab bench")).toBeVisible();
 
     await userEvent.selectOptions(screen.getByRole("combobox", { name: "Show" }), "Archived");
     expect(await screen.findByText("Old bench")).toBeVisible();
