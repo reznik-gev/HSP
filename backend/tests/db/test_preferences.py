@@ -15,20 +15,24 @@ from tests.db.plan_helpers import new_tenant
 
 
 @pytest.fixture
-async def users(db: AsyncSession) -> dict[str, Any]:
+async def preferences_in_own_tenant(rolled_back_db_session: AsyncSession) -> dict[str, Any]:
     """A tenant of its own, and `as_user(subject)` for the preferences of any user in it."""
-    tenant = await new_tenant(db)
+    tenant = await new_tenant(rolled_back_db_session)
 
     def as_user(subject: str) -> PreferencesService:
         return PreferencesService(
-            db, Principal(subject, subject, None, frozenset(), tenant, new_id(), "c")
+            rolled_back_db_session,
+            Principal(subject, subject, None, frozenset(), tenant, new_id(), "c"),
         )
 
-    return {"db": db, "as_user": as_user, "tenant": tenant}
+    return {"db": rolled_back_db_session, "as_user": as_user, "tenant": tenant}
 
 
-async def test_defaults_then_saved_per_user(users: dict[str, Any]) -> None:
-    noa, eli = users["as_user"]("noa"), users["as_user"]("eli")
+async def test_defaults_then_saved_per_user(preferences_in_own_tenant: dict[str, Any]) -> None:
+    noa, eli = (
+        preferences_in_own_tenant["as_user"]("noa"),
+        preferences_in_own_tenant["as_user"]("eli"),
+    )
     assert await noa.get() == Preferences()  # nothing chosen yet
     await noa.put(Preferences(language="he", theme="dark", display_units="m", grid_mm=100))
     assert await noa.get() == Preferences(
@@ -40,13 +44,19 @@ async def test_defaults_then_saved_per_user(users: dict[str, Any]) -> None:
     assert await noa.get() == Preferences(language="en")
 
 
-async def test_other_keys_in_the_profile_are_kept(users: dict[str, Any]) -> None:
-    users["db"].add(
-        models.UserProfile(tenant_id=users["tenant"], subject="noa", preferences={"future_key": 1})
+async def test_other_keys_in_the_profile_are_kept(
+    preferences_in_own_tenant: dict[str, Any],
+) -> None:
+    preferences_in_own_tenant["db"].add(
+        models.UserProfile(
+            tenant_id=preferences_in_own_tenant["tenant"],
+            subject="noa",
+            preferences={"future_key": 1},
+        )
     )
-    await users["db"].flush()
-    await users["as_user"]("noa").put(Preferences(theme="light"))
-    profile = await users["db"].scalar(
+    await preferences_in_own_tenant["db"].flush()
+    await preferences_in_own_tenant["as_user"]("noa").put(Preferences(theme="light"))
+    profile = await preferences_in_own_tenant["db"].scalar(
         select(models.UserProfile).where(models.UserProfile.subject == "noa")
     )
     assert profile is not None and profile.preferences["future_key"] == 1

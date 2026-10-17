@@ -56,7 +56,8 @@ The stubs describe one small organisation, so tests across the app agree with ea
 Extend the world rather than inventing a parallel one: a second person is `stubPerson("p9", "Dana Cohen")`, not a new hand-written object.
 
 ### 3. Backend: setup in fixtures, the test body tests
-- Setup is **pytest fixtures**: function-level by default, in a `conftest.py` next to the tests that use them, such as `tests/db/drafts/conftest.py` with `db`, `ctx` and `other_admin`.
+- Setup is **pytest fixtures**: function-level by default, in a `conftest.py` next to the tests that use them, such as `tests/db/conftest.py` with `rolled_back_db_session`, `admin_editing_new_floor` and `published_floor_with_seats`.
+- **A fixture's name says what it is or what it's for**, not just its type: `admin_editing_new_floor`, not `ctx`; `rolled_back_db_session`, not `db`.
 - The test body **runs the code under test and asserts**. Data generation, closures and helper functions inside a test are a sign that a fixture or stub is missing.
 - Parametrised data goes through a fixture too: the shared validation cases are a `case` fixture feeding `content`, `refs`, `names` and `expected`.
 - **Split test files by area** (for example drafts → `test_versions.py`, `test_guards.py`, `test_rules.py`), so a failure's file name already says what broke.
@@ -94,7 +95,7 @@ Only key flows (signing in and finding a seat; drawing and publishing a floor). 
 - Is any test data defined inside a test body? It belongs at the top of the file, or in the shared stubs.
 - Is data used by more than one file shared, and data used by one file kept in that file?
 - Is a double named after its strongest role (mock > spy > fake > stub)?
-- Python: is setup in fixtures, with the test body only acting and asserting? Is the file about one area?
+- Python: is setup in fixtures, with the test body only acting and asserting? Does each fixture's name say what it is? Is the file about one area?
 - Screen tests: queried by role and name? Waits for state, not for time? Both languages where text matters?
 - New database constraint or query: is there a database test?
 - New or changed plan rule: are the shared cases updated?

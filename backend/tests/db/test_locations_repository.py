@@ -11,12 +11,16 @@ from hsp.locations.repository import SqlLocationsRepository
 from hsp.models import Building, Site, Tenant, new_id
 
 
-async def _tenant(db: AsyncSession, slug: str) -> uuid.UUID:
+async def _tenant(rolled_back_db_session: AsyncSession, slug: str) -> uuid.UUID:
     if slug == "default":
-        return (await db.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))).scalar_one()
+        return (
+            await rolled_back_db_session.execute(
+                text("SELECT id FROM tenant WHERE slug = 'default'")
+            )
+        ).scalar_one()
     t = Tenant(id=new_id(), name=slug, slug=slug)
-    db.add(t)
-    await db.flush()
+    rolled_back_db_session.add(t)
+    await rolled_back_db_session.flush()
     return t.id
 
 
@@ -34,9 +38,12 @@ def _site(tenant_id: uuid.UUID, name: str, archived: bool = False) -> Site:
     )
 
 
-async def test_list_sites_pages_filters_and_scopes(db: AsyncSession) -> None:
-    repo = SqlLocationsRepository(db)
-    mine, theirs = await _tenant(db, "default"), await _tenant(db, "other")
+async def test_list_sites_pages_filters_and_scopes(rolled_back_db_session: AsyncSession) -> None:
+    repo = SqlLocationsRepository(rolled_back_db_session)
+    mine, theirs = (
+        await _tenant(rolled_back_db_session, "default"),
+        await _tenant(rolled_back_db_session, "other"),
+    )
     sites = [_site(mine, f"S{i}") for i in range(5)]
     for s in [*sites, _site(mine, "old", archived=True), _site(theirs, "foreign")]:
         repo.add(s)
@@ -51,9 +58,9 @@ async def test_list_sites_pages_filters_and_scopes(db: AsyncSession) -> None:
     assert await repo.get_site(theirs, sites[0].id) is None  # tenant scoping
 
 
-async def test_active_buildings(db: AsyncSession) -> None:
-    repo = SqlLocationsRepository(db)
-    tenant = await _tenant(db, "default")
+async def test_active_buildings(rolled_back_db_session: AsyncSession) -> None:
+    repo = SqlLocationsRepository(rolled_back_db_session)
+    tenant = await _tenant(rolled_back_db_session, "default")
     site = _site(tenant, "HQ")
     repo.add(site)
     await repo.commit()
@@ -75,9 +82,9 @@ async def test_active_buildings(db: AsyncSession) -> None:
     assert [b.code for b in await repo.active_buildings(tenant, site.id)] == ["A"]
 
 
-async def test_buildings_filter_and_code_lookup(db: AsyncSession) -> None:
-    repo = SqlLocationsRepository(db)
-    tenant = await _tenant(db, "default")
+async def test_buildings_filter_and_code_lookup(rolled_back_db_session: AsyncSession) -> None:
+    repo = SqlLocationsRepository(rolled_back_db_session)
+    tenant = await _tenant(rolled_back_db_session, "default")
     s1, s2 = _site(tenant, "One"), _site(tenant, "Two")
     repo.add(s1)
     repo.add(s2)
@@ -111,11 +118,11 @@ async def test_buildings_filter_and_code_lookup(db: AsyncSession) -> None:
     assert await repo.building_with_code(tenant, s2.id, "B") is None
 
 
-async def test_floors_filter_and_level_lookup(db: AsyncSession) -> None:
+async def test_floors_filter_and_level_lookup(rolled_back_db_session: AsyncSession) -> None:
     from hsp.models import Floor
 
-    repo = SqlLocationsRepository(db)
-    tenant = await _tenant(db, "default")
+    repo = SqlLocationsRepository(rolled_back_db_session)
+    tenant = await _tenant(rolled_back_db_session, "default")
     s = _site(tenant, "HQ")
     repo.add(s)
     await repo.commit()

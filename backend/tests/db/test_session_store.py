@@ -11,8 +11,10 @@ from hsp.auth.tokens import TokenCipher, hash_token
 from hsp.config import DEV_SESSION_ENCRYPTION_KEY
 
 
-async def test_round_trip_encrypted_at_rest(conn: AsyncConnection, db: AsyncSession) -> None:
-    store = SqlSessionStore(db, TokenCipher(DEV_SESSION_ENCRYPTION_KEY))
+async def test_round_trip_encrypted_at_rest(
+    conn: AsyncConnection, rolled_back_db_session: AsyncSession
+) -> None:
+    store = SqlSessionStore(rolled_back_db_session, TokenCipher(DEV_SESSION_ENCRYPTION_KEY))
     tenant_id = (
         await conn.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))
     ).scalar_one()
@@ -51,15 +53,19 @@ async def test_round_trip_encrypted_at_rest(conn: AsyncConnection, db: AsyncSess
     assert await store.get(hash_token("cookie")) is None
 
 
-async def test_rotated_key_invalidates_session(conn: AsyncConnection, db: AsyncSession) -> None:
+async def test_rotated_key_invalidates_session(
+    conn: AsyncConnection, rolled_back_db_session: AsyncSession
+) -> None:
     tenant_id = (
         await conn.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))
     ).scalar_one()
     now = datetime.now(UTC)
     tokens = SessionTokens("a", now + timedelta(minutes=5), "r", None, now + timedelta(hours=1))
-    await SqlSessionStore(db, TokenCipher(DEV_SESSION_ENCRYPTION_KEY)).create(
+    await SqlSessionStore(rolled_back_db_session, TokenCipher(DEV_SESSION_ENCRYPTION_KEY)).create(
         token_hash=hash_token("k"), tenant_id=tenant_id, subject="u1", csrf_token="c", tokens=tokens
     )
-    rotated = SqlSessionStore(db, TokenCipher(base64.urlsafe_b64encode(b"y" * 32)))
+    rotated = SqlSessionStore(
+        rolled_back_db_session, TokenCipher(base64.urlsafe_b64encode(b"y" * 32))
+    )
     assert await rotated.get(hash_token("k")) is None
     assert (await conn.execute(text("SELECT count(*) FROM user_session"))).scalar_one() == 0
