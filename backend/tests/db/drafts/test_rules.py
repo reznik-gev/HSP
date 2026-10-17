@@ -1,5 +1,6 @@
 """The plan rules as a saved changeset meets them (docs/0081, docs/0092): a refused changeset saves
-nothing, overlapping zones are refused, and warnings come back about what a change touched."""
+nothing, overlapping zones and zones sticking out of their parent are refused, and warnings come
+back about what a change touched."""
 
 from typing import Any
 
@@ -9,6 +10,9 @@ from hsp import models
 from hsp.models import new_id
 from hsp.problems import ProblemException
 from tests.db.plan_helpers import add, apply, stub_desk, stub_door, stub_wall, stub_zone
+
+#: A zone outline moved 2 m east of stub_zone's.
+MOVED_2_M = {"boundary": [[2000, 0], [6000, 0], [6000, 3000], [2000, 3000]]}
 
 
 async def test_an_invalid_changeset_saves_nothing(ctx: dict[str, Any]) -> None:
@@ -37,6 +41,22 @@ async def test_zones_overlapping_partly_are_refused(ctx: dict[str, Any]) -> None
         await apply(ctx, 1, add("zone", new_id(), **stub_zone(ctx, x=2000)))
     assert exc.value.errors is not None
     assert {e.code for e in exc.value.errors} == {"zone_overlap"}
+
+
+async def test_moving_a_parent_off_its_nested_zone_is_refused(ctx: dict[str, Any]) -> None:
+    parent, child = new_id(), new_id()
+    await apply(  # a child exactly as big as its parent is inside it
+        ctx,
+        0,
+        add("zone", parent, **stub_zone(ctx, name="Wing")),
+        add("zone", child, **stub_zone(ctx, name="Pod", parent_zone_id=str(parent))),
+    )
+    with pytest.raises(ProblemException) as exc:
+        await apply(ctx, 1, {"op": "update", "kind": "zone", "id": str(parent), "data": MOVED_2_M})
+    assert exc.value.errors is not None
+    assert [(e.code, e.element_id) for e in exc.value.errors] == [
+        ("zone_outside_parent", str(child))
+    ]
 
 
 async def test_changesets_warn_about_what_they_touch(ctx: dict[str, Any]) -> None:
