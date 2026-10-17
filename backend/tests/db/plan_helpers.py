@@ -174,12 +174,13 @@ def stub_door(
     }
 
 
-def stub_zone(ctx: dict[str, Any], x: int = 0, name: str = "Room") -> dict[str, Any]:
-    """A 4 x 3 m zone whose left edge is at `x`."""
+def stub_zone(ctx: dict[str, Any], x: int = 0, name: str = "Room", **extra: Any) -> dict[str, Any]:
+    """A 4 x 3 m zone whose left edge is at `x`; `extra` sets e.g. its parent_zone_id."""
     return {
         "name": name,
         "zone_type_id": str(ctx["zone_type"]),
         "boundary": [[x, 0], [x + 4000, 0], [x + 4000, 3000], [x, 3000]],
+        **extra,
     }
 
 

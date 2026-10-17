@@ -4,8 +4,8 @@
  * sent. The server still checks every changeset and has the last word. The two stay in step
  * through the shared cases in /shared/validation-cases, which both run in CI.
  *
- * Geometry (docs/0092 step 9, backend hsp.plans.geometry_checks): zones overlapping partly are
- * errors; an item standing in a door's swing or over a column, and a seat without a label, are
+ * Geometry (docs/0092 step 9, backend hsp.plans.geometry_checks): zones overlapping partly, and
+ * a nested zone sticking out of its parent (docs/0034 invariant 1), are errors; an item standing in a door's swing or over a column, and a seat without a label, are
  * warnings. "Overlap" means sharing more than 1 mm², and "inside" all but 1 mm², so rooms that
  * only share a wall line don't overlap.
  */
@@ -135,6 +135,15 @@ export function checkPlan(plan: ApiPlan, refs: CheckRefs): Finding[] {
     }
     return found;
   };
+  for (const z of plan.zones) {
+    const child = outlines.get(z.id);
+    const parent = z.parent_zone_id ? outlines.get(z.parent_zone_id) : undefined;
+    if (!child || !parent) continue; // reference_missing or polygon_invalid covers it
+    if (intersectionArea(child, parent) < Math.abs(polygonArea(child)) - AREA_EPS) {
+      error("zone_outside_parent", z.id);
+    }
+  }
+
   const shaped = [...outlines.keys()];
   for (let i = 0; i < shaped.length; i++) {
     for (let j = i + 1; j < shaped.length; j++) {

@@ -3,6 +3,8 @@
 Errors (they block a changeset that touches the elements):
 - ``zone_overlap``: two zones overlap partly, neither inside the other and neither nested in
   the other; reported on both zones.
+- ``zone_outside_parent``: a nested zone isn't wholly inside its parent (docs/0020, docs/0034
+  invariant 1); reported on the child, with the parent related, so changing either is refused.
 
 Warnings (allowed, shown to the editor):
 - ``item_in_door_swing``: an item that takes floor space stands where a door swings open;
@@ -96,6 +98,21 @@ def zone_errors(plan: PlanContent) -> list[ProblemError]:
     zones = {z.id: z for z in plan.zones}
     shapes = {z.id: _polygon([(p[0], p[1]) for p in z.boundary]) for z in plan.zones}
     problems: list[ProblemError] = []
+    for zone in plan.zones:
+        parent = zones.get(zone.parent_zone_id) if zone.parent_zone_id else None
+        child_shape = shapes[zone.id]
+        parent_shape = shapes[parent.id] if parent else None
+        if parent is None or child_shape is None or parent_shape is None:
+            continue  # reference_missing or polygon_invalid covers it
+        if _overlap(child_shape, parent_shape) < child_shape.area - AREA_EPS:
+            problems.append(
+                _problem(
+                    "zone_outside_parent",
+                    f"{zone.name} isn't wholly inside {parent.name}.",
+                    zone.id,
+                    parent.id,
+                )
+            )
     ordered = sorted(plan.zones, key=lambda z: z.id)
     for i, a in enumerate(ordered):
         for b in ordered[i + 1 :]:
