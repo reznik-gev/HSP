@@ -50,40 +50,47 @@ PEOPLE = [
 
 
 @pytest.fixture
-async def svc(db: AsyncSession) -> ImportService:
-    tenant = await new_tenant(db)
+async def import_service_in_own_tenant(rolled_back_db_session: AsyncSession) -> ImportService:
+    tenant = await new_tenant(rolled_back_db_session)
     return ImportService(
-        db, Principal("a", "A", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c")
+        rolled_back_db_session,
+        Principal("a", "A", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c"),
     )
 
 
-async def count(svc: ImportService, model: Any) -> int:
+async def count(import_service_in_own_tenant: ImportService, model: Any) -> int:
     return int(
-        await svc.db.scalar(
+        await import_service_in_own_tenant.db.scalar(
             select(func.count())
             .select_from(model)
-            .where(model.tenant_id == svc.principal.tenant_id)
+            .where(model.tenant_id == import_service_in_own_tenant.principal.tenant_id)
         )
         or 0
     )
 
 
-async def test_units_dry_run_then_apply_then_idempotent(svc: ImportService) -> None:
+async def test_units_dry_run_then_apply_then_idempotent(
+    import_service_in_own_tenant: ImportService,
+) -> None:
     rows = read_table("units.csv", UNITS_CSV)
-    preview = await svc.import_units(rows, apply=False)
+    preview = await import_service_in_own_tenant.import_units(rows, apply=False)
     assert (preview.applied, preview.created, preview.errors) == (False, 3, [])
     assert [w.params for w in preview.warnings] == [{"columns": "shoe_size"}]
-    assert await count(svc, models.OrgUnit) == 0  # dry run wrote nothing
+    assert await count(import_service_in_own_tenant, models.OrgUnit) == 0  # dry run wrote nothing
 
-    done = await svc.import_units(rows, apply=True)
+    done = await import_service_in_own_tenant.import_units(rows, apply=True)
     assert (done.applied, done.created) == (True, 3)
-    again = await svc.import_units(read_table("units.csv", UNITS_CSV), apply=True)
+    again = await import_service_in_own_tenant.import_units(
+        read_table("units.csv", UNITS_CSV), apply=True
+    )
     assert (again.created, again.updated, again.unchanged) == (0, 0, 3)  # idempotent re-import
 
 
-async def test_units_errors_are_reported_per_row_and_nothing_is_written(svc: ImportService) -> None:
+async def test_units_errors_are_reported_per_row_and_nothing_is_written(
+    import_service_in_own_tenant: ImportService,
+) -> None:
     bad = b"external_id,name,parent_external_id\nCO,Company,\nX,,CO\nY,Y,NOPE\nZ,Z,\nCO,Again,\n"
-    report = await svc.import_units(read_table("u.csv", bad), apply=True)
+    report = await import_service_in_own_tenant.import_units(read_table("u.csv", bad), apply=True)
     assert report.applied is False
     assert sorted((e.row, e.code) for e in report.errors) == [
         (3, "required"),
@@ -95,22 +102,26 @@ async def test_units_errors_are_reported_per_row_and_nothing_is_written(svc: Imp
     params = {e.code: e.params for e in report.errors}
     assert params["parent_not_found"] == {"value": "NOPE"}
     assert params["duplicate_row"] == {"value": "CO", "other_row": "2"}
-    assert await count(svc, models.OrgUnit) == 0
+    assert await count(import_service_in_own_tenant, models.OrgUnit) == 0
 
 
-async def test_people_from_excel_with_memberships_and_positions(svc: ImportService) -> None:
-    await svc.import_units(read_table("units.csv", UNITS_CSV), apply=True)
-    report = await svc.import_people(read_table("people.xlsx", xlsx(PEOPLE)), apply=True)
+async def test_people_from_excel_with_memberships_and_positions(
+    import_service_in_own_tenant: ImportService,
+) -> None:
+    await import_service_in_own_tenant.import_units(read_table("units.csv", UNITS_CSV), apply=True)
+    report = await import_service_in_own_tenant.import_people(
+        read_table("people.xlsx", xlsx(PEOPLE)), apply=True
+    )
     assert (report.created, report.positions_created, report.errors) == (2, 1, [])
 
-    dana = await svc.db.scalar(
+    dana = await import_service_in_own_tenant.db.scalar(
         select(models.Person).where(models.Person.email == "dana@example.com")
     )
     assert (
         dana is not None and dana.external_id == "E1" and dana.source == models.RecordSource.IMPORT
     )
     memberships = list(
-        await svc.db.scalars(
+        await import_service_in_own_tenant.db.scalars(
             select(models.UnitMembership).where(models.UnitMembership.person_id == dana.id)
         )
     )
@@ -118,19 +129,25 @@ async def test_people_from_excel_with_memberships_and_positions(svc: ImportServi
     assert sum(m.position_id is not None for m in memberships) == 1
 
     # Re-import: matched by external id (E1) and by email (eli); nothing changes.
-    again = await svc.import_people(read_table("people.xlsx", xlsx(PEOPLE)), apply=True)
+    again = await import_service_in_own_tenant.import_people(
+        read_table("people.xlsx", xlsx(PEOPLE)), apply=True
+    )
     assert (again.created, again.updated, again.unchanged, again.positions_created) == (0, 0, 2, 0)
 
 
-async def test_people_errors_and_reactivation(svc: ImportService) -> None:
-    await svc.import_units(read_table("units.csv", UNITS_CSV), apply=True)
-    await svc.import_people(read_table("p.xlsx", xlsx(PEOPLE)), apply=True)
-    eli = await svc.db.scalar(select(models.Person).where(models.Person.email == "eli@example.com"))
+async def test_people_errors_and_reactivation(import_service_in_own_tenant: ImportService) -> None:
+    await import_service_in_own_tenant.import_units(read_table("units.csv", UNITS_CSV), apply=True)
+    await import_service_in_own_tenant.import_people(read_table("p.xlsx", xlsx(PEOPLE)), apply=True)
+    eli = await import_service_in_own_tenant.db.scalar(
+        select(models.Person).where(models.Person.email == "eli@example.com")
+    )
     assert eli is not None
     eli.active = False
-    await svc.db.commit()
+    await import_service_in_own_tenant.db.commit()
 
-    report = await svc.import_people(read_table("p.xlsx", xlsx(PEOPLE)), apply=True)
+    report = await import_service_in_own_tenant.import_people(
+        read_table("p.xlsx", xlsx(PEOPLE)), apply=True
+    )
     assert report.reactivated == 1  # being in the HR export means active again
 
     bad = xlsx(
@@ -142,7 +159,9 @@ async def test_people_errors_and_reactivation(svc: ImportService) -> None:
             ["y@example.com", "Y", "", "", "ENG", ""],
         ]
     )
-    report = await svc.import_people(read_table("bad.xlsx", bad), apply=True)
+    report = await import_service_in_own_tenant.import_people(
+        read_table("bad.xlsx", bad), apply=True
+    )
     # Dana already has external id E1: a row re-keying her to E2 is an identity conflict.
     assert sorted(e.code for e in report.errors) == [
         "identity_conflict",

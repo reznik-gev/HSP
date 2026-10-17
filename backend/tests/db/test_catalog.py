@@ -12,8 +12,8 @@ from hsp.problems import ProblemException
 from tests.db.plan_helpers import add, apply
 
 
-def svc(ctx: dict[str, Any]) -> CatalogService:
-    return CatalogService(ctx["db"], ctx["admin"])
+def catalog_service(admin_editing_new_floor: dict[str, Any]) -> CatalogService:
+    return CatalogService(admin_editing_new_floor["db"], admin_editing_new_floor["admin"])
 
 
 def lamp(**over: Any) -> CatalogItemIn:
@@ -30,15 +30,15 @@ def lamp(**over: Any) -> CatalogItemIn:
     )
 
 
-async def test_zone_type_lifecycle_and_in_use(ctx: dict[str, Any]) -> None:
-    s = svc(ctx)
+async def test_zone_type_lifecycle_and_in_use(admin_editing_new_floor: dict[str, Any]) -> None:
+    s = catalog_service(admin_editing_new_floor)
     z = await s.create_zone_type(ZoneTypeIn(name="Quiet area", is_enclosed=False, color="#aabbcc"))
     with pytest.raises(ProblemException) as exc:
         await s.create_zone_type(ZoneTypeIn(name="quiet AREA"))
     assert exc.value.slug == "name-taken"  # case-insensitive
     assert (await s.update_zone_type(z.id, {"is_enclosed": True})).is_enclosed is True
     await apply(
-        ctx,
+        admin_editing_new_floor,
         0,
         add(
             "zone",
@@ -56,8 +56,8 @@ async def test_zone_type_lifecycle_and_in_use(ctx: dict[str, Any]) -> None:
     assert "Phone booth" not in [t.name for t in await s.list_zone_types()]
 
 
-async def test_builtins_are_listed_and_read_only(ctx: dict[str, Any]) -> None:
-    s = svc(ctx)
+async def test_builtins_are_listed_and_read_only(admin_editing_new_floor: dict[str, Any]) -> None:
+    s = catalog_service(admin_editing_new_floor)
     desks = await s.list_items(category="desk", include_archived=False, after=None, limit=50)
     assert {d.key for d in desks} >= {"desk_1600x800", "desk_1400x700"}
     assert all(d.builtin for d in desks)
@@ -70,9 +70,9 @@ async def test_builtins_are_listed_and_read_only(ctx: dict[str, Any]) -> None:
 
 
 async def test_dimension_change_adds_a_revision_and_placements_keep_theirs(
-    ctx: dict[str, Any],
+    admin_editing_new_floor: dict[str, Any],
 ) -> None:
-    s = svc(ctx)
+    s = catalog_service(admin_editing_new_floor)
     item = await s.create_item(lamp())
     rev1 = item.current_revision
     assert rev1.rev_no == 1
@@ -83,17 +83,23 @@ async def test_dimension_change_adds_a_revision_and_placements_keep_theirs(
     assert [r.height_mm for r in await s.revisions(item.id)] == [1700, 1900]
     # A placement made with revision 1 still references revision 1 (docs/0021).
     obj = new_id()
-    await apply(ctx, 0, add("object", obj, catalog_item_rev_id=str(rev1.id), position=[0, 0, 0]))
+    await apply(
+        admin_editing_new_floor,
+        0,
+        add("object", obj, catalog_item_rev_id=str(rev1.id), position=[0, 0, 0]),
+    )
     ref = (
-        await ctx["db"].execute(
+        await admin_editing_new_floor["db"].execute(
             text("SELECT catalog_item_rev_id FROM object_rev WHERE element_id = :e"), {"e": obj}
         )
     ).scalar_one()
     assert ref == rev1.id
 
 
-async def test_archive_hides_from_listing_and_blocks_edits(ctx: dict[str, Any]) -> None:
-    s = svc(ctx)
+async def test_archive_hides_from_listing_and_blocks_edits(
+    admin_editing_new_floor: dict[str, Any],
+) -> None:
+    s = catalog_service(admin_editing_new_floor)
     item = await s.create_item(lamp())
     await s.archive_item(item.id)
     assert item.id not in {
@@ -110,9 +116,9 @@ async def test_archive_hides_from_listing_and_blocks_edits(ctx: dict[str, Any]) 
     assert (await s.restore_item(item.id)).archived_at is None
 
 
-async def test_other_tenants_items_are_invisible(ctx: dict[str, Any]) -> None:
-    item = await svc(ctx).create_item(lamp())
+async def test_other_tenants_items_are_invisible(admin_editing_new_floor: dict[str, Any]) -> None:
+    item = await catalog_service(admin_editing_new_floor).create_item(lamp())
     stranger = Principal("x", "X", None, frozenset({ADMIN_ROLE}), new_id(), new_id(), "c")
     with pytest.raises(ProblemException) as exc:
-        await CatalogService(ctx["db"], stranger).get_item(item.id)
+        await CatalogService(admin_editing_new_floor["db"], stranger).get_item(item.id)
     assert exc.value.status == 404

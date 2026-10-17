@@ -63,20 +63,20 @@ async def conn(engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
 
 
 @pytest.fixture
-def db(conn: AsyncConnection) -> AsyncSession:
+def rolled_back_db_session(conn: AsyncConnection) -> AsyncSession:
     """A session inside the test's transaction; its commits are savepoints, rolled back after."""
     return AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
 
 
 @pytest.fixture
-async def ctx(db: AsyncSession) -> dict[str, Any]:
+async def admin_editing_new_floor(rolled_back_db_session: AsyncSession) -> dict[str, Any]:
     """A new floor in the default tenant whose edit lock the admin "alice" holds, with the stock
     desk and a zone type to place (tests/db/plan_helpers.py)."""
-    return await context(db)
+    return await context(rolled_back_db_session)
 
 
 @pytest.fixture
-async def seat_floor(db: AsyncSession) -> dict[str, Any]:
+async def published_floor_with_seats(rolled_back_db_session: AsyncSession) -> dict[str, Any]:
     """A floor whose published plan has two assigned seats (a, b), a bookable one, and a seat
     only in the draft (draft_only) (tests/db/seat_helpers.py)."""
-    return await published_seats(db)
+    return await published_seats(rolled_back_db_session)

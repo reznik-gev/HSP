@@ -13,8 +13,10 @@ from hsp.models import new_id
 from hsp.plans.repository import SqlPlanRepository
 
 
-async def _setup(db: AsyncSession) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
-    tenant = (await db.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))).scalar_one()
+async def _setup(rolled_back_db_session: AsyncSession) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
+    tenant = (
+        await rolled_back_db_session.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))
+    ).scalar_one()
     now = datetime.now(UTC)
     site = models.Site(
         id=new_id(), tenant_id=tenant, name="HQ", time_zone="UTC", created_at=now, updated_at=now
@@ -44,14 +46,14 @@ async def _setup(db: AsyncSession) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
     )
     # No ORM relationships are declared, so flush parents before children (FK order).
     for row in (site, building, floor):
-        db.add(row)
-        await db.flush()
+        rolled_back_db_session.add(row)
+        await rolled_back_db_session.flush()
     for n, state in (
         (1, models.FloorVersionState.SUPERSEDED),
         (2, models.FloorVersionState.PUBLISHED),
         (3, models.FloorVersionState.DRAFT),
     ):
-        db.add(
+        rolled_back_db_session.add(
             models.FloorVersion(
                 id=new_id(),
                 tenant_id=tenant,
@@ -62,7 +64,7 @@ async def _setup(db: AsyncSession) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
                 created_by="admin",
             )
         )
-    desk_rev = await db.scalar(
+    desk_rev = await rolled_back_db_session.scalar(
         select(models.CatalogItemRev.id)
         .join(models.CatalogItem)
         .where(models.CatalogItem.key == "desk_1600x800")
@@ -72,27 +74,30 @@ async def _setup(db: AsyncSession) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
 
 
 def _element(
-    db: AsyncSession, tenant: uuid.UUID, floor_id: uuid.UUID, kind: models.ElementKind
+    rolled_back_db_session: AsyncSession,
+    tenant: uuid.UUID,
+    floor_id: uuid.UUID,
+    kind: models.ElementKind,
 ) -> uuid.UUID:
     e = models.FloorElement(id=new_id(), tenant_id=tenant, floor_id=floor_id, kind=kind)
-    db.add(e)
+    rolled_back_db_session.add(e)
     return e.id
 
 
-async def test_version_ranges_and_geometry(db: AsyncSession) -> None:
-    tenant, floor_id, desk_rev = await _setup(db)
+async def test_version_ranges_and_geometry(rolled_back_db_session: AsyncSession) -> None:
+    tenant, floor_id, desk_rev = await _setup(rolled_back_db_session)
 
     # A wall present in every version; a zone added in v2; a desk moved in v3 (draft).
-    wall = _element(db, tenant, floor_id, models.ElementKind.WALL)
-    zone = _element(db, tenant, floor_id, models.ElementKind.ZONE)
-    desk = _element(db, tenant, floor_id, models.ElementKind.OBJECT)
+    wall = _element(rolled_back_db_session, tenant, floor_id, models.ElementKind.WALL)
+    zone = _element(rolled_back_db_session, tenant, floor_id, models.ElementKind.ZONE)
+    desk = _element(rolled_back_db_session, tenant, floor_id, models.ElementKind.OBJECT)
     zone_type = (
-        await db.execute(
+        await rolled_back_db_session.execute(
             text("SELECT id FROM zone_type WHERE tenant_id = :t LIMIT 1"), {"t": tenant}
         )
     ).scalar_one()
-    await db.flush()
-    db.add_all(
+    await rolled_back_db_session.flush()
+    rolled_back_db_session.add_all(
         [
             models.WallRev(
                 id=new_id(),
@@ -141,8 +146,8 @@ async def test_version_ranges_and_geometry(db: AsyncSession) -> None:
             ),
         ]
     )
-    await db.flush()
-    repo = SqlPlanRepository(db)
+    await rolled_back_db_session.flush()
+    repo = SqlPlanRepository(rolled_back_db_session)
 
     v1 = await repo.load_content(tenant, floor_id, 1)
     v2 = await repo.load_content(tenant, floor_id, 2)

@@ -16,8 +16,10 @@ from hsp.models import new_id
 from hsp.plans.locks import SqlLockRepository
 
 
-async def _floor(db: AsyncSession) -> tuple[uuid.UUID, uuid.UUID]:
-    tenant = (await db.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))).scalar_one()
+async def _floor(rolled_back_db_session: AsyncSession) -> tuple[uuid.UUID, uuid.UUID]:
+    tenant = (
+        await rolled_back_db_session.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))
+    ).scalar_one()
     now = datetime.now(UTC)
     site = models.Site(
         id=new_id(), tenant_id=tenant, name="HQ", time_zone="UTC", created_at=now, updated_at=now
@@ -45,14 +47,14 @@ async def _floor(db: AsyncSession) -> tuple[uuid.UUID, uuid.UUID]:
         updated_at=now,
     )
     for row in (site, building, floor):  # no ORM relationships: flush parents first
-        db.add(row)
-        await db.flush()
+        rolled_back_db_session.add(row)
+        await rolled_back_db_session.flush()
     return tenant, floor.id
 
 
-async def test_acquire_heartbeat_block_takeover(db: AsyncSession) -> None:
-    tenant, floor = await _floor(db)
-    repo = SqlLockRepository(db)
+async def test_acquire_heartbeat_block_takeover(rolled_back_db_session: AsyncSession) -> None:
+    tenant, floor = await _floor(rolled_back_db_session)
+    repo = SqlLockRepository(rolled_back_db_session)
     t0 = datetime.now(UTC)
     ttl = timedelta(minutes=15)
 
@@ -72,7 +74,10 @@ async def test_acquire_heartbeat_block_takeover(db: AsyncSession) -> None:
     )
     assert blocked is None
     assert (await repo.get(tenant, floor)).holder_subject == "alice"  # type: ignore[union-attr]
-    assert await SqlLocationsRepository(db).lock_holder(tenant, floor, t1) == "Alice"
+    assert (
+        await SqlLocationsRepository(rolled_back_db_session).lock_holder(tenant, floor, t1)
+        == "Alice"
+    )
 
     t_late = t1 + ttl + timedelta(seconds=1)  # Alice's lock expired: Bob takes over
     b = await repo.try_acquire(
@@ -80,7 +85,10 @@ async def test_acquire_heartbeat_block_takeover(db: AsyncSession) -> None:
     )
     assert b is not None and (b.holder_subject, b.acquired_at) == ("bob", t_late)
     assert (
-        await SqlLocationsRepository(db).lock_holder(tenant, floor, t_late + ttl) is None
+        await SqlLocationsRepository(rolled_back_db_session).lock_holder(
+            tenant, floor, t_late + ttl
+        )
+        is None
     )  # expired = free
 
     t_back = t_late + ttl + timedelta(seconds=1)  # same holder after expiry: a NEW session
@@ -101,8 +109,8 @@ async def test_two_editors_racing_only_one_wins(engine: AsyncEngine) -> None:
         now = datetime.now(UTC)
 
         async def contender(subject: str) -> bool:
-            async with AsyncSession(engine, expire_on_commit=False) as db:
-                won = await SqlLockRepository(db).try_acquire(
+            async with AsyncSession(engine, expire_on_commit=False) as rolled_back_db_session:
+                won = await SqlLockRepository(rolled_back_db_session).try_acquire(
                     tenant,
                     floor,
                     subject=subject,
@@ -110,7 +118,7 @@ async def test_two_editors_racing_only_one_wins(engine: AsyncEngine) -> None:
                     now=now,
                     expires_at=now + timedelta(minutes=15),
                 )
-                await db.commit()
+                await rolled_back_db_session.commit()
                 return won is not None
 
         results = await asyncio.gather(*(contender(f"editor-{i}") for i in range(8)))
