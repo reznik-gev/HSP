@@ -44,7 +44,7 @@ Names say which kind a thing is, and a double that does several jobs is **named 
 ### 1. All test data is fixturized; only what's shared is shared
 **No test data is defined inside a test.** A test body acts and asserts, spelling out only the values it checks; the data comes from fixtures and stubs defined outside it. Where they live depends on who uses them:
 - **Used by one file** (one test or several): defined **at the top of that file**, as a module-level constant, builder or fixture, e.g. `const LOOSE = stubDevice("dev2", "DOCK-0007")`.
-- **Used by more than one file:** in the shared modules, `stubs.ts` / `stubs.py` or a shared `conftest.py`.
+- **Used by more than one file:** in the shared modules: `frontend/src/test/` (`stubs.ts` for the shared world, `editorStubs.ts` for the editor's screen tests), `backend/tests/stubs.py`, or a shared `conftest.py`.
 - Build values **with** the stub builders, changing only what matters (`stubDesk("d3", [5000, 1000], { allocation_mode: "bookable" })`), rather than writing whole object literals.
 - Response shapes come from builders too (`page(items)`, `ref(id, name)`), so a change to the API shape is one edit.
 
@@ -63,7 +63,7 @@ Extend the world rather than inventing a parallel one: a second person is `stubP
 
 ### 4. Frontend screen tests
 - Render **the whole app** at a path with `renderApp(path, routes)`. Give it only the routes the screen needs, built with the `stub…Routes` helpers.
-- Find things **the way a user would**: by role and accessible name (`getByRole("button", { name: "Make a copy" })`), not by CSS class or test id. For the plan, the drawing is `svg[data-lod]`.
+- Find things **the way a user would**: by role and accessible name (`getByRole("button", { name: "Make a copy" })`), not by CSS class or test id. For the plan, the drawing is `svg[data-lod]`; click and drag on it at plan coordinates with `clickOnPlan` and `dragOnPlan` (`src/test/planPointer.ts`).
 - **Check what was sent** through `calls` (the spy) or a route function that captures the request body.
 - **Never assume timing.** Searches apply after a short pause and requests resolve later: wait for the state you need (`waitFor`, `findBy…`) before the next step. A test that passes on your machine but not in CI usually missed one of these waits.
 - Opt into jsdom with `// @vitest-environment jsdom` as the file's first line. Clean up after each test, and reset the language if the test changed it:
