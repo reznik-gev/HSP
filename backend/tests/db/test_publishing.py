@@ -26,6 +26,30 @@ PARENT, CHILD = new_id(), new_id()
 MOVED_2_M = "POLYGON((2000 0, 6000 0, 6000 3000, 2000 3000, 2000 0))"
 
 
+@pytest.fixture
+async def draft_with_zone_outside_its_parent(
+    admin_editing_new_floor: dict[str, Any],
+) -> dict[str, Any]:
+    """A saved draft (revision 1) whose zone Pod sticks out of its parent Wing. No save refused
+    it: the outline is written straight into the database, like a zone saved before the rule
+    existed, or restored from an old version."""
+    await apply(
+        admin_editing_new_floor,
+        0,
+        add("zone", PARENT, **stub_zone(admin_editing_new_floor, name="Wing")),
+        add(
+            "zone",
+            CHILD,
+            **stub_zone(admin_editing_new_floor, name="Pod", parent_zone_id=str(PARENT)),
+        ),
+    )
+    await admin_editing_new_floor["db"].execute(
+        text("UPDATE zone_rev SET boundary = ST_GeomFromText(:b) WHERE element_id = :child"),
+        {"b": MOVED_2_M, "child": CHILD},
+    )
+    return admin_editing_new_floor
+
+
 def publishing(admin_editing_new_floor: dict[str, Any]) -> PublishingService:
     rolled_back_db_session = admin_editing_new_floor["db"]
     return PublishingService(
@@ -143,25 +167,10 @@ async def test_restore_brings_back_an_old_version_exactly(
 
 
 async def test_publish_checks_the_whole_draft_not_only_what_saves_touched(
-    admin_editing_new_floor: dict[str, Any],
+    draft_with_zone_outside_its_parent: dict[str, Any],
 ) -> None:
-    await apply(
-        admin_editing_new_floor,
-        0,
-        add("zone", PARENT, **stub_zone(admin_editing_new_floor, name="Wing")),
-        add(
-            "zone",
-            CHILD,
-            **stub_zone(admin_editing_new_floor, name="Pod", parent_zone_id=str(PARENT)),
-        ),
-    )
-    # A zone saved before a rule existed, or restored from an old version: no save refused it.
-    await admin_editing_new_floor["db"].execute(
-        text("UPDATE zone_rev SET boundary = ST_GeomFromText(:b) WHERE element_id = :child"),
-        {"b": MOVED_2_M, "child": CHILD},
-    )
     with pytest.raises(ProblemException) as exc:
-        await publish(admin_editing_new_floor, 1)
+        await publish(draft_with_zone_outside_its_parent, 1)
     assert exc.value.slug == "publish-conflicts"
     assert [(e.code, e.element_id) for e in exc.value.errors or []] == [
         ("zone_outside_parent", str(CHILD))
