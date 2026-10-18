@@ -16,7 +16,8 @@ class Payload(BaseModel):
 
 
 @pytest.fixture
-def app() -> FastAPI:
+def probe_app() -> FastAPI:
+    """The app plus two probe routes: one validating a body, one raising a domain problem."""
     app = create_app()
 
     @app.post("/_test/validate")
@@ -36,24 +37,26 @@ def app() -> FastAPI:
 
 
 @pytest.fixture
-def client(app: FastAPI) -> Iterator[TestClient]:
-    with TestClient(app) as c:
-        yield c
+def probe_api(probe_app: FastAPI) -> Iterator[TestClient]:
+    with TestClient(probe_app) as client:
+        yield client
 
 
-def test_healthz(client: TestClient) -> None:
-    r = client.get("/healthz")
+def test_healthz(probe_api: TestClient) -> None:
+    r = probe_api.get("/healthz")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
 
 
-def test_request_id_is_generated_and_echoed(client: TestClient) -> None:
-    assert client.get("/healthz").headers["X-Request-ID"]
-    assert client.get("/healthz", headers={"X-Request-ID": "abc"}).headers["X-Request-ID"] == "abc"
+def test_request_id_is_generated_and_echoed(probe_api: TestClient) -> None:
+    assert probe_api.get("/healthz").headers["X-Request-ID"]
+    assert (
+        probe_api.get("/healthz", headers={"X-Request-ID": "abc"}).headers["X-Request-ID"] == "abc"
+    )
 
 
-def test_not_found_is_problem_json(client: TestClient) -> None:
-    r = client.get("/api/v1/does-not-exist")
+def test_not_found_is_problem_json(probe_api: TestClient) -> None:
+    r = probe_api.get("/api/v1/does-not-exist")
     assert r.status_code == 404
     assert r.headers["content-type"] == PROBLEM_JSON
     body = r.json()
@@ -62,16 +65,16 @@ def test_not_found_is_problem_json(client: TestClient) -> None:
     assert body["request_id"] == r.headers["X-Request-ID"]
 
 
-def test_request_validation_uses_json_pointer(client: TestClient) -> None:
-    r = client.post("/_test/validate", json={"width_mm": "wide"})
+def test_request_validation_uses_json_pointer(probe_api: TestClient) -> None:
+    r = probe_api.post("/_test/validate", json={"width_mm": "wide"})
     assert r.status_code == 422
     body = r.json()
     assert body["type"].endswith("/request-invalid")
     assert body["errors"][0]["pointer"] == "/width_mm"
 
 
-def test_domain_problem(client: TestClient) -> None:
-    r = client.get("/_test/domain-error")
+def test_domain_problem(probe_api: TestClient) -> None:
+    r = probe_api.get("/_test/domain-error")
     assert r.status_code == 422
     body = r.json()
     assert body["type"].endswith("/changeset-invalid")

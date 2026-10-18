@@ -3,10 +3,9 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from hsp.auth.dependencies import get_principal
-from hsp.auth.principal import ADMIN_ROLE, Principal
-from hsp.main import create_app
 from hsp.models import new_id
+from tests.stubs import STUB_ADMIN, STUB_CSRF_HEADER, STUB_VIEWER
+from tests.unit.api_helpers import SignedIn
 
 ID = new_id()
 WRITES = [
@@ -42,15 +41,10 @@ WRITES = [
 
 
 @pytest.mark.parametrize(("method", "url"), WRITES)
-def test_viewer_and_missing_csrf_are_refused(method: str, url: str) -> None:
-    app = create_app()
-    tenant = new_id()
-    with TestClient(app) as client:
-        app.dependency_overrides[get_principal] = lambda: Principal(
-            "v", "V", None, frozenset(), tenant, new_id(), "c"
-        )
-        assert getattr(client, method)(url, headers={"X-CSRF-Token": "c"}).status_code == 403
-        app.dependency_overrides[get_principal] = lambda: Principal(
-            "a", "A", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c"
-        )
-        assert getattr(client, method)(url).status_code == 403  # no CSRF header
+def test_viewer_and_missing_csrf_are_refused(
+    api: TestClient, signed_in: SignedIn, method: str, url: str
+) -> None:
+    signed_in.principal = STUB_VIEWER
+    assert getattr(api, method)(url, headers=STUB_CSRF_HEADER).status_code == 403
+    signed_in.principal = STUB_ADMIN
+    assert getattr(api, method)(url).status_code == 403  # no CSRF header

@@ -1,170 +1,132 @@
 """/api/v1/buildings with an in-memory repository (docs/0035, 0033, 0078)."""
 
 import uuid
-from collections.abc import Iterator
-from datetime import UTC, datetime
-from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
-from hsp.api.common import get_locations_repository
-from hsp.auth.dependencies import get_principal
-from hsp.auth.principal import ADMIN_ROLE, Principal
-from hsp.main import create_app
-from hsp.models import Floor, SeatAssignment, new_id
+from hsp.models import SeatAssignment, new_id
 from tests.fakes import InMemoryLocationsRepository
+from tests.stubs import STUB_CSRF_HEADER, STUB_TENANT
+from tests.unit.api_helpers import create_building, create_floor, create_site
 
-TENANT = new_id()
-CSRF = {"X-CSRF-Token": "csrf"}
-ADMIN = Principal("u1", "Dev", None, frozenset({ADMIN_ROLE}), TENANT, new_id(), "csrf")
+pytestmark = pytest.mark.usefixtures("locations_repo")
+
+SEAT, PERSON = new_id(), new_id()
+
+
+def assignment_of_seat_to_person() -> SeatAssignment:
+    """SEAT held by PERSON, wherever a test puts it."""
+    return SeatAssignment(
+        id=new_id(),
+        tenant_id=STUB_TENANT,
+        seat_element_id=SEAT,
+        holder_person_id=PERSON,
+        assigned_by="alice",
+    )
 
 
 @pytest.fixture
-def repo() -> InMemoryLocationsRepository:
-    return InMemoryLocationsRepository()
-
-
-@pytest.fixture
-def client(repo: InMemoryLocationsRepository) -> Iterator[TestClient]:
-    app = create_app()
-    app.dependency_overrides[get_locations_repository] = lambda: repo
-    app.dependency_overrides[get_principal] = lambda: ADMIN
-    with TestClient(app) as c:
-        yield c
-
-
-def site(client: TestClient) -> str:
-    r = client.post("/api/v1/sites", json={"name": "HQ", "time_zone": "UTC"}, headers=CSRF)
-    sid: str = r.json()["id"]
+def site_id(api: TestClient) -> str:
+    sid: str = create_site(api)["id"]
     return sid
 
 
-def building(
-    client: TestClient, site_id: str, code: str = "A", expect: int = 201
-) -> dict[str, Any]:
-    r = client.post(
-        "/api/v1/buildings",
-        json={"site_id": site_id, "name": f"Building {code}", "code": code},
-        headers=CSRF,
-    )
-    assert r.status_code == expect, r.text
-    body: dict[str, Any] = r.json()
-    return body
-
-
-def test_create_list_filter_by_site(client: TestClient) -> None:
-    s1, s2 = site(client), site(client)
-    building(client, s1, "A")
-    building(client, s1, "B")
-    building(client, s2, "A")  # same code, other site: fine
-    assert len(client.get("/api/v1/buildings").json()["items"]) == 3
-    only_s1 = client.get("/api/v1/buildings", params={"site_id": s1}).json()["items"]
+def test_create_list_filter_by_site(api: TestClient) -> None:
+    s1, s2 = create_site(api)["id"], create_site(api)["id"]
+    create_building(api, s1, "A")
+    create_building(api, s1, "B")
+    create_building(api, s2, "A")  # same code, other site: fine
+    assert len(api.get("/api/v1/buildings").json()["items"]) == 3
+    only_s1 = api.get("/api/v1/buildings", params={"site_id": s1}).json()["items"]
     assert [b["code"] for b in only_s1] == ["A", "B"]
 
 
-def test_duplicate_code_in_site_is_409(client: TestClient) -> None:
-    s = site(client)
-    a = building(client, s, "A")
-    r = client.post(
-        "/api/v1/buildings", json={"site_id": s, "name": "x", "code": "A"}, headers=CSRF
+def test_duplicate_code_in_site_is_409(api: TestClient, site_id: str) -> None:
+    a = create_building(api, site_id, "A")
+    r = api.post(
+        "/api/v1/buildings",
+        json={"site_id": site_id, "name": "x", "code": "A"},
+        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == 409
     assert r.json()["type"].endswith("/code-taken")
     # Renaming another building to a taken code is refused too; keeping one's own code is fine.
-    b = building(client, s, "B")
+    b = create_building(api, site_id, "B")
+    to_a = {"code": "A"}
     assert (
-        client.patch(f"/api/v1/buildings/{b['id']}", json={"code": "A"}, headers=CSRF).status_code
+        api.patch(f"/api/v1/buildings/{b['id']}", json=to_a, headers=STUB_CSRF_HEADER).status_code
         == 409
     )
     assert (
-        client.patch(f"/api/v1/buildings/{a['id']}", json={"code": "A"}, headers=CSRF).status_code
+        api.patch(f"/api/v1/buildings/{a['id']}", json=to_a, headers=STUB_CSRF_HEADER).status_code
         == 200
     )
 
 
-def test_archived_building_still_owns_its_code(client: TestClient) -> None:
-    s = site(client)
-    a = building(client, s, "A")
-    client.delete(f"/api/v1/buildings/{a['id']}", headers=CSRF)
-    r = client.post(
-        "/api/v1/buildings", json={"site_id": s, "name": "x", "code": "A"}, headers=CSRF
+def test_archived_building_still_owns_its_code(api: TestClient, site_id: str) -> None:
+    a = create_building(api, site_id, "A")
+    api.delete(f"/api/v1/buildings/{a['id']}", headers=STUB_CSRF_HEADER)
+    r = api.post(
+        "/api/v1/buildings",
+        json={"site_id": site_id, "name": "x", "code": "A"},
+        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == 409
     assert "archived building" in r.json()["detail"]
 
 
-def test_unknown_or_archived_site(client: TestClient) -> None:
-    r = client.post(
-        "/api/v1/buildings", json={"site_id": str(new_id()), "name": "x", "code": "A"}, headers=CSRF
+def test_unknown_or_archived_site(api: TestClient, site_id: str) -> None:
+    r = api.post(
+        "/api/v1/buildings",
+        json={"site_id": str(new_id()), "name": "x", "code": "A"},
+        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == 422
     assert r.json()["errors"][0]["pointer"] == "/site_id"
-    s = site(client)
-    client.delete(f"/api/v1/sites/{s}", headers=CSRF)
-    r = client.post(
-        "/api/v1/buildings", json={"site_id": s, "name": "x", "code": "A"}, headers=CSRF
+    api.delete(f"/api/v1/sites/{site_id}", headers=STUB_CSRF_HEADER)
+    r = api.post(
+        "/api/v1/buildings",
+        json={"site_id": site_id, "name": "x", "code": "A"},
+        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == 409
     assert r.json()["type"].endswith("/parent-archived")
 
 
-def test_invalid_code_format_is_422(client: TestClient) -> None:
-    building(client, site(client), "bad code!", expect=422)
+def test_invalid_code_format_is_422(api: TestClient, site_id: str) -> None:
+    create_building(api, site_id, "bad code!", expect=422)
 
 
 def test_archive_cascades_to_floors_and_frees_their_seats(
-    client: TestClient, repo: InMemoryLocationsRepository
+    api: TestClient, site_id: str, locations_repo: InMemoryLocationsRepository
 ) -> None:
-    b = building(client, site(client))
-    now = datetime.now(UTC)
-    floor = Floor(
-        id=new_id(),
-        tenant_id=TENANT,
-        building_id=uuid.UUID(b["id"]),
-        name="Ground",
-        level_index=0,
-        elevation_mm=0,
-        default_wall_height_mm=2800,
-        origin_x_mm=0,
-        origin_y_mm=0,
-        published_version=None,
-        created_at=now,
-        updated_at=now,
-        archived_at=None,
-    )
-    repo.floors[floor.id] = floor
-    seat, person = new_id(), new_id()
-    repo.seat_assignments[floor.id] = [
-        SeatAssignment(
-            id=new_id(),
-            tenant_id=TENANT,
-            seat_element_id=seat,
-            holder_person_id=person,
-            assigned_by="a",
-        )
-    ]
-    r = client.delete(f"/api/v1/buildings/{b['id']}", headers=CSRF)
+    b = create_building(api, site_id)
+    floor = create_floor(api, b["id"], 0)
+    locations_repo.seat_assignments[uuid.UUID(floor["id"])] = [assignment_of_seat_to_person()]
+    r = api.delete(f"/api/v1/buildings/{b['id']}", headers=STUB_CSRF_HEADER)
     assert r.status_code == 200
     body = r.json()
-    assert [a["name"] for a in body["archived"]] == ["Building A (Building A)", "Ground"]
+    assert [a["name"] for a in body["archived"]] == ["Building A (Building A)", "L0"]
     assert body["freed_seats"] == [
-        {"seat_id": str(seat), "holder_person_id": str(person), "holder_unit_id": None}
+        {"seat_id": str(SEAT), "holder_person_id": str(PERSON), "holder_unit_id": None}
     ]
-    assert [e.action for e in repo.events][-3:] == [
+    assert [e.action for e in locations_repo.events][-3:] == [
         "building.archived",
         "floor.archived",
         "seat.unassigned",
     ]
 
 
-def test_restore_is_top_down(client: TestClient, repo: InMemoryLocationsRepository) -> None:
-    s = site(client)
-    b = building(client, s)
-    assert client.delete(f"/api/v1/buildings/{b['id']}", headers=CSRF).status_code == 200
-    assert client.delete(f"/api/v1/sites/{s}", headers=CSRF).status_code == 200
-    assert client.post(f"/api/v1/buildings/{b['id']}/restore", headers=CSRF).status_code == 409
-    assert client.post(f"/api/v1/sites/{s}/restore", headers=CSRF).status_code == 200
-    assert client.post(f"/api/v1/buildings/{b['id']}/restore", headers=CSRF).status_code == 200
-    actions = [e.action for e in repo.events if e.entity_type == "building"]
+def test_restore_is_top_down(
+    api: TestClient, site_id: str, locations_repo: InMemoryLocationsRepository
+) -> None:
+    b = create_building(api, site_id)
+    assert api.delete(f"/api/v1/buildings/{b['id']}", headers=STUB_CSRF_HEADER).status_code == 200
+    assert api.delete(f"/api/v1/sites/{site_id}", headers=STUB_CSRF_HEADER).status_code == 200
+    restore_building = f"/api/v1/buildings/{b['id']}/restore"
+    assert api.post(restore_building, headers=STUB_CSRF_HEADER).status_code == 409
+    assert api.post(f"/api/v1/sites/{site_id}/restore", headers=STUB_CSRF_HEADER).status_code == 200
+    assert api.post(restore_building, headers=STUB_CSRF_HEADER).status_code == 200
+    actions = [e.action for e in locations_repo.events if e.entity_type == "building"]
     assert actions == ["building.created", "building.archived", "building.restored"]

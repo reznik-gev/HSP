@@ -8,11 +8,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
-from hsp.auth.principal import ADMIN_ROLE, Principal
 from hsp.locations.buildings import BuildingsService
 from hsp.locations.repository import SqlLocationsRepository
 from hsp.models import new_id
 from tests.db.plan_helpers import make_floor, new_tenant
+from tests.stubs import stub_admin
 
 
 @pytest.fixture
@@ -20,7 +20,7 @@ async def floor_in_own_tenant(rolled_back_db_session: AsyncSession) -> dict[str,
     """A floor in a tenant of its own, and its admin."""
     tenant = await new_tenant(rolled_back_db_session)
     floor, building = await make_floor(rolled_back_db_session, tenant)
-    admin = Principal("alice", "Alice", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c")
+    admin = stub_admin(tenant)
     return {
         "db": rolled_back_db_session,
         "tenant": tenant,

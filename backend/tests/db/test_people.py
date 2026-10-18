@@ -5,12 +5,12 @@ from typing import Any
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp.auth.principal import ADMIN_ROLE, Principal
 from hsp.models import new_id
 from hsp.org.people import MembershipIn, PeopleService, PersonIn
 from hsp.org.units import PositionIn, UnitIn, UnitsService
 from hsp.problems import ProblemException
 from tests.db.plan_helpers import new_tenant
+from tests.stubs import stub_admin
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ async def own_tenant_with_web_team(rolled_back_db_session: AsyncSession) -> dict
     """A tenant of its own with Company > Engineering > Web, a Team Lead position in Web, and
     the people service as its admin."""
     tenant = await new_tenant(rolled_back_db_session)
-    admin = Principal("a", "A", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c")
+    admin = stub_admin(tenant, "a", "A")
     units = UnitsService(rolled_back_db_session, admin)
     root = await units.create(UnitIn(name="Company"))
     eng = await units.create(UnitIn(name="Engineering", parent_id=root.id))

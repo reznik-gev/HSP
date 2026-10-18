@@ -5,11 +5,13 @@ from typing import Any
 import pytest
 from sqlalchemy import text
 
-from hsp.auth.principal import ADMIN_ROLE, Principal
 from hsp.catalog.items import CatalogItemIn, CatalogService, ZoneTypeIn
 from hsp.models import new_id
 from hsp.problems import ProblemException
 from tests.db.plan_helpers import add, apply
+from tests.stubs import stub_admin
+
+ADMIN_OF_OTHER_TENANT = stub_admin(new_id(), "x", "X")
 
 
 def catalog_service(admin_editing_new_floor: dict[str, Any]) -> CatalogService:
@@ -118,7 +120,6 @@ async def test_archive_hides_from_listing_and_blocks_edits(
 
 async def test_other_tenants_items_are_invisible(admin_editing_new_floor: dict[str, Any]) -> None:
     item = await catalog_service(admin_editing_new_floor).create_item(lamp())
-    stranger = Principal("x", "X", None, frozenset({ADMIN_ROLE}), new_id(), new_id(), "c")
     with pytest.raises(ProblemException) as exc:
-        await CatalogService(admin_editing_new_floor["db"], stranger).get_item(item.id)
+        await CatalogService(admin_editing_new_floor["db"], ADMIN_OF_OTHER_TENANT).get_item(item.id)
     assert exc.value.status == 404

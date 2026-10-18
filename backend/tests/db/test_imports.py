@@ -10,12 +10,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
-from hsp.auth.principal import ADMIN_ROLE, Principal
 from hsp.imports import read_table
-from hsp.models import new_id
 from hsp.org.imports import ImportService
 from hsp.problems import ProblemException
 from tests.db.plan_helpers import new_tenant
+from tests.stubs import stub_admin
 
 UNITS_CSV = b"""external_id,name,parent_external_id,level_label,shoe_size
 CO,Company,,Company,
@@ -54,7 +53,7 @@ async def import_service_in_own_tenant(rolled_back_db_session: AsyncSession) -> 
     tenant = await new_tenant(rolled_back_db_session)
     return ImportService(
         rolled_back_db_session,
-        Principal("a", "A", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c"),
+        stub_admin(tenant, "a", "A"),
     )
 
 

@@ -1,68 +1,37 @@
 """/api/v1/sites with an in-memory repository (docs/0035, 0040, 0033, 0078)."""
 
-import uuid
-from collections.abc import Iterator
-from datetime import UTC, datetime
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
-from hsp.api.common import get_locations_repository
-from hsp.auth.dependencies import get_principal
-from hsp.auth.principal import ADMIN_ROLE, Principal
-from hsp.main import create_app
-from hsp.models import Building, new_id
+from hsp.models import new_id
 from tests.fakes import InMemoryLocationsRepository
+from tests.stubs import STUB_CSRF_HEADER, STUB_VIEWER, stub_admin
+from tests.unit.api_helpers import SignedIn, create_building, create_site
 
-TENANT = new_id()
-CSRF = {"X-CSRF-Token": "csrf"}
+pytestmark = pytest.mark.usefixtures("locations_repo")
 
-
-def principal(*roles: str, tenant: Any = TENANT) -> Principal:
-    return Principal(
-        subject="u1",
-        name="Dev",
-        email=None,
-        roles=frozenset(roles),
-        tenant_id=tenant,
-        session_id=new_id(),
-        csrf_token="csrf",
-    )
+ADMIN_OF_OTHER_TENANT = stub_admin(new_id())
 
 
-@pytest.fixture
-def repo() -> InMemoryLocationsRepository:
-    return InMemoryLocationsRepository()
+def all_site_ids(api: TestClient, limit: int) -> list[str]:
+    """Every site id, read page by page by following `next_cursor`."""
+    seen: list[str] = []
+    params: dict[str, Any] = {"limit": limit}
+    while True:
+        page = api.get("/api/v1/sites", params=params).json()
+        seen += [s["id"] for s in page["items"]]
+        if not page["next_cursor"]:
+            return seen
+        params["cursor"] = page["next_cursor"]
 
 
-@pytest.fixture
-def as_user() -> dict[str, Principal]:
-    return {"p": principal(ADMIN_ROLE)}
-
-
-@pytest.fixture
-def client(
-    repo: InMemoryLocationsRepository, as_user: dict[str, Principal]
-) -> Iterator[TestClient]:
-    app = create_app()
-    app.dependency_overrides[get_locations_repository] = lambda: repo
-    app.dependency_overrides[get_principal] = lambda: as_user["p"]
-    with TestClient(app) as c:
-        yield c
-
-
-def create(client: TestClient, name: str = "HQ", tz: str = "Europe/Berlin") -> dict[str, Any]:
-    r = client.post("/api/v1/sites", json={"name": name, "time_zone": tz}, headers=CSRF)
-    assert r.status_code == 201, r.text
-    return r.json()
-
-
-def test_create_get_and_audit(client: TestClient, repo: InMemoryLocationsRepository) -> None:
-    site = create(client)
-    assert client.get(f"/api/v1/sites/{site['id']}").json()["name"] == "HQ"
-    assert [e.action for e in repo.events] == ["site.created"]
-    assert repo.events[0].after == {
+def test_create_get_and_audit(api: TestClient, locations_repo: InMemoryLocationsRepository) -> None:
+    site = create_site(api, "HQ", "Europe/Berlin")
+    assert api.get(f"/api/v1/sites/{site['id']}").json()["name"] == "HQ"
+    assert [e.action for e in locations_repo.events] == ["site.created"]
+    assert locations_repo.events[0].after == {
         "name": "HQ",
         "address": None,
         "time_zone": "Europe/Berlin",
@@ -70,8 +39,10 @@ def test_create_get_and_audit(client: TestClient, repo: InMemoryLocationsReposit
     }
 
 
-def test_unknown_time_zone_is_422_with_pointer(client: TestClient) -> None:
-    r = client.post("/api/v1/sites", json={"name": "X", "time_zone": "Mars/Olympus"}, headers=CSRF)
+def test_unknown_time_zone_is_422_with_pointer(api: TestClient) -> None:
+    r = api.post(
+        "/api/v1/sites", json={"name": "X", "time_zone": "Mars/Olympus"}, headers=STUB_CSRF_HEADER
+    )
     assert r.status_code == 422
     assert r.json()["errors"][0] == {
         "code": "time_zone_unknown",
@@ -80,25 +51,25 @@ def test_unknown_time_zone_is_422_with_pointer(client: TestClient) -> None:
     }
 
 
-def test_writes_need_admin_and_csrf(client: TestClient, as_user: dict[str, Principal]) -> None:
-    assert client.post("/api/v1/sites", json={"name": "X", "time_zone": "UTC"}).status_code == 403
-    as_user["p"] = principal("default-roles-hsp")
-    r = client.post("/api/v1/sites", json={"name": "X", "time_zone": "UTC"}, headers=CSRF)
+def test_writes_need_admin_and_csrf(api: TestClient, signed_in: SignedIn) -> None:
+    assert api.post("/api/v1/sites", json={"name": "X", "time_zone": "UTC"}).status_code == 403
+    signed_in.principal = STUB_VIEWER
+    r = api.post("/api/v1/sites", json={"name": "X", "time_zone": "UTC"}, headers=STUB_CSRF_HEADER)
     assert r.status_code == 403
-    assert client.get("/api/v1/sites").status_code == 200  # viewers can read (docs/0027)
+    assert api.get("/api/v1/sites").status_code == 200  # viewers can read (docs/0027)
 
 
 def test_patch_audits_only_changed_fields(
-    client: TestClient, repo: InMemoryLocationsRepository
+    api: TestClient, locations_repo: InMemoryLocationsRepository
 ) -> None:
-    site = create(client)
-    r = client.patch(
+    site = create_site(api, "HQ")
+    r = api.patch(
         f"/api/v1/sites/{site['id']}",
-        json={"name": "Head office", "time_zone": "Europe/Berlin"},
-        headers=CSRF,
+        json={"name": "Head office", "time_zone": "UTC"},
+        headers=STUB_CSRF_HEADER,
     )
     assert r.json()["name"] == "Head office"
-    event = repo.events[-1]
+    event = locations_repo.events[-1]
     assert (event.action, event.before, event.after) == (
         "site.updated",
         {"name": "HQ"},
@@ -106,86 +77,63 @@ def test_patch_audits_only_changed_fields(
     )
 
 
-def test_noop_patch_writes_nothing(client: TestClient, repo: InMemoryLocationsRepository) -> None:
-    site = create(client)
-    commits = repo.committed
-    client.patch(f"/api/v1/sites/{site['id']}", json={"name": "HQ"}, headers=CSRF)
-    assert repo.committed == commits
+def test_noop_patch_writes_nothing(
+    api: TestClient, locations_repo: InMemoryLocationsRepository
+) -> None:
+    site = create_site(api, "HQ")
+    commits = locations_repo.committed
+    api.patch(f"/api/v1/sites/{site['id']}", json={"name": "HQ"}, headers=STUB_CSRF_HEADER)
+    assert locations_repo.committed == commits
 
 
-def test_archive_restore_and_listing(client: TestClient) -> None:
-    site = create(client)
-    archived = client.delete(f"/api/v1/sites/{site['id']}", headers=CSRF)
+def test_archive_restore_and_listing(api: TestClient) -> None:
+    site = create_site(api)
+    archived = api.delete(f"/api/v1/sites/{site['id']}", headers=STUB_CSRF_HEADER)
     assert [a["id"] for a in archived.json()["archived"]] == [site["id"]]
-    again = client.delete(f"/api/v1/sites/{site['id']}", headers=CSRF)
+    again = api.delete(f"/api/v1/sites/{site['id']}", headers=STUB_CSRF_HEADER)
     assert (again.status_code, again.json()["archived"]) == (200, [])  # idempotent
-    assert client.get("/api/v1/sites").json()["items"] == []
-    archived = client.get("/api/v1/sites", params={"include_archived": True}).json()["items"]
+    assert api.get("/api/v1/sites").json()["items"] == []
+    archived = api.get("/api/v1/sites", params={"include_archived": True}).json()["items"]
     assert archived[0]["archived_at"] is not None
-    r = client.patch(f"/api/v1/sites/{site['id']}", json={"name": "X"}, headers=CSRF)
+    r = api.patch(f"/api/v1/sites/{site['id']}", json={"name": "X"}, headers=STUB_CSRF_HEADER)
     assert r.status_code == 409  # archived is read-only
-    assert (
-        client.post(f"/api/v1/sites/{site['id']}/restore", headers=CSRF).json()["archived_at"]
-        is None
-    )
-    assert len(client.get("/api/v1/sites").json()["items"]) == 1
+    restored = api.post(f"/api/v1/sites/{site['id']}/restore", headers=STUB_CSRF_HEADER)
+    assert restored.json()["archived_at"] is None
+    assert len(api.get("/api/v1/sites").json()["items"]) == 1
 
 
 def test_archive_cascades_to_active_buildings(
-    client: TestClient, repo: InMemoryLocationsRepository
+    api: TestClient, locations_repo: InMemoryLocationsRepository
 ) -> None:
-    site = create(client)
-    b = Building(
-        id=new_id(),
-        tenant_id=TENANT,
-        site_id=uuid.UUID(site["id"]),
-        name="Main",
-        code="A",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
-        archived_at=None,
-    )
-    repo.buildings[b.id] = b
-    r = client.delete(f"/api/v1/sites/{site['id']}", headers=CSRF)
+    site = create_site(api)
+    building = create_building(api, site["id"])
+    r = api.delete(f"/api/v1/sites/{site['id']}", headers=STUB_CSRF_HEADER)
     assert r.status_code == 200  # docs/0086: no more bottom-up archiving
     assert [(a["kind"], a["id"]) for a in r.json()["archived"]] == [
         ("site", site["id"]),
-        ("building", str(b.id)),
+        ("building", building["id"]),
     ]
-    assert repo.buildings[b.id].archived_at is not None
-    cascaded = [e for e in repo.events if e.entity_id == b.id]
-    assert cascaded[0].action == "building.archived" and cascaded[0].reason is not None
+    cascaded = [e for e in locations_repo.events if str(e.entity_id) == building["id"]]
+    assert [e.action for e in cascaded] == ["building.created", "building.archived"]
+    assert cascaded[-1].reason is not None
 
 
-def test_cursor_pagination(client: TestClient) -> None:
-    ids = [create(client, f"S{i}")["id"] for i in range(5)]
-    seen: list[str] = []
-    cursor = None
-    while True:
-        params: dict[str, Any] = {"limit": 2}
-        if cursor:
-            params["cursor"] = cursor
-        page = client.get("/api/v1/sites", params=params).json()
-        seen += [s["id"] for s in page["items"]]
-        cursor = page["next_cursor"]
-        if not cursor:
-            break
-    assert seen == ids
+def test_cursor_pagination(api: TestClient) -> None:
+    ids = [create_site(api, f"S{i}")["id"] for i in range(5)]
+    assert all_site_ids(api, limit=2) == ids
 
 
-def test_cursor_from_other_filters_is_rejected(client: TestClient) -> None:
+def test_cursor_from_other_filters_is_rejected(api: TestClient) -> None:
     for i in range(3):
-        create(client, f"S{i}")
-    cursor = client.get("/api/v1/sites", params={"limit": 1}).json()["next_cursor"]
-    r = client.get("/api/v1/sites", params={"limit": 1, "cursor": cursor, "include_archived": True})
+        create_site(api, f"S{i}")
+    cursor = api.get("/api/v1/sites", params={"limit": 1}).json()["next_cursor"]
+    r = api.get("/api/v1/sites", params={"limit": 1, "cursor": cursor, "include_archived": True})
     assert r.status_code == 400
-    assert client.get("/api/v1/sites", params={"cursor": "garbage"}).status_code == 400
+    assert api.get("/api/v1/sites", params={"cursor": "garbage"}).status_code == 400
 
 
-def test_other_tenants_sites_are_invisible(
-    client: TestClient, as_user: dict[str, Principal]
-) -> None:
-    site = create(client)
-    as_user["p"] = principal(ADMIN_ROLE, tenant=new_id())
-    assert client.get(f"/api/v1/sites/{site['id']}").status_code == 404
-    assert client.get("/api/v1/sites").json()["items"] == []
+def test_other_tenants_sites_are_invisible(api: TestClient, signed_in: SignedIn) -> None:
+    site = create_site(api)
+    signed_in.principal = ADMIN_OF_OTHER_TENANT
+    assert api.get(f"/api/v1/sites/{site['id']}").status_code == 404
+    assert api.get("/api/v1/sites").json()["items"] == []

@@ -9,12 +9,13 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
-from hsp.auth.principal import ADMIN_ROLE, Principal
+from hsp.auth.principal import Principal
 from hsp.models import new_id
 from hsp.plans.changeset import ChangesetIn
 from hsp.plans.drafts import DraftsService, SqlDraftRepository
 from hsp.plans.locks import SqlLockRepository
 from hsp.plans.repository import SqlPlanRepository
+from tests.stubs import stub_admin
 
 changeset = TypeAdapter(ChangesetIn)
 
@@ -109,7 +110,7 @@ async def context(db: AsyncSession) -> dict[str, Any]:
             text("SELECT id FROM zone_type WHERE tenant_id = :t LIMIT 1"), {"t": tenant}
         )
     ).scalar_one()
-    admin = Principal("alice", "Alice", None, frozenset({ADMIN_ROLE}), tenant, new_id(), "c")
+    admin = stub_admin(tenant)
     return {
         "db": db,
         "tenant": tenant,
