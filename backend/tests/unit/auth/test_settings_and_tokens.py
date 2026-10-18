@@ -1,10 +1,11 @@
-"""Auth settings and secrets: the production guard, token encryption and reading JWT claims
-(docs/0077)."""
+"""Settings and secrets: the production guard, the database password, token encryption and
+reading JWT claims (docs/0077, docs/0099)."""
 
 import base64
 
 import pytest
 from pydantic import ValidationError
+from sqlalchemy import make_url
 
 from hsp.auth.principal import jwt_claims, realm_roles
 from hsp.auth.tokens import TokenCipher, TokenDecryptError
@@ -12,6 +13,8 @@ from hsp.config import DEV_SESSION_ENCRYPTION_KEY, Settings
 from tests.unit.auth.stubs import stub_jwt
 
 OTHER_KEY = base64.urlsafe_b64encode(b"x" * 32)
+#: Characters a URL would need escaped.
+DATABASE_PASSWORD = "p@ss:w/rd"
 
 
 def test_production_requires_real_secrets() -> None:
@@ -41,3 +44,18 @@ def test_jwt_claims_and_roles() -> None:
     assert realm_roles({}) == frozenset()
     with pytest.raises(ValueError):
         jwt_claims("not-a-jwt")
+
+
+def test_database_password_can_come_separately_from_the_url() -> None:
+    s = Settings(
+        database_url="postgresql+asyncpg://hsp@db:5432/hsp",  # type: ignore[arg-type]
+        database_password=DATABASE_PASSWORD,  # type: ignore[arg-type]
+    )
+    url = make_url(s.database_dsn())
+    assert (url.username, url.password, url.host, url.database) == (
+        "hsp",
+        DATABASE_PASSWORD,
+        "db",
+        "hsp",
+    )
+    assert Settings().database_dsn() == "postgresql+asyncpg://hsp:hsp@localhost:5432/hsp"

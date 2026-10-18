@@ -9,7 +9,7 @@ Every design decision is recorded in **[docs/decisions/](docs/decisions/README.m
 |---|---|
 | [`backend/`](backend/README.md) | FastAPI service, SQLAlchemy models, Alembic migrations (Python 3.14, uv) |
 | [`frontend/`](frontend/README.md) | React + TypeScript app with the headless editor core (pnpm, Vite) |
-| `deploy/` | Docker Compose: `compose.dev.yml` for local development. The production images ([0097](docs/decisions/0097-2026-10-18-production-images.md)): see [deploy/README.md](deploy/README.md). Production stack and offline bundle to follow ([0054](docs/decisions/0054-2026-10-08-release-distribution.md), [0055](docs/decisions/0055-2026-10-08-deployment-target.md)) |
+| `deploy/` | Docker Compose: `compose.dev.yml` for local development. Production images and stack ([0097](docs/decisions/0097-2026-10-18-production-images.md), [0099](docs/decisions/0099-2026-10-18-production-compose.md)): see [deploy/README.md](deploy/README.md). Offline bundle to follow ([0054](docs/decisions/0054-2026-10-08-release-distribution.md), [0055](docs/decisions/0055-2026-10-08-deployment-target.md)) |
 | `shared/` | Language-neutral validation test cases ([0051](docs/decisions/0051-2026-10-08-validation-feedback.md)) |
 | `authz/` | OpenFGA model (deferred past v1) |
 | `docs/` | Documentation: [decision records](docs/decisions/README.md), [guides](docs/guides/README.md), with more sections to come ([0075](docs/decisions/0075-2026-10-08-docs-directory-structure.md)) |

@@ -30,3 +30,8 @@ frontend/playwright-report/
 
 # Claude Code: temporary git worktrees created for background agents
 .claude/worktrees/
+
+# A production install tried out from deploy/compose (docs/0099): never commit these
+deploy/compose/.env
+deploy/compose/secrets/
+deploy/compose/tls/

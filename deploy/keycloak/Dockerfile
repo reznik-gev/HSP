@@ -24,5 +24,7 @@ COPY --from=build /opt/keycloak/ /opt/keycloak/
 # Imported on first start only (an existing realm is left alone). ${HSP_*} placeholders in it are
 # filled from the environment.
 COPY --chown=keycloak:keycloak hsp-realm.json /opt/keycloak/data/import/hsp-realm.json
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+# Reads *_FILE variables (secret files) into the environment, then runs kc.sh.
+COPY --chmod=755 entrypoint.sh /opt/keycloak/bin/hsp-entrypoint.sh
+ENTRYPOINT ["/opt/keycloak/bin/hsp-entrypoint.sh"]
 CMD ["start", "--optimized", "--import-realm"]
