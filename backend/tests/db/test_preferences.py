@@ -8,10 +8,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hsp import models
-from hsp.auth.principal import Principal
-from hsp.models import new_id
 from hsp.preferences import Preferences, PreferencesService
 from tests.db.plan_helpers import new_tenant
+from tests.stubs import stub_viewer
 
 
 @pytest.fixture
@@ -22,7 +21,7 @@ async def preferences_in_own_tenant(rolled_back_db_session: AsyncSession) -> dic
     def as_user(subject: str) -> PreferencesService:
         return PreferencesService(
             rolled_back_db_session,
-            Principal(subject, subject, None, frozenset(), tenant, new_id(), "c"),
+            stub_viewer(tenant, subject, subject),
         )
 
     return {"db": rolled_back_db_session, "as_user": as_user, "tenant": tenant}

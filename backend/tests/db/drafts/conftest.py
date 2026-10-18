@@ -8,19 +8,11 @@ from typing import Any
 
 import pytest
 
-from hsp.auth.principal import ADMIN_ROLE, Principal
-from hsp.models import new_id
+from hsp.auth.principal import Principal
+from tests.stubs import stub_admin
 
 
 @pytest.fixture
 def other_admin(admin_editing_new_floor: dict[str, Any]) -> Principal:
     """An admin who doesn't hold the floor's lock."""
-    return Principal(
-        "bob",
-        "Bob",
-        None,
-        frozenset({ADMIN_ROLE}),
-        admin_editing_new_floor["tenant"],
-        new_id(),
-        "c",
-    )
+    return stub_admin(admin_editing_new_floor["tenant"], "bob", "Bob")
