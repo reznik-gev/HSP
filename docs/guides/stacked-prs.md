@@ -1,6 +1,6 @@
 # Working with stacked pull requests
 
-A **stack** is a chain of PRs where each one builds on the one before it (for example login → sites → buildings → floors). Stacks keep PRs small and reviewable ([0076](../decisions/0076-2026-10-08-backend-delivery-plan.md)), but with **rebase-only merges** ([0069](../decisions/0069-2026-10-08-rebase-merges.md)) they need one extra step after each merge. We use GitHub's own stacks and the `gh stack` command for it ([0093](../decisions/0093-2026-10-16-github-stacked-prs.md)).
+A **stack** is a chain of PRs where each one builds on the one before it (for example login → sites → buildings → floors). Stacks keep PRs small and reviewable ([0076](../decisions/0076-2026-10-08-backend-delivery-plan.md)), but with **rebase-only merges** ([0069](../decisions/0069-2026-10-08-rebase-merges.md)) they need one extra step after each merge. We use GitHub's own stacks and the `gh stack` command for it ([0093](../decisions/0093-2026-10-16-github-stacked-prs.md)). For branches, commits and reviews in general, see [Working with Git and pull requests](git.md).
 
 ## Why stacks need restacking
 ```
