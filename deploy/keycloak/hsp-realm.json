@@ -1,0 +1,30 @@
+{
+  "realm": "hsp",
+  "enabled": true,
+  "displayName": "HSP",
+  "sslRequired": "external",
+  "roles": {
+    "realm": [
+      { "name": "hsp-admin", "description": "Full access in v1 (docs/0027)" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "hsp-api",
+      "name": "HSP API (BFF)",
+      "description": "Confidential OIDC client used by the FastAPI backend-for-frontend (docs/0038)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${HSP_OIDC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["${HSP_PUBLIC_URL}/api/v1/auth/callback"],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${HSP_PUBLIC_URL}/*"
+      }
+    }
+  ]
+}
