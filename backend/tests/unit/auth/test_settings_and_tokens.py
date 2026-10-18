@@ -58,4 +58,5 @@ def test_database_password_can_come_separately_from_the_url() -> None:
         "db",
         "hsp",
     )
-    assert Settings().database_dsn() == "postgresql+asyncpg://hsp:hsp@localhost:5432/hsp"
+    without = Settings(database_url="postgresql+asyncpg://hsp:pw@db:5432/hsp")  # type: ignore[arg-type]
+    assert without.database_dsn() == "postgresql+asyncpg://hsp:pw@db:5432/hsp"
