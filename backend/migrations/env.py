@@ -38,7 +38,7 @@ def _configure(**kwargs: object) -> None:
 
 def run_migrations_offline() -> None:
     _configure(
-        url=str(get_settings().database_url),
+        url=get_settings().database_dsn(),
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
@@ -53,7 +53,7 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    engine = create_async_engine(str(get_settings().database_url), poolclass=pool.NullPool)
+    engine = create_async_engine(get_settings().database_dsn(), poolclass=pool.NullPool)
     async with engine.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await engine.dispose()

@@ -1,0 +1,128 @@
+# HSP production stack on one host (docs/0055, docs/0099).
+#
+# An installation directory holds this file next to:
+#   .env              settings (see .env.example)
+#   secrets/          one file per secret (see .env.example), readable by its container's user
+#   tls/              tls.crt and tls.key, when hsp-web terminates TLS
+#   postgres-init/    roles and databases, run once on an empty data directory
+# and keeps its data under HSP_DATA_DIR. `hsp install` (bin/hsp) prepares all of it.
+#
+#   docker compose up -d
+name: hsp
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+x-hsp-api: &hsp-api
+  image: hsp-api:${HSP_VERSION:?set HSP_VERSION in .env}
+  pull_policy: never # images are loaded from the release bundle (docs/0054)
+  environment:
+    HSP_DATABASE_URL: postgresql+asyncpg://hsp@postgres:5432/hsp
+    HSP_PUBLIC_URL: ${HSP_PUBLIC_URL:?set HSP_PUBLIC_URL in .env}
+    # The API talks to Keycloak inside the stack; Keycloak still names its public URL as the
+    # issuer (KC_HOSTNAME_BACKCHANNEL_DYNAMIC below).
+    HSP_OIDC_ISSUER_URL: http://keycloak:8080/auth/realms/hsp
+    HSP_API_WORKERS: ${HSP_API_WORKERS:-4}
+  secrets: [hsp_database_password, hsp_session_encryption_key, hsp_oidc_client_secret]
+  logging: *logging
+
+services:
+  postgres:
+    image: postgis/postgis:18-3.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_superuser_password
+    secrets: [db_superuser_password, hsp_database_password, keycloak_db_password]
+    volumes:
+      - ${HSP_DATA_DIR:-/var/lib/hsp}/postgres:/var/lib/postgresql
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hsp"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    logging: *logging
+
+  # One-shot: brings the HSP schema up to date, then exits (docs/0056).
+  migrate:
+    <<: *hsp-api
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    <<: *hsp-api
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  keycloak:
+    image: hsp-keycloak:${HSP_VERSION}
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD_FILE: /run/secrets/keycloak_db_password
+      KC_HOSTNAME: ${HSP_PUBLIC_URL}/auth
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD_FILE: /run/secrets/keycloak_admin_password
+      # Filled into the hsp realm when it's first imported.
+      HSP_PUBLIC_URL: ${HSP_PUBLIC_URL}
+      HSP_OIDC_CLIENT_SECRET_FILE: /run/secrets/hsp_oidc_client_secret
+    secrets: [keycloak_db_password, keycloak_admin_password, hsp_oidc_client_secret]
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      # The image has no curl; ask the management port with bash's /dev/tcp.
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/localhost/9000 &&
+          printf 'GET /auth/health/ready HTTP/1.0\r\n\r\n' >&3 && grep -q '"UP"' <&3
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+    logging: *logging
+
+  web:
+    image: hsp-web:${HSP_VERSION}
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      HSP_PUBLIC_URL: ${HSP_PUBLIC_URL}
+      HSP_WEB_TLS: ${HSP_WEB_TLS:-on}
+      HSP_HSTS: ${HSP_HSTS:-on}
+      HSP_TRUSTED_PROXIES: ${HSP_TRUSTED_PROXIES:-}
+      HSP_KEYCLOAK_ADMIN_FROM: ${HSP_KEYCLOAK_ADMIN_FROM:-}
+    ports:
+      - "${HSP_BIND_ADDRESS:-0.0.0.0}:${HSP_HTTP_PORT:-80}:8080"
+      - "${HSP_BIND_ADDRESS:-0.0.0.0}:${HSP_HTTPS_PORT:-443}:8443"
+    volumes:
+      - ./tls:/etc/hsp/tls:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    logging: *logging
+
+secrets:
+  db_superuser_password: { file: ./secrets/db_superuser_password }
+  hsp_database_password: { file: ./secrets/hsp_database_password }
+  keycloak_db_password: { file: ./secrets/keycloak_db_password }
+  keycloak_admin_password: { file: ./secrets/keycloak_admin_password }
+  hsp_session_encryption_key: { file: ./secrets/hsp_session_encryption_key }
+  hsp_oidc_client_secret: { file: ./secrets/hsp_oidc_client_secret }

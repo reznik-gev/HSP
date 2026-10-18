@@ -2,23 +2,37 @@
 
 import base64
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal, Self
 
 from pydantic import Field, PostgresDsn, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import make_url
 
 # Fixed, publicly known key used ONLY when HSP_ENVIRONMENT=development, so dev sessions survive
 # API reloads. Any other environment must set HSP_SESSION_ENCRYPTION_KEY (docs/0077).
 DEV_SESSION_ENCRYPTION_KEY = base64.urlsafe_b64encode(b"hsp-development-only-session-key")
 
+#: Where Docker puts secret files (docs/0099). A setting can come from a file named after its
+#: variable in lower case, e.g. /run/secrets/hsp_oidc_client_secret; the environment wins.
+SECRETS_DIR = Path("/run/secrets")
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="HSP_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="HSP_",
+        env_file=".env",
+        extra="ignore",
+        secrets_dir=SECRETS_DIR if SECRETS_DIR.is_dir() else None,
+    )
 
     environment: Literal["development", "test", "production"] = "development"
     database_url: PostgresDsn = Field(
         default=PostgresDsn("postgresql+asyncpg://hsp:hsp@localhost:5432/hsp"),
     )
+    # Overrides the URL's password, so the URL can be plain config and the password a secret
+    # file (docs/0099).
+    database_password: SecretStr | None = None
     log_level: str = "INFO"
     log_json: bool = True
 
@@ -44,6 +58,13 @@ class Settings(BaseSettings):
 
     # Floor edit lock (docs/0016): expires unless the editor sends heartbeats.
     edit_lock_ttl_s: int = 900
+
+    def database_dsn(self) -> str:
+        """The database URL to connect with, including `database_password` if it's set."""
+        url = make_url(str(self.database_url))
+        if self.database_password is not None:
+            url = url.set(password=self.database_password.get_secret_value())
+        return url.render_as_string(hide_password=False)
 
     @property
     def is_development(self) -> bool:
