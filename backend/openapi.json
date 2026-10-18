@@ -5901,7 +5901,7 @@
     },
     "/api/v1/floors/{floor_id}/draft/publish": {
       "post": {
-        "description": "Make the draft the published version (docs/0082). `base_revision` must be the revision\nyou reviewed. 409 publish-conflicts lists seat-label and device problems. Assigned seats the\ndraft removes or makes non-assignable are freed, and listed in `freed_seats` (docs/0086).",
+        "description": "Make the draft the published version (docs/0082). `base_revision` must be the revision\nyou reviewed. 409 publish-conflicts lists every problem: the plan rules over the whole draft\n(docs/0081), duplicate seat labels and devices placed elsewhere. Assigned seats the\ndraft removes or makes non-assignable are freed, and listed in `freed_seats` (docs/0086).",
         "operationId": "publish_draft_api_v1_floors__floor_id__draft_publish_post",
         "parameters": [
           {

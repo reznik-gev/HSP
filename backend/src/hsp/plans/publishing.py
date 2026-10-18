@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from hsp import models
 from hsp.audit import audit_event
 from hsp.auth.principal import Principal
-from hsp.plans.changeset import ATTR, KINDS, Element, Kind
+from hsp.plans.changeset import ATTR, KINDS, Element, Kind, needed_references, validate
 from hsp.plans.drafts import REV_MODEL, DraftRepository, DraftsService
 from hsp.plans.schema import PlanContent
 from hsp.problems import ProblemError, ProblemException
@@ -339,7 +339,10 @@ class PublishingService:
         content = await self.drafts.load_content(self._tenant, floor_id, draft.version)
         before = await self._published_content(floor_id, published)
         seat_ids = {o.id for o in content.objects} | {o.id for o in before.objects}
-        problems = publish_conflicts(
+        # Saves only refuse problems in the elements they touch, and a restored version is an
+        # exact copy, so the whole draft is checked again before it goes live (docs/0051, 0082).
+        refs = await self.drafts.load_references(self._tenant, *needed_references(content, []))
+        problems = validate(content, refs) + publish_conflicts(
             content,
             before,
             await self.repo.seat_labels_elsewhere(self._tenant, floor_id),
