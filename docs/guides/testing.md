@@ -28,9 +28,9 @@ We use the usual vocabulary ([Martin Fowler, *Test Double*](https://martinfowler
 
 | Double | Means | Ours |
 |---|---|---|
-| **Stub** | Canned data or canned answers. | `frontend/src/test/stubs.ts`, `backend/tests/stubs.py`, and the `stub_*` builders in `backend/tests/db/plan_helpers.py`. |
-| **Fake** | A working, simplified implementation. | `backend/tests/fakes.py`: `InMemoryLocationsRepository`, `InMemoryPlanRepository`, and so on. |
-| **Spy** | Records how it was called, for the test to check afterwards. | `spyBackend` (used by `renderApp`) answers with canned replies and records every request in `calls`. |
+| **Stub** | Canned data or canned answers. | `frontend/src/test/stubs.ts`, `backend/tests/stubs.py` (with the signed-in users `STUB_ADMIN`, `STUB_VIEWER`), and the `stub_*` builders in `backend/tests/db/plan_helpers.py`. |
+| **Fake** | A working, simplified implementation. | `backend/tests/fakes.py`: `InMemoryLocationsRepository`, `InMemoryPlanRepository`, and so on; `FakeIdP` in `backend/tests/unit/auth/fake_idp.py`. |
+| **Spy** | Records how it was called, for the test to check afterwards. | `spyBackend` (used by `renderApp`) answers with canned replies and records every request in `calls`; `SpyRefresher` counts token refreshes. |
 | **Mock** | Expects particular calls and fails the test itself if they don't come. | Not used: we check results and recorded requests instead. |
 
 Names say which kind a thing is, and a double that does several jobs is **named after the strongest one** (mock > spy > fake > stub): `spyBackend` gives canned answers like a stub, but it also records calls, so it's a spy.
@@ -60,7 +60,8 @@ Extend the world rather than inventing a parallel one: a second person is `stubP
 - **A fixture's name says what it is or what it's for**, not just its type: `admin_editing_new_floor`, not `ctx`; `rolled_back_db_session`, not `db`.
 - The test body **runs the code under test and asserts**. Data generation, closures and helper functions inside a test are a sign that a fixture or stub is missing.
 - Parametrised data goes through a fixture too: the shared validation cases are a `case` fixture feeding `content`, `refs`, `names` and `expected`.
-- **Split test files by area** (for example drafts → `test_versions.py`, `test_guards.py`, `test_rules.py`), so a failure's file name already says what broke.
+- **API unit tests** use `tests/unit/conftest.py`: `api` is a test client of the app, signed in as `signed_in.principal` (`STUB_ADMIN` until the test sets another user, e.g. `signed_in.principal = STUB_VIEWER`). `locations_repo` plugs in an empty in-memory locations store; create sites, buildings and floors through the API with `create_site`, `create_building` and `create_floor` (`tests/unit/api_helpers.py`) rather than writing rows into a fake.
+- **Split test files by area** (for example drafts → `test_versions.py`, `test_guards.py`, `test_rules.py`; the changeset engine → `tests/unit/changeset/`; sign-in → `tests/unit/auth/`), so a failure's file name already says what broke.
 
 ### 4. Frontend screen tests
 - Render **the whole app** at a path with `renderApp(path, routes)`. Give it only the routes the screen needs, built with the `stub…Routes` helpers.
