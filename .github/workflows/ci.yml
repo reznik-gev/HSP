@@ -27,6 +27,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      images: ${{ steps.filter.outputs.images }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -41,6 +42,13 @@ jobs:
               - "frontend/**"
               - "shared/**"
               - "backend/openapi.json"
+              - ".github/workflows/ci.yml"
+            images:
+              - "backend/**"
+              - "frontend/**"
+              - "deploy/web/**"
+              - "deploy/keycloak/**"
+              - "deploy/*.sh"
               - ".github/workflows/ci.yml"
 
   backend:
@@ -124,9 +132,24 @@ jobs:
       - name: Build
         run: pnpm build
 
+  # Build the production images and smoke-test them (docs/0097). Nothing is pushed.
+  images:
+    needs: changes
+    if: needs.changes.outputs.images == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      # Exposes the Actions cache token to `docker buildx` for the gha build cache.
+      - uses: crazy-max/ghaction-github-runtime@v4
+      - name: Build hsp-api, hsp-web and hsp-keycloak
+        run: HSP_BUILD_CACHE=gha deploy/build-images.sh
+      - name: Smoke test
+        run: deploy/smoke-images.sh
+
   ci-ok:
     if: always()
-    needs: [changes, backend, frontend]
+    needs: [changes, backend, frontend, images]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped
