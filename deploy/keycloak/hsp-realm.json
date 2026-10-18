@@ -3,6 +3,11 @@
   "enabled": true,
   "displayName": "HSP",
   "sslRequired": "external",
+  "bruteForceProtected": true,
+  "failureFactor": 10,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "maxDeltaTimeSeconds": 43200,
   "roles": {
     "realm": [
       { "name": "hsp-admin", "description": "Full access in v1 (docs/0027)" }

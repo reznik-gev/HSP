@@ -1,18 +1,23 @@
 #!/usr/bin/env bash
 # Smoke-test the HSP images built by deploy/build-images.sh (docs/0097). CI runs it on PRs.
 #   deploy/smoke-images.sh [version]      # default 0.0.0-dev
-# Checks that each image starts and answers: the API's /healthz and its migrate tooling, the web
-# image's app and health ports, and Keycloak starting optimized against PostgreSQL with the realm
-# imported. Ports 18000-18082 and 19000 on this machine must be free.
+# Checks that each image starts and answers: the API's /healthz and its migrate tooling; the web
+# image in both TLS modes (docs/0098), serving the app, proxying to the API and closing Keycloak's
+# admin console; and Keycloak starting optimized against PostgreSQL with the realm imported.
+# Ports 18000-18088, 18443 and 19000 on this machine must be free; needs curl and openssl.
 set -euo pipefail
 
 version="${1:-0.0.0-dev}"
 run="hsp-smoke-$$"
 net="$run-net"
+tmp="$(mktemp -d)"
+tls="$tmp/tls"
+mkdir "$tls"
 
 cleanup() {
-  docker rm -f "$run-api" "$run-web" "$run-db" "$run-kc" >/dev/null 2>&1 || true
+  docker rm -f "$run-api" "$run-web" "$run-web-tls" "$run-db" "$run-kc" >/dev/null 2>&1 || true
   docker network rm "$net" >/dev/null 2>&1 || true
+  rm -rf "$tmp"
 }
 trap cleanup EXIT
 
@@ -35,10 +40,15 @@ expect() {
   echo "ok: $1"
 }
 
+# status <curl options and URL>: the HTTP status (and redirect target), without the body.
+status() {
+  curl -sS -w '\n%{http_code} %{redirect_url}' "$@" | tail -n 1
+}
+
 docker network create "$net" >/dev/null
 
 echo "== hsp-api"
-docker run -d --name "$run-api" -p 18000:8000 \
+docker run -d --name "$run-api" --network "$net" --network-alias api -p 18000:8000 \
   -e HSP_SESSION_ENCRYPTION_KEY="$(head -c 32 /dev/urandom | base64 | tr '+/' '-_')" \
   -e HSP_OIDC_CLIENT_SECRET=smoke-secret \
   -e HSP_API_WORKERS=2 \
@@ -48,14 +58,56 @@ expect "api /healthz reports the version" "$(curl -fsS http://localhost:18000/he
 expect "api runs as non-root" "$(docker exec "$run-api" id -u)" "10001"
 expect "migrate job has the migrations" "$(docker run --rm "hsp-api:$version" alembic heads)" "(head)"
 
-echo "== hsp-web"
-docker run -d --name "$run-web" -p 18080:8080 -p 18081:8081 "hsp-web:$version" >/dev/null
+echo "== hsp-web, HSP_WEB_TLS=off (behind a trusted proxy)"
+docker run -d --name "$run-web" --network "$net" -p 18080:8080 -p 18081:8081 \
+  -e HSP_WEB_TLS=off -e HSP_TRUSTED_PROXIES=0.0.0.0/0 "hsp-web:$version" >/dev/null
 wait_for http://localhost:18081/healthz 30 || { docker logs "$run-web"; exit 1; }
 expect "web /healthz reports the version" "$(curl -fsS http://localhost:18081/healthz)" "\"version\":\"$version\""
 expect "web serves the app" "$(curl -fsS http://localhost:18080/)" '<div id="root">'
 expect "web serves client routes from index.html" "$(curl -fsS http://localhost:18080/floors/x)" '<div id="root">'
-expect "web never caches index.html" "$(curl -fsSI http://localhost:18080/)" "no-cache"
+headers="$(curl -fsSI http://localhost:18080/)"
+expect "web never caches index.html" "$headers" "no-cache"
+expect "web sends the content security policy" "$headers" "frame-ancestors 'none'"
+[[ "$headers" != *Strict-Transport-Security* ]] || { echo "FAIL: HSTS sent without TLS" >&2; exit 1; }
+echo "ok: no HSTS without TLS"
+asset="$(curl -fsS http://localhost:18080/ | grep -o -m1 '/assets/index-[^"]*\.js')"
+expect "web serves assets gzipped" \
+  "$(curl -fsSI -H 'Accept-Encoding: gzip' "http://localhost:18080$asset")" "Content-Encoding: gzip"
+expect "web proxies /api to the API" \
+  "$(curl -sS -H 'X-Request-ID: smoke-1' -D - http://localhost:18080/api/v1/auth/me)" "x-request-id: smoke-1"
+expect "web closes Keycloak's admin console" \
+  "$(status http://localhost:18080/auth/admin/)" "404"
+expect "web shows the maintenance page while Keycloak is down" \
+  "$(curl -sS -w ' status=%{http_code}' http://localhost:18080/auth/realms/hsp/account)" "status=503"
+docker stop -t 2 "$run-api" >/dev/null
+expect "web answers a Problem Details 503 while the API is down" \
+  "$(curl -sS -w ' status=%{http_code}' http://localhost:18080/api/v1/floors)" "problems/maintenance"
+docker start "$run-api" >/dev/null
 expect "web runs as non-root" "$(docker exec "$run-web" id -u)" "101"
+
+echo "== hsp-web, HSP_WEB_TLS=on"
+# Relative paths: Git for Windows' openssl doesn't understand /tmp.
+(cd "$tls" && openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=localhost" \
+  -keyout tls.key -out tls.crt 2>/dev/null)
+chmod 644 "$tls/tls.key"  # test key only: readable by nginx's user after docker cp
+docker create --name "$run-web-tls" --network "$net" -p 18088:8080 -p 18443:8443 \
+  -e HSP_PUBLIC_URL=https://localhost:18443 -e HSP_KEYCLOAK_ADMIN_FROM=10.99.0.0/16 \
+  -e HSP_TLS_CERT=/tmp/tls/tls.crt -e HSP_TLS_KEY=/tmp/tls/tls.key "hsp-web:$version" >/dev/null
+# Streamed as a tar, so it works the same from Git Bash on Windows.
+tar -C "$tmp" -cf - tls | docker cp - "$run-web-tls:/tmp"
+docker start "$run-web-tls" >/dev/null
+for _ in $(seq 30); do curl -ksS https://localhost:18443/ >/dev/null 2>&1 && break; sleep 1; done
+expect "web redirects HTTP to the public HTTPS address" \
+  "$(status 'http://localhost:18088/floors?x=1')" \
+  "301 https://localhost:18443/floors?x=1"
+headers="$(curl -ksSI https://localhost:18443/ | tr '[:upper:]' '[:lower:]')"
+expect "web serves the app over HTTPS" "$headers" " 200"
+expect "web sends HSTS for this host only" "$headers" "strict-transport-security: max-age=31536000"
+expect "web refuses TLS 1.1" "$(curl -ksS --tls-max 1.1 https://localhost:18443/ 2>&1 || true)" "alert"
+expect "web limits Keycloak's admin console to HSP_KEYCLOAK_ADMIN_FROM" \
+  "$(status -k https://localhost:18443/auth/admin/)" "403"
+expect "web refuses to start with TLS on and no certificate" \
+  "$(docker run --rm -e HSP_PUBLIC_URL=https://x "hsp-web:$version" 2>&1 || true)" "no certificate"
 
 echo "== hsp-keycloak"
 docker run -d --name "$run-db" --network "$net" \

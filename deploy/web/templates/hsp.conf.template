@@ -1,24 +1,35 @@
-# HSP web server (docs/0060, docs/0097). nginx's entrypoint renders this file with envsubst into
-# /etc/nginx/conf.d/ at start, so ${VARIABLES} come from the container's environment.
+# HSP web: settings for every server (docs/0060, docs/0097, docs/0098). nginx's entrypoint
+# renders this file with envsubst into /etc/nginx/conf.d/ at start, so ${HSP_*} come from the
+# environment. The servers themselves are written by /docker-entrypoint.d/40-hsp.sh, because
+# which ones exist depends on HSP_WEB_TLS.
 
-server {
-    listen 8080;
-    server_name _;
-    root /usr/share/nginx/html;
+# Upstreams are resolved per request, so hsp-web starts (and serves the app and its maintenance
+# answers) even while the API or Keycloak is down.
+resolver ${HSP_RESOLVER} valid=10s ipv6=off;
 
-    # Built assets have content hashes in their names: cache them for good.
-    location /assets/ {
-        add_header Cache-Control "public, max-age=31536000, immutable";
-        try_files $uri =404;
-    }
-
-    # Single-page app: every other path is a client route, served by index.html, never cached
-    # so a new release is picked up on the next page load.
-    location / {
-        add_header Cache-Control "no-cache";
-        try_files $uri /index.html;
-    }
+# Keep the client's request id, or make one, and pass it on: nginx, API and audit logs share it.
+map $http_x_request_id $hsp_request_id {
+    default $http_x_request_id;
+    ""      $request_id;
 }
+
+log_format hsp_json escape=json
+    '{"time":"$time_iso8601","request_id":"$hsp_request_id","client":"$remote_addr",'
+    '"method":"$request_method","uri":"$request_uri","status":$status,'
+    '"bytes":$body_bytes_sent,"duration_s":$request_time,"upstream_s":"$upstream_response_time",'
+    '"user_agent":"$http_user_agent"}';
+access_log /dev/stdout hsp_json;
+
+server_tokens off;
+# Imports are limited to 10 MB by the API; leave room for the multipart envelope.
+client_max_body_size 12m;
+
+gzip on;
+gzip_proxied any;
+gzip_min_length 1024;
+gzip_vary on;
+gzip_types application/json application/problem+json application/javascript text/css
+           text/plain image/svg+xml;
 
 # Health for Docker and Kubernetes probes. Port 8081 is never published.
 server {
