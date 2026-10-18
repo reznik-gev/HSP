@@ -3,8 +3,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from hsp.auth.principal import Principal
 from hsp.models import new_id
-from tests.stubs import STUB_ADMIN, STUB_CSRF_HEADER, STUB_VIEWER
 from tests.unit.api_helpers import SignedIn
 
 ID = new_id()
@@ -42,9 +42,13 @@ WRITES = [
 
 @pytest.mark.parametrize(("method", "url"), WRITES)
 def test_viewer_and_missing_csrf_are_refused(
-    api: TestClient, signed_in: SignedIn, method: str, url: str
+    api: TestClient,
+    api_without_csrf: TestClient,
+    signed_in: SignedIn,
+    viewer: Principal,
+    method: str,
+    url: str,
 ) -> None:
-    signed_in.principal = STUB_VIEWER
-    assert getattr(api, method)(url, headers=STUB_CSRF_HEADER).status_code == 403
-    signed_in.principal = STUB_ADMIN
-    assert getattr(api, method)(url).status_code == 403  # no CSRF header
+    assert getattr(api_without_csrf, method)(url).status_code == 403  # an admin, but no CSRF
+    signed_in.principal = viewer
+    assert getattr(api, method)(url).status_code == 403

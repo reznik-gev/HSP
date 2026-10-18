@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from hsp.models import SeatAssignment, new_id
 from tests.fakes import InMemoryLocationsRepository
-from tests.stubs import STUB_CSRF_HEADER, STUB_TENANT
+from tests.stubs import STUB_TENANT
 from tests.unit.api_helpers import create_building, create_floor, create_site
 
 pytestmark = pytest.mark.usefixtures("locations_repo")
@@ -47,7 +47,6 @@ def test_duplicate_code_in_site_is_409(api: TestClient, site_id: str) -> None:
     r = api.post(
         "/api/v1/buildings",
         json={"site_id": site_id, "name": "x", "code": "A"},
-        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == 409
     assert r.json()["type"].endswith("/code-taken")
@@ -55,22 +54,21 @@ def test_duplicate_code_in_site_is_409(api: TestClient, site_id: str) -> None:
     b = create_building(api, site_id, "B")
     to_a = {"code": "A"}
     assert (
-        api.patch(f"/api/v1/buildings/{b['id']}", json=to_a, headers=STUB_CSRF_HEADER).status_code
+        api.patch(f"/api/v1/buildings/{b['id']}", json=to_a).status_code
         == 409
     )
     assert (
-        api.patch(f"/api/v1/buildings/{a['id']}", json=to_a, headers=STUB_CSRF_HEADER).status_code
+        api.patch(f"/api/v1/buildings/{a['id']}", json=to_a).status_code
         == 200
     )
 
 
 def test_archived_building_still_owns_its_code(api: TestClient, site_id: str) -> None:
     a = create_building(api, site_id, "A")
-    api.delete(f"/api/v1/buildings/{a['id']}", headers=STUB_CSRF_HEADER)
+    api.delete(f"/api/v1/buildings/{a['id']}")
     r = api.post(
         "/api/v1/buildings",
         json={"site_id": site_id, "name": "x", "code": "A"},
-        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == 409
     assert "archived building" in r.json()["detail"]
@@ -80,15 +78,13 @@ def test_unknown_or_archived_site(api: TestClient, site_id: str) -> None:
     r = api.post(
         "/api/v1/buildings",
         json={"site_id": str(new_id()), "name": "x", "code": "A"},
-        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == 422
     assert r.json()["errors"][0]["pointer"] == "/site_id"
-    api.delete(f"/api/v1/sites/{site_id}", headers=STUB_CSRF_HEADER)
+    api.delete(f"/api/v1/sites/{site_id}")
     r = api.post(
         "/api/v1/buildings",
         json={"site_id": site_id, "name": "x", "code": "A"},
-        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == 409
     assert r.json()["type"].endswith("/parent-archived")
@@ -104,7 +100,7 @@ def test_archive_cascades_to_floors_and_frees_their_seats(
     b = create_building(api, site_id)
     floor = create_floor(api, b["id"], 0)
     locations_repo.seat_assignments[uuid.UUID(floor["id"])] = [assignment_of_seat_to_person()]
-    r = api.delete(f"/api/v1/buildings/{b['id']}", headers=STUB_CSRF_HEADER)
+    r = api.delete(f"/api/v1/buildings/{b['id']}")
     assert r.status_code == 200
     body = r.json()
     assert [a["name"] for a in body["archived"]] == ["Building A (Building A)", "L0"]
@@ -122,11 +118,11 @@ def test_restore_is_top_down(
     api: TestClient, site_id: str, locations_repo: InMemoryLocationsRepository
 ) -> None:
     b = create_building(api, site_id)
-    assert api.delete(f"/api/v1/buildings/{b['id']}", headers=STUB_CSRF_HEADER).status_code == 200
-    assert api.delete(f"/api/v1/sites/{site_id}", headers=STUB_CSRF_HEADER).status_code == 200
+    assert api.delete(f"/api/v1/buildings/{b['id']}").status_code == 200
+    assert api.delete(f"/api/v1/sites/{site_id}").status_code == 200
     restore_building = f"/api/v1/buildings/{b['id']}/restore"
-    assert api.post(restore_building, headers=STUB_CSRF_HEADER).status_code == 409
-    assert api.post(f"/api/v1/sites/{site_id}/restore", headers=STUB_CSRF_HEADER).status_code == 200
-    assert api.post(restore_building, headers=STUB_CSRF_HEADER).status_code == 200
+    assert api.post(restore_building).status_code == 409
+    assert api.post(f"/api/v1/sites/{site_id}/restore").status_code == 200
+    assert api.post(restore_building).status_code == 200
     actions = [e.action for e in locations_repo.events if e.entity_type == "building"]
     assert actions == ["building.created", "building.archived", "building.restored"]

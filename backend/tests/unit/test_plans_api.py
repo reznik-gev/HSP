@@ -7,10 +7,11 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from hsp.api.plans import get_plan_repository
+from hsp.auth.principal import Principal
 from hsp.models import new_id
 from hsp.plans.schema import FloorVersion, PlanContent
 from tests.fakes import InMemoryPlanRepository
-from tests.stubs import STUB_TENANT, STUB_VIEWER, stub_placed_object
+from tests.stubs import STUB_TENANT, stub_placed_object
 from tests.unit.api_helpers import SignedIn
 
 FLOOR = new_id()
@@ -54,12 +55,14 @@ def plan_repo(app: FastAPI) -> InMemoryPlanRepository:
     return repo
 
 
-def test_admin_sees_all_versions_viewer_only_public(api: TestClient, signed_in: SignedIn) -> None:
+def test_admin_sees_all_versions_viewer_only_public(
+    api: TestClient, signed_in: SignedIn, viewer: Principal
+) -> None:
     url = f"/api/v1/floors/{FLOOR}/versions"
     page = api.get(url).json()
     assert page["next_cursor"] is None
     assert [v["state"] for v in page["items"]] == ["superseded", "published", "draft"]
-    signed_in.principal = STUB_VIEWER
+    signed_in.principal = viewer
     assert [v["version"] for v in api.get(url).json()["items"]] == [1, 2]
 
 
@@ -70,9 +73,9 @@ def test_plan_of_a_version(api: TestClient) -> None:
 
 
 def test_viewer_gets_404_for_draft_version_and_403_for_draft(
-    api: TestClient, signed_in: SignedIn
+    api: TestClient, signed_in: SignedIn, viewer: Principal
 ) -> None:
-    signed_in.principal = STUB_VIEWER
+    signed_in.principal = viewer
     assert api.get(f"/api/v1/floors/{FLOOR}/versions/3").status_code == 404  # not revealed
     assert api.get(f"/api/v1/floors/{FLOOR}/draft").status_code == 403
 
@@ -93,12 +96,12 @@ def test_no_draft_is_404(api: TestClient, plan_repo: InMemoryPlanRepository) -> 
     assert r.json()["type"].endswith("/no-draft")
 
 
-def test_diff_between_versions(api: TestClient, signed_in: SignedIn) -> None:
+def test_diff_between_versions(api: TestClient, signed_in: SignedIn, viewer: Principal) -> None:
     diff = api.get(f"/api/v1/floors/{FLOOR}/versions/1/diff/2").json()
     assert diff["objects"]["changed"] == [
         {"id": str(DESK), "before": {"position": [1000, 0, 0]}, "after": {"position": [2000, 0, 0]}}
     ]
-    signed_in.principal = STUB_VIEWER
+    signed_in.principal = viewer
     assert api.get(f"/api/v1/floors/{FLOOR}/versions/2/diff/3").status_code == 404  # draft hidden
 
 

@@ -16,7 +16,7 @@ from hsp.plans.schema import CatalogItem, PlacedObject
 STUB_TENANT = new_id()
 STUB_CSRF_TOKEN = "csrf"
 #: The header a write request needs (docs/0038).
-STUB_CSRF_HEADER = {"X-CSRF-Token": STUB_CSRF_TOKEN}
+STUB_CSRF_HEADER_NAME = "X-CSRF-Token"
 
 
 def stub_admin(
@@ -33,11 +33,6 @@ def stub_viewer(
 ) -> Principal:
     """A signed-in user without the admin role: read-only (docs/0027)."""
     return Principal(subject, name, None, frozenset(), tenant, new_id(), STUB_CSRF_TOKEN)
-
-
-STUB_ADMIN = stub_admin()
-STUB_OTHER_ADMIN = stub_admin(subject="bob", name="Bob")
-STUB_VIEWER = stub_viewer()
 
 
 def stub_catalog_item(rev: uuid.UUID, key: str, category: str, **over: Any) -> CatalogItem:
