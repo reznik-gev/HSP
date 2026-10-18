@@ -9,20 +9,17 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from hsp.auth.principal import Principal
-from tests.stubs import STUB_ADMIN, STUB_CSRF_HEADER
 
 
 @dataclass
 class SignedIn:
     """Who the `api` client's requests run as. A test switches user by setting `principal`."""
 
-    principal: Principal = STUB_ADMIN
+    principal: Principal
 
 
 def create_site(api: TestClient, name: str = "HQ", time_zone: str = "UTC") -> dict[str, Any]:
-    r = api.post(
-        "/api/v1/sites", json={"name": name, "time_zone": time_zone}, headers=STUB_CSRF_HEADER
-    )
+    r = api.post("/api/v1/sites", json={"name": name, "time_zone": time_zone})
     assert r.status_code == 201, r.text
     body: dict[str, Any] = r.json()
     return body
@@ -34,7 +31,6 @@ def create_building(
     r = api.post(
         "/api/v1/buildings",
         json={"site_id": site_id, "name": f"Building {code}", "code": code},
-        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == expect, r.text
     body: dict[str, Any] = r.json()
@@ -47,7 +43,6 @@ def create_floor(
     r = api.post(
         "/api/v1/floors",
         json={"building_id": building_id, "name": f"L{level}", "level_index": level, **extra},
-        headers=STUB_CSRF_HEADER,
     )
     assert r.status_code == expect, r.text
     body: dict[str, Any] = r.json()
