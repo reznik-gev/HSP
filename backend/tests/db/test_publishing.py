@@ -10,7 +10,20 @@ from hsp.models import new_id
 from hsp.plans.drafts import SqlDraftRepository
 from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
 from hsp.problems import ProblemException
-from tests.db.plan_helpers import add, apply, lock, make_floor, plan, stub_desk, stub_wall
+from tests.db.plan_helpers import (
+    add,
+    apply,
+    lock,
+    make_floor,
+    plan,
+    stub_desk,
+    stub_wall,
+    stub_zone,
+)
+
+PARENT, CHILD = new_id(), new_id()
+#: The outline of stub_zone moved 2 m east, written straight into the database.
+MOVED_2_M = "POLYGON((2000 0, 6000 0, 6000 3000, 2000 3000, 2000 0))"
 
 
 def publishing(admin_editing_new_floor: dict[str, Any]) -> PublishingService:
@@ -127,6 +140,32 @@ async def test_restore_brings_back_an_old_version_exactly(
     with pytest.raises(ProblemException) as exc:
         await publishing(admin_editing_new_floor).restore(admin_editing_new_floor["floor"], 1)
     assert exc.value.slug == "draft-exists"  # never overwrite unsaved work
+
+
+async def test_publish_checks_the_whole_draft_not_only_what_saves_touched(
+    admin_editing_new_floor: dict[str, Any],
+) -> None:
+    await apply(
+        admin_editing_new_floor,
+        0,
+        add("zone", PARENT, **stub_zone(admin_editing_new_floor, name="Wing")),
+        add(
+            "zone",
+            CHILD,
+            **stub_zone(admin_editing_new_floor, name="Pod", parent_zone_id=str(PARENT)),
+        ),
+    )
+    # A zone saved before a rule existed, or restored from an old version: no save refused it.
+    await admin_editing_new_floor["db"].execute(
+        text("UPDATE zone_rev SET boundary = ST_GeomFromText(:b) WHERE element_id = :child"),
+        {"b": MOVED_2_M, "child": CHILD},
+    )
+    with pytest.raises(ProblemException) as exc:
+        await publish(admin_editing_new_floor, 1)
+    assert exc.value.slug == "publish-conflicts"
+    assert [(e.code, e.element_id) for e in exc.value.errors or []] == [
+        ("zone_outside_parent", str(CHILD))
+    ]
 
 
 async def test_publish_conflicts_labels_devices_and_assignments(
