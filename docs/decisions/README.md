@@ -63,7 +63,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0052 | 2026-10-08 | [SVG commitment: renderer-agnostic core + performance gate](0052-2026-10-08-svg-commitment-and-performance-gate.md) | Accepted (v1 bounds lowered by 0074) |
 | 0053 | 2026-10-08 | [Code hosting & CI: GitHub + Actions](0053-2026-10-08-code-hosting-and-ci.md) | Accepted (partially superseded by 0068; refined by 0070) |
 | 0054 | 2026-10-08 | [Release distribution: offline bundle only](0054-2026-10-08-release-distribution.md) | Accepted |
-| 0055 | 2026-10-08 | [Deployment target: Docker Compose, single host](0055-2026-10-08-deployment-target.md) | Accepted (images refined by 0097) |
+| 0055 | 2026-10-08 | [Deployment target: Docker Compose, single host](0055-2026-10-08-deployment-target.md) | Accepted (images refined by 0097, the stack by 0099) |
 | 0056 | 2026-10-08 | [Upgrades: maintenance window + migrate job](0056-2026-10-08-upgrades-and-migrations.md) | Accepted |
 | 0057 | 2026-10-08 | [Observability: standard outputs + optional stack](0057-2026-10-08-observability.md) | Accepted |
 | 0058 | 2026-10-08 | [Backups: built-in scheduled dumps](0058-2026-10-08-backups.md)           | Accepted |
@@ -107,4 +107,5 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0096 | 2026-10-16 | [Test data and test-double conventions](0096-2026-10-16-test-conventions.md) | Accepted |
 | 0097 | 2026-10-18 | [Production container images](0097-2026-10-18-production-images.md) | Accepted (refined by 0098) |
 | 0098 | 2026-10-18 | [The web entry point: TLS modes, compression, HSTS and the Keycloak console](0098-2026-10-18-web-entry-point.md) | Accepted |
+| 0099 | 2026-10-18 | [The production Compose stack: secrets, data and how it's wired](0099-2026-10-18-production-compose.md) | Accepted |
 | 0100 | 2026-10-19 | [The @claude bot runs the checks and searches the web](0100-2026-10-19-claude-bot-tools.md) | Accepted |
