@@ -89,12 +89,13 @@ chmod 444 "$install"/secrets/* "$install"/tls/*
 
 echo "== Start"
 compose up -d || { compose ps -a >&2; compose logs --tail 80 >&2; exit 1; }
-# Wait until postgres, api, keycloak and web are healthy and migrate has finished.
+# Wait until every service is healthy and migrate has finished. No service names or count here,
+# so a service added to compose.yml is waited for too.
 healthy=""
 for _ in $(seq 60); do
   states="$(compose ps -a --format '{{.Service}}={{.State}}/{{.Health}}/{{.ExitCode}}')"
   if [[ "$states" == *"migrate=exited//0"* ]] &&
-    [[ "$(grep -c '=running/healthy/' <<<"$states")" == 4 ]]; then
+    ! grep -v '^migrate=' <<<"$states" | grep -qv '=running/healthy/'; then
     healthy=1
     break
   fi
