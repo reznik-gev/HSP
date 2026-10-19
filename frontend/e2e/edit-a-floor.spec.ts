@@ -5,17 +5,10 @@
  */
 import { expect, type Page, test } from "@playwright/test";
 
+import { signIn } from "./session";
+
 const tag = Math.random().toString(36).slice(2, 7);
 const API = "/api/v1";
-
-async function signIn(page: Page, user: string) {
-  await page.goto("/floors");
-  await page.waitForURL(/\/realms\/hsp\//);
-  await page.fill("#username", user);
-  await page.fill("#password", user);
-  await page.click("#kc-login");
-  await page.waitForURL(/\/floors$/);
-}
 
 /** Screen position of a plan point (mm, +y north), read from the plan's viewBox. */
 async function planPoint(page: Page) {
