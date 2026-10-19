@@ -9,6 +9,7 @@ How changes get from a branch to `main`: branches, commits, reviews and merging.
 
 ## Pull requests
 - The description says what changes for the user, how it's built, what was decided along the way and how it was tested, including what wasn't tested.
+- A PR that changes something users or operators notice adds a line to `CHANGELOG.md` under **Unreleased** ([how](releasing.md#between-releases-keep-the-changelog)).
 - `ci-ok` must pass before a PR merges.
 - **Claude reviews** each PR when it's opened or marked ready, for guide and decision compliance and maintainability ([0101](../decisions/0101-2026-10-19-claude-reviews-only.md)). After review fixes, comment `@claude review` to have it look again. Mention `@claude` anywhere else to ask it something. It answers with comments and suggestions and never changes code; coding happens in Claude Code sessions.
 

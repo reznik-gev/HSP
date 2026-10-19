@@ -6,6 +6,7 @@ HSP (Human-Space Program) manages office space: sites, buildings and floors draw
 - [docs/decisions/](docs/decisions/README.md): every product and technical decision, numbered and indexed. Follow them. An accepted record is never edited; a new record supersedes it.
 - [docs/guides/git.md](docs/guides/git.md): branches, commits, review fixes and merging.
 - [docs/guides/stacked-prs.md](docs/guides/stacked-prs.md): stacked PRs with `gh stack`.
+- [docs/guides/releasing.md](docs/guides/releasing.md): the changelog, and how a release is built, tested and published.
 - [docs/guides/testing.md](docs/guides/testing.md): how tests are written, with a review checklist.
 - [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md): commands, layout and conventions for each side.
 - [shared/validation-cases/](shared/validation-cases/README.md): plan rules as data, run by both sides.
