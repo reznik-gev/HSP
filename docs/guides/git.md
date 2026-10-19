@@ -10,6 +10,7 @@ How changes get from a branch to `main`: branches, commits, reviews and merging.
 ## Pull requests
 - The description says what changes for the user, how it's built, what was decided along the way and how it was tested, including what wasn't tested.
 - `ci-ok` must pass before a PR merges.
+- **Claude reviews** each PR when it's opened or marked ready, for guide and decision compliance and maintainability ([0101](../decisions/0101-2026-10-19-claude-reviews-only.md)). After review fixes, comment `@claude review` to have it look again. Mention `@claude` anywhere else to ask it something. It answers with comments and suggestions and never changes code; coding happens in Claude Code sessions.
 
 ## Review fixes are new commits
 **Fixes for review comments always go in as new commits on top of the PR.** Never amend, squash, fixup or otherwise rewrite commits that have been reviewed, so the reviewer can see exactly what changed since they looked.

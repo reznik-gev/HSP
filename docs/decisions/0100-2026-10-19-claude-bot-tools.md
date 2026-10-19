@@ -1,7 +1,7 @@
 # 0100 — The @claude bot runs the checks and searches the web
 
 - **Date:** 2026-10-19
-- **Status:** Accepted
+- **Status:** Superseded by [0101](0101-2026-10-19-claude-reviews-only.md): the bot reviews and never changes code.
 
 ## Context
 The owner wants to handle review fixes by mentioning `@claude` on a PR. The first try, on #84 and #85, showed two problems:
