@@ -102,6 +102,7 @@ const PLAN_CSS = `
     stroke-width: 36px;
     stroke-linejoin: round;
   }
+  .plan-label-backing { fill: var(--plan-paper); }
   /* When seats are coloured, other furniture steps back so the seat states read first. */
   svg[data-seat-view] .plan-furniture { fill-opacity: 0.45; }
   .plan-selected { stroke: var(--primary); }
@@ -402,18 +403,48 @@ const ObjectShape = memo(function ObjectShape({
   );
 });
 
+/** Room around a label's text inside its backing, in plan millimetres. */
+const LABEL_PAD = 40;
+
+/** A label sits on a paper-coloured box the size of its text, so a monitor at the middle of a
+ *  desk can't show through between the letters and read as a strike-through. */
 const Label = memo(function Label({ obj, copy = false }: { obj: PlacedObject; copy?: boolean }) {
+  const text = useRef<SVGTextElement>(null);
+  const [box, setBox] = useState<DOMRect | null>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      // jsdom has no layout, so no getBBox: tests draw the label without its backing.
+      if (text.current?.getBBox) setBox(text.current.getBBox());
+    };
+    measure();
+    // The text's width changes once the web font has loaded.
+    void document.fonts?.ready.then(measure);
+  }, [obj.label]);
   return (
-    <text
+    <g
       id={copy ? undefined : `l-${obj.id}`}
-      className="plan-label"
       transform={`translate(${obj.position[0]} ${obj.position[1]}) scale(1 -1)`}
-      fontSize={180}
-      textAnchor="middle"
-      dominantBaseline="central"
     >
-      {obj.label}
-    </text>
+      {box && (
+        <rect
+          className="plan-label-backing"
+          x={box.x - LABEL_PAD}
+          y={box.y - LABEL_PAD}
+          width={box.width + 2 * LABEL_PAD}
+          height={box.height + 2 * LABEL_PAD}
+          rx={LABEL_PAD}
+        />
+      )}
+      <text
+        ref={text}
+        className="plan-label"
+        fontSize={180}
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        {obj.label}
+      </text>
+    </g>
   );
 });
 
