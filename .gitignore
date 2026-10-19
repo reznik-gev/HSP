@@ -31,7 +31,8 @@ frontend/playwright-report/
 # Claude Code: temporary git worktrees created for background agents
 .claude/worktrees/
 
-# A production install tried out from deploy/compose (docs/0099): never commit these, at any depth
-**/.env
-**/secrets/
-**/tls/
+# A production install tried out from deploy/compose (docs/0099): never commit these. Its .env is
+# covered by `.env` above, at any depth. secrets/ and tls/ are named by path, not at any depth,
+# so code folders with those names elsewhere aren't ignored by surprise.
+deploy/compose/secrets/
+deploy/compose/tls/
