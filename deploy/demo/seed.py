@@ -1,15 +1,15 @@
-"""Fill the demo database with Northwind Robotics, a made-up company, for showing HSP (docs/0103).
+"""Fill the demo database with Northwind Robotics, a made-up company, for showing HSP (0103).
 
 Builds everything through HSP's own API, signed in as a real user, so every rule applies:
 - the org chart, from a CSV and an Excel import;
-- two sites, three buildings' worth of floors, three floor plans (one with history, one
+- two sites, two buildings with four floors, three floor plans (one with history, one
   with an open draft);
 - devices, some on the plans and some issued to people;
 - seats assigned to people and reserved for teams.
 
 It first rebuilds the `hsp_demo` database from scratch, so every run gives the same demo. Run it
 from backend/, with the dev stack, the API on hsp_demo and the frontend dev server running
-(docs/demos/README.md):
+(docs/demos/northwind-robotics.md):
 
     uv run python ../deploy/demo/seed.py
 """
@@ -339,6 +339,12 @@ class Plan:
             self.door(ids[door_on], max(abs(bx - ax), abs(by - ay)) // 2 - 450)
         self.zone(name, zone_type, x0, y0, x1, y1)
 
+    def core(self) -> None:
+        """The lift and stair core, in the middle of a Harbor Tower floor."""
+        corners = [(14000, 7000), (18000, 7000), (18000, 11000), (14000, 11000)]
+        walls = list(zip(corners, corners[1:] + corners[:1], strict=True))
+        self.room("Core", "Core", 14000, 7000, 18000, 11000, walls, door_on=3)
+
     def zone(self, name: str, zone_type: str, x0: int, y0: int, x1: int, y1: int) -> str:
         return self.add(
             "zone",
@@ -405,11 +411,23 @@ class Plan:
 # --- Steps ---------------------------------------------------------------------------------
 
 
+def psql(database: str, sql: str) -> str:
+    """Run one SQL command in the dev stack's PostgreSQL, as the hsp user; return its output."""
+    result = subprocess.run(
+        [*COMPOSE, "exec", "-T", "postgres", "psql", "-U", "hsp", "-d", database, "-qtAc", sql],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode:
+        fail(f"psql: {result.stderr.strip()}")
+    return result.stdout.strip()
+
+
 def reset_database() -> None:
     print(f"== A fresh {DATABASE} database")
-    psql = [*COMPOSE, "exec", "-T", "postgres", "psql", "-U", "hsp", "-d", "hsp", "-q"]
-    subprocess.run([*psql, "-c", f"DROP DATABASE IF EXISTS {DATABASE} WITH (FORCE)"], check=True)
-    subprocess.run([*psql, "-c", f"CREATE DATABASE {DATABASE}"], check=True)
+    psql("hsp", f"DROP DATABASE IF EXISTS {DATABASE} WITH (FORCE)")
+    psql("hsp", f"CREATE DATABASE {DATABASE}")
     subprocess.run(
         [sys.executable, "-m", "alembic", "upgrade", "head"],
         check=True,
@@ -472,29 +490,12 @@ def demo_users() -> None:
 def check_api_uses_demo_database(hsp: Hsp) -> None:
     """Refuse to go on if the API isn't on hsp_demo, so a dev database is never filled."""
     probe = hsp.post("/sites", {"name": "demo database check", "time_zone": "UTC"})
-    found = subprocess.run(
-        [
-            *COMPOSE,
-            "exec",
-            "-T",
-            "postgres",
-            "psql",
-            "-U",
-            "hsp",
-            "-d",
-            DATABASE,
-            "-tAc",
-            f"SELECT count(*) FROM site WHERE id = '{probe['id']}'",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    ).stdout.strip()
+    found = psql(DATABASE, f"SELECT count(*) FROM site WHERE id = '{probe['id']}'")
     hsp.delete(f"/sites/{probe['id']}")
     if found != "1":
         fail(
             f"the API at {API} isn't using the {DATABASE} database. Start it with "
-            f"HSP_DATABASE_URL={DATABASE_URL} (docs/demos/README.md)."
+            f"HSP_DATABASE_URL={DATABASE_URL} (docs/demos/northwind-robotics.md, step 2)."
         )
 
 
@@ -610,13 +611,7 @@ def publish(
 def floor_3(hsp: Hsp, plan: Plan, floor_id: str, monitors: list[str], printer: str) -> None:
     """R&D: the Platform and Vision pods, two meeting rooms and hot desks. Two versions."""
     plan.outline(32000, 18000, windows=6, walls_at=(20000, 24000))
-    core = [
-        ((14000, 7000), (18000, 7000)),
-        ((18000, 7000), (18000, 11000)),
-        ((18000, 11000), (14000, 11000)),
-        ((14000, 11000), (14000, 7000)),
-    ]
-    plan.room("Core", "Core", 14000, 7000, 18000, 11000, core, door_on=3)
+    plan.core()
     plan.zone("Platform pod", "Pod", 1500, 1500, 12500, 6500)
     plan.desks(2600, 3200, 5, monitors=monitors[:10], modes={9: "unavailable"})
     plan.zone("Vision pod", "Pod", 1500, 11500, 12500, 16500)
@@ -665,13 +660,7 @@ def floor_3(hsp: Hsp, plan: Plan, floor_id: str, monitors: list[str], printer: s
 def floor_4(hsp: Hsp, plan: Plan, floor_id: str, printer: str, display: str) -> None:
     """Product, Operations and Sales, with the boardroom; a draft is left open."""
     plan.outline(32000, 18000, windows=6, walls_at=(7000,))
-    core = [
-        ((14000, 7000), (18000, 7000)),
-        ((18000, 7000), (18000, 11000)),
-        ((18000, 11000), (14000, 11000)),
-        ((14000, 11000), (14000, 7000)),
-    ]
-    plan.room("Core", "Core", 14000, 7000, 18000, 11000, core, door_on=3)
+    plan.core()
     plan.zone("Design studio", "Pod", 1000, 12500, 7800, 17000)
     plan.desks(1900, 14200, 4, modes={7: "bookable"})
     plan.zone("Product pod", "Pod", 8500, 12500, 15200, 17000)
@@ -710,20 +699,10 @@ def floor_4(hsp: Hsp, plan: Plan, floor_id: str, printer: str, display: str) -> 
     plan.thing("printer_mfp", 13600, 6000, label="Floor 4 printer", device_id=printer)
     for x, y in ((800, 11500), (19200, 11500), (31200, 800)):
         plan.thing("plant_large", x, y)
-    draft = [
-        {"op": "update", "kind": "zone", "id": sales, "data": {"name": "Sales & Partners"}},
-        {
-            "op": "add",
-            "kind": "object",
-            "id": str(uuid.uuid4()),
-            "data": {
-                "catalog_item_rev_id": plan.catalog["plant_large"],
-                "position": [18800, 6000, 0],
-                "rotation_ddeg": 0,
-            },
-        },
-    ]
-    publish(hsp, floor_id, [(plan.ops, "First layout")], draft)
+    first = plan.ops
+    plan.ops = [{"op": "update", "kind": "zone", "id": sales, "data": {"name": "Sales & Partners"}}]
+    plan.thing("plant_large", 18800, 6000)
+    publish(hsp, floor_id, [(first, "First layout")], plan.ops)
 
 
 def haifa(hsp: Hsp, plan: Plan, floor_id: str, printer: str) -> None:
