@@ -8,7 +8,7 @@ How HSP is tested, where the shared test data lives, and the conventions a revie
 |---|---|---|---|
 | Editor core | `frontend/src/editor/core/*.test.ts` | Vitest, Node | Tools, snapping, hit-testing, operations and undo, without a browser. |
 | Screen tests | `frontend/src/**/*.test.tsx` | Vitest, jsdom | The real app rendered at a path against a stubbed API; checks what the user sees and what was sent. |
-| Browser tests | `frontend/e2e/*.spec.ts` | Playwright | A few key flows end to end against the running dev stack. |
+| Browser tests | `frontend/e2e/*.spec.ts` | Playwright | A few key flows end to end: against the running dev stack, and in the release workflow against the installed bundle ([0102](../decisions/0102-2026-10-19-release-workflow.md)). |
 | Backend unit | `backend/tests/unit/` | pytest | Services and rules against fakes and stubs; no Docker. |
 | Database | `backend/tests/db/` | pytest + PostGIS | What only a real database can check ([0061](../decisions/0061-2026-10-08-test-strategy.md) lists it). |
 | Shared validation cases | `shared/validation-cases/*.json` | both suites | Plan rules as data, so the editor and the server can't drift apart ([its README](../../shared/validation-cases/README.md)). |
@@ -18,6 +18,8 @@ Running them:
 ```bash
 cd frontend && pnpm test                         # editor core + screen tests
 cd frontend && PW_CHANNEL=msedge pnpm e2e        # browser tests; needs the dev stack running
+cd frontend && HSP_E2E_URL=https://localhost:8443 HSP_E2E_IGNORE_HTTPS_ERRORS=1 pnpm e2e
+                                                 # against a stack from deploy/test-bundle.sh (releasing.md)
 cd backend && uv run pytest                      # unit tests; database tests are skipped
 cd backend && HSP_TEST_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test uv run pytest
 ```
@@ -90,7 +92,7 @@ Use `editing()` from `editor/core/testPlan.ts`. It loads a small plan (an L of t
 A plan rule (an error or a warning) is changed by **editing the cases** in `shared/validation-cases/` first. Both the TypeScript checker and the server's `validate` must then pass them.
 
 ### 8. Browser tests stay few
-Only key flows (signing in and finding a seat; drawing and publishing a floor). Each test **creates its own data through the API and archives it afterwards**, so it runs against any dev database.
+Only key flows (signing in and finding a seat; drawing and publishing a floor), plus one check that the pages break no Content Security Policy rule. That check proves something only against `hsp-web`, as in the release workflow: the dev server sends no policy, so there it always passes. Each test **creates its own data through the API and archives it afterwards**, so it runs against any dev database.
 
 ## Review checklist
 - Is any test data defined inside a test body? It belongs at the top of the file, or in the shared stubs.
