@@ -85,12 +85,14 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
     healthcheck:
-      # The image has no curl; ask the management port with bash's /dev/tcp.
+      # The image has no curl; ask the management port with bash's /dev/tcp. Ready is a 200;
+      # while starting it's a 503 whose body still says "UP" for some checks, so read the status.
       test:
         - CMD-SHELL
         - >-
           exec 3<>/dev/tcp/localhost/9000 &&
-          printf 'GET /auth/health/ready HTTP/1.0\r\n\r\n' >&3 && grep -q '"UP"' <&3
+          printf 'GET /auth/health/ready HTTP/1.0\r\n\r\n' >&3 &&
+          read -r status <&3 && case "$$status" in *" 200 "*) exit 0 ;; *) exit 1 ;; esac
       interval: 10s
       timeout: 5s
       retries: 18
