@@ -50,6 +50,7 @@ jobs:
           # Reads: the code, read-only git and gh (`gh api` for review comments, which `gh pr view`
           # doesn't show), CI results and the web. Writes: comments and inline suggestions only.
           # Blocked: editing files, committing, pushing, and the gh api flags that write.
+          # The --disallowedTools list matches claude-code-review.yml's; keep the two in sync.
           claude_args: >-
             --model claude-sonnet-5-5
             --allowedTools
