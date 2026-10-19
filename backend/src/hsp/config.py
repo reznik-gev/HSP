@@ -13,9 +13,9 @@ from sqlalchemy import make_url
 # API reloads. Any other environment must set HSP_SESSION_ENCRYPTION_KEY (docs/0077).
 DEV_SESSION_ENCRYPTION_KEY = base64.urlsafe_b64encode(b"hsp-development-only-session-key")
 
-#: Where Docker puts secret files (docs/0099). A setting can come from a file named after its
-#: variable in lower case, e.g. /run/secrets/hsp_oidc_client_secret; the environment wins.
-SECRETS_DIR = Path("/run/secrets")
+#: Where Docker puts secret files by default (docs/0099). A setting can come from a file named
+#: after its variable in lower case, e.g. /run/secrets/hsp_oidc_client_secret; the environment wins.
+DEFAULT_SECRETS_DIR = Path("/run/secrets")
 
 
 class Settings(BaseSettings):
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
         env_prefix="HSP_",
         env_file=".env",
         extra="ignore",
-        secrets_dir=SECRETS_DIR if SECRETS_DIR.is_dir() else None,
+        secrets_dir=DEFAULT_SECRETS_DIR if DEFAULT_SECRETS_DIR.is_dir() else None,
     )
 
     environment: Literal["development", "test", "production"] = "development"
@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     # Floor edit lock (docs/0016): expires unless the editor sends heartbeats.
     edit_lock_ttl_s: int = 900
 
+    @property
     def database_dsn(self) -> str:
         """The database URL to connect with, including `database_password` if it's set."""
         url = make_url(str(self.database_url))

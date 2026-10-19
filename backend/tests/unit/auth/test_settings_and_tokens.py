@@ -17,6 +17,19 @@ OTHER_KEY = base64.urlsafe_b64encode(b"x" * 32)
 DATABASE_PASSWORD = "p@ss:w/rd"
 
 
+@pytest.fixture
+def settings_with_separate_database_password() -> Settings:
+    return Settings(
+        database_url="postgresql+asyncpg://hsp@db:5432/hsp",  # type: ignore[arg-type]
+        database_password=DATABASE_PASSWORD,  # type: ignore[arg-type]
+    )
+
+
+@pytest.fixture
+def settings_with_database_password_in_url() -> Settings:
+    return Settings(database_url="postgresql+asyncpg://hsp:pw@db:5432/hsp")  # type: ignore[arg-type]
+
+
 def test_production_requires_real_secrets() -> None:
     with pytest.raises(ValidationError, match="HSP_SESSION_ENCRYPTION_KEY"):
         Settings(environment="production")
@@ -46,17 +59,22 @@ def test_jwt_claims_and_roles() -> None:
         jwt_claims("not-a-jwt")
 
 
-def test_database_password_can_come_separately_from_the_url() -> None:
-    s = Settings(
-        database_url="postgresql+asyncpg://hsp@db:5432/hsp",  # type: ignore[arg-type]
-        database_password=DATABASE_PASSWORD,  # type: ignore[arg-type]
-    )
-    url = make_url(s.database_dsn())
+def test_database_password_can_come_separately_from_the_url(
+    settings_with_separate_database_password: Settings,
+) -> None:
+    url = make_url(settings_with_separate_database_password.database_dsn)
     assert (url.username, url.password, url.host, url.database) == (
         "hsp",
         DATABASE_PASSWORD,
         "db",
         "hsp",
     )
-    without = Settings(database_url="postgresql+asyncpg://hsp:pw@db:5432/hsp")  # type: ignore[arg-type]
-    assert without.database_dsn() == "postgresql+asyncpg://hsp:pw@db:5432/hsp"
+
+
+def test_database_url_keeps_its_own_password_when_none_is_given(
+    settings_with_database_password_in_url: Settings,
+) -> None:
+    assert (
+        settings_with_database_password_in_url.database_dsn
+        == "postgresql+asyncpg://hsp:pw@db:5432/hsp"
+    )
