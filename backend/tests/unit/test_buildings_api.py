@@ -53,14 +53,8 @@ def test_duplicate_code_in_site_is_409(api: TestClient, site_id: str) -> None:
     # Renaming another building to a taken code is refused too; keeping one's own code is fine.
     b = create_building(api, site_id, "B")
     to_a = {"code": "A"}
-    assert (
-        api.patch(f"/api/v1/buildings/{b['id']}", json=to_a).status_code
-        == 409
-    )
-    assert (
-        api.patch(f"/api/v1/buildings/{a['id']}", json=to_a).status_code
-        == 200
-    )
+    assert api.patch(f"/api/v1/buildings/{b['id']}", json=to_a).status_code == 409
+    assert api.patch(f"/api/v1/buildings/{a['id']}", json=to_a).status_code == 200
 
 
 def test_archived_building_still_owns_its_code(api: TestClient, site_id: str) -> None:

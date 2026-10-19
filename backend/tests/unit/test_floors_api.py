@@ -54,9 +54,7 @@ def test_patch_and_level_move(
 
 def test_published_version_is_not_patchable(api: TestClient, building_id: str) -> None:
     f = create_floor(api, building_id, 0)
-    r = api.patch(
-        f"/api/v1/floors/{f['id']}", json={"published_version": 7}
-    )
+    r = api.patch(f"/api/v1/floors/{f['id']}", json={"published_version": 7})
     assert r.status_code == 200
     assert r.json()["published_version"] is None  # unknown fields are ignored
 
