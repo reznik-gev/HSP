@@ -48,6 +48,10 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Full history, so it can diff a PR against the one below it in a stack
+          # Don't leave the read-only GITHUB_TOKEN behind. checkout v6+ keeps it in a separate
+          # credentials file that the action doesn't clear, so git pushes with it and gets a 403
+          # instead of using the action's own token.
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@v7
         with:
