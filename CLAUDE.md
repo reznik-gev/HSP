@@ -10,6 +10,9 @@ HSP (Human-Space Program) manages office space: sites, buildings and floors draw
 - [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md): commands, layout and conventions for each side.
 - [shared/validation-cases/](shared/validation-cases/README.md): plan rules as data, run by both sides.
 
+## Before you push
+Run the checks for each side you changed, the same ones CI runs (see each side's README): `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy` and `uv run pytest` in `backend/`; `pnpm lint`, `pnpm format:check`, `pnpm typecheck` and `pnpm test` in `frontend/`. Don't push anything that fails them. If you can't run a check, say so in your reply.
+
 ## Working with the product owner
 - **Product dilemmas go to the owner:** scope, order, and behaviour users notice. Present the options with their trade-offs and a recommendation, one question at a time, then record the answer as a decision.
 - **Small UI details you're confident about, decide yourself,** and mark them in the record as your lower-confidence choice. Ask when genuinely unsure.
