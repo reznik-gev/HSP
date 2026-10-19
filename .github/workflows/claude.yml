@@ -82,11 +82,18 @@ jobs:
             actions: read
 
           # Checks (uv, pnpm), read-only git, and the web. Commits and pushes go through the
-          # action's own tools.
+          # action's own tools. `gh api` is for reading review comments, which `gh pr view`
+          # doesn't show; the flags that make it write (method, fields, input, mutations) are
+          # blocked.
           claude_args: >-
             --allowedTools
             "Bash(uv run:*)" "Bash(uv sync:*)" "Bash(uv lock:*)"
             "Bash(pnpm:*)"
             "Bash(git status:*)" "Bash(git diff:*)" "Bash(git log:*)" "Bash(git show:*)"
             "Bash(gh pr view:*)" "Bash(gh pr diff:*)" "Bash(gh pr checks:*)" "Bash(gh run view:*)"
+            "Bash(gh api:*)"
             "WebSearch" "WebFetch"
+            --disallowedTools
+            "Bash(gh api *-X*)" "Bash(gh api *--method*)"
+            "Bash(gh api *-f*)" "Bash(gh api *-F*)" "Bash(gh api *--field*)" "Bash(gh api *--raw-field*)"
+            "Bash(gh api *--input*)" "Bash(gh api graphql*mutation*)"
