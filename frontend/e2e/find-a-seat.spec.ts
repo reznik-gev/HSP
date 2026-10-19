@@ -102,6 +102,19 @@ test("find where someone sits and open the seat on the plan", async ({ page }) =
     await expect(panel).toContainText(`E2E-${tag}`);
     await expect(panel).toContainText(`Dana ${tag}`);
     await expect(page.getByRole("heading", { name: "E2E floor" })).toBeVisible();
+
+    // The seat's label sits on a box that covers its text, so a monitor under it can't show
+    // through as a strike-through. Measured here because only a browser lays text out.
+    const label = page.locator(`#l-${deskId}`);
+    const text = await label.locator("text").boundingBox();
+    const backing = await label.locator("rect.plan-label-backing").boundingBox();
+    expect(text && backing).toBeTruthy();
+    if (text && backing) {
+      expect(backing.x).toBeLessThan(text.x);
+      expect(backing.y).toBeLessThan(text.y);
+      expect(backing.x + backing.width).toBeGreaterThan(text.x + text.width);
+      expect(backing.y + backing.height).toBeGreaterThan(text.y + text.height);
+    }
   } finally {
     // Archiving the site archives the floor and frees the seat (docs/0086).
     await api.delete(`/sites/${site.id}`);
