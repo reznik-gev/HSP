@@ -1,0 +1,4 @@
+email,display_name,external_id,title,primary_unit_external_id,secondary_unit_external_ids,position
+ava.thompson@northwind.example,Ava Thompson,E1045,Computer Vision Engineer,VIS,,
+leo.fischer@northwind.example,Leo Fischer,E1046,Backend Engineer,PLAT,,
+nina.rao@northwind.example,Nina Rao,E1047,Product Designer,DES,,
