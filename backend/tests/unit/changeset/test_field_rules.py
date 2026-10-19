@@ -20,7 +20,9 @@ from tests.unit.changeset.stubs import BOWTIE, add, codes, desk, ops, wall, zone
 
 @pytest.fixture(
     params=[
-        pytest.param(({**wall(), "thickness_mm": 0}, "/ops/0/data/thickness_mm"), id="no-thickness"),
+        pytest.param(
+            ({**wall(), "thickness_mm": 0}, "/ops/0/data/thickness_mm"), id="no-thickness"
+        ),
         pytest.param(({**wall(), "a": (0.5, 0)}, "/ops/0/data/a/0"), id="fractional-mm"),
         pytest.param(({**wall(), "a": (99_000_000, 0)}, "/ops/0/data/a/0"), id="out-of-bounds"),
     ]
