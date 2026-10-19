@@ -1,3 +1,8 @@
+# The @claude bot: answers and fixes on PRs and issues when someone with write access mentions it (docs/0100).
+#
+# It gets the same tools and database as CI's backend and frontend jobs, so it can run the checks
+# on what it changes before pushing. Comment-triggered workflows always run from `main`'s copy of
+# this file, so changes here take effect only after they merge.
 name: Claude Code
 
 on:
@@ -24,11 +29,44 @@ jobs:
       issues: read
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6
+        env:
+          POSTGRES_USER: hsp
+          POSTGRES_PASSWORD: hsp
+          POSTGRES_DB: hsp_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hsp -d hsp_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      HSP_TEST_DATABASE_URL: postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test
+      HSP_DATABASE_URL: postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          fetch-depth: 1
+          fetch-depth: 0 # Full history, so it can diff a PR against the one below it in a stack
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync --frozen
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
 
       - name: Run Claude Code
         id: claude
@@ -38,3 +76,13 @@ jobs:
 
           additional_permissions: |
             actions: read
+
+          # Checks (uv, pnpm), read-only git, and the web. Commits and pushes go through the
+          # action's own tools.
+          claude_args: >-
+            --allowedTools
+            "Bash(uv run:*)" "Bash(uv sync:*)" "Bash(uv lock:*)"
+            "Bash(pnpm:*)"
+            "Bash(git status:*)" "Bash(git diff:*)" "Bash(git log:*)" "Bash(git show:*)"
+            "Bash(gh pr view:*)" "Bash(gh pr diff:*)" "Bash(gh pr checks:*)" "Bash(gh run view:*)"
+            "WebSearch" "WebFetch"

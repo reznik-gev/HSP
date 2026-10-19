@@ -105,3 +105,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0094 | 2026-10-16 | [Move the 3D view past v1; show heights in 2D instead](0094-2026-10-16-3d-view-after-v1.md) | Accepted |
 | 0095 | 2026-10-16 | [Heights on the plan, Catalog and Devices screens (frontend phase 3c)](0095-2026-10-16-heights-catalog-and-devices.md) | Accepted |
 | 0096 | 2026-10-16 | [Test data and test-double conventions](0096-2026-10-16-test-conventions.md) | Accepted |
+| 0100 | 2026-10-19 | [The @claude bot runs the checks and searches the web](0100-2026-10-19-claude-bot-tools.md) | Accepted |
