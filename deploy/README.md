@@ -35,7 +35,7 @@ CI runs both on every PR that touches the app or the images; nothing is pushed a
 ## The production stack
 [`compose/compose.yml`](compose/compose.yml) runs HSP on one host ([0055](../docs/decisions/0055-2026-10-08-deployment-target.md), [0099](../docs/decisions/0099-2026-10-18-production-compose.md)): `postgres`, a one-shot `migrate`, `api`, `keycloak` and `web`. Only `web` publishes ports.
 
-`hsp install` will prepare an installation. Until it exists, these are the steps by hand, on a Linux host with Docker Engine and the Compose plugin, with the images loaded (`deploy/build-images.sh <version>`):
+`hsp install` will prepare an installation. Until it exists, these are the steps by hand, on a Linux host with Docker Engine and the Compose plugin, with the images loaded: from a release bundle (below), or built with `deploy/build-images.sh <version>`:
 
 1. **Make the installation directory** (for example `/opt/hsp`) and copy in `compose/compose.yml`, `compose/postgres-init/` and `compose/.env.example` as `.env`. Set `HSP_VERSION` and `HSP_PUBLIC_URL` in `.env`.
 2. **Write the secrets**, one file each in `secrets/`, and give each to its container's user:
@@ -57,3 +57,23 @@ CI runs both on every PR that touches the app or the images; nothing is pushed a
 4. **Data:** `mkdir -p /var/lib/hsp` (or your `HSP_DATA_DIR`).
 5. **Start:** `docker compose up -d`. Migrations run first; `docker compose ps` shows every service healthy after about a minute.
 6. **First admin:** create a user in Keycloak's `hsp` realm and give them the `hsp-admin` role, from the admin console (open it with `HSP_KEYCLOAK_ADMIN_FROM`) or inside the container with `kcadm.sh`.
+
+## The release bundle
+Each release is one file, `hsp-<version>.tar.gz`, on the repository's GitHub Releases page ([0054](../docs/decisions/0054-2026-10-08-release-distribution.md), [0102](../docs/decisions/0102-2026-10-19-release-workflow.md)). It holds everything an installation needs, and no registry is contacted:
+
+| Path | What |
+|---|---|
+| `images/` | One `docker save` file per image the stack runs: `hsp-api`, `hsp-web`, `hsp-keycloak` and PostGIS |
+| `compose/` | `compose.yml`, `postgres-init/` and `.env.example` (with `HSP_VERSION` already set) |
+| `docs/` | This guide (`install.md`), this release's notes and the full changelog |
+| `LICENSE`, `VERSION` | The licence, and the version |
+| `SHA256SUMS` | A checksum for every file above |
+
+To install from it:
+```bash
+sha256sum -c hsp-<version>.tar.gz.sha256      # the file next to the bundle on the Releases page
+tar -xzf hsp-<version>.tar.gz && cd hsp-<version>
+sha256sum -c SHA256SUMS
+for f in images/*.tar; do docker load -i "$f"; done
+```
+Then follow the steps above, using the files in `compose/`. How releases are made: [docs/guides/releasing.md](../docs/guides/releasing.md).

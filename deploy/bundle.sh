@@ -49,7 +49,8 @@ cp "$root/CHANGELOG.md" "$dir/docs/CHANGELOG.md"
 cp "$root/LICENSE" "$dir/"
 echo "$version" > "$dir/VERSION"
 
-(cd "$dir" && find . -type f ! -name SHA256SUMS -printf '%P\n' | sort | xargs sha256sum > SHA256SUMS)
+sums="$(cd "$dir" && find . -type f -printf '%P\n' | sort | xargs sha256sum)"
+printf '%s\n' "$sums" > "$dir/SHA256SUMS"
 
 tarball="$out/$name.tar.gz"
 gzip_cmd=gzip
