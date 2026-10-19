@@ -1,0 +1,156 @@
+# Build, test and publish the offline release bundle (docs/0102, docs/guides/releasing.md).
+#
+#   push a tag vX.Y.Z or vX.Y.Z-rc.N   build, test, wait for approval, publish a GitHub Release
+#   Run workflow (Actions tab)         a dry run: build and test from the chosen branch, no publish
+#   a PR that changes the release      a dry run, so changes to this machinery are tested
+#     workflow or its scripts          before they merge (ordinary PRs never run it, docs/0099)
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - deploy/bundle.sh
+      - deploy/test-bundle.sh
+      - deploy/release-notes.sh
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.version.outputs.publish }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # To check which branch the tag is on
+
+      - name: Work out the version
+        id: version
+        run: |
+          fail() { echo "::error::$1"; exit 1; }
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            [[ "$GITHUB_REF_NAME" =~ ^v(([0-9]+)\.([0-9]+)\.[0-9]+)(-rc\.[0-9]+)?$ ]] ||
+              fail "$GITHUB_REF_NAME isn't a release tag: vX.Y.Z or vX.Y.Z-rc.N (docs/0063)"
+            version="${GITHUB_REF_NAME#v}"
+            notes="${BASH_REMATCH[1]}" # an rc gets the notes of the version it's a candidate for
+            branch="release/${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+            # Releases are tagged on main, hotfixes on their release/X.Y branch (docs/0064).
+            git fetch --quiet origin main
+            git fetch --quiet origin "$branch" 2>/dev/null || true
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main &&
+              ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/$branch" 2>/dev/null; then
+              fail "the tagged commit is on neither main nor $branch (docs/0064)"
+            fi
+            publish=true
+            prerelease=$([[ "$version" == *-rc.* ]] && echo true || echo false)
+          else
+            version="0.0.0-dryrun.$GITHUB_RUN_NUMBER"
+            notes=Unreleased
+            publish=false
+            prerelease=false
+          fi
+          mkdir dist
+          deploy/release-notes.sh "$notes" > dist/release-notes.md
+          {
+            echo "version=$version"
+            echo "publish=$publish"
+            echo "prerelease=$prerelease"
+          } >> "$GITHUB_OUTPUT"
+          echo "Version $version (publish: $publish, pre-release: $prerelease). Notes:"
+          cat dist/release-notes.md
+
+      - uses: docker/setup-buildx-action@v4
+      # Exposes the Actions cache token to `docker buildx` for the gha build cache.
+      - uses: crazy-max/ghaction-github-runtime@v4
+      - name: Build hsp-api, hsp-web and hsp-keycloak
+        run: HSP_BUILD_CACHE=gha deploy/build-images.sh "${{ steps.version.outputs.version }}"
+      - name: Assemble the bundle
+        run: deploy/bundle.sh "${{ steps.version.outputs.version }}" dist/release-notes.md dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bundle
+          path: dist/
+          retention-days: 7
+          compression-level: 0 # Already gzipped
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE: dist/hsp-${{ needs.build.outputs.version }}.tar.gz
+      HSP_TEST_DIR: ${{ github.workspace }}/../bundle-test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: bundle
+          path: dist/
+
+      - name: Install the bundle and check it
+        run: KEEP=1 deploy/test-bundle.sh "$BUNDLE"
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Browser tests against the installed bundle
+        working-directory: frontend
+        env:
+          HSP_E2E_URL: https://localhost:8443
+          HSP_E2E_IGNORE_HTTPS_ERRORS: "1"
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+          pnpm e2e
+
+      - name: The stack's logs
+        if: failure()
+        run: docker compose --project-directory "$HSP_TEST_DIR/install" logs --tail 200
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-traces
+          path: frontend/test-results/
+          retention-days: 7
+
+  publish:
+    needs: [build, test]
+    if: needs.build.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    # Required reviewers on this environment: the owner approves before anything is public.
+    environment: release
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: bundle
+          path: dist/
+      - name: Publish the GitHub Release
+        run: |
+          flags=()
+          if [[ "${{ needs.build.outputs.prerelease }}" == true ]]; then flags+=(--prerelease); fi
+          gh release create "v$VERSION" \
+            "dist/hsp-$VERSION.tar.gz" "dist/hsp-$VERSION.tar.gz.sha256" \
+            --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "HSP $VERSION" --notes-file dist/release-notes.md "${flags[@]}"

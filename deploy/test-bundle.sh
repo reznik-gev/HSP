@@ -3,6 +3,8 @@
 # The release workflow runs it on a clean runner, then runs the Playwright tests against the stack.
 #   deploy/test-bundle.sh dist/hsp-1.2.0.tar.gz          # check, then stop and remove everything
 #   KEEP=1 deploy/test-bundle.sh dist/hsp-1.2.0.tar.gz   # leave the stack running for Playwright
+# HSP_TEST_DIR=<empty dir> puts the unpacked bundle and the installation there (default: a new
+# temporary directory); the stack's Compose project is then <dir>/install.
 # The stack listens on 127.0.0.1:8088 (HTTP) and :8443 (HTTPS, a self-signed certificate) as
 # https://localhost:8443, with test users admin/admin (hsp-admin) and viewer/viewer.
 # Needs Linux, Docker with the Compose plugin, curl, openssl and python3.
@@ -10,7 +12,9 @@ set -euo pipefail
 
 bundle="$(realpath "${1:?usage: deploy/test-bundle.sh <hsp-version.tar.gz>}")"
 url=https://localhost:8443
-tmp="$(mktemp -d)"
+tmp="${HSP_TEST_DIR:-$(mktemp -d)}"
+mkdir -p "$tmp"
+tmp="$(realpath "$tmp")"
 install="$tmp/install"
 postgres_image=""
 
