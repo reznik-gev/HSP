@@ -1,0 +1,57 @@
+[project]
+name = "hsp-backup"
+version = "0.1.0"
+description = "HSP's backup service: scheduled dumps to a folder or S3, and restore (docs/0106)"
+readme = "README.md"
+authors = [
+    { name = "gev", email = "reznikgev@gmail.com" }
+]
+requires-python = ">=3.14,<3.15"
+license = "LicenseRef-Proprietary"
+dependencies = [
+    "boto3>=1.43.116",
+    "croniter>=6.2.4",
+    "packaging>=26.3",
+    "prometheus-client>=0.26.0",
+    "pydantic>=2.14.1",
+    "pyyaml>=6.0.3",
+    "tzdata>=2026.5",
+]
+
+[project.scripts]
+hsp-backup = "hsp_backup.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+# --- Tooling (docs/0062), as in backend/ ------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+packages = ["hsp_backup"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "boto3-stubs[s3]>=1.43.116",
+    "moto[s3]>=5.2.4",
+    "mypy>=2.4.0",
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+    "types-croniter>=6.2.4.20261006",
+    "types-pyyaml>=6.0.12.20260906",
+]

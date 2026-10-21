@@ -27,6 +27,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      backup: ${{ steps.filter.outputs.backup }}
       images: ${{ steps.filter.outputs.images }}
     steps:
       - uses: actions/checkout@v7
@@ -42,6 +43,9 @@ jobs:
               - "frontend/**"
               - "shared/**"
               - "backend/openapi.json"
+              - ".github/workflows/ci.yml"
+            backup:
+              - "backup/**"
               - ".github/workflows/ci.yml"
             images:
               - "backend/**"
@@ -96,6 +100,30 @@ jobs:
             exit 1
           }
 
+  # The backup service (docs/0106). Its tests need no database; the weekly restore test runs it
+  # for real.
+  backup:
+    needs: changes
+    if: needs.changes.outputs.backup == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backup
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Types
+        run: uv run mypy
+      - name: Tests
+        run: uv run pytest
+
   frontend:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
@@ -149,7 +177,7 @@ jobs:
 
   ci-ok:
     if: always()
-    needs: [changes, backend, frontend, images]
+    needs: [changes, backend, backup, frontend, images]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped
