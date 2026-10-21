@@ -8508,7 +8508,7 @@
     },
     "/readyz": {
       "get": {
-        "description": "The service can handle traffic: the database is reachable.\n\nTODO: also verify the Alembic schema revision and Keycloak reachability (docs/0056, 0057).",
+        "description": "The service can handle traffic: the database answers, its schema is the one this version\nneeds, and Keycloak answers. Otherwise 503, naming what failed.",
         "operationId": "readyz_readyz_get",
         "responses": {
           "200": {

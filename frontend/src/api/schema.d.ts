@@ -1087,9 +1087,8 @@ export interface paths {
         };
         /**
          * Readyz
-         * @description The service can handle traffic: the database is reachable.
-         *
-         *     TODO: also verify the Alembic schema revision and Keycloak reachability (docs/0056, 0057).
+         * @description The service can handle traffic: the database answers, its schema is the one this version
+         *     needs, and Keycloak answers. Otherwise 503, naming what failed.
          */
         get: operations["readyz_readyz_get"];
         put?: never;
