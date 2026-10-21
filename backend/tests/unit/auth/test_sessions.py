@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 from fastapi import Depends
 from fastapi.testclient import TestClient
+from structlog.testing import capture_logs
 
 from hsp.auth.dependencies import (
     CurrentPrincipal,
@@ -93,6 +94,16 @@ async def test_valid_session_resolves_principal(
     r = probe_api.get("/_t/me")
     assert r.status_code == 200
     assert r.json() == {"subject": "u1", "name": "Dev Admin", "admin": True}
+
+
+async def test_the_request_log_names_the_signed_in_user(
+    session_store: InMemorySessionStore, probe_api: TestClient
+) -> None:
+    await sign_in(session_store, probe_api, VIEWER_TOKENS)
+    with capture_logs() as logs:
+        probe_api.get("/_t/me")
+    [line] = [line for line in logs if line["event"] == "request"]
+    assert line["actor_subject"] == "u1"
 
 
 async def test_expired_session_is_deleted(

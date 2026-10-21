@@ -1,5 +1,6 @@
 """FastAPI application factory."""
 
+import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
@@ -14,6 +15,9 @@ from hsp.config import get_settings
 from hsp.db import dispose_engine
 from hsp.logging import configure_logging
 from hsp.problems import install_problem_handlers
+
+#: Probed every few seconds by health checks and Prometheus; logging them would drown the rest.
+UNLOGGED_PATHS = frozenset({"/healthz", "/readyz", "/metrics"})
 
 
 @asynccontextmanager
@@ -42,9 +46,14 @@ def create_app() -> FastAPI:
         rid = request.headers.get("X-Request-ID") or str(uuid_utils.uuid7())
         request.state.request_id = rid
         structlog.contextvars.bind_contextvars(request_id=rid)
+        started = time.perf_counter()
+        status = 500  # unless the app answers
         try:
             response = await call_next(request)
+            status = response.status_code
         finally:
+            if request.url.path not in UNLOGGED_PATHS:
+                log_request(request, status, started, debug=settings.log_level == "DEBUG")
             structlog.contextvars.clear_contextvars()
         response.headers["X-Request-ID"] = rid
         return response
@@ -52,6 +61,25 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(v1.router)
     return app
+
+
+def log_request(request: Request, status: int, started: float, *, debug: bool) -> None:
+    """The request's log line (docs/0105): the route template, never the raw path, which holds IDs
+    and search text, except at debug level."""
+    route = request.scope.get("route")
+    fields = {
+        "method": request.method,
+        "route": getattr(route, "path", None),
+        "status": status,
+        "duration_ms": round((time.perf_counter() - started) * 1000),
+        "request_id": request.state.request_id,
+        "actor_subject": getattr(request.state, "actor_subject", None),
+    }
+    if debug:
+        # Sign-in callbacks carry one-time codes in their query; never log those.
+        query = request.url.query if not request.url.path.startswith("/api/v1/auth/") else ""
+        fields["path"] = request.url.path + (f"?{query}" if query else "")
+    structlog.get_logger().info("request", **fields)
 
 
 def run() -> None:
