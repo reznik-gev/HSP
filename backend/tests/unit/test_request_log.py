@@ -36,11 +36,19 @@ def probe_api(probe_app: FastAPI) -> Iterator[TestClient]:
 
 
 @pytest.fixture
-def debug_logging(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Settings with HSP_LOG_LEVEL=DEBUG, for apps created inside the test."""
+def api_that_survives_crashes(probe_app: FastAPI) -> Iterator[TestClient]:
+    """A client of `probe_app` that gets a 500 from a crash, as a browser would."""
+    with TestClient(probe_app, raise_server_exceptions=False) as client:
+        yield client
+
+
+@pytest.fixture
+def debug_api(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+    """A client of the app with HSP_LOG_LEVEL=DEBUG."""
     monkeypatch.setenv("HSP_LOG_LEVEL", "DEBUG")
     get_settings.cache_clear()
-    yield
+    with TestClient(create_app()) as client:
+        yield client
     get_settings.cache_clear()
 
 
@@ -63,17 +71,17 @@ def test_a_request_is_logged_once_with_its_route_template(probe_api: TestClient)
     assert "path" not in line
 
 
-def test_the_raw_path_is_logged_only_at_debug_level(debug_logging: None) -> None:
-    with TestClient(create_app()) as api, capture_logs() as logs:
-        api.get("/api/v1/does-not-exist?q=x")
+def test_the_raw_path_is_logged_only_at_debug_level(debug_api: TestClient) -> None:
+    with capture_logs() as logs:
+        debug_api.get("/api/v1/does-not-exist?q=x")
 
     [line] = request_lines(logs)
     assert line["path"] == "/api/v1/does-not-exist?q=x"
 
 
-def test_sign_in_codes_are_never_logged(debug_logging: None) -> None:
-    with TestClient(create_app()) as api, capture_logs() as logs:
-        api.get("/api/v1/auth/callback?code=one-time&state=s")
+def test_sign_in_codes_are_never_logged(debug_api: TestClient) -> None:
+    with capture_logs() as logs:
+        debug_api.get("/api/v1/auth/callback?code=one-time&state=s")
 
     [line] = request_lines(logs)
     assert line["path"] == "/api/v1/auth/callback"
@@ -89,9 +97,9 @@ def test_an_unknown_path_has_no_route_and_no_user(probe_api: TestClient) -> None
     assert line["actor_subject"] is None
 
 
-def test_a_crashed_request_is_logged_as_500(probe_app: FastAPI) -> None:
-    with TestClient(probe_app, raise_server_exceptions=False) as api, capture_logs() as logs:
-        api.get("/_test/crash")
+def test_a_crashed_request_is_logged_as_500(api_that_survives_crashes: TestClient) -> None:
+    with capture_logs() as logs:
+        api_that_survives_crashes.get("/_test/crash")
 
     [line] = request_lines(logs)
     assert line["route"] == "/_test/crash"

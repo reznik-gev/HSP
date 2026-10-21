@@ -9,7 +9,7 @@ import uuid_utils
 from fastapi import FastAPI, Request, Response
 
 from hsp import __version__
-from hsp.api import health, v1
+from hsp.api import auth, health, v1
 from hsp.auth.oidc import OidcClient
 from hsp.config import get_settings
 from hsp.db import dispose_engine
@@ -18,6 +18,10 @@ from hsp.problems import install_problem_handlers
 
 #: Probed every few seconds by health checks and Prometheus; logging them would drown the rest.
 UNLOGGED_PATHS = frozenset({"/healthz", "/readyz", "/metrics"})
+
+#: Sign-in callbacks carry one-time codes in their query, so it's never logged; built from the
+#: routers, so it follows their prefixes.
+AUTH_PATH_PREFIX = v1.router.prefix + auth.router.prefix + "/"
 
 
 @asynccontextmanager
@@ -40,7 +44,7 @@ def create_app() -> FastAPI:
     app.state.oidc = OidcClient(settings)
 
     @app.middleware("http")
-    async def request_id(
+    async def identify_and_log_request(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         rid = request.headers.get("X-Request-ID") or str(uuid_utils.uuid7())
@@ -76,8 +80,7 @@ def log_request(request: Request, status: int, started: float, *, debug: bool) -
         "actor_subject": getattr(request.state, "actor_subject", None),
     }
     if debug:
-        # Sign-in callbacks carry one-time codes in their query; never log those.
-        query = request.url.query if not request.url.path.startswith("/api/v1/auth/") else ""
+        query = request.url.query if not request.url.path.startswith(AUTH_PATH_PREFIX) else ""
         fields["path"] = request.url.path + (f"?{query}" if query else "")
     structlog.get_logger().info("request", **fields)
 
