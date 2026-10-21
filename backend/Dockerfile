@@ -30,9 +30,9 @@ RUN useradd --system --uid 10001 --home-dir /app hsp
 WORKDIR /app
 COPY --from=build --chown=hsp:hsp /app /app
 # The API port is never published: only hsp-web (or an ingress) reaches it, so uvicorn may trust
-# X-Forwarded-* from any address on the container network (docs/0097). Requests are logged by
-# hsp-web as JSON with their request id (docs/0098), so uvicorn's own access log is off: it would
-# repeat them as plain text, sign-in codes in callback URLs included.
+# X-Forwarded-* from any address on the container network (docs/0097). The API logs each request
+# as JSON itself (docs/0105), so uvicorn's own access log is off: it would repeat them as plain
+# text, sign-in codes in callback URLs included.
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 \
     HSP_VERSION="${HSP_VERSION}" HSP_ENVIRONMENT=production \
     HSP_API_WORKERS=4 FORWARDED_ALLOW_IPS="*"

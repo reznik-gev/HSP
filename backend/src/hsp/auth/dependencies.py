@@ -80,6 +80,7 @@ async def get_principal(
         await store.delete(session.id)
         raise _unauthenticated("Session token is invalid.") from None
 
+    request.state.actor_subject = session.subject  # for the request's log line (docs/0105)
     name = claims.get("name") or claims.get("preferred_username")
     email = claims.get("email")
     return Principal(
