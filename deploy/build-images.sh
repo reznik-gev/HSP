@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build the HSP images locally (docs/0097): hsp-api, hsp-web and hsp-keycloak, tagged <version>.
+# Build the HSP images locally (docs/0097): hsp-api, hsp-web, hsp-keycloak and hsp-backup
+# (docs/0106), tagged <version>.
 #   deploy/build-images.sh            # tagged 0.0.0-dev
 #   deploy/build-images.sh 1.2.0
 # Run from anywhere; needs Docker with BuildKit (the default since Docker 23).
@@ -30,4 +31,5 @@ build() {
 build hsp-api "$root/backend"
 build hsp-web "$root/deploy/web" --build-context "frontend=$root/frontend"
 build hsp-keycloak "$root/deploy/keycloak"
-echo "Built hsp-api, hsp-web and hsp-keycloak, tagged $version."
+build hsp-backup "$root/deploy/backup" --build-context "backup=$root/backup"
+echo "Built hsp-api, hsp-web, hsp-keycloak and hsp-backup, tagged $version."

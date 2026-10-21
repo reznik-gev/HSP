@@ -26,3 +26,4 @@ The first release.
 - `/readyz` checks the database, its schema version and Keycloak, and names what isn't ready. The API refuses to start on a database that wasn't migrated for its version.
 - Prometheus metrics from the API: requests by route, changesets and publishes, edit-lock refusals and database connections. Only the host itself can reach them, unless you set `HSP_METRICS_ADDRESS`.
 - OpenTelemetry tracing of requests and database queries, off until you set `OTEL_EXPORTER_OTLP_ENDPOINT`.
+- Scheduled backups of HSP's and Keycloak's databases, to a folder or to S3, on the schedules you set in `backups.yml`. Each schedule keeps its own number of backups. Restoring refuses a backup from a newer version.
