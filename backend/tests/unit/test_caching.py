@@ -9,6 +9,8 @@ from tests.unit.api_helpers import create_building, create_floor, create_site
 
 pytestmark = pytest.mark.usefixtures("locations_repo")
 
+MISSING_FLOOR_URL = "/api/v1/floors/00000000-0000-7000-8000-000000000000"
+
 
 @pytest.fixture
 def floor_url(api: TestClient) -> str:
@@ -50,7 +52,7 @@ def test_a_changed_answer_is_sent_with_a_new_tag(api: TestClient, floor_url: str
 
 
 def test_errors_and_other_reads_have_no_etag(api: TestClient, floor_url: str) -> None:
-    missing = api.get("/api/v1/floors/00000000-0000-7000-8000-000000000000")
+    missing = api.get(MISSING_FLOOR_URL)
     assert missing.status_code == 404
     assert "ETag" not in missing.headers
     assert "ETag" not in api.get("/api/v1/sites").headers

@@ -62,6 +62,9 @@ interface Elsewhere {
   lock: typeof STUB_LOCK_FREE | typeof STUB_LOCK_DANA;
 }
 
+/** Nothing has happened elsewhere yet: version 2 is published and nobody is editing. */
+const quietElsewhere = (): Elsewhere => ({ published: 2, lock: STUB_LOCK_FREE });
+
 /** The floor and its lock as `elsewhere` says, and version 3 of the plan once it's published. */
 function polledRoutes(elsewhere: Elsewhere): Routes {
   return {
@@ -82,7 +85,7 @@ afterEach(async () => {
 describe("floor plan viewer (docs/0087)", () => {
   it("picks up a version published elsewhere within 30 s (docs/0041)", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    const elsewhere: Elsewhere = { published: 2, lock: STUB_LOCK_FREE };
+    const elsewhere = quietElsewhere();
     await renderApp("/floors/f3", { ...backend(), ...polledRoutes(elsewhere) });
     expect(await screen.findByText("Published version 2")).toBeInTheDocument();
     elsewhere.published = 3;
@@ -92,7 +95,7 @@ describe("floor plan viewer (docs/0087)", () => {
 
   it("shows within 15 s that someone started editing (docs/0041)", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    const elsewhere: Elsewhere = { published: 2, lock: STUB_LOCK_FREE };
+    const elsewhere = quietElsewhere();
     await renderApp("/floors/f3", { ...backend(), ...polledRoutes(elsewhere) });
     expect(await screen.findByRole("link", { name: "Edit floor" })).toBeInTheDocument();
     elsewhere.lock = STUB_LOCK_DANA;
