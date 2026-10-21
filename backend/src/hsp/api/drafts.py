@@ -9,6 +9,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Path, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from hsp import metrics
 from hsp.api.common import WRITE
 from hsp.api.plans import Service as PlansServiceDep
 from hsp.auth.dependencies import CurrentPrincipal
@@ -74,7 +75,8 @@ async def apply_changeset(
     409 stale-revision if `base_revision` is outdated, 409 lock-required / 423 floor-locked
     without the edit lock, 422 changeset-invalid with per-operation errors.
     """
-    return await service.apply(floor_id, body)
+    with metrics.observed("changeset"):
+        return await service.apply(floor_id, body)
 
 
 @router.post("/publish", dependencies=WRITE)
@@ -85,7 +87,8 @@ async def publish_draft(
     you reviewed. 409 publish-conflicts lists every problem: the plan rules over the whole draft
     (docs/0081), duplicate seat labels and devices placed elsewhere. Assigned seats the
     draft removes or makes non-assignable are freed, and listed in `freed_seats` (docs/0086)."""
-    return await publishing.publish(floor_id, body)
+    with metrics.observed("publish"):
+        return await publishing.publish(floor_id, body)
 
 
 @router.delete("", status_code=204, dependencies=WRITE)

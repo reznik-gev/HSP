@@ -30,6 +30,14 @@ async def get_session() -> AsyncIterator[AsyncSession]:
         yield session
 
 
+def connections_in_use() -> int:
+    """Connections checked out of the pool now; 0 before the first query (docs/0105)."""
+    if _engine is None:
+        return 0
+    checked_out: int = _engine.pool.checkedout()  # type: ignore[attr-defined]
+    return checked_out
+
+
 async def dispose_engine() -> None:
     global _engine, _sessionmaker
     if _engine is not None:

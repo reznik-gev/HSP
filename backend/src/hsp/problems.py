@@ -67,6 +67,7 @@ def _pointer(loc: tuple[Any, ...]) -> str:
 def install_problem_handlers(app: FastAPI) -> None:
     @app.exception_handler(ProblemException)
     async def _problem(request: Request, exc: ProblemException) -> JSONResponse:
+        request.state.problem = exc.slug  # counted by the request's metrics (docs/0105)
         return _response(
             request,
             Problem(

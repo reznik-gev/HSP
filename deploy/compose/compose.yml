@@ -55,6 +55,9 @@ services:
   api:
     <<: *hsp-api
     restart: unless-stopped
+    # Prometheus metrics (docs/0105): host-only unless HSP_METRICS_ADDRESS names another interface.
+    ports:
+      - "${HSP_METRICS_ADDRESS:-127.0.0.1}:${HSP_API_METRICS_PORT:-9464}:9464"
     depends_on:
       migrate: { condition: service_completed_successfully }
     healthcheck:

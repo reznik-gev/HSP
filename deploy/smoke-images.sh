@@ -5,7 +5,7 @@
 # refusal to start on an unmigrated database; the web
 # image in both TLS modes (docs/0098), serving the app, proxying to the API and closing Keycloak's
 # admin console; and Keycloak starting optimized against PostgreSQL with the realm imported.
-# Ports 18000-18088, 18443 and 19000 on this machine must be free; needs curl and openssl.
+# Ports 18000-18088, 18443, 19000 and 19464 on this machine must be free; needs curl and openssl.
 set -euo pipefail
 
 version="${1:-0.0.0-dev}"
@@ -78,8 +78,13 @@ fi
 echo "ok: and it stops instead of restarting"
 docker run --rm --network "$net" "${api_env[@]}" "hsp-api:$version" alembic upgrade head >/dev/null
 docker run -d --name "$run-api" --network "$net" --network-alias api -p 18000:8000 \
-  "${api_env[@]}" "hsp-api:$version" >/dev/null
+  -p 19464:9464 "${api_env[@]}" "hsp-api:$version" >/dev/null
 wait_for http://localhost:18000/healthz 60 || { docker logs "$run-api"; exit 1; }
+# Requests no route matches are counted under one label; with 2 workers, the metrics port must
+# add up both (docs/0105), so 6 requests show as 6 wherever they landed.
+for _ in 1 2 3 4 5 6; do curl -s -o /dev/null http://localhost:18000/no-such-path; done
+expect "api metrics add up every worker" "$(curl -fsS http://localhost:19464/metrics)" \
+  'hsp_http_requests_total{method="GET",route="unmatched",status="404"} 6.0'
 expect "api /healthz reports the version" "$(curl -fsS http://localhost:18000/healthz)" "\"version\":\"$version\""
 expect "api runs as non-root" "$(docker exec "$run-api" id -u)" "10001"
 expect "migrate job has the migrations" "$(docker run --rm "hsp-api:$version" alembic heads)" "(head)"
