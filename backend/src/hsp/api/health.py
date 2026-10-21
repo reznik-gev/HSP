@@ -1,12 +1,11 @@
-"""Health endpoints (docs/0057). Not exposed publicly by nginx (docs/0060)."""
+"""Health endpoints (docs/0057, docs/0105). Not exposed publicly by nginx (docs/0060)."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from sqlalchemy import text
 
 from hsp import __version__
-from hsp.db import get_engine
 from hsp.problems import ProblemException
+from hsp.readiness import Readiness
 
 router = APIRouter(tags=["health"])
 
@@ -23,14 +22,12 @@ async def healthz() -> Health:
 
 
 @router.get("/readyz")
-async def readyz() -> Health:
-    """The service can handle traffic: the database is reachable.
-
-    TODO: also verify the Alembic schema revision and Keycloak reachability (docs/0056, 0057).
-    """
-    try:
-        async with get_engine().connect() as conn:
-            await conn.execute(text("SELECT 1"))
-    except Exception as exc:
-        raise ProblemException(503, "not-ready", "Database unreachable") from exc
+async def readyz(request: Request) -> Health:
+    """The service can handle traffic: the database answers, its schema is the one this version
+    needs, and Keycloak answers. Otherwise 503, naming what failed."""
+    readiness: Readiness = request.app.state.readiness
+    problems = await readiness.problems()
+    if problems:
+        detail = "; ".join(f"{name}: {problem}" for name, problem in problems.items())
+        raise ProblemException(503, "not-ready", "Not ready", detail)
     return Health(status="ready", version=__version__)

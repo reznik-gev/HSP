@@ -58,11 +58,14 @@ services:
     depends_on:
       migrate: { condition: service_completed_successfully }
     healthcheck:
+      # Ready means the database, its schema and Keycloak all answer (docs/0105). Keycloak's first
+      # start imports the realm and can take minutes, hence the long start period; checks that fail
+      # during it don't count, and the first that passes makes the API healthy.
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz', timeout=3)"]
       interval: 10s
       timeout: 5s
       retries: 6
-      start_period: 20s
+      start_period: 180s
 
   keycloak:
     image: hsp-keycloak:${HSP_VERSION}
