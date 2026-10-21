@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-21
 - **Status:** Accepted
-- **Refines:** [0025](0025-2026-10-08-v1-scope.md) (v1 scope), [0057](0057-2026-10-08-observability.md) (the monitoring profile), [0064](0064-2026-10-08-branching-workflow.md) (the supported-versions policy), [0055](0055-2026-10-08-deployment-target.md) (Kubernetes later)
+- **Refines:** [0025](0025-2026-10-08-v1-scope.md) (v1 scope), [0057](0057-2026-10-08-observability.md) (the monitoring profile), [0064](0064-2026-10-08-branching-workflow.md) (the supported-versions policy), [0055](0055-2026-10-08-deployment-target.md) (Kubernetes later), [0041](0041-2026-10-08-live-updates.md) (ETags), [0063](0063-2026-10-08-release-versioning.md) (the version in the app)
 
 ## Context
 The first client demo went well ([feedback](../demos/feedback-2026-10-21.md)), and the owner wants to finish v1 and release **1.0.0**. Comparing the decisions with the code showed what's still missing for operators: backups, `bin/hsp`, metrics, tracing and a full `/readyz`. The client also asked for AD sync. [0064](0064-2026-10-08-branching-workflow.md) left one question for "before the first release": which versions get fixes.
