@@ -41,6 +41,9 @@ export const floorPlaceQuery = (floorId: string) =>
       if (!site.data) return fail("the site");
       return { floor: floor.data, building: building.data, site: site.data };
     },
+    // A floor published meanwhile shows within 30 s: its new published_version loads the new
+    // plan. Unchanged answers are 304s, so polling is cheap (docs/0041, docs/0104).
+    refetchInterval: 30_000,
   });
 
 export const publishedPlanQuery = (floorId: string, version: number) =>
