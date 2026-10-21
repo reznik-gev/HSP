@@ -64,6 +64,8 @@ export interface PlanViewProps {
   options: RenderOptions;
   /** Seat id -> state; seats get a state colour instead of their catalog colour. */
   seatStates?: ReadonlyMap<string, SeatState>;
+  /** "Show free seats" (docs/0108): everything but the free and bookable seats steps back. */
+  onlyFree?: boolean;
   /** Pointer moving with no button pressed (canvas pixels), or leaving the canvas (null). */
   onHover?: (point: { sx: number; sy: number } | null) => void;
   /** Called after the static layer for a new plan has been painted (initial render timing). */
@@ -123,6 +125,13 @@ const PLAN_CSS = `
   /* The height filter fades the other group rather than hiding it. */
   svg[data-height="floor"] .plan-raised,
   svg[data-height="raised"] .plan-floor { opacity: 0.2; }
+  /* Show free seats (docs/0108): the free and bookable seats stand out, the rest steps back;
+     walls stay, so the room still reads. No blinking: it's tiring, and hard for some people. */
+  svg[data-only-free] .plan-object:not(.seat-free):not(.seat-bookable),
+  svg[data-only-free] .plan-zone,
+  svg[data-only-free] .plan-label-group:not(.label-open) { opacity: 0.15; }
+  svg[data-only-free] .seat-free,
+  svg[data-only-free] .seat-bookable { stroke-width: 40px; }
   .hatch-bg { fill: var(--plan-hatch); }
   .hatch-line { stroke: var(--plan-wall); }
 `;
@@ -132,6 +141,7 @@ export function PlanView({
   interaction,
   options,
   seatStates = NO_STATES,
+  onlyFree = false,
   onHover,
   onStaticPainted,
   onSelectionPainted,
@@ -193,6 +203,7 @@ export function PlanView({
       viewBox={`${vx} ${vy} ${vw} ${vh}`}
       data-lod={far ? "far" : "near"}
       data-seat-view={seatStates.size > 0 ? "" : undefined}
+      data-only-free={onlyFree ? "" : undefined}
       data-height={heightFilter}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -285,6 +296,7 @@ const StaticLayer = memo(function StaticLayer({
           {plan.zones.map((z) => (
             <polygon
               key={z.id}
+              className="plan-zone"
               points={z.boundary.map((p) => `${p[0]},${p[1]}`).join(" ")}
               fill={z.color}
               fillOpacity={0.2}
@@ -340,7 +352,9 @@ const StaticLayer = memo(function StaticLayer({
         <g className="lod-detail">
           {plan.objectOrder.map((id) => {
             const obj = plan.objects[id];
-            return obj?.label ? <Label key={id} obj={obj} /> : null;
+            const state = seatStates.get(id);
+            const open = state === "free" || state === "bookable";
+            return obj?.label ? <Label key={id} obj={obj} open={open} /> : null;
           })}
           {plan.objectOrder.map((id) => {
             const obj = plan.objects[id];
@@ -408,7 +422,16 @@ const LABEL_PAD = 40;
 
 /** A label sits on a paper-coloured box the size of its text, so a monitor at the middle of a
  *  desk can't show through between the letters and read as a strike-through. */
-const Label = memo(function Label({ obj, copy = false }: { obj: PlacedObject; copy?: boolean }) {
+const Label = memo(function Label({
+  obj,
+  copy = false,
+  open = false,
+}: {
+  obj: PlacedObject;
+  copy?: boolean;
+  /** A free or bookable seat's label: it stays when "Show free seats" fades the rest. */
+  open?: boolean;
+}) {
   const text = useRef<SVGTextElement>(null);
   const [box, setBox] = useState<DOMRect | null>(null);
   useLayoutEffect(() => {
@@ -423,6 +446,7 @@ const Label = memo(function Label({ obj, copy = false }: { obj: PlacedObject; co
   return (
     <g
       id={copy ? undefined : `l-${obj.id}`}
+      className={open ? "plan-label-group label-open" : "plan-label-group"}
       transform={`translate(${obj.position[0]} ${obj.position[1]}) scale(1 -1)`}
     >
       {box && (
