@@ -33,8 +33,21 @@ export function EditOverlay({ store }: { store: EditorStore }) {
 
   const selectedWalls = plan.walls.filter((w) => selection.has(w.id));
   const junction = preview?.kind === "junction" ? preview : null;
-  const moved = (p: Vec2): Vec2 =>
-    junction && p[0] === junction.from[0] && p[1] === junction.from[1] ? junction.to : p;
+  // A whole wall being dragged (docs/0108): its ends move by d.
+  const wallMove = preview?.kind === "wallMove" ? preview : null;
+  const moving = wallMove && plan.walls.find((w) => w.id === wallMove.id);
+  const moved = (p: Vec2): Vec2 => {
+    if (junction && p[0] === junction.from[0] && p[1] === junction.from[1]) return junction.to;
+    if (
+      moving &&
+      wallMove &&
+      ((p[0] === moving.a[0] && p[1] === moving.a[1]) ||
+        (p[0] === moving.b[0] && p[1] === moving.b[1]))
+    ) {
+      return [p[0] + wallMove.d[0], p[1] + wallMove.d[1]];
+    }
+    return p;
+  };
 
   return (
     <g pointerEvents="none" data-testid="edit-overlay">
@@ -73,9 +86,11 @@ export function EditOverlay({ store }: { store: EditorStore }) {
           data-selected-wall={w.id}
         />
       ))}
-      {junction &&
+      {(junction || moving) &&
         plan.walls
-          .filter((w) => junction.walls.includes(w.id))
+          .filter((w) =>
+            junction ? junction.walls.includes(w.id) : [w.a, w.b].some((p) => moved(p) !== p),
+          )
           .map((w) => {
             const [a, b] = [moved(w.a), moved(w.b)];
             return (
@@ -225,6 +240,9 @@ export function EditOverlay({ store }: { store: EditorStore }) {
         "to" in preview &&
         preview.snap &&
         preview.snap !== "grid" && <SnapMarker at={preview.to} kind={preview.snap} px={px} />}
+      {wallMove?.snap && wallMove.snap !== "grid" && (
+        <SnapMarker at={wallMove.at} kind={wallMove.snap} px={px} />
+      )}
       {(preview?.kind === "wall" || preview?.kind === "zone") && (
         <circle
           className="plan-selected"
