@@ -35,7 +35,9 @@ COPY --from=build --chown=hsp:hsp /app /app
 # (docs/0105), so uvicorn's own access log is off: it would repeat them as plain text, sign-in
 # codes in callback URLs included. Workers write metrics to PROMETHEUS_MULTIPROC_DIR, which exists
 # for every process (the migrate job too) and is emptied each time the API starts.
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1     HSP_VERSION="${HSP_VERSION}" HSP_ENVIRONMENT=production     HSP_API_WORKERS=4 FORWARDED_ALLOW_IPS="*" PROMETHEUS_MULTIPROC_DIR=/tmp/hsp-metrics
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 \
+    HSP_VERSION="${HSP_VERSION}" HSP_ENVIRONMENT=production \
+    HSP_API_WORKERS=4 FORWARDED_ALLOW_IPS="*" PROMETHEUS_MULTIPROC_DIR=/tmp/hsp-metrics
 RUN install -d -o 10001 -g 10001 /tmp/hsp-metrics
 USER 10001
 EXPOSE 8000 9464

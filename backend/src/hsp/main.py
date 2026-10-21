@@ -12,13 +12,14 @@ from hsp import __version__, metrics
 from hsp.api import auth, health, v1
 from hsp.auth.oidc import OidcClient
 from hsp.config import get_settings
-from hsp.db import connections_in_use, dispose_engine
+from hsp.db import dispose_engine
 from hsp.logging import configure_logging, is_debug
 from hsp.problems import install_problem_handlers
 from hsp.readiness import check_schema_at_startup, default_readiness
 
-#: Probed every few seconds by health checks and Prometheus; logging them would drown the rest.
-UNLOGGED_PATHS = frozenset({"/healthz", "/readyz", "/metrics"})
+#: Probed every few seconds by health checks and Prometheus: left out of the request logs and the
+#: request metrics, where they would drown the requests people make.
+PROBE_PATHS = frozenset({"/healthz", "/readyz", "/metrics"})
 
 #: Sign-in callbacks carry one-time codes in their query, so it's never logged; built from the
 #: routers, so it follows their prefixes.
@@ -61,7 +62,7 @@ def create_app() -> FastAPI:
             response = await call_next(request)
             status = response.status_code
         finally:
-            if request.url.path not in UNLOGGED_PATHS:
+            if request.url.path not in PROBE_PATHS:
                 log_request(request, status, started, debug=is_debug(settings.log_level))
                 record_metrics(request, status, started)
             structlog.contextvars.clear_contextvars()
@@ -97,4 +98,3 @@ def record_metrics(request: Request, status: int, started: float) -> None:
     metrics.record_request(request.method, getattr(route, "path", None), status, seconds)
     if problem := getattr(request.state, "problem", None):
         metrics.record_problem(problem)
-    metrics.DB_CONNECTIONS.set(connections_in_use())
