@@ -16,6 +16,7 @@ from hsp.db import dispose_engine
 from hsp.logging import configure_logging, is_debug
 from hsp.problems import install_problem_handlers
 from hsp.readiness import check_schema_at_startup, default_readiness
+from hsp.tracing import configure_tracing
 
 #: Probed every few seconds by health checks and Prometheus: left out of the request logs and the
 #: request metrics, where they would drown the requests people make.
@@ -71,6 +72,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(v1.router)
+    configure_tracing(app)
     return app
 
 
