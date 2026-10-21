@@ -23,6 +23,8 @@ from prometheus_client import (
 )
 from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily, Metric
 from prometheus_client.registry import Collector
+from sqlalchemy import event
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from hsp.problems import ProblemException
 
@@ -56,6 +58,13 @@ LOCK_REFUSALS = Counter(
 
 #: Problem types that mean "the edit lock refused you" (docs/0016).
 LOCK_PROBLEMS = frozenset({"lock-required", "floor-locked"})
+
+
+def count_connections(engine: AsyncEngine) -> None:
+    """Keep hsp_db_connections_in_use exact: up when the pool hands a connection out, down when
+    it's returned, in every worker (hsp/db.py calls this when it creates the engine)."""
+    event.listen(engine.sync_engine, "checkout", lambda *_: DB_CONNECTIONS.inc())
+    event.listen(engine.sync_engine, "checkin", lambda *_: DB_CONNECTIONS.dec())
 
 
 def record_request(method: str, route: str | None, status: int, seconds: float) -> None:

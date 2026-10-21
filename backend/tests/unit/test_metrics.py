@@ -19,6 +19,12 @@ from hsp.serve import reset_metrics_dir
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
+#: A publish the server refuses, as an observed operation sees it.
+PUBLISH_REFUSED = ProblemException(409, "publish-conflicts", "Conflicts")
+
+#: The request a worker counts in the multiprocess tests: GET /x, answered 200.
+WORKER_REQUEST = {"method": "GET", "route": "/x", "status": "200"}
+
 
 @pytest.fixture
 def probe_app() -> FastAPI:
@@ -94,7 +100,7 @@ def test_an_observed_operation_counts_its_outcome_and_time() -> None:
     with metrics.observed("publish"):
         pass
     with pytest.raises(ProblemException), metrics.observed("publish"):
-        raise ProblemException(409, "publish-conflicts", "Conflicts")
+        raise PUBLISH_REFUSED
 
     assert sample("hsp_plan_operations_total", **labels, outcome="ok") == ok + 1
     assert sample("hsp_plan_operations_total", **labels, outcome="refused") == refused + 1
@@ -110,8 +116,7 @@ def count_in_a_worker(metrics_dir: Path) -> None:
         [
             sys.executable,
             "-c",
-            "from hsp import metrics; "
-            "metrics.HTTP_REQUESTS.labels(method='GET', route='/x', status='200').inc()",
+            f"from hsp import metrics; metrics.HTTP_REQUESTS.labels(**{WORKER_REQUEST!r}).inc()",
         ],
         cwd=BACKEND_DIR,
         env={**os.environ, "PROMETHEUS_MULTIPROC_DIR": str(metrics_dir)},
@@ -128,11 +133,17 @@ def test_the_metrics_server_adds_up_every_worker(
 
     registry = metrics.registry()
 
-    assert sample("hsp_http_requests_total", registry, method="GET", route="/x", status="200") == 2
+    assert sample("hsp_http_requests_total", registry, **WORKER_REQUEST) == 2
     assert sample("process_resident_memory_bytes", registry) > 0
 
 
-def test_a_restart_starts_counting_from_zero(tmp_path: Path) -> None:
+def test_a_restart_starts_counting_from_zero(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     count_in_a_worker(tmp_path)
     reset_metrics_dir(tmp_path)
-    assert list(tmp_path.iterdir()) == []
+    monkeypatch.setenv("PROMETHEUS_MULTIPROC_DIR", str(tmp_path))
+
+    registry = metrics.registry()
+
+    assert sample("hsp_http_requests_total", registry, **WORKER_REQUEST) == 0
