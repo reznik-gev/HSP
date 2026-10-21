@@ -18,7 +18,8 @@ import {
   stubSeat,
   stubWall,
 } from "@/test/stubs";
-import { AS_VIEWER, renderApp, type Routes } from "@/test/renderApp";
+import { STUB_LOCK_DANA, STUB_LOCK_FREE } from "@/test/editorStubs";
+import { AS_VIEWER, renderApp, type Reply, type Routes } from "@/test/renderApp";
 
 const PLAN = stubPlan({
   version: 2,
@@ -55,13 +56,50 @@ function backend(publishedVersion: number | null = 2): Routes {
   };
 }
 
+/** What the floor's polls see (docs/0041): a test moves these on, as another admin would. */
+interface Elsewhere {
+  published: number;
+  lock: typeof STUB_LOCK_FREE | typeof STUB_LOCK_DANA;
+}
+
+/** The floor and its lock as `elsewhere` says, and version 3 of the plan once it's published. */
+function polledRoutes(elsewhere: Elsewhere): Routes {
+  return {
+    "GET /api/v1/floors/f3": () =>
+      stubLocationRoutes(elsewhere.published)["GET /api/v1/floors/f3"] as Reply,
+    "GET /api/v1/floors/f3/versions/3": { status: 200, body: { ...PLAN, version: 3 } },
+    "GET /api/v1/floors/f3/lock": () => ({ status: 200, body: elsewhere.lock }),
+  };
+}
+
 afterEach(async () => {
+  vi.useRealTimers();
   cleanup();
   vi.unstubAllGlobals();
   await act(() => i18n.changeLanguage("en"));
 });
 
 describe("floor plan viewer (docs/0087)", () => {
+  it("picks up a version published elsewhere within 30 s (docs/0041)", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const elsewhere: Elsewhere = { published: 2, lock: STUB_LOCK_FREE };
+    await renderApp("/floors/f3", { ...backend(), ...polledRoutes(elsewhere) });
+    expect(await screen.findByText("Published version 2")).toBeInTheDocument();
+    elsewhere.published = 3;
+    await act(() => vi.advanceTimersByTimeAsync(30_000));
+    expect(await screen.findByText("Published version 3")).toBeInTheDocument();
+  });
+
+  it("shows within 15 s that someone started editing (docs/0041)", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const elsewhere: Elsewhere = { published: 2, lock: STUB_LOCK_FREE };
+    await renderApp("/floors/f3", { ...backend(), ...polledRoutes(elsewhere) });
+    expect(await screen.findByRole("link", { name: "Edit floor" })).toBeInTheDocument();
+    elsewhere.lock = STUB_LOCK_DANA;
+    await act(() => vi.advanceTimersByTimeAsync(15_000));
+    expect(await screen.findByText(/^Being edited by Dana Levi/)).toBeInTheDocument();
+  });
+
   it("shows where the floor is, with a seat legend", async () => {
     await renderApp("/floors/f3", backend());
     expect(await screen.findByRole("heading", { name: "Floor 3" })).toBeInTheDocument();

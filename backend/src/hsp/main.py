@@ -11,6 +11,8 @@ from opentelemetry.instrumentation.utils import suppress_instrumentation
 
 from hsp import __version__, metrics
 from hsp.api import auth, health, v1
+from hsp.api.caching import apply_caching
+from hsp.api.routes import route_template
 from hsp.auth.oidc import OidcClient
 from hsp.config import get_settings
 from hsp.db import dispose_engine
@@ -64,7 +66,7 @@ def create_app() -> FastAPI:
         try:
             # Nothing a probe does is traced either, e.g. /readyz's database check.
             with suppress_instrumentation() if probe else nullcontext():
-                response = await call_next(request)
+                response = await apply_caching(request, await call_next(request))
             status = response.status_code
         finally:
             if not probe:
@@ -83,10 +85,9 @@ def create_app() -> FastAPI:
 def log_request(request: Request, status: int, started: float, *, debug: bool) -> None:
     """The request's log line (docs/0105): the route template, never the raw path, which holds IDs
     and search text, except at debug level."""
-    route = request.scope.get("route")
     fields = {
         "method": request.method,
-        "route": getattr(route, "path", None),
+        "route": route_template(request),
         "status": status,
         "duration_ms": round((time.perf_counter() - started) * 1000),
         "request_id": request.state.request_id,
@@ -99,8 +100,7 @@ def log_request(request: Request, status: int, started: float, *, debug: bool) -
 
 
 def record_metrics(request: Request, status: int, started: float) -> None:
-    route = request.scope.get("route")
     seconds = time.perf_counter() - started
-    metrics.record_request(request.method, getattr(route, "path", None), status, seconds)
+    metrics.record_request(request.method, route_template(request), status, seconds)
     if problem := getattr(request.state, "problem", None):
         metrics.record_problem(problem)

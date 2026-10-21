@@ -12,6 +12,10 @@ from hsp.config import get_settings
 from hsp.main import create_app
 
 
+#: A floor that may not exist; its route is matched either way.
+SOME_FLOOR_URL = "/api/v1/floors/0193e3d2-0000-7000-8000-000000000001"
+
+
 @pytest.fixture
 def actor_subject() -> str:
     """The signed-in user who calls the probe route."""
@@ -84,6 +88,14 @@ def test_the_raw_path_is_not_logged_above_debug_level(probe_api: TestClient) -> 
 
     [line] = request_lines(logs)
     assert "path" not in line
+
+
+def test_routes_under_api_v1_are_logged_in_full(probe_api: TestClient) -> None:
+    with capture_logs() as logs:
+        probe_api.get(SOME_FLOOR_URL)
+
+    [line] = request_lines(logs)
+    assert line["route"] == "/api/v1/floors/{floor_id}"
 
 
 def test_the_raw_path_is_logged_at_debug_level(debug_api: TestClient) -> None:

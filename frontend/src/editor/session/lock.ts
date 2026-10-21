@@ -31,6 +31,8 @@ export const lockStatusQuery = (floorId: string) =>
       if (!data) throw new Error("Couldn't load the edit lock");
       return data;
     },
+    // Someone starting or stopping editing shows within 15 s (docs/0041).
+    refetchInterval: 15_000,
   });
 
 /** Removes whoever holds the lock; their draft is kept (admins only, audited). */

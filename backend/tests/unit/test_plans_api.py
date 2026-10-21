@@ -72,6 +72,12 @@ def test_plan_of_a_version(api: TestClient) -> None:
     assert plan["objects"][0]["position"] == [2000, 0, 0]
 
 
+def test_a_version_never_changes_so_browsers_keep_it(api: TestClient) -> None:
+    r = api.get(f"/api/v1/floors/{FLOOR}/versions/2")
+    assert r.headers["Cache-Control"] == "private, max-age=31536000, immutable"
+    assert "ETag" not in r.headers
+
+
 def test_viewer_gets_404_for_draft_version_and_403_for_draft(
     api: TestClient, signed_in: SignedIn, viewer: Principal
 ) -> None:

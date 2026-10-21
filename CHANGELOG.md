@@ -11,6 +11,7 @@ The first release.
 - See each floor's plan, and find where someone sits from the search in the top bar.
 - English and Hebrew, with the layout mirrored for Hebrew.
 - The user menu and the bottom of the sidebar show which release of HSP you're using.
+- A floor's page shows a newly published version within 30 seconds, and that someone started editing within 15, without reloading.
 
 ### For admins
 - Manage sites, buildings, floors, people, teams, the catalog of furniture and devices, and zone types.

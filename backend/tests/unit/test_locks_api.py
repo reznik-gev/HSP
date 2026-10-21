@@ -48,6 +48,13 @@ def test_acquire_and_status(
     assert [e.action for e in lock_repo.events] == ["floor.lock_acquired"]
 
 
+def test_the_polled_lock_status_has_an_etag(api: TestClient) -> None:
+    etag = api.get(URL).headers["ETag"]
+    assert api.get(URL, headers={"If-None-Match": etag}).status_code == 304
+    api.post(URL)
+    assert api.get(URL, headers={"If-None-Match": etag}).status_code == 200
+
+
 def test_heartbeat_extends_without_audit(
     api: TestClient, lock_repo: InMemoryLockRepository
 ) -> None:
