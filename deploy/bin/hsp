@@ -6,6 +6,8 @@
 #   hsp status
 #   sudo hsp backup now | list
 #   sudo hsp restore <backup>
+#   sudo ./hsp-1.1.0/bin/hsp upgrade            # the new release's hsp upgrades /opt/hsp
+#   sudo hsp rollback
 #   hsp help
 #
 # It ships in the release bundle, and `hsp install` copies it to <installation>/bin/hsp. It
@@ -41,9 +43,17 @@ need_docker() {
 
 # The installation this copy of hsp belongs to: the folder above bin/, or HSP_DIR.
 installation() {
-  local dir="${HSP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+  local here dir
+  here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  if [[ -n "${HSP_DIR:-}" ]]; then
+    dir="$HSP_DIR"
+  elif [[ -f "$here/.env" ]]; then
+    dir="$here" # this is the installation's own bin/hsp
+  else
+    dir="$DEFAULT_DIR" # run from a bundle, e.g. for hsp upgrade
+  fi
   [[ -f "$dir/.env" && -f "$dir/compose.yml" ]] ||
-    die "$dir isn't an HSP installation; set HSP_DIR, or run this installation's bin/hsp"
+    die "$dir isn't an HSP installation; use --dir or HSP_DIR, or the installation's bin/hsp"
   echo "$dir"
 }
 
@@ -413,6 +423,211 @@ cmd_restore() {
   ok "every service is healthy"
 }
 
+# --- hsp upgrade and hsp rollback ----------------------------------------------------------
+
+# version_cmp <a> <b>: prints -1, 0 or 1 (docs/0063). A release is newer than its own
+# pre-releases: 1.1.0 > 1.1.0-rc.2 > 1.1.0-rc.1.
+version_cmp() {
+  local a_core="${1%%-*}" b_core="${2%%-*}" a_pre="" b_pre="" i
+  [[ "$1" == *-* ]] && a_pre="${1#*-}"
+  [[ "$2" == *-* ]] && b_pre="${2#*-}"
+  local -a a b
+  IFS=. read -r -a a <<<"$a_core"
+  IFS=. read -r -a b <<<"$b_core"
+  for i in 0 1 2; do
+    if ((10#${a[i]:-0} != 10#${b[i]:-0})); then
+      ((10#${a[i]:-0} < 10#${b[i]:-0})) && echo -1 || echo 1
+      return
+    fi
+  done
+  if [[ "$a_pre" == "$b_pre" ]]; then echo 0
+  elif [[ -z "$a_pre" ]]; then echo 1
+  elif [[ -z "$b_pre" ]]; then echo -1
+  elif [[ "$(printf '%s\n%s\n' "$a_pre" "$b_pre" | sort -V | head -n 1)" == "$a_pre" ]]; then
+    echo -1
+  else echo 1
+  fi
+}
+
+# check_upgrade_path <installed> <new>: no downgrades, and at most one MAJOR at a time (docs/0056).
+check_upgrade_path() {
+  local from="$1" to="$2"
+  case "$(version_cmp "$to" "$from")" in
+    0) die "HSP $from is already installed" ;;
+    -1) die "$to is older than the installed $from; to go back, use hsp rollback" ;;
+  esac
+  local from_major="${from%%.*}" to_major="${to%%.*}"
+  if ((10#$to_major > 10#$from_major + 1)); then
+    die "an upgrade crosses one MAJOR version at most: install $((10#$from_major + 1)).x first"
+  fi
+}
+
+# merge_env <installed .env> <new .env.example> <out>: the new example's settings with every
+# value already set, plus settings the new example no longer has; prints what changed.
+merge_env() {
+  local old="$1" example="$2" out="$3" line name
+  cp "$example" "$out"
+  local -a kept=()
+  while IFS= read -r line; do
+    [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)= ]] || continue
+    name="${BASH_REMATCH[1]}"
+    if grep -q "^$name=" "$example"; then
+      env_set "$out" "$name" "${line#*=}"
+    else
+      kept+=("$line")
+    fi
+  done <"$old"
+  if ((${#kept[@]})); then
+    printf '\n# Kept from before the upgrade: not in this release'"'"'s .env.example.\n' >>"$out"
+    printf '%s\n' "${kept[@]}" >>"$out"
+  fi
+  while IFS= read -r line; do
+    [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)= ]] || continue
+    grep -q "^${BASH_REMATCH[1]}=" "$old" || ok "new setting: $line"
+  done <"$example"
+}
+
+# The secret files a compose.yml names that this installation doesn't have.
+missing_secrets() {
+  grep -o 'file: \./secrets/[A-Za-z0-9_]*' "$1" | sed 's|file: \./secrets/||' | sort -u |
+    while read -r s; do [[ -e "$INSTALL_DIR/secrets/$s" ]] || echo "$s"; done
+}
+
+usage_upgrade() {
+  cat <<'EOF'
+hsp upgrade [bundle] [--dir DIR] [--yes]: upgrade an installation to a release bundle (docs/0056).
+
+Run the NEW release's hsp: sudo ./hsp-<new version>/bin/hsp upgrade
+  bundle      hsp-<version>.tar.gz or its unpacked folder; default: the bundle this hsp came from
+  --dir DIR   the installation (default /opt/hsp, or HSP_DIR)
+  --yes       don't ask
+
+It takes a backup first and aborts if that fails. HSP is down for a few minutes while the
+database is migrated. If anything goes wrong, hsp rollback brings back the previous release and
+its data from that backup.
+EOF
+}
+
+cmd_upgrade() {
+  local bundle="" yes=""
+  while (($#)); do
+    case "$1" in
+      --dir) HSP_DIR="$2"; shift 2 ;;
+      --yes) yes=1; shift ;;
+      -h | --help) usage_upgrade; return 0 ;;
+      -*) die "unknown option $1 (hsp upgrade --help)" ;;
+      *) bundle="$1"; shift ;;
+    esac
+  done
+  need_root "hsp upgrade"
+  need_docker
+  INSTALL_DIR="$(installation)"
+  local from to source
+  from="$(env_get HSP_VERSION)"
+
+  step "Check the bundle"
+  source="$(open_bundle "$bundle")"
+  to="$(cat "$source/VERSION")"
+  check_upgrade_path "$from" "$to"
+  local missing
+  missing="$(INSTALL_DIR="$INSTALL_DIR" missing_secrets "$source/compose/compose.yml")"
+  [[ -z "$missing" ]] ||
+    die "HSP $to needs secret files this installation doesn't have: $missing. Its release notes say how to make them."
+  ok "HSP $from -> $to, checksums match"
+  if [[ -z "$yes" && -t 0 ]]; then
+    [[ "$(ask "Upgrade $INSTALL_DIR to $to? HSP is down for a few minutes. Type yes" "")" == yes ]] ||
+      die "nothing was changed"
+  fi
+
+  step "Load the images"
+  load_images "$source"
+  ok "loaded"
+
+  step "Back up first"
+  local backup
+  backup="$(backup_tool now --schedule pre-upgrade)" ||
+    die "the pre-upgrade backup failed, so nothing was changed: fix the cause above first"
+  ok "$backup"
+
+  step "Keep the previous release for hsp rollback"
+  local previous="$INSTALL_DIR/previous"
+  rm -rf "$previous"
+  install -d -m 700 "$previous"
+  cp -a "$INSTALL_DIR/.env" "$INSTALL_DIR/compose.yml" "$INSTALL_DIR/postgres-init" "$previous/"
+  cp -a "$INSTALL_DIR/bin" "$previous/"
+  echo "$backup" >"$previous/backup"
+  echo "$from" >"$previous/version"
+  ok "$previous"
+
+  step "Stop the API: users see that HSP is being updated"
+  compose stop api
+
+  step "Write HSP $to's files"
+  cp "$source/compose/compose.yml" "$source/compose/backups.example.yml" "$INSTALL_DIR/"
+  rm -rf "$INSTALL_DIR/postgres-init" && cp -r "$source/compose/postgres-init" "$INSTALL_DIR/"
+  merge_env "$previous/.env" "$source/compose/.env.example" "$INSTALL_DIR/.env.new"
+  env_set "$INSTALL_DIR/.env.new" HSP_VERSION "$to"
+  mv "$INSTALL_DIR/.env.new" "$INSTALL_DIR/.env"
+  install -m 755 "$source/bin/hsp" "$INSTALL_DIR/bin/hsp"
+  ok ".env keeps every value you set; backups.yml is unchanged"
+
+  step "Migrate and start HSP $to"
+  if ! compose up -d --remove-orphans || ! wait_healthy; then
+    echo "hsp: HSP $to didn't start. 'sudo $INSTALL_DIR/bin/hsp rollback' brings back $from" >&2
+    die "and its data from $backup"
+  fi
+  ok "every service is healthy"
+
+  # The backup from the upgrade before this one is no longer needed (docs/0106).
+  backup_tool prune --schedule pre-upgrade --keep 1 >/dev/null ||
+    ok "older pre-upgrade backups weren't deleted; hsp backup list shows them"
+  step "Done"
+  echo "HSP $to is running. The images of $from are kept; 'docker image prune -a' removes"
+  echo "unused ones once you're sure you won't roll back."
+}
+
+cmd_rollback() {
+  local yes=""
+  while (($#)); do
+    case "$1" in
+      --dir) HSP_DIR="$2"; shift 2 ;;
+      --yes) yes=1; shift ;;
+      *) die "hsp rollback [--dir DIR] [--yes]" ;;
+    esac
+  done
+  need_root "hsp rollback"
+  need_docker
+  INSTALL_DIR="$(installation)"
+  local previous="$INSTALL_DIR/previous"
+  [[ -f "$previous/backup" && -f "$previous/version" ]] ||
+    die "there's nothing to roll back to: no upgrade has kept a previous release here"
+  local from to backup
+  from="$(env_get HSP_VERSION)"
+  to="$(cat "$previous/version")"
+  backup="$(cat "$previous/backup")"
+  if [[ -z "$yes" ]]; then
+    [[ -t 0 ]] || die "rolling back replaces both databases; add --yes to go on without asking"
+    echo "This goes back from HSP $from to $to, with the data from $backup."
+    echo "Everything changed since that upgrade is lost."
+    [[ "$(ask "Type yes to go on" "")" == yes ]] || die "nothing was changed"
+  fi
+
+  step "Stop HSP"
+  compose stop api keycloak web backup migrate
+  step "Bring back HSP $to's files"
+  cp -a "$previous/.env" "$previous/compose.yml" "$INSTALL_DIR/"
+  rm -rf "$INSTALL_DIR/postgres-init" && cp -a "$previous/postgres-init" "$INSTALL_DIR/"
+  cp -a "$previous/bin/." "$INSTALL_DIR/bin/"
+  step "Restore $backup"
+  backup_tool restore "$backup" --yes ||
+    die "the restore failed; HSP is stopped. Fix the cause above and run hsp rollback again"
+  step "Start HSP $to"
+  compose up -d --remove-orphans
+  wait_healthy
+  rm -rf "$previous"
+  ok "HSP $to is running again, with the data from $backup"
+}
+
 # --- Commands ------------------------------------------------------------------------------
 
 usage() {
@@ -424,6 +639,8 @@ hsp: install and run HSP on this Docker host (docs/0107).
   hsp backup now                   take a backup now (it goes where backups.yml's manual says)
   hsp backup list                  every backup on every target, newest first
   hsp restore <backup> [--yes]     replace both databases with a backup; HSP is down meanwhile
+  hsp upgrade [bundle]             upgrade to a release; run the new release's hsp (--help)
+  hsp rollback                     undo the last upgrade: the previous release and its data
   hsp help                         this
 EOF
 }
@@ -451,6 +668,8 @@ case "$COMMAND" in
   status) cmd_status "$@" ;;
   backup) cmd_backup "$@" ;;
   restore) cmd_restore "$@" ;;
+  upgrade) cmd_upgrade "$@" ;;
+  rollback) cmd_rollback "$@" ;;
   help | -h | --help) usage ;;
   *) usage >&2; die "unknown command $COMMAND" ;;
 esac
