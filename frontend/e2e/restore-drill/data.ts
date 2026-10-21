@@ -6,5 +6,5 @@ export const DRILL = {
   floor: "Drill floor",
   seat: "RD-01",
   person: "Restore Drill",
-  email: "restore.drill@hsp.test",
+  email: "restore.drill@drill.example",
 };
