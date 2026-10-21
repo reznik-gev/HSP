@@ -3,7 +3,7 @@
 How HSP is packaged and run outside development. For local development, see the [main README](../README.md) (`compose.dev.yml`).
 
 ## Production images
-HSP ships three images, all amd64, all running as non-root and configured only through environment variables ([0097](../docs/decisions/0097-2026-10-18-production-images.md)):
+HSP ships four images, all amd64, all running as non-root and configured only through environment variables ([0097](../docs/decisions/0097-2026-10-18-production-images.md)):
 
 | Image | Built from | What it is |
 |---|---|---|
