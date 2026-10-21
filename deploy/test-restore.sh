@@ -10,7 +10,9 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 tmp="$(realpath "${HSP_TEST_DIR:?set HSP_TEST_DIR to the directory test-bundle.sh used}")"
 install="$tmp/install"
-compose() { docker compose --project-directory "$install" "$@"; }
+# The installation belongs to root, as hsp install makes it (docs/0107).
+as_root() { if [[ $EUID -eq 0 ]]; then "$@"; else sudo "$@"; fi; }
+compose() { as_root docker compose --project-directory "$install" "$@"; }
 healthy() { "$root/deploy/wait-healthy.sh" "$install"; }
 
 # The browser steps, against the installed stack.

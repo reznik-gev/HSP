@@ -6,7 +6,9 @@
 set -euo pipefail
 
 install="${1:?usage: deploy/wait-healthy.sh <installation directory>}"
-compose() { docker compose --project-directory "$install" "$@"; }
+# The installation belongs to root, as hsp install makes it (docs/0107).
+as_root() { if [[ $EUID -eq 0 ]]; then "$@"; else sudo "$@"; fi; }
+compose() { as_root docker compose --project-directory "$install" "$@"; }
 
 for _ in $(seq 60); do
   states="$(compose ps -a --format '{{.Service}}={{.State}}/{{.Health}}/{{.ExitCode}}')"

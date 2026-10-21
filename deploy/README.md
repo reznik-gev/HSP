@@ -36,7 +36,7 @@ CI runs both on every PR that touches the app or the images; nothing is pushed a
 ## The production stack
 [`compose/compose.yml`](compose/compose.yml) runs HSP on one host ([0055](../docs/decisions/0055-2026-10-08-deployment-target.md), [0099](../docs/decisions/0099-2026-10-18-production-compose.md)): `postgres`, a one-shot `migrate`, `api`, `keycloak` and `web`. `web` publishes the ports users reach; `api` publishes only its metrics port, to this host by default (see [Monitoring](#monitoring)).
 
-`hsp install` will prepare an installation. Until it exists, these are the steps by hand, on a Linux host with Docker Engine and the Compose plugin, with the images loaded: from a release bundle (below), or built with `deploy/build-images.sh <version>`:
+`hsp install` prepares an installation from a release bundle, and starts it (see [The release bundle](#the-release-bundle) and [`bin/hsp`](#binhsp)). These are the same steps by hand, for a setup it doesn't cover, on a Linux host with Docker Engine and the Compose plugin, with the images loaded: from a release bundle, or built with `deploy/build-images.sh <version>`:
 
 1. **Make the installation directory** (for example `/opt/hsp`) and copy in `compose/compose.yml`, `compose/postgres-init/`, `compose/.env.example` as `.env`, and `compose/backups.example.yml` as `backups.yml`. Set `HSP_VERSION` and `HSP_PUBLIC_URL` in `.env`; check the backup schedules in `backups.yml` (see [Backups](#backups)).
 2. **Write the secrets**, one file each in `secrets/`, and give each to its container's user:
@@ -93,14 +93,23 @@ Each release is one file, `hsp-<version>.tar.gz`, on the repository's GitHub Rel
 | `images/` | One `docker save` file per image the stack runs: `hsp-api`, `hsp-web`, `hsp-keycloak`, `hsp-backup` and PostGIS |
 | `compose/` | `compose.yml`, `postgres-init/`, `.env.example` (with `HSP_VERSION` already set) and `backups.example.yml` |
 | `docs/` | This guide (`install.md`), this release's notes and the full changelog |
+| `bin/hsp` | The operator's command (see [`bin/hsp`](#binhsp)) |
 | `LICENSE`, `VERSION` | The licence, and the version |
 | `SHA256SUMS` | A checksum for every file above |
 
 To install from it:
 ```bash
 sha256sum -c hsp-<version>.tar.gz.sha256      # the file next to the bundle on the Releases page
-tar -xzf hsp-<version>.tar.gz && cd hsp-<version>
-sha256sum -c SHA256SUMS
-for f in images/*.tar; do docker load -i "$f"; done
+tar -xzf hsp-<version>.tar.gz
+sudo ./hsp-<version>/bin/hsp install          # asks for the public URL, TLS and the first admin
 ```
-Then follow the steps above, using the files in `compose/`. How releases are made: [docs/guides/releasing.md](../docs/guides/releasing.md).
+How releases are made: [docs/guides/releasing.md](../docs/guides/releasing.md).
+
+## `bin/hsp`
+The operator's command, on the Docker host ([0107](../docs/decisions/0107-2026-10-21-operator-cli.md)). `hsp install` copies it to `<installation>/bin/hsp`. From another machine, Windows included, run it over SSH: `ssh admin@hsp-host sudo /opt/hsp/bin/hsp status`.
+
+| Command | What it does |
+|---|---|
+| `hsp install [bundle] [options]` | Checks the bundle's checksums, loads its images, writes the installation (default `/opt/hsp`): `.env`, `backups.yml`, generated secrets, and TLS files (yours with `--tls-cert`/`--tls-key`, or a self-signed certificate to try it out). Then starts HSP, waits until every service is healthy, and creates the first admin with a one-time password. `hsp install --help` lists the options for a scripted install, such as `--public-url`, `--tls` and `--set NAME=VALUE`. |
+| `hsp status` | The version, each service's state and health, the last backup of each schedule and any failure since, and free disk. |
+

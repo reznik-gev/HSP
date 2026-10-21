@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Install a release bundle the way deploy/README.md describes, start it, and check it (docs/0102).
+# Install a release bundle with its own hsp install, as deploy/README.md describes, and check it
+# (docs/0102, docs/0107).
 # The release workflow runs it on a clean runner, then runs the Playwright tests against the stack.
 #   deploy/test-bundle.sh dist/hsp-1.2.0.tar.gz          # check, then stop and remove everything
 #   KEEP=1 deploy/test-bundle.sh dist/hsp-1.2.0.tar.gz   # leave the stack running for Playwright
@@ -7,7 +8,7 @@
 # temporary directory); the stack's Compose project is then <dir>/install.
 # The stack listens on 127.0.0.1:8088 (HTTP) and :8443 (HTTPS, a self-signed certificate) as
 # https://localhost:8443, with test users admin/admin (hsp-admin) and viewer/viewer.
-# Needs Linux, Docker with the Compose plugin, curl, openssl and python3.
+# Needs Linux, Docker with the Compose plugin, curl, openssl, and root or sudo.
 set -euo pipefail
 
 bundle="$(realpath "${1:?usage: deploy/test-bundle.sh <hsp-version.tar.gz>}")"
@@ -16,9 +17,10 @@ tmp="${HSP_TEST_DIR:-$(mktemp -d)}"
 mkdir -p "$tmp"
 tmp="$(realpath "$tmp")"
 install="$tmp/install"
-postgres_image=""
 
-compose() { docker compose --project-directory "$install" "$@"; }
+# The installation belongs to root, as hsp install makes it; secrets/ is root's only.
+as_root() { if [[ $EUID -eq 0 ]]; then "$@"; else sudo "$@"; fi; }
+compose() { as_root docker compose --project-directory "$install" "$@"; }
 
 cleanup() {
   if [[ "${KEEP:-}" == 1 ]]; then
@@ -26,11 +28,7 @@ cleanup() {
     return
   fi
   compose down --volumes >/dev/null 2>&1 || true
-  # PostgreSQL's data belongs to its container's user; remove it as root, inside a container.
-  if [[ -n "$postgres_image" ]]; then
-    docker run --rm -v "$tmp:/t" --entrypoint rm "$postgres_image" -rf /t/data 2>/dev/null || true
-  fi
-  rm -rf "$tmp"
+  as_root rm -rf "$tmp"
 }
 trap cleanup EXIT
 
@@ -56,43 +54,17 @@ tar -C "$tmp" -xzf "$bundle"
 dir="$(find "$tmp" -mindepth 1 -maxdepth 1 -type d -name 'hsp-*')"
 (cd "$dir" && sha256sum --quiet -c SHA256SUMS) && echo "ok: SHA256SUMS"
 version="$(cat "$dir/VERSION")"
-for image in "$dir"/images/*.tar; do
-  docker load -q -i "$image"
-done
-postgres_image="$(grep -o 'postgis/postgis:[^ ]*' "$dir/compose/compose.yml")"
 
-echo "== Install $version as deploy/README.md describes"
-mkdir -p "$install/secrets" "$install/tls" "$tmp/data/backups"
-cp "$dir/compose/compose.yml" "$install/"
-cp "$dir/compose/backups.example.yml" "$install/backups.yml"
-cp -r "$dir/compose/postgres-init" "$install/"
-cp "$dir/compose/.env.example" "$install/.env"
-# set_env <name> <value>: change a setting in .env, as an operator would.
-set_env() { sed -i "s|^$1=.*|$1=$2|" "$install/.env"; grep -q "^$1=$2\$" "$install/.env"; }
-set_env HSP_PUBLIC_URL "$url"
-set_env HSP_DATA_DIR "$tmp/data"
-set_env HSP_BIND_ADDRESS 127.0.0.1
-set_env HSP_HTTP_PORT 8088
-set_env HSP_HTTPS_PORT 8443
-set_env HSP_API_WORKERS 2
-for s in db_superuser_password hsp_database_password keycloak_db_password \
-  keycloak_admin_password hsp_oidc_client_secret; do
-  openssl rand -base64 32 | tr -d '/+=\n' > "$install/secrets/$s"
-done
-python3 -c "import base64,os; print(base64.urlsafe_b64encode(os.urandom(32)).decode(), end='')" \
-  > "$install/secrets/hsp_session_encryption_key"
-touch "$install/secrets/backup_s3_access_key" "$install/secrets/backup_s3_secret_key"
+echo "== Install $version with hsp install (docs/0107)"
 openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj /CN=localhost \
-  -addext subjectAltName=DNS:localhost \
-  -keyout "$install/tls/tls.key" -out "$install/tls/tls.crt" 2>/dev/null
-# A throwaway runner: readable by every container user, in place of the per-user owners the
-# README sets up.
-chmod 444 "$install"/secrets/* "$install"/tls/*
-chmod 777 "$tmp/data/backups"
-
-echo "== Start"
-compose up -d || { compose ps -a >&2; compose logs --tail 80 >&2; exit 1; }
-"$(dirname "${BASH_SOURCE[0]}")/wait-healthy.sh" "$install"
+  -addext subjectAltName=DNS:localhost -keyout "$tmp/tls.key" -out "$tmp/tls.crt" 2>/dev/null
+# The test users come below, so no first admin.
+as_root "$dir/bin/hsp" install "$dir" --dir "$install" --data-dir "$tmp/data" \
+  --public-url "$url" --tls on --tls-cert "$tmp/tls.crt" --tls-key "$tmp/tls.key" --no-admin \
+  --set HSP_BIND_ADDRESS=127.0.0.1 --set HSP_HTTP_PORT=8088 --set HSP_HTTPS_PORT=8443 \
+  --set HSP_API_WORKERS=2
+expect "hsp install copies itself into the installation" "$(ls "$install/bin")" "hsp"
+expect "hsp status names the release" "$(as_root "$install/bin/hsp" status)" "HSP $version at $url"
 
 echo "== Check"
 expect "the app loads over HTTPS" "$(curl -fsSk "$url/")" '<div id="root">'
@@ -114,8 +86,8 @@ expect "Keycloak names the public URL as its issuer" \
 expect "Keycloak's admin console is closed" "$(status -k "$url/auth/admin/")" "404"
 expect "backups.yml is fine" "$(compose exec -T backup hsp-backup check)" "every target can be read"
 backup="$(compose exec -T backup hsp-backup now)"
-expect "a backup is written to HSP_DATA_DIR/backups" "$(ls "$tmp/data/backups")" "$backup"
-expect "the backup holds both databases" "$(tar -tf "$tmp/data/backups/$backup")" "keycloak.dump"
+expect "a backup is written to HSP_DATA_DIR/backups" "$(as_root ls "$tmp/data/backups")" "$backup"
+expect "the backup holds both databases" "$(as_root tar -tf "$tmp/data/backups/$backup")" "keycloak.dump"
 
 echo "== Test users for the browser tests"
 compose exec -T keycloak bash -s <<EOF

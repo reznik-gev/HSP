@@ -1,0 +1,375 @@
+#!/usr/bin/env bash
+# hsp: install and run HSP on this Docker host (docs/0054, docs/0056, docs/0107).
+#
+#   sudo ./hsp-1.0.0/bin/hsp install            # from an unpacked release bundle
+#   sudo hsp install hsp-1.0.0.tar.gz [--dir /opt/hsp]
+#   hsp status
+#   hsp help
+#
+# It ships in the release bundle, and `hsp install` copies it to <installation>/bin/hsp. It
+# needs only bash, Docker with the Compose plugin, openssl and the usual tools (tar, sha256sum).
+# Real work, such as backups, runs inside HSP's own images.
+set -euo pipefail
+
+readonly DEFAULT_DIR=/opt/hsp
+readonly DEFAULT_DATA_DIR=/var/lib/hsp
+# The containers' users (docs/0097, docs/0106): nginx in hsp-web, and postgres and backup.
+readonly WEB_UID=101 POSTGRES_UID=999
+# One file each in secrets/ (docs/0099, docs/0106).
+readonly PASSWORDS=(db_superuser_password hsp_database_password keycloak_db_password
+  keycloak_admin_password hsp_oidc_client_secret)
+readonly EMPTY_SECRETS=(backup_s3_access_key backup_s3_secret_key)
+
+# --- Small helpers -------------------------------------------------------------------------
+
+die() {
+  echo "hsp: $*" >&2
+  exit 1
+}
+step() { echo "== $*"; }
+ok() { echo "   $*"; }
+
+need_root() { [[ $EUID -eq 0 ]] || die "$1 changes files only root may change: run it with sudo"; }
+
+need_docker() {
+  command -v docker >/dev/null || die "Docker isn't installed"
+  docker compose version >/dev/null 2>&1 || die "Docker's Compose plugin isn't installed"
+  docker info >/dev/null 2>&1 || die "can't reach Docker: is it running, and may you use it?"
+}
+
+# The installation this copy of hsp belongs to: the folder above bin/, or HSP_DIR.
+installation() {
+  local dir="${HSP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+  [[ -f "$dir/.env" && -f "$dir/compose.yml" ]] ||
+    die "$dir isn't an HSP installation; set HSP_DIR, or run this installation's bin/hsp"
+  echo "$dir"
+}
+
+compose() { docker compose --project-directory "$INSTALL_DIR" "$@"; }
+
+# env_get <name>: a setting from the installation's .env.
+env_get() { sed -n "s/^$1=//p" "$INSTALL_DIR/.env" | tail -n 1; }
+
+# env_set <file> <name> <value>: change a setting, or add it.
+env_set() {
+  local file="$1" name="$2" value="$3" escaped
+  escaped="$(printf '%s' "$value" | sed 's/[\/&|]/\\&/g')"
+  if grep -q "^$name=" "$file"; then
+    sed -i "s|^$name=.*|$name=$escaped|" "$file"
+  else
+    printf '%s=%s\n' "$name" "$value" >>"$file"
+  fi
+}
+
+# ask <prompt> <default>: a value from the operator, or the default without a terminal.
+ask() {
+  local answer
+  if [[ -t 0 ]]; then
+    read -r -p "$1${2:+ [$2]}: " answer
+    echo "${answer:-$2}"
+  else
+    echo "$2"
+  fi
+}
+
+random_secret() { openssl rand -base64 32 | tr -d '/+=\n'; }
+
+# --- Release bundles -----------------------------------------------------------------------
+
+# open_bundle <.tar.gz or folder, or empty for the bundle this hsp came from>: prints the
+# unpacked, verified bundle folder.
+open_bundle() {
+  local source="$1" here
+  if [[ -z "$source" ]]; then
+    here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    [[ -f "$here/VERSION" && -d "$here/images" ]] ||
+      die "name the bundle: hsp $COMMAND <hsp-version.tar.gz or its unpacked folder>"
+    source="$here"
+  fi
+  if [[ -f "$source" ]]; then
+    if [[ -f "$source.sha256" ]]; then
+      (cd "$(dirname "$source")" && sha256sum --quiet -c "$(basename "$source").sha256") ||
+        die "$source doesn't match its .sha256 file: download it again"
+    fi
+    local unpacked
+    unpacked="$(mktemp -d /var/tmp/hsp-bundle.XXXXXX)"
+    echo "$unpacked" >>"$UNPACKED_LIST"
+    tar -C "$unpacked" -xzf "$source" || die "can't unpack $source"
+    source="$(find "$unpacked" -mindepth 1 -maxdepth 1 -type d -name 'hsp-*' | head -n 1)"
+  fi
+  [[ -f "$source/VERSION" && -f "$source/SHA256SUMS" ]] || die "$source isn't an HSP bundle"
+  (cd "$source" && sha256sum --quiet -c SHA256SUMS) ||
+    die "the bundle's files don't match SHA256SUMS: it's damaged, download it again"
+  echo "$source"
+}
+
+load_images() {
+  local image
+  for image in "$1"/images/*.tar; do
+    docker load -q -i "$image" >/dev/null || die "can't load $image"
+  done
+}
+
+# --- Waiting for the stack -----------------------------------------------------------------
+
+# Until every service is healthy and migrate has finished; up to 5 minutes.
+wait_healthy() {
+  local states
+  for _ in $(seq 60); do
+    states="$(compose ps -a --format '{{.Service}}={{.State}}/{{.Health}}/{{.ExitCode}}')"
+    if [[ "$states" == *"migrate=exited//0"* ]] &&
+      ! grep -v '^migrate=' <<<"$states" | grep -qv '=running/healthy/'; then
+      return 0
+    fi
+    if grep -qE '=exited//[1-9]|=running/unhealthy/' <<<"$states"; then break; fi
+    sleep 5
+  done
+  compose ps -a >&2
+  compose logs --tail 40 >&2
+  die "the stack didn't become healthy; the logs above say why"
+}
+
+# --- hsp install ---------------------------------------------------------------------------
+
+usage_install() {
+  cat <<'EOF'
+hsp install [bundle] [options]: install HSP from a release bundle (docs/0107).
+
+  bundle                 hsp-<version>.tar.gz or its unpacked folder; default: the bundle this
+                         hsp came from
+  --dir DIR              the installation folder (default /opt/hsp)
+  --data-dir DIR         PostgreSQL's data and the backups (default /var/lib/hsp)
+  --public-url URL       where users reach HSP, e.g. https://hsp.example.com
+  --tls on|off           on: HSP serves HTTPS with --tls-cert and --tls-key (or a self-signed
+                         certificate, for trying it out); off: a proxy in front does
+  --tls-cert FILE        the certificate, with its chain
+  --tls-key FILE         its private key
+  --admin-email EMAIL    the first admin's email, which is also their username
+  --admin-name NAME      the first admin's name
+  --no-admin             don't create a first admin
+  --set NAME=VALUE       any other .env setting (repeatable), e.g. --set HSP_HTTPS_PORT=8443
+EOF
+}
+
+cmd_install() {
+  local bundle="" dir="$DEFAULT_DIR" data_dir="$DEFAULT_DATA_DIR" public_url="" tls=""
+  local tls_cert="" tls_key="" admin_email="" admin_name="" admin=1
+  local -a settings=()
+  while (($#)); do
+    case "$1" in
+      --dir) dir="$2"; shift 2 ;;
+      --data-dir) data_dir="$2"; shift 2 ;;
+      --public-url) public_url="$2"; shift 2 ;;
+      --tls) tls="$2"; shift 2 ;;
+      --tls-cert) tls_cert="$2"; shift 2 ;;
+      --tls-key) tls_key="$2"; shift 2 ;;
+      --admin-email) admin_email="$2"; shift 2 ;;
+      --admin-name) admin_name="$2"; shift 2 ;;
+      --no-admin) admin=""; shift ;;
+      --set) settings+=("$2"); shift 2 ;;
+      -h | --help) usage_install; return 0 ;;
+      -*) die "unknown option $1 (hsp install --help)" ;;
+      *) bundle="$1"; shift ;;
+    esac
+  done
+  need_root "hsp install"
+  need_docker
+  [[ ! -e "$dir/.env" ]] || die "$dir already holds an installation: use hsp upgrade"
+
+  public_url="${public_url:-$(ask "Where users reach HSP" "")}"
+  [[ "$public_url" =~ ^https?://[^/]+$ ]] ||
+    die "--public-url must be like https://hsp.example.com, without a path or trailing slash"
+  tls="${tls:-$(ask "Does HSP serve HTTPS itself (on), or a proxy in front (off)?" on)}"
+  [[ "$tls" == on || "$tls" == off ]] || die "--tls is on or off"
+  if [[ -n "$admin" ]]; then
+    admin_email="${admin_email:-$(ask "The first admin's email" "")}"
+    [[ "$admin_email" == *@* ]] || die "the first admin needs an email (or use --no-admin)"
+    admin_name="${admin_name:-$(ask "The first admin's name" "${admin_email%%@*}")}"
+  fi
+
+  step "Check the bundle"
+  local source version
+  source="$(open_bundle "$bundle")"
+  version="$(cat "$source/VERSION")"
+  ok "HSP $version, checksums match"
+
+  step "Load the images"
+  load_images "$source"
+  ok "loaded"
+
+  step "Write $dir"
+  INSTALL_DIR="$dir"
+  install -d -m 755 "$dir" "$dir/bin"
+  install -d -m 700 "$dir/secrets"
+  install -d -m 755 "$dir/tls"
+  cp "$source/compose/compose.yml" "$source/compose/backups.example.yml" "$dir/"
+  cp -r "$source/compose/postgres-init" "$dir/"
+  cp "$source/compose/backups.example.yml" "$dir/backups.yml"
+  cp "$source/compose/.env.example" "$dir/.env"
+  install -m 755 "$source/bin/hsp" "$dir/bin/hsp"
+  env_set "$dir/.env" HSP_VERSION "$version"
+  env_set "$dir/.env" HSP_PUBLIC_URL "$public_url"
+  env_set "$dir/.env" HSP_DATA_DIR "$data_dir"
+  env_set "$dir/.env" HSP_WEB_TLS "$tls"
+  local setting
+  for setting in "${settings[@]}"; do
+    [[ "$setting" == *=* ]] || die "--set needs NAME=VALUE, not $setting"
+    env_set "$dir/.env" "${setting%%=*}" "${setting#*=}"
+  done
+  ok ".env, compose.yml, backups.yml and bin/hsp"
+
+  # Readable by the containers that mount them; the folder keeps everyone else out
+  # (deploy/README.md, step 2).
+  local s
+  for s in "${PASSWORDS[@]}"; do random_secret >"$dir/secrets/$s"; done
+  openssl rand -base64 32 | tr '+/' '-_' | tr -d '\n' >"$dir/secrets/hsp_session_encryption_key"
+  for s in "${EMPTY_SECRETS[@]}"; do : >"$dir/secrets/$s"; done
+  chmod 444 "$dir"/secrets/*
+  ok "secrets/, generated"
+
+  if [[ "$tls" == on ]]; then
+    if [[ -n "$tls_cert" || -n "$tls_key" ]]; then
+      [[ -f "$tls_cert" && -f "$tls_key" ]] || die "--tls-cert and --tls-key must both be files"
+      cp "$tls_cert" "$dir/tls/tls.crt"
+      cp "$tls_key" "$dir/tls/tls.key"
+      ok "tls/, from $tls_cert"
+    else
+      local host="${public_url#*://}"
+      host="${host%%:*}"
+      openssl req -x509 -newkey rsa:2048 -nodes -days 365 -subj "/CN=$host" \
+        -addext "subjectAltName=DNS:$host" \
+        -keyout "$dir/tls/tls.key" -out "$dir/tls/tls.crt" 2>/dev/null
+      ok "tls/: a self-signed certificate for $host. Browsers will warn: replace tls.crt and"
+      ok "tls.key with your own and run 'docker compose restart web' in $dir"
+    fi
+    chown "$WEB_UID" "$dir/tls/tls.key" && chmod 400 "$dir/tls/tls.key"
+    chmod 444 "$dir/tls/tls.crt"
+  fi
+
+  install -d -m 755 "$data_dir"
+  install -d -m 750 -o "$POSTGRES_UID" "$data_dir/backups"
+  ok "$data_dir, with backups/ for the backup service"
+
+  step "Start HSP"
+  compose up -d
+  wait_healthy
+  ok "every service is healthy"
+
+  if [[ -n "$admin" ]]; then
+    step "The first admin"
+    create_admin "$admin_email" "$admin_name"
+  fi
+
+  step "Done"
+  echo "HSP $version is running at $public_url, from $dir."
+  echo "Backups: $dir/backups.yml (every night by default, to $data_dir/backups). Check them"
+  echo "with '$dir/bin/hsp status'."
+}
+
+# create_admin <email> <name>: a Keycloak user with the hsp-admin role and a one-time password.
+create_admin() {
+  local email="$1" name="$2" first last password
+  first="${name%% *}"
+  last="${name#"$first"}"
+  last="${last# }"
+  password="$(random_secret | cut -c1-16)"
+  compose exec -T keycloak bash -s -- "$email" "$first" "$last" "$password" <<'EOF' >/dev/null
+set -euo pipefail
+k=/opt/keycloak/bin/kcadm.sh
+$k config credentials --server http://localhost:8080/auth --realm master --user admin \
+  --password "$(cat /run/secrets/keycloak_admin_password)"
+$k create users -r hsp -s "username=$1" -s "email=$1" -s "firstName=$2" -s "lastName=$3" \
+  -s enabled=true -s emailVerified=true
+$k set-password -r hsp --username "$1" --new-password "$4" --temporary
+$k add-roles -r hsp --uusername "$1" --rolename hsp-admin
+EOF
+  ok "Sign in as $email with the one-time password $password"
+  ok "Keycloak asks for a new password at the first sign-in."
+}
+
+# --- hsp status ----------------------------------------------------------------------------
+
+cmd_status() {
+  need_docker
+  INSTALL_DIR="$(installation)"
+  local data_dir
+  data_dir="$(env_get HSP_DATA_DIR)"
+  echo "HSP $(env_get HSP_VERSION) at $(env_get HSP_PUBLIC_URL), installed in $INSTALL_DIR"
+  echo
+  echo "Services:"
+  compose ps -a --format '  {{.Service}}\t{{.State}}\t{{.Health}}' | column -t -s $'\t'
+  echo
+  echo "Backups:"
+  backup_status
+  echo
+  echo "Free disk:"
+  df -h --output=target,avail,pcent "${data_dir:-$DEFAULT_DATA_DIR}" \
+    "${data_dir:-$DEFAULT_DATA_DIR}/backups" 2>/dev/null | sed 's/^/  /' || echo "  (unknown)"
+}
+
+# The last success and failure of each schedule, from the backup service's metrics.
+backup_status() {
+  local metrics
+  if ! metrics="$(compose exec -T backup python -c \
+    "import urllib.request; print(urllib.request.urlopen('http://localhost:9465/metrics').read().decode())" \
+    2>/dev/null)"; then
+    echo "  the backup service isn't running"
+    return
+  fi
+  local found="" schedule success failure line
+  while read -r schedule success failure; do
+    found=1
+    line="  $schedule: last backup $(when "$success")"
+    if [[ -n "$failure" && "${failure%.*}" -gt "${success%.*}" ]]; then
+      line+=", FAILED since $(when "$failure")"
+    fi
+    echo "$line"
+  done < <(awk '
+    /^hsp_backup_last_(success|failure)_timestamp_seconds\{/ {
+      match($0, /schedule="[^"]*"/); s = substr($0, RSTART + 10, RLENGTH - 11)
+      if ($0 ~ /success/) ok[s] = $2; else bad[s] = $2; seen[s] = 1
+    }
+    END { for (s in seen) print s, (s in ok ? ok[s] : 0), (s in bad ? bad[s] : 0) }
+  ' <<<"$metrics" | sort)
+  [[ -n "$found" ]] || echo "  none since the backup service started (see hsp backup list)"
+}
+
+when() {
+  local seconds="${1%.*}"
+  if [[ -z "$seconds" || "$seconds" == 0 ]]; then
+    echo "never"
+  else
+    date -d "@$seconds" '+%Y-%m-%d %H:%M %Z'
+  fi
+}
+
+# --- Commands ------------------------------------------------------------------------------
+
+usage() {
+  cat <<'EOF'
+hsp: install and run HSP on this Docker host (docs/0107).
+
+  hsp install [bundle] [options]   install from a release bundle (hsp install --help)
+  hsp status                       version, services, last backups and free disk
+  hsp help                         this
+EOF
+}
+
+# Bundles unpacked into /var/tmp are removed on exit (open_bundle runs in a subshell, so it
+# lists them in a file).
+UNPACKED_LIST="$(mktemp)"
+cleanup() {
+  local d
+  while read -r d; do [[ -n "$d" ]] && rm -rf "$d"; done <"$UNPACKED_LIST"
+  rm -f "$UNPACKED_LIST"
+}
+trap cleanup EXIT
+
+COMMAND="${1:-help}"
+shift || true
+case "$COMMAND" in
+  install) cmd_install "$@" ;;
+  status) cmd_status "$@" ;;
+  help | -h | --help) usage ;;
+  *) usage >&2; die "unknown command $COMMAND" ;;
+esac

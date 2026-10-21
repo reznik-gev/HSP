@@ -28,6 +28,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
       backup: ${{ steps.filter.outputs.backup }}
+      scripts: ${{ steps.filter.outputs.scripts }}
       images: ${{ steps.filter.outputs.images }}
     steps:
       - uses: actions/checkout@v7
@@ -46,6 +47,10 @@ jobs:
               - ".github/workflows/ci.yml"
             backup:
               - "backup/**"
+              - ".github/workflows/ci.yml"
+            scripts:
+              - "deploy/**/*.sh"
+              - "deploy/bin/**"
               - ".github/workflows/ci.yml"
             images:
               - "backend/**"
@@ -126,6 +131,16 @@ jobs:
       - name: Tests
         run: uv run pytest
 
+  # The operator and deploy scripts (docs/0107). shellcheck comes with GitHub's Ubuntu runners.
+  scripts:
+    needs: changes
+    if: needs.changes.outputs.scripts == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: shellcheck
+        run: shellcheck deploy/*.sh deploy/bin/hsp
+
   frontend:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
@@ -179,7 +194,7 @@ jobs:
 
   ci-ok:
     if: always()
-    needs: [changes, backend, backup, frontend, images]
+    needs: [changes, backend, backup, scripts, frontend, images]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped

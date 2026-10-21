@@ -48,6 +48,7 @@ cp "$root/deploy/README.md" "$dir/docs/install.md"
 cp "$notes" "$dir/docs/release-notes.md"
 cp "$root/CHANGELOG.md" "$dir/docs/CHANGELOG.md"
 cp "$root/LICENSE" "$dir/"
+install -D -m 755 "$root/deploy/bin/hsp" "$dir/bin/hsp"
 echo "$version" > "$dir/VERSION"
 
 sums="$(cd "$dir" && find . -type f -printf '%P\n' | sort | xargs sha256sum)"
