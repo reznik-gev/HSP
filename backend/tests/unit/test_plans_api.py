@@ -39,6 +39,10 @@ def content(x: int) -> PlanContent:
     return PlanContent(objects=[stub_placed_object(DESK_REV, id=DESK, position=(x, 0, 0))])
 
 
+#: The draft (version 3) after its desk moved to x = 3500 mm.
+EDITED_DRAFT = content(3500)
+
+
 @pytest.fixture
 def plan_repo(app: FastAPI) -> InMemoryPlanRepository:
     """FLOOR with versions 1 (superseded), 2 (published) and 3 (the draft), its desk at x = 1000,
@@ -72,10 +76,17 @@ def test_plan_of_a_version(api: TestClient) -> None:
     assert plan["objects"][0]["position"] == [2000, 0, 0]
 
 
-def test_a_version_never_changes_so_browsers_keep_it(api: TestClient) -> None:
-    r = api.get(f"/api/v1/floors/{FLOOR}/versions/2")
-    assert r.headers["Cache-Control"] == "private, max-age=31536000, immutable"
-    assert "ETag" not in r.headers
+def test_a_version_is_revalidated_because_its_answer_can_change(
+    api: TestClient, plan_repo: InMemoryPlanRepository
+) -> None:
+    # An admin reads the draft through /versions/3; it changes as it's edited (docs/0109).
+    url = f"/api/v1/floors/{FLOOR}/versions/3"
+    first = api.get(url)
+    assert first.headers["Cache-Control"] == "private, no-cache"
+    plan_repo.content[(FLOOR, 3)] = EDITED_DRAFT
+    again = api.get(url, headers={"If-None-Match": first.headers["ETag"]})
+    assert again.status_code == 200
+    assert again.json()["objects"][0]["position"] == [3500, 0, 0]
 
 
 def test_viewer_gets_404_for_draft_version_and_403_for_draft(

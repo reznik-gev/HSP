@@ -11,7 +11,6 @@ from structlog.testing import capture_logs
 from hsp.config import get_settings
 from hsp.main import create_app
 
-
 #: A floor that may not exist; its route is matched either way.
 SOME_FLOOR_URL = "/api/v1/floors/0193e3d2-0000-7000-8000-000000000001"
 

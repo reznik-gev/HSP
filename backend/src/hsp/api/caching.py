@@ -3,7 +3,10 @@
 Polled reads carry a weak ETag, a hash of the body, and `Cache-Control: private, no-cache`: the
 browser keeps the answer and asks again with If-None-Match, and an unchanged answer is a 304
 with no body. The server still does the work; what's saved is the download and the redraw.
-A published plan version never changes, so the browser keeps it for good instead.
+
+A plan version is revalidated the same way. Its answer can change under the same URL: admins
+read the draft through it while it's edited, and a published version later says it's
+superseded (docs/0109), so it can't be kept for good.
 """
 
 import hashlib
@@ -13,19 +16,17 @@ from fastapi import Request, Response
 
 from hsp.api.routes import route_template
 
-#: Route templates the app polls (docs/0041): the floor, its edit lock, and its seats.
-POLLED = frozenset(
+#: Route templates whose answers are revalidated (docs/0041): the floor, its edit lock, its seats,
+#: and its plan versions.
+REVALIDATED = frozenset(
     {
         "/api/v1/floors/{floor_id}",
         "/api/v1/floors/{floor_id}/lock",
         "/api/v1/seats",
+        "/api/v1/floors/{floor_id}/versions/{version}",
     }
 )
 REVALIDATE = "private, no-cache"
-
-#: Route templates whose answers never change.
-IMMUTABLE = frozenset({"/api/v1/floors/{floor_id}/versions/{version}"})
-FOREVER = "private, max-age=31536000, immutable"
 
 
 def etag_of(body: bytes) -> str:
@@ -39,15 +40,11 @@ def matches(if_none_match: str, etag: str) -> bool:
 
 
 async def apply_caching(request: Request, response: Response) -> Response:
-    """Add the caching headers to a successful GET of a polled or never-changing route, and
-    answer 304 when the browser already has the same answer."""
+    """Add an ETag to a successful GET of a revalidated route, and answer 304 when the browser
+    already has the same answer."""
     if request.method != "GET" or response.status_code != 200:
         return response
-    route = route_template(request)
-    if route in IMMUTABLE:
-        response.headers["Cache-Control"] = FOREVER
-        return response
-    if route not in POLLED:
+    if route_template(request) not in REVALIDATED:
         return response
 
     # The middleware hands over a streamed body; read it to hash it.
