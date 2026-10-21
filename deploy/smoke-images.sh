@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Smoke-test the HSP images built by deploy/build-images.sh (docs/0097). CI runs it on PRs.
 #   deploy/smoke-images.sh [version]      # default 0.0.0-dev
-# Checks that each image starts and answers: the API's /healthz and its migrate tooling; the web
+# Checks that each image starts and answers: the API's /healthz, its migrate tooling and its
+# refusal to start on an unmigrated database; the web
 # image in both TLS modes (docs/0098), serving the app, proxying to the API and closing Keycloak's
 # admin console; and Keycloak starting optimized against PostgreSQL with the realm imported.
 # Ports 18000-18088, 18443 and 19000 on this machine must be free; needs curl and openssl.
@@ -47,12 +48,30 @@ status() {
 
 docker network create "$net" >/dev/null
 
+# One PostgreSQL for the API and Keycloak, each with its own database.
+docker run -d --name "$run-db" --network "$net" \
+  -e POSTGRES_USER=keycloak -e POSTGRES_PASSWORD=keycloak -e POSTGRES_DB=keycloak \
+  postgis/postgis:18-3.6 >/dev/null
+# The image's init scripts restart the server once, so wait for it to answer over the network.
+for _ in $(seq 60); do
+  docker exec "$run-db" pg_isready -h "$run-db" -U keycloak -d keycloak >/dev/null 2>&1 && break
+  sleep 1
+done
+docker exec "$run-db" createdb -h "$run-db" -U keycloak hsp
+
 echo "== hsp-api"
+api_env=(
+  -e HSP_DATABASE_URL="postgresql+asyncpg://keycloak:keycloak@$run-db:5432/hsp"
+  -e HSP_SESSION_ENCRYPTION_KEY="$(head -c 32 /dev/urandom | base64 | tr '+/' '-_')"
+  -e HSP_OIDC_CLIENT_SECRET=smoke-secret
+  -e HSP_API_WORKERS=2
+)
+expect "api refuses to start before migrations ran (docs/0056)" \
+  "$(timeout 60 docker run --rm --network "$net" "${api_env[@]}" "hsp-api:$version" 2>&1 || true)" \
+  "run the migrate job"
+docker run --rm --network "$net" "${api_env[@]}" "hsp-api:$version" alembic upgrade head >/dev/null
 docker run -d --name "$run-api" --network "$net" --network-alias api -p 18000:8000 \
-  -e HSP_SESSION_ENCRYPTION_KEY="$(head -c 32 /dev/urandom | base64 | tr '+/' '-_')" \
-  -e HSP_OIDC_CLIENT_SECRET=smoke-secret \
-  -e HSP_API_WORKERS=2 \
-  "hsp-api:$version" >/dev/null
+  "${api_env[@]}" "hsp-api:$version" >/dev/null
 wait_for http://localhost:18000/healthz 60 || { docker logs "$run-api"; exit 1; }
 expect "api /healthz reports the version" "$(curl -fsS http://localhost:18000/healthz)" "\"version\":\"$version\""
 expect "api runs as non-root" "$(docker exec "$run-api" id -u)" "10001"
@@ -112,13 +131,6 @@ expect "web refuses to start with TLS on and no certificate" \
   "$(docker run --rm -e HSP_PUBLIC_URL=https://x "hsp-web:$version" 2>&1 || true)" "no certificate"
 
 echo "== hsp-keycloak"
-docker run -d --name "$run-db" --network "$net" \
-  -e POSTGRES_USER=keycloak -e POSTGRES_PASSWORD=keycloak -e POSTGRES_DB=keycloak \
-  postgis/postgis:18-3.6 >/dev/null
-for _ in $(seq 60); do
-  docker exec "$run-db" pg_isready -U keycloak -d keycloak >/dev/null 2>&1 && break
-  sleep 1
-done
 docker run -d --name "$run-kc" --network "$net" -p 18082:8080 -p 19000:9000 \
   -e KC_DB_URL="jdbc:postgresql://$run-db:5432/keycloak" \
   -e KC_DB_USERNAME=keycloak -e KC_DB_PASSWORD=keycloak \

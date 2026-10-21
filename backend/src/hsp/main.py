@@ -15,6 +15,7 @@ from hsp.config import get_settings
 from hsp.db import dispose_engine
 from hsp.logging import configure_logging, is_debug
 from hsp.problems import install_problem_handlers
+from hsp.readiness import check_schema_at_startup, default_readiness
 
 #: Probed every few seconds by health checks and Prometheus; logging them would drown the rest.
 UNLOGGED_PATHS = frozenset({"/healthz", "/readyz", "/metrics"})
@@ -26,6 +27,10 @@ AUTH_PATH_PREFIX = v1.router.prefix + auth.router.prefix + "/"
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    # In production the schema must match, or the API refuses to start (docs/0056). Development
+    # and tests see a mismatch on /readyz instead.
+    if get_settings().environment == "production":
+        await check_schema_at_startup()
     yield
     await dispose_engine()
 
@@ -42,6 +47,7 @@ def create_app() -> FastAPI:
     )
     install_problem_handlers(app)
     app.state.oidc = OidcClient(settings)
+    app.state.readiness = default_readiness(settings.oidc_issuer_url)
 
     @app.middleware("http")
     async def identify_and_log_request(
