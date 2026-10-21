@@ -63,14 +63,15 @@ describe("the Properties panel's fields (docs/0045)", () => {
     ).toBeNull();
   });
 
-  it("a wall's length moves its far end, and the wall joined there follows", () => {
-    const { set } = setup(["w1"]);
+  it("a wall's length moves its free end, so its corner stays (docs/0108)", () => {
+    const { set } = setup(["w1"]); // w1's b is the corner with w2; its a is free
     expect(set("length", 5000)).toEqual([
-      { op: "update", kind: "wall", id: "w1", data: { b: [5000, 0] } },
-      { op: "update", kind: "wall", id: "w2", data: { a: [5000, 0] } },
+      { op: "update", kind: "wall", id: "w1", data: { a: [-1000, 0] } },
+      // The door keeps its place on the plan: 1000 mm further from the moved end.
+      { op: "update", kind: "opening", id: "o1", data: { offset_mm: 1500 } },
     ]);
-    // Too short for its door (offset 500 + 900).
-    expect(set("length", 1000)).toBeNull();
+    // Shorter than the door's place allows: it would leave the wall.
+    expect(set("length", 3200)).toBeNull();
   });
 
   it("a door must stay inside its wall; windows have no swing", () => {

@@ -14,6 +14,7 @@
 import {
   deleteSelection,
   moveJunction,
+  moveWall,
   moveZoneVertex,
   type OpeningType,
   rotateObjects,
@@ -26,7 +27,7 @@ import type { Measure } from "./measure";
 import { hitTest, zoneAt } from "./hitTest";
 import type { Plan, Vec2 } from "./plan";
 import { SNAP_PX, snapPoint, snapSettings } from "./snap";
-import type { EditorStore } from "./store";
+import type { EditorStore, Preview } from "./store";
 import { ColumnTool } from "./tools/columnTool";
 import { ItemTool } from "./tools/itemTool";
 import { NumberTool } from "./tools/numberTool";
@@ -59,6 +60,16 @@ type Gesture =
   | { kind: "pan"; clickClears?: boolean }
   | { kind: "drag"; start: Vec2; moved: boolean }
   | { kind: "junction"; from: Vec2; walls: string[] }
+  /** A selected wall dragged by its body; the walls joined at its ends stretch (docs/0108). */
+  | {
+      kind: "wall";
+      id: string;
+      start: Vec2;
+      a: Vec2;
+      b: Vec2;
+      joinedA: string[];
+      joinedB: string[];
+    }
   /** Sliding a door or window: `grab` is where along it the pointer took hold. */
   | { kind: "slide"; id: string; grab: number }
   | { kind: "vertex"; zone: string; index: number; from: Vec2 }
@@ -172,6 +183,21 @@ export class Interaction {
       return "select";
     }
     if (hit?.kind === "wall") {
+      const w = s.plan.walls.find((x) => x.id === hit.id);
+      if (w && !e.shift && s.selection.size === 1 && s.selection.has(w.id)) {
+        // A selected wall: dragging its body moves it; Alt detaches it (docs/0108).
+        const others = (p: Vec2) => (e.alt ? [] : wallsAt(s.plan!, p).filter((id) => id !== w.id));
+        this.gesture = {
+          kind: "wall",
+          id: w.id,
+          start: p,
+          a: w.a,
+          b: w.b,
+          joinedA: others(w.a),
+          joinedB: others(w.b),
+        };
+        return "none";
+      }
       s.select([hit.id], e.shift);
       this.pan(e);
       return "select";
@@ -205,6 +231,33 @@ export class Interaction {
     if (!item) return null;
     const shape: ItemShape = item;
     return { object, shape, moving: new Set(s.selection) };
+  }
+
+  /**
+   * Where a dragged wall goes: moved with the pointer, then snapped by whichever end snaps to
+   * something (a wall's end, midpoint or side) with the smaller correction, else by its first
+   * end to the grid. The wall and the walls stretching with it aren't snapped to.
+   */
+  private wallMove(g: Extract<Gesture, { kind: "wall" }>, p: Vec2, alt?: boolean): Preview {
+    const s = this.store.getState();
+    const d: Vec2 = [p[0] - g.start[0], p[1] - g.start[1]];
+    const opts = {
+      ...snapSettings(s, alt),
+      ignoreWalls: new Set([g.id, ...g.joinedA, ...g.joinedB]),
+    };
+    const want = (end: Vec2): Vec2 => [end[0] + d[0], end[1] + d[1]];
+    const ends = [g.a, g.b].map((end) => ({ end, snapped: snapPoint(s.plan!, want(end), opts) }));
+    const onSomething = ends.filter((x) => x.snapped.kind && x.snapped.kind !== "grid");
+    const correction = (x: (typeof ends)[number]) =>
+      Math.hypot(x.snapped.point[0] - want(x.end)[0], x.snapped.point[1] - want(x.end)[1]);
+    const best = onSomething.sort((x, y) => correction(x) - correction(y))[0] ?? ends[0]!;
+    return {
+      kind: "wallMove",
+      id: g.id,
+      d: [best.snapped.point[0] - best.end[0], best.snapped.point[1] - best.end[1]],
+      at: best.snapped.point,
+      snap: best.snapped.kind,
+    };
   }
 
   /** A corner of a selected zone near the pointer, which can be dragged. */
@@ -279,6 +332,9 @@ export class Interaction {
         straight: e.shift,
       });
       s.setPreview({ kind: "junction", from: g.from, to: point, walls: g.walls, snap: kind });
+    } else if (g.kind === "wall" && s.plan) {
+      if (!s.preview && isClick(this.downAt, e.sx, e.sy)) return;
+      s.setPreview(this.wallMove(g, this.toPlan(e), e.alt));
     } else if (g.kind === "numbering") {
       this.numberTool.extend(this.toPlan(e));
     } else if (g.kind === "vertex" && s.plan) {
@@ -320,6 +376,12 @@ export class Interaction {
       s.setPreview(null);
       if (preview?.kind === "junction" && s.plan) {
         s.perform(moveJunction(s.plan, g.walls, g.from, preview.to));
+      }
+    } else if (g.kind === "wall") {
+      const preview = s.preview;
+      s.setPreview(null);
+      if (preview?.kind === "wallMove" && s.plan) {
+        s.perform(moveWall(s.plan, g.id, preview.d, g.joinedA, g.joinedB));
       }
     } else if (g.kind === "numbering") {
       this.numberTool.end();

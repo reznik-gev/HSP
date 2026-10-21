@@ -8,14 +8,15 @@ import { editing } from "./testPlan";
 // (160 × 80 cm, not turned) at (2000,1500) with monitor m1 on it.
 
 describe("dimensions on the plan (docs/0045)", () => {
-  it("a selected wall shows its length beside it; editing it moves its far end", () => {
+  it("a selected wall shows its length beside it; editing it moves its free end", () => {
     const { store } = editing();
     const plan = store.getState().plan!;
     const [length] = dimensionsFor(plan, new Set(["w1"]), 200);
     expect(length).toMatchObject({ key: "length", from: [0, 275], to: [4000, 275], valueMm: 4000 });
+    // w1's corner with w2 stays; its free end and its door move out (docs/0108).
     expect(length!.edit(5000)).toEqual([
-      { op: "update", kind: "wall", id: "w1", data: { b: [5000, 0] } },
-      { op: "update", kind: "wall", id: "w2", data: { a: [5000, 0] } },
+      { op: "update", kind: "wall", id: "w1", data: { a: [-1000, 0] } },
+      { op: "update", kind: "opening", id: "o1", data: { offset_mm: 1500 } },
     ]);
     expect(length!.edit(1000)).toBeNull(); // its door wouldn't fit
   });

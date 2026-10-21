@@ -179,23 +179,82 @@ export function wallsAt(plan: Plan, p: Vec2): string[] {
 }
 
 /**
- * Makes a wall `lengthMm` long by moving its far end (b) along the wall; the walls joined there
- * follow (docs/0044). Null when that can't be done: a length that isn't positive, or a door or
- * window that would no longer fit (opening_exceeds_wall, docs/0081).
+ * Makes a wall `lengthMm` long by moving one end along the wall. When exactly one end is joined
+ * to other walls, the free end moves, so the corner stays (docs/0108), and the wall's doors and
+ * windows keep their place on the plan. Otherwise the far end (b) moves, and the walls joined
+ * there follow (docs/0044). Null when that can't be done: a length that isn't positive, or a door
+ * or window that would no longer fit (opening_exceeds_wall, docs/0081).
  */
 export function setWallLength(plan: Plan, wallId: string, lengthMm: number): Op[] | null {
   const w = plan.walls.find((x) => x.id === wallId);
   if (!w || !(lengthMm > 0)) return null;
   const l = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]);
+  const joined = (p: Vec2) => wallsAt(plan, p).length > 1;
+  const openings = plan.openings.filter((o) => o.wall_id === wallId);
+  if (joined(w.b) && !joined(w.a)) {
+    const to: Vec2 = [
+      Math.round(w.b[0] - ((w.b[0] - w.a[0]) / l) * lengthMm),
+      Math.round(w.b[1] - ((w.b[1] - w.a[1]) / l) * lengthMm),
+    ];
+    // Offsets are measured from a, which moves: shift them by what the wall gains.
+    const gained = Math.round(Math.hypot(w.b[0] - to[0], w.b[1] - to[1]) - l);
+    if (
+      openings.some((o) => o.offset_mm + gained < 0 || o.offset_mm + gained + o.width_mm > lengthMm)
+    ) {
+      return null;
+    }
+    const ops = moveJunction(plan, [wallId], w.a, to);
+    if (!ops.length) return null;
+    return [
+      ...ops,
+      ...openings.map((o): Op => ({
+        op: "update",
+        kind: "opening",
+        id: o.id,
+        data: { offset_mm: o.offset_mm + gained },
+      })),
+    ];
+  }
   const to: Vec2 = [
     Math.round(w.a[0] + ((w.b[0] - w.a[0]) / l) * lengthMm),
     Math.round(w.a[1] + ((w.b[1] - w.a[1]) / l) * lengthMm),
   ];
-  const tooLong = plan.openings.some(
-    (o) => o.wall_id === wallId && o.offset_mm + o.width_mm > lengthMm,
-  );
+  const tooLong = openings.some((o) => o.offset_mm + o.width_mm > lengthMm);
   const ops = moveJunction(plan, wallsAt(plan, w.b), w.b, to);
   return ops.length && !tooLong ? ops : null;
+}
+
+/**
+ * Moves a whole wall by `d` (docs/0108): its ends, and the ends of `joinedA` and `joinedB` (the
+ * walls joined at its ends, which stretch to stay joined) that meet them. One op per wall. No ops
+ * if that would collapse a wall to a point.
+ */
+export function moveWall(
+  plan: Plan,
+  wallId: string,
+  d: Vec2,
+  joinedA: readonly string[],
+  joinedB: readonly string[],
+): Op[] {
+  const w = plan.walls.find((x) => x.id === wallId);
+  if (!w || (d[0] === 0 && d[1] === 0)) return [];
+  const by = (p: Vec2): number[] => [p[0] + d[0], p[1] + d[1]];
+  const ops: Op[] = [];
+  for (const other of plan.walls) {
+    const data: Record<string, number[]> = {};
+    for (const end of ["a", "b"] as const) {
+      const p = other[end];
+      if (other.id === wallId) data[end] = by(p);
+      else if (joinedA.includes(other.id) && same(p, w.a)) data[end] = by(p);
+      else if (joinedB.includes(other.id) && same(p, w.b)) data[end] = by(p);
+    }
+    if (!Object.keys(data).length) continue;
+    const a = data.a ?? other.a;
+    const b = data.b ?? other.b;
+    if (a[0] === b[0] && a[1] === b[1]) return [];
+    ops.push({ op: "update", kind: "wall", id: other.id, data });
+  }
+  return ops;
 }
 
 /**
