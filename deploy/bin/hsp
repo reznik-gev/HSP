@@ -162,12 +162,14 @@ hsp install [bundle] [options]: install HSP from a release bundle (docs/0107).
   --admin-name NAME      the first admin's name
   --no-admin             don't create a first admin
   --set NAME=VALUE       any other .env setting (repeatable), e.g. --set HSP_HTTPS_PORT=8443
+  --secrets DIR          use a saved secrets/ folder instead of new secrets, to restore a backup
+                         on a new host (install.md, "Recovering on a new host")
 EOF
 }
 
 cmd_install() {
   local bundle="" dir="$DEFAULT_DIR" data_dir="$DEFAULT_DATA_DIR" public_url="" tls=""
-  local tls_cert="" tls_key="" admin_email="" admin_name="" admin=1
+  local tls_cert="" tls_key="" admin_email="" admin_name="" admin=1 secrets_from=""
   local -a settings=()
   while (($#)); do
     case "$1" in
@@ -181,6 +183,7 @@ cmd_install() {
       --admin-name) admin_name="$2"; shift 2 ;;
       --no-admin) admin=""; shift ;;
       --set) settings+=("$2"); shift 2 ;;
+      --secrets) secrets_from="$2"; shift 2 ;;
       -h | --help) usage_install; return 0 ;;
       -*) die "unknown option $1 (hsp install --help)" ;;
       *) bundle="$1"; shift ;;
@@ -235,11 +238,23 @@ cmd_install() {
   # Readable by the containers that mount them; the folder keeps everyone else out
   # (deploy/README.md, step 2).
   local s
-  for s in "${PASSWORDS[@]}"; do random_secret >"$dir/secrets/$s"; done
-  openssl rand -base64 32 | tr '+/' '-_' | tr -d '\n' >"$dir/secrets/hsp_session_encryption_key"
-  for s in "${EMPTY_SECRETS[@]}"; do : >"$dir/secrets/$s"; done
-  chmod 444 "$dir"/secrets/*
-  ok "secrets/, generated"
+  if [[ -n "$secrets_from" ]]; then
+    # Recovering on a new host (docs/0109): PostgreSQL takes its passwords from these on its
+    # first start, so they must be the saved ones before it starts, not put back after.
+    for s in "${PASSWORDS[@]}" hsp_session_encryption_key; do
+      [[ -s "$secrets_from/$s" ]] || die "$secrets_from has no $s: --secrets needs a saved secrets/"
+    done
+    cp "$secrets_from"/* "$dir/secrets/"
+    for s in "${EMPTY_SECRETS[@]}"; do [[ -e "$dir/secrets/$s" ]] || : >"$dir/secrets/$s"; done
+    chmod 444 "$dir"/secrets/*
+    ok "secrets/, from $secrets_from"
+  else
+    for s in "${PASSWORDS[@]}"; do random_secret >"$dir/secrets/$s"; done
+    openssl rand -base64 32 | tr '+/' '-_' | tr -d '\n' >"$dir/secrets/hsp_session_encryption_key"
+    for s in "${EMPTY_SECRETS[@]}"; do : >"$dir/secrets/$s"; done
+    chmod 444 "$dir"/secrets/*
+    ok "secrets/, generated"
+  fi
 
   if [[ "$tls" == on ]]; then
     if [[ -n "$tls_cert" || -n "$tls_key" ]]; then
