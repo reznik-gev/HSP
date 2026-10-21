@@ -2,8 +2,9 @@
  * The wall tool (docs/0044, docs/0089): click to start, click again for each corner; every
  * segment is its own wall and its own undo step, starting where the last one ended, so walls
  * join exactly. Clicking the chain's first point closes the room and ends the chain, as do
- * Enter, Escape and the right mouse button. Points snap as docs/0047 says (see snap.ts); a
- * typed length (and angle) places the next corner exactly (docs/0045).
+ * Enter, Escape and the right mouse button. Points snap as docs/0047 says (see snap.ts), and
+ * straight from the last corner (docs/0108; Shift forces it); a typed length (and angle) places
+ * the next corner exactly (docs/0045).
  *
  * The chain lives in the store's preview, so switching tools always ends it.
  */
@@ -26,9 +27,13 @@ export class WallTool {
   private snap(p: Vec2) {
     const s = this.store.getState();
     const { start } = this.chain();
+    const { from } = this.chain();
     return snapPoint(s.plan!, p, {
       ...snapSettings(s, s.snapFree),
       extra: start ? [start] : [],
+      // The next corner keeps straight from the last one (docs/0108).
+      anchors: from ? [from] : [],
+      straight: s.snapStraight,
     });
   }
 

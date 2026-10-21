@@ -9,6 +9,7 @@ import { useStore } from "zustand";
 
 import type { Vec2, Wall } from "@/editor/core/plan";
 import { arrayLayout } from "@/editor/core/array";
+import type { SnapKind } from "@/editor/core/snap";
 import type { EditorStore } from "@/editor/core/store";
 
 export function EditOverlay({ store }: { store: EditorStore }) {
@@ -275,7 +276,7 @@ function SnapMarker({
   px,
 }: {
   at: Vec2;
-  kind: "endpoint" | "midpoint" | "centreline";
+  kind: Exclude<SnapKind, "grid" | null>;
   px: number;
 }) {
   const { t } = useTranslation();
@@ -300,6 +301,21 @@ function SnapMarker({
           points={`${x},${y - r} ${x + r},${y} ${x},${y + r} ${x - r},${y}`}
           fill="none"
           strokeWidth={2 * px}
+        />
+      )}
+      {(kind === "horizontal" || kind === "vertical" || kind === "diagonal") && (
+        // A short stroke along the straight line the end keeps to (docs/0108).
+        <path
+          className="plan-selected"
+          d={
+            kind === "horizontal"
+              ? `M${x - 2 * r} ${y}L${x + 2 * r} ${y}`
+              : kind === "vertical"
+                ? `M${x} ${y - 2 * r}L${x} ${y + 2 * r}`
+                : `M${x - 1.5 * r} ${y - 1.5 * r}L${x + 1.5 * r} ${y + 1.5 * r}`
+          }
+          strokeWidth={2 * px}
+          strokeDasharray={`${2 * px} ${2 * px}`}
         />
       )}
       {kind === "centreline" && (

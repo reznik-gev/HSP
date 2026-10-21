@@ -114,6 +114,8 @@ export interface EditorState {
   heightFilter: HeightFilter;
   /** Alt is held: snapping is off for this pointer move (docs/0047). */
   snapFree: boolean;
+  /** Shift is held: a wall's end keeps to the nearest straight line (docs/0108). */
+  snapStraight: boolean;
   /** The edited plan in API shape; null in the read-only viewer. */
   document: ApiPlan | null;
   zoneTypes: ZoneTypes;
@@ -177,6 +179,7 @@ export interface EditorState {
   setGridMm(gridMm: EditorState["gridMm"]): void;
   setHeightFilter(filter: HeightFilter): void;
   setSnapFree(free: boolean): void;
+  setSnapStraight(straight: boolean): void;
   setTool(tool: Tool): void;
   setPreview(preview: Preview): void;
   setWallDefaults(defaults: Partial<WallDefaults>): void;
@@ -254,6 +257,7 @@ export function createEditorStore() {
       gridSnap: true,
       heightFilter: "all",
       snapFree: false,
+      snapStraight: false,
       document: null,
       zoneTypes: new Map(),
       undoStack: [],
@@ -409,6 +413,9 @@ export function createEditorStore() {
       setHeightFilter: (heightFilter) => set({ heightFilter }),
       setSnapFree: (snapFree) => {
         if (get().snapFree !== snapFree) set({ snapFree });
+      },
+      setSnapStraight: (snapStraight) => {
+        if (get().snapStraight !== snapStraight) set({ snapStraight });
       },
       setTool: (tool) => set({ tool, preview: null }),
       setPreview: (preview) => set({ preview }),
