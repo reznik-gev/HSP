@@ -45,6 +45,23 @@
     "title": "Seats",
     "empty": "Search for a person, team or seat label to see where they sit."
   },
+  "freeSeats": {
+    "title": "Free seats",
+    "search": "Find someone's seat",
+    "site": "Site",
+    "building": "Building",
+    "floor": "Floor",
+    "zone": "Zone",
+    "kind": "Kind",
+    "all": "All",
+    "kinds": {
+      "any": "Free or bookable",
+      "assignable": "Free to assign",
+      "bookable": "Bookable"
+    },
+    "failed": "Couldn't load the free seats. Try again.",
+    "none": "No free seats match these filters."
+  },
   "notFound": {
     "title": "Page not found",
     "body": "This address doesn't match any page. Use the sidebar to find what you need."
