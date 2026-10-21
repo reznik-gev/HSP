@@ -4,7 +4,7 @@
  * - Ctrl+C copies the selection; Ctrl+V pastes in place, Ctrl+Shift+V at the pointer (docs/0049);
  * - a tool's letter picks it (V select, W wall, …);
  * - Escape, Enter, Delete and Backspace go to the current tool (end a wall chain, delete the
- *   selection, …);
+ *   selection, …), and the arrow keys nudge the selection 1 cm, 10 cm with Shift (docs/0108);
  * - a digit while drawing a wall or dragging opens the typed-measurement box (docs/0045).
  */
 import { useEffect } from "react";
@@ -38,7 +38,7 @@ export function useEditorKeys(store: EditorStore, interaction: Interaction, enab
       } else {
         const tool = TOOLS.find((x) => x.key.toLowerCase() === key);
         if (tool) store.getState().setTool(tool.tool);
-        else if (!interaction.key(e.key)) return;
+        else if (!interaction.key(e.key, e.shiftKey)) return;
       }
       e.preventDefault();
     };
