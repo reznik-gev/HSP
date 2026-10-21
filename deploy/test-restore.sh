@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# The weekly restore test (docs/0058, docs/0106). On a stack that `KEEP=1 deploy/test-bundle.sh`
-# installed: seed data, back it up to the folder, wipe the database for a fresh stack, restore,
-# and check that every HSP table and Keycloak's own data (users, realms, clients) have the same
-# rows, and that signing in and finding the seeded seat still work.
+# The weekly restore test (docs/0058, docs/0106, docs/0107). On a stack that
+# `KEEP=1 deploy/test-bundle.sh` installed: seed data, back it up with `hsp backup now`, wipe the
+# database for a fresh stack, `hsp restore`, and check that every HSP table and Keycloak's own
+# data (users, realms, clients) have the same rows, and that signing in and finding the seeded
+# seat still work.
 #   HSP_TEST_DIR=<test-bundle's directory> deploy/test-restore.sh
 # Needs Docker with the Compose plugin, and pnpm with Playwright's Chromium in frontend/.
 set -euo pipefail
@@ -42,7 +43,7 @@ before_hsp="$(counts hsp)"
 before_keycloak="$(counts keycloak "$KEYCLOAK_TABLES")"
 
 echo "== Back up"
-backup="$(compose exec -T backup hsp-backup now)"
+backup="$(as_root "$install/bin/hsp" backup now)"
 echo "ok: $backup"
 
 echo "== A fresh stack: the same installation with an empty database"
@@ -57,10 +58,7 @@ if [[ "$(counts hsp)" == "$before_hsp" ]]; then
 fi
 
 echo "== Restore $backup"
-compose stop api keycloak web backup
-compose run --rm backup hsp-backup restore "$backup" --yes
-compose up -d
-healthy
+as_root "$install/bin/hsp" restore "$backup" --yes
 
 echo "== Check"
 if ! diff <(echo "$before_hsp") <(counts hsp) >&2; then

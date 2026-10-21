@@ -4,6 +4,8 @@
 #   sudo ./hsp-1.0.0/bin/hsp install            # from an unpacked release bundle
 #   sudo hsp install hsp-1.0.0.tar.gz [--dir /opt/hsp]
 #   hsp status
+#   sudo hsp backup now | list
+#   sudo hsp restore <backup>
 #   hsp help
 #
 # It ships in the release bundle, and `hsp install` copies it to <installation>/bin/hsp. It
@@ -344,6 +346,61 @@ when() {
   fi
 }
 
+# --- hsp backup and hsp restore ------------------------------------------------------------
+
+# backup_tool <hsp-backup arguments>: in the running backup service, or in a one-off container
+# of it while the service is stopped (docs/0106).
+backup_tool() {
+  if [[ -n "$(compose ps -q --status running backup 2>/dev/null)" ]]; then
+    compose exec -T backup hsp-backup "$@"
+  else
+    compose run --rm -T --no-deps backup hsp-backup "$@"
+  fi
+}
+
+cmd_backup() {
+  need_root "hsp backup"
+  need_docker
+  INSTALL_DIR="$(installation)"
+  case "${1:-}" in
+    now) backup_tool now ;; # prints the new backup's name
+    list) backup_tool list ;;
+    *) die "hsp backup now | hsp backup list" ;;
+  esac
+}
+
+cmd_restore() {
+  local name="" yes=""
+  while (($#)); do
+    case "$1" in
+      --yes) yes=1; shift ;;
+      -*) die "unknown option $1" ;;
+      *) name="$1"; shift ;;
+    esac
+  done
+  [[ -n "$name" ]] || die "hsp restore <backup> [--yes]; hsp backup list shows the backups"
+  need_root "hsp restore"
+  need_docker
+  INSTALL_DIR="$(installation)"
+  if [[ -z "$yes" ]]; then
+    [[ -t 0 ]] || die "restoring replaces both databases; add --yes to go on without asking"
+    echo "This replaces HSP's and Keycloak's databases with $name."
+    echo "Everything changed since that backup is lost, and HSP is down while it runs."
+    [[ "$(ask "Type yes to go on" "")" == yes ]] || die "nothing was changed"
+  fi
+  step "Stop HSP"
+  compose stop api keycloak web backup
+  step "Restore $name"
+  if ! backup_tool restore "$name" --yes; then
+    echo "hsp: the restore failed; HSP is still stopped. Fix the cause above and run it again," >&2
+    die "or start HSP as it is with: docker compose --project-directory $INSTALL_DIR up -d"
+  fi
+  step "Start HSP"
+  compose up -d
+  wait_healthy
+  ok "every service is healthy"
+}
+
 # --- Commands ------------------------------------------------------------------------------
 
 usage() {
@@ -352,6 +409,9 @@ hsp: install and run HSP on this Docker host (docs/0107).
 
   hsp install [bundle] [options]   install from a release bundle (hsp install --help)
   hsp status                       version, services, last backups and free disk
+  hsp backup now                   take a backup now (it goes where backups.yml's manual says)
+  hsp backup list                  every backup on every target, newest first
+  hsp restore <backup> [--yes]     replace both databases with a backup; HSP is down meanwhile
   hsp help                         this
 EOF
 }
@@ -377,6 +437,8 @@ case "$COMMAND" in
     wait_healthy
     ;;
   status) cmd_status "$@" ;;
+  backup) cmd_backup "$@" ;;
+  restore) cmd_restore "$@" ;;
   help | -h | --help) usage ;;
   *) usage >&2; die "unknown command $COMMAND" ;;
 esac
