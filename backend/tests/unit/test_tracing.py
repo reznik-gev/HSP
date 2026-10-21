@@ -5,9 +5,7 @@ otherwise (docs/0105)."""
 from collections.abc import Iterator
 
 import pytest
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON, ParentBased, TraceIdRatioBased
@@ -17,6 +15,8 @@ from hsp.main import create_app
 from hsp.tracing import tracer_provider
 
 ENDPOINT = "http://collector.test:4318"
+TRACES_ENDPOINT = f"{ENDPOINT}/v1/traces"
+STAGING_SERVICE_NAME = "hsp-api-staging"
 
 
 @pytest.fixture
@@ -32,18 +32,33 @@ def no_otel(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def spans() -> InMemorySpanExporter:
-    return InMemorySpanExporter()
+def otlp_endpoint_set(no_otel: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tracing on, with the standard endpoint and nothing else set."""
+    monkeypatch.setenv("OTEL_EXPORTER_OTLP_ENDPOINT", ENDPOINT)
 
 
 @pytest.fixture
-def traced_api(
-    no_otel: None, monkeypatch: pytest.MonkeyPatch, spans: InMemorySpanExporter
-) -> Iterator[TestClient]:
-    """The app with tracing on, every request sampled, spans kept in `spans`."""
-    monkeypatch.setenv("OTEL_EXPORTER_OTLP_ENDPOINT", ENDPOINT)
+def traces_endpoint_sampling_all(no_otel: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tracing on through the traces-only endpoint, with the standard sampler set to always_on."""
+    monkeypatch.setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", TRACES_ENDPOINT)
     monkeypatch.setenv("OTEL_TRACES_SAMPLER", "always_on")
-    monkeypatch.setattr("hsp.tracing.span_processor", lambda: SimpleSpanProcessor(spans))
+
+
+@pytest.fixture
+def staging_service_name(otlp_endpoint_set: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tracing on, under the standard service name setting."""
+    monkeypatch.setenv("OTEL_SERVICE_NAME", STAGING_SERVICE_NAME)
+
+
+@pytest.fixture
+def spans(monkeypatch: pytest.MonkeyPatch) -> InMemorySpanExporter:
+    """Where spans go, instead of an OTLP endpoint."""
+    exporter = InMemorySpanExporter()
+    monkeypatch.setattr("hsp.tracing.span_processor", lambda: SimpleSpanProcessor(exporter))
+    return exporter
+
+
+def probe_client() -> Iterator[TestClient]:
     app = create_app()
 
     @app.get("/_test/items/{item_id}")
@@ -54,14 +69,26 @@ def traced_api(
         yield client
 
 
-def provider_of(app: FastAPI) -> TracerProvider | None:
-    provider: TracerProvider | None = app.state.tracer_provider
-    return provider
+@pytest.fixture
+def traced_api(
+    otlp_endpoint_set: None, monkeypatch: pytest.MonkeyPatch, spans: InMemorySpanExporter
+) -> Iterator[TestClient]:
+    """The app with tracing on and every request sampled; spans go to `spans`."""
+    monkeypatch.setenv("OTEL_TRACES_SAMPLER", "always_on")
+    yield from probe_client()
 
 
-def test_tracing_is_off_without_an_endpoint(no_otel: None) -> None:
-    assert tracer_provider() is None
-    assert provider_of(create_app()) is None
+@pytest.fixture
+def untraced_api(no_otel: None, spans: InMemorySpanExporter) -> Iterator[TestClient]:
+    """The app with no tracing endpoint set; any span would still go to `spans`."""
+    yield from probe_client()
+
+
+def test_tracing_is_off_without_an_endpoint(
+    untraced_api: TestClient, spans: InMemorySpanExporter
+) -> None:
+    untraced_api.get("/_test/items/42")
+    assert spans.get_finished_spans() == ()
 
 
 def test_a_request_is_a_span_named_by_its_route(
@@ -74,35 +101,31 @@ def test_a_request_is_a_span_named_by_its_route(
     assert server.resource.attributes["service.version"] == __version__
 
 
-def test_health_and_metrics_are_not_traced(
-    traced_api: TestClient, spans: InMemorySpanExporter
+@pytest.mark.parametrize("path", ["/healthz", "/readyz", "/metrics"])
+def test_probes_are_not_traced(
+    traced_api: TestClient, spans: InMemorySpanExporter, path: str
 ) -> None:
-    for path in ("/healthz", "/metrics"):
-        traced_api.get(path)
+    traced_api.get(path)
     assert spans.get_finished_spans() == ()
 
 
-def test_one_request_in_ten_is_sampled_by_default(
-    no_otel: None, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("OTEL_EXPORTER_OTLP_ENDPOINT", ENDPOINT)
+@pytest.mark.usefixtures("otlp_endpoint_set")
+def test_one_request_in_ten_is_sampled_by_default() -> None:
     provider = tracer_provider()
     assert provider is not None
     expected = ParentBased(TraceIdRatioBased(0.1)).get_description()
     assert provider.sampler.get_description() == expected
 
 
-def test_the_standard_sampler_setting_wins(no_otel: None, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", f"{ENDPOINT}/v1/traces")
-    monkeypatch.setenv("OTEL_TRACES_SAMPLER", "always_on")
+@pytest.mark.usefixtures("traces_endpoint_sampling_all")
+def test_the_standard_sampler_setting_wins() -> None:
     provider = tracer_provider()
     assert provider is not None
     assert provider.sampler is ALWAYS_ON
 
 
-def test_the_standard_service_name_wins(no_otel: None, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("OTEL_EXPORTER_OTLP_ENDPOINT", ENDPOINT)
-    monkeypatch.setenv("OTEL_SERVICE_NAME", "hsp-api-staging")
+@pytest.mark.usefixtures("staging_service_name")
+def test_the_standard_service_name_wins() -> None:
     provider = tracer_provider()
     assert provider is not None
-    assert provider.resource.attributes["service.name"] == "hsp-api-staging"
+    assert provider.resource.attributes["service.name"] == STAGING_SERVICE_NAME

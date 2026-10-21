@@ -7,6 +7,8 @@ traced. Calls to Keycloak aren't: OpenTelemetry's httpx instrumentation doesn't 
 """
 
 import os
+import re
+from collections.abc import Iterable
 
 from fastapi import FastAPI
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -19,9 +21,6 @@ from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from hsp import __version__
-
-#: Not traced: probed every few seconds, they'd drown the traces that matter.
-EXCLUDED_URLS = "healthz,readyz,metrics"
 
 #: Requests sampled when OTEL_TRACES_SAMPLER isn't set; a caller's sampling decision wins.
 DEFAULT_SAMPLE_RATIO = 0.1
@@ -52,15 +51,15 @@ def tracer_provider() -> TracerProvider | None:
     return provider
 
 
-def configure_tracing(app: FastAPI) -> None:
-    """Trace the app's requests, if tracing is on; `instrument_engine` adds its queries."""
+def configure_tracing(app: FastAPI, untraced_paths: Iterable[str]) -> None:
+    """Trace the app's requests, if tracing is on, except `untraced_paths` (the probes, which
+    would drown the traces that matter); `instrument_engine` adds the queries."""
     global _provider
     _provider = tracer_provider()
-    app.state.tracer_provider = _provider
     if _provider is not None:
-        FastAPIInstrumentor.instrument_app(
-            app, tracer_provider=_provider, excluded_urls=EXCLUDED_URLS
-        )
+        # Patterns searched in the whole URL: anchored, so they match only these paths.
+        excluded = ",".join(f"{re.escape(p)}$" for p in sorted(untraced_paths))
+        FastAPIInstrumentor.instrument_app(app, tracer_provider=_provider, excluded_urls=excluded)
 
 
 def instrument_engine(engine: AsyncEngine) -> None:
