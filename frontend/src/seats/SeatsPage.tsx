@@ -5,7 +5,7 @@
  */
 import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
-import { MapPin, Search } from "lucide-react";
+import { Armchair, MapPin, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -60,6 +60,14 @@ export function SeatsPage() {
 
   return (
     <Page title={t("seats.title")}>
+      <div className="-mt-2 mb-4 flex justify-end">
+        <Button asChild variant="outline" size="sm">
+          <Link to="/seats/free">
+            <Armchair aria-hidden />
+            {t("freeSeats.title")}
+          </Link>
+        </Button>
+      </div>
       <div className="relative max-w-xl">
         <Search
           className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
@@ -141,7 +149,8 @@ function unheldState(seat: Seat): "free" | "bookable" | "unavailable" {
   return "free";
 }
 
-function SeatRow({ seat }: { seat: Seat }) {
+/** One seat: its label, who holds it, their team, where it is, and Show on plan. */
+export function SeatRow({ seat }: { seat: Seat }) {
   const { t } = useTranslation();
   const person = seat.holder_person;
   const team = person?.primary_unit?.name ?? seat.holder_unit?.name;
