@@ -11,6 +11,9 @@ from hsp_backup.backups import Backups, RestoreRefused, refuse_newer
 from hsp_backup.stores import FolderStore
 from tests.conftest import FakeClock, SpyPostgres
 
+#: A well-formed backup name that no target holds.
+NEVER_TAKEN = "hsp-20200101T000000Z-nightly.tar"
+
 
 def files_in(store: FolderStore) -> list[str]:
     return sorted(p.name for p in store.path.iterdir())
@@ -138,9 +141,29 @@ def test_a_restore_replaces_both_databases(backups: Backups, postgres: SpyPostgr
     assert postgres.restored == {"hsp": b"hsp rows v1", "keycloak": b"keycloak rows v1"}
 
 
+@pytest.fixture
+def nas_unreadable(folders: dict[str, FolderStore]) -> None:
+    """The nas target's folder is gone, e.g. the share isn't mounted."""
+    folders["nas"].path.rmdir()
+
+
+def test_a_restore_skips_a_target_it_cant_read(
+    backups: Backups, postgres: SpyPostgres, nas_unreadable: None
+) -> None:
+    name = backups.take("nightly")  # on local, which still works
+    backups.restore(str(name))
+    assert postgres.restored["hsp"] == b"hsp rows v1"
+
+
+@pytest.mark.usefixtures("nas_unreadable")
+def test_a_missing_backup_names_the_targets_it_couldnt_read(backups: Backups) -> None:
+    with pytest.raises(RestoreRefused, match=r"no target holds .* \(couldn't read nas\)"):
+        backups.restore(NEVER_TAKEN)
+
+
 def test_a_restore_needs_a_backup_that_exists(backups: Backups) -> None:
     with pytest.raises(RestoreRefused, match="no target holds"):
-        backups.restore("hsp-20200101T000000Z-nightly.tar")
+        backups.restore(NEVER_TAKEN)
     with pytest.raises(RestoreRefused, match="isn't a backup name"):
         backups.restore("latest")
 

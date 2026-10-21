@@ -52,7 +52,9 @@ def test_extracting_checks_every_file(archive: Path, tmp_path: Path) -> None:
     assert (out / "config/.env").read_bytes() == b"A=1\n"
 
 
-def test_a_damaged_file_is_found(archive: Path, tmp_path: Path) -> None:
+@pytest.fixture
+def damaged_archive(archive: Path, tmp_path: Path) -> Path:
+    """`archive` with one byte of hsp.dump changed, and its manifest left as it was."""
     damaged = tmp_path / "damaged.tar"
     with tarfile.open(archive) as src, tarfile.open(damaged, "w") as dst:
         for info in src.getmembers():
@@ -62,8 +64,12 @@ def test_a_damaged_file_is_found(archive: Path, tmp_path: Path) -> None:
             if info.name == "hsp.dump":
                 data = b"hsp dat!"
             dst.addfile(info, io.BytesIO(data))
+    return damaged
+
+
+def test_a_damaged_file_is_found(damaged_archive: Path, tmp_path: Path) -> None:
     with pytest.raises(ArchiveError, match=r"hsp\.dump doesn't match its checksum"):
-        extract_verified(damaged, tmp_path / "out")
+        extract_verified(damaged_archive, tmp_path / "out")
 
 
 def test_something_else_is_not_a_backup(tmp_path: Path) -> None:
