@@ -52,7 +52,9 @@ export class Autosave {
     this.revision = base.revision;
     this.state.setState({ version: base.version });
     this.unsubscribe = store.subscribe((s, before) => {
-      if (s.pending.length > before.pending.length) this.schedule(SAVE_DELAY_MS);
+      // A new change, or the last one grown by a run of nudges (docs/0108): wait a second more.
+      const grown = s.pending.length > 0 && s.pending.at(-1) !== before.pending.at(-1);
+      if (s.pending.length > before.pending.length || grown) this.schedule(SAVE_DELAY_MS);
     });
   }
 
@@ -92,6 +94,8 @@ export class Autosave {
   private async sendFirst(): Promise<boolean> {
     const change = this.store.getState().pending[0]!;
     this.set("saving");
+    // A run of nudges must not grow a change while it's on its way (docs/0108).
+    this.store.setState({ sending: change });
     let result;
     try {
       result = await api.POST("/api/v1/floors/{floor_id}/draft/changesets", {
@@ -99,10 +103,12 @@ export class Autosave {
         body: { base_revision: this.revision, ops: change.ops as never },
       });
     } catch {
+      this.store.setState({ sending: null });
       this.set("offline");
       this.schedule(RETRY_MS);
       return false;
     }
+    this.store.setState({ sending: null });
     if (this.stopped) return false;
     const { data, error, response } = result;
     if (data) {
