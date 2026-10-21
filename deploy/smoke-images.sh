@@ -57,7 +57,7 @@ for _ in $(seq 60); do
   docker exec "$run-db" pg_isready -h "$run-db" -U keycloak -d keycloak >/dev/null 2>&1 && break
   sleep 1
 done
-docker exec "$run-db" createdb -h "$run-db" -U keycloak hsp
+docker exec -e PGPASSWORD=keycloak "$run-db" createdb -h "$run-db" -U keycloak hsp
 
 echo "== hsp-api"
 api_env=(
