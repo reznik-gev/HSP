@@ -3,6 +3,7 @@
 from collections.abc import AsyncIterator
 
 import pytest
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
@@ -30,6 +31,8 @@ async def traced_engine(spans: InMemorySpanExporter) -> AsyncIterator[AsyncEngin
     tracing.instrument_engine(engine)
     yield engine
     await engine.dispose()
+    # The instrumentor is one shared object that patches SQLAlchemy: leave nothing behind.
+    SQLAlchemyInstrumentor().uninstrument()
 
 
 async def test_queries_are_spans(traced_engine: AsyncEngine, spans: InMemorySpanExporter) -> None:

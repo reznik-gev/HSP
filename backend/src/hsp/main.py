@@ -2,11 +2,12 @@
 
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 
 import structlog
 import uuid_utils
 from fastapi import FastAPI, Request, Response
+from opentelemetry.instrumentation.utils import suppress_instrumentation
 
 from hsp import __version__, metrics
 from hsp.api import auth, health, v1
@@ -59,11 +60,14 @@ def create_app() -> FastAPI:
         structlog.contextvars.bind_contextvars(request_id=rid)
         started = time.perf_counter()
         status = 500  # unless the app answers
+        probe = request.url.path in PROBE_PATHS
         try:
-            response = await call_next(request)
+            # Nothing a probe does is traced either, e.g. /readyz's database check.
+            with suppress_instrumentation() if probe else nullcontext():
+                response = await call_next(request)
             status = response.status_code
         finally:
-            if request.url.path not in PROBE_PATHS:
+            if not probe:
                 log_request(request, status, started, debug=is_debug(settings.log_level))
                 record_metrics(request, status, started)
             structlog.contextvars.clear_contextvars()
@@ -72,7 +76,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(v1.router)
-    configure_tracing(app)
+    configure_tracing(app, untraced_paths=PROBE_PATHS)
     return app
 
 
