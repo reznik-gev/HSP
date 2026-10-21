@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import (
 
 from hsp.config import get_settings
 from hsp.metrics import count_connections
+from hsp.tracing import instrument_engine
 
 _engine: AsyncEngine | None = None
 _sessionmaker: async_sessionmaker[AsyncSession] | None = None
@@ -21,6 +22,7 @@ def get_engine() -> AsyncEngine:
     if _engine is None:
         _engine = create_async_engine(get_settings().database_dsn, pool_pre_ping=True)
         count_connections(_engine)
+        instrument_engine(_engine)
         _sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
     return _engine
 
