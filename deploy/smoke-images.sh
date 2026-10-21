@@ -4,7 +4,8 @@
 # Checks that each image starts and answers: the API's /healthz, its migrate tooling and its
 # refusal to start on an unmigrated database; the web
 # image in both TLS modes (docs/0098), serving the app, proxying to the API and closing Keycloak's
-# admin console; and Keycloak starting optimized against PostgreSQL with the realm imported.
+# admin console; Keycloak starting optimized against PostgreSQL with the realm imported; and the
+# backup image with PostgreSQL 18's tools.
 # Ports 18000-18088, 18443, 19000 and 19464 on this machine must be free; needs curl and openssl.
 set -euo pipefail
 
@@ -173,5 +174,13 @@ expect "keycloak filled the realm's placeholders from the environment" \
   "$(curl -fsS -H "Authorization: Bearer $token" \
     'http://localhost:18082/auth/admin/realms/hsp/clients?clientId=hsp-api')" \
   '"redirectUris":["https://hsp.example/api/v1/auth/callback"]'
+
+echo "== hsp-backup"
+expect "backup has PostgreSQL 18's tools" \
+  "$(docker run --rm "hsp-backup:$version" pg_dump --version)" "pg_dump (PostgreSQL) 18"
+expect "backup runs as postgres's uid" "$(docker run --rm "hsp-backup:$version" id -u)" "999"
+expect "backup refuses a missing backups.yml" \
+  "$(docker run --rm "hsp-backup:$version" hsp-backup check 2>&1 || true)" \
+  "can't read /etc/hsp/backups.yml"
 
 echo "All image smoke checks passed."

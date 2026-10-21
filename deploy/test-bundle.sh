@@ -62,8 +62,9 @@ done
 postgres_image="$(grep -o 'postgis/postgis:[^ ]*' "$dir/compose/compose.yml")"
 
 echo "== Install $version as deploy/README.md describes"
-mkdir -p "$install/secrets" "$install/tls" "$tmp/data"
+mkdir -p "$install/secrets" "$install/tls" "$tmp/data/backups"
 cp "$dir/compose/compose.yml" "$install/"
+cp "$dir/compose/backups.example.yml" "$install/backups.yml"
 cp -r "$dir/compose/postgres-init" "$install/"
 cp "$dir/compose/.env.example" "$install/.env"
 # set_env <name> <value>: change a setting in .env, as an operator would.
@@ -80,12 +81,14 @@ for s in db_superuser_password hsp_database_password keycloak_db_password \
 done
 python3 -c "import base64,os; print(base64.urlsafe_b64encode(os.urandom(32)).decode(), end='')" \
   > "$install/secrets/hsp_session_encryption_key"
+touch "$install/secrets/backup_s3_access_key" "$install/secrets/backup_s3_secret_key"
 openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj /CN=localhost \
   -addext subjectAltName=DNS:localhost \
   -keyout "$install/tls/tls.key" -out "$install/tls/tls.crt" 2>/dev/null
 # A throwaway runner: readable by every container user, in place of the per-user owners the
 # README sets up.
 chmod 444 "$install"/secrets/* "$install"/tls/*
+chmod 777 "$tmp/data/backups"
 
 echo "== Start"
 compose up -d || { compose ps -a >&2; compose logs --tail 80 >&2; exit 1; }
@@ -128,6 +131,10 @@ expect "Keycloak names the public URL as its issuer" \
   "$(curl -fsSk "$url/auth/realms/hsp/.well-known/openid-configuration")" \
   "\"issuer\":\"$url/auth/realms/hsp\""
 expect "Keycloak's admin console is closed" "$(status -k "$url/auth/admin/")" "404"
+expect "backups.yml is fine" "$(compose exec -T backup hsp-backup check)" "every target can be read"
+backup="$(compose exec -T backup hsp-backup now)"
+expect "a backup is written to HSP_DATA_DIR/backups" "$(ls "$tmp/data/backups")" "$backup"
+expect "the backup holds both databases" "$(tar -tf "$tmp/data/backups/$backup")" "keycloak.dump"
 
 echo "== Test users for the browser tests"
 compose exec -T keycloak bash -s <<EOF

@@ -5,6 +5,7 @@
 #   secrets/          one file per secret (see .env.example), readable by its container's user
 #   tls/              tls.crt and tls.key, when hsp-web terminates TLS
 #   postgres-init/    roles and databases, run once on an empty data directory
+#   backups.yml       when and where to back up (see backups.example.yml)
 # and keeps its data under HSP_DATA_DIR. `hsp install` (bin/hsp) prepares all of it.
 #
 #   docker compose up -d
@@ -112,6 +113,37 @@ services:
       start_period: 30s
     logging: *logging
 
+  # Scheduled backups to a folder or S3, and restore (docs/0058, docs/0106). Runs as uid 999, like
+  # postgres, so it reads the superuser's password and owns HSP_DATA_DIR/backups.
+  backup:
+    image: hsp-backup:${HSP_VERSION}
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      HSP_VERSION: ${HSP_VERSION}
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD_FILE: /run/secrets/db_superuser_password
+    secrets: [db_superuser_password, backup_s3_access_key, backup_s3_secret_key]
+    volumes:
+      - ./backups.yml:/etc/hsp/backups.yml:ro
+      - ${HSP_DATA_DIR:-/var/lib/hsp}/backups:/backups
+      # With include_config, a backup holds these; never secrets/.
+      - ./.env:/etc/hsp/install/.env:ro
+      - ./backups.yml:/etc/hsp/install/backups.yml:ro
+      - ./compose.yml:/etc/hsp/install/compose.yml:ro
+    ports:
+      - "${HSP_METRICS_ADDRESS:-127.0.0.1}:${HSP_BACKUP_METRICS_PORT:-9465}:9465"
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9465/metrics', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging: *logging
+
   web:
     image: hsp-web:${HSP_VERSION}
     pull_policy: never
@@ -141,3 +173,6 @@ secrets:
   keycloak_admin_password: { file: ./secrets/keycloak_admin_password }
   hsp_session_encryption_key: { file: ./secrets/hsp_session_encryption_key }
   hsp_oidc_client_secret: { file: ./secrets/hsp_oidc_client_secret }
+  # Empty unless a backups.yml target is S3 (docs/0106).
+  backup_s3_access_key: { file: ./secrets/backup_s3_access_key }
+  backup_s3_secret_key: { file: ./secrets/backup_s3_secret_key }

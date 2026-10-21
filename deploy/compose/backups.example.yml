@@ -1,0 +1,45 @@
+# HSP's backups (docs/0106). `hsp install` copies this file to backups.yml; change it there.
+# `docker compose exec backup hsp-backup check` says whether it's right, and `docker compose
+# restart backup` applies a change.
+#
+# Each backup is one file, hsp-<UTC time>-<schedule>.tar, holding HSP's and Keycloak's databases.
+# It holds people's names, emails and seats: keep the target encrypted and access to it limited.
+
+# The time zone cron times are in.
+timezone: UTC
+
+# Where backups go. A folder is mounted from HSP_DATA_DIR/backups at /backups; another folder
+# (NFS, SMB) can be mounted there instead. An S3 target signs in with the secret files
+# secrets/backup_s3_access_key and secrets/backup_s3_secret_key.
+targets:
+  local:
+    type: folder
+    path: /backups
+  # offsite:
+  #   type: s3
+  #   endpoint: https://minio.example.com:9000   # leave out for AWS itself
+  #   bucket: hsp-backups
+  #   prefix: production/
+  #   region: us-east-1
+  #   path_style: true                           # MinIO and most S3-compatible stores
+  #   ca_file: /etc/hsp/backup-ca.pem            # an internal certificate authority
+
+# When to back up, where to, and how many to keep. Each schedule deletes only its own old
+# backups; keep_days keeps more when it would. include_config adds .env, backups.yml and
+# compose.yml (never secrets/).
+schedules:
+  - name: nightly
+    cron: "30 2 * * *"
+    target: local
+    keep: 7
+  - name: weekly
+    cron: "0 4 * * 0"
+    target: local
+    keep: 4
+    include_config: true
+
+# Backups taken by `hsp backup now`: where, and how many to keep. Backups taken before an
+# upgrade go here too, and stay until the next upgrade succeeds.
+manual:
+  target: local
+  keep: 5
