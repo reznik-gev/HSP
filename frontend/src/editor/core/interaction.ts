@@ -24,7 +24,7 @@ import { viewportFor } from "./focus";
 import { type ItemShape, placeItem } from "./furnitureSnap";
 import type { Measure } from "./measure";
 import { hitTest, zoneAt } from "./hitTest";
-import type { Vec2 } from "./plan";
+import type { Plan, Vec2 } from "./plan";
 import { SNAP_PX, snapPoint, snapSettings } from "./snap";
 import type { EditorStore } from "./store";
 import { ColumnTool } from "./tools/columnTool";
@@ -43,6 +43,14 @@ export interface PointerInput {
   button: number;
   shift: boolean;
   alt?: boolean;
+}
+
+/** The far ends of `walls` from their junction `at`: a dragged corner keeps straight from them
+ *  (docs/0108). */
+function farEnds(plan: Plan, walls: readonly string[], at: Vec2): Vec2[] {
+  return plan.walls
+    .filter((w) => walls.includes(w.id))
+    .map((w) => (w.a[0] === at[0] && w.a[1] === at[1] ? w.b : w.a));
 }
 
 type Gesture =
@@ -108,6 +116,7 @@ export class Interaction {
   /** Returns what happened, so the view can e.g. time selection latency. */
   pointerDown(e: PointerInput): "select" | "pan" | "clear" | "none" {
     this.store.getState().setSnapFree(Boolean(e.alt));
+    this.store.getState().setSnapStraight(e.shift);
     const s = this.store.getState();
     if (!s.plan || !s.hitIndex) return "none";
     this.downAt = [e.sx, e.sy];
@@ -226,6 +235,7 @@ export class Interaction {
   pointerMove(e: PointerInput): void {
     this.lastPointer = { sx: e.sx, sy: e.sy };
     this.store.getState().setSnapFree(Boolean(e.alt));
+    this.store.getState().setSnapStraight(e.shift);
     const s = this.store.getState();
     const g = this.gesture;
     if (g.kind === "pan") {
@@ -264,6 +274,9 @@ export class Interaction {
         ignore: g.from,
         // The moving walls' own centrelines move with them.
         ignoreWalls: new Set(g.walls),
+        // Straight from the far end of any wall meeting here (docs/0108).
+        anchors: farEnds(s.plan, g.walls, g.from),
+        straight: e.shift,
       });
       s.setPreview({ kind: "junction", from: g.from, to: point, walls: g.walls, snap: kind });
     } else if (g.kind === "numbering") {
@@ -294,6 +307,7 @@ export class Interaction {
 
   pointerUp(e: PointerInput): void {
     this.store.getState().setSnapFree(Boolean(e.alt));
+    this.store.getState().setSnapStraight(e.shift);
     const s = this.store.getState();
     const g = this.gesture;
     this.gesture = { kind: "none" };

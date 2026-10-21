@@ -571,6 +571,9 @@
       "endpoint": "Endpoint",
       "midpoint": "Midpoint",
       "centreline": "On wall",
+      "horizontal": "Horizontal",
+      "vertical": "Vertical",
+      "diagonal": "45°",
       "face": "Against wall",
       "attach": "On item"
     },

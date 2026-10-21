@@ -590,6 +590,9 @@
       "endpoint": "קצה",
       "midpoint": "אמצע",
       "centreline": "על הקיר",
+      "horizontal": "אופקי",
+      "vertical": "אנכי",
+      "diagonal": "45°",
       "face": "צמוד לקיר",
       "attach": "על פריט"
     },
