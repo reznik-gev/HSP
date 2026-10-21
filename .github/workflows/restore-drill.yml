@@ -17,7 +17,6 @@ on:
       - deploy/bin/hsp
       - deploy/compose/**
       - deploy/test-restore.sh
-      - deploy/wait-healthy.sh
       - frontend/e2e/restore-drill/**
 
 concurrency:

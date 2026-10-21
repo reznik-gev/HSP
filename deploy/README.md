@@ -36,30 +36,7 @@ CI runs both on every PR that touches the app or the images; nothing is pushed a
 ## The production stack
 [`compose/compose.yml`](compose/compose.yml) runs HSP on one host ([0055](../docs/decisions/0055-2026-10-08-deployment-target.md), [0099](../docs/decisions/0099-2026-10-18-production-compose.md)): `postgres`, a one-shot `migrate`, `api`, `keycloak` and `web`. `web` publishes the ports users reach; `api` publishes only its metrics port, to this host by default (see [Monitoring](#monitoring)).
 
-`hsp install` prepares an installation from a release bundle, and starts it (see [The release bundle](#the-release-bundle) and [`bin/hsp`](#binhsp)). These are the same steps by hand, for a setup it doesn't cover, on a Linux host with Docker Engine and the Compose plugin, with the images loaded: from a release bundle, or built with `deploy/build-images.sh <version>`:
-
-1. **Make the installation directory** (for example `/opt/hsp`) and copy in `compose/compose.yml`, `compose/postgres-init/`, `compose/.env.example` as `.env`, and `compose/backups.example.yml` as `backups.yml`. Set `HSP_VERSION` and `HSP_PUBLIC_URL` in `.env`; check the backup schedules in `backups.yml` (see [Backups](#backups)).
-2. **Write the secrets**, one file each in `secrets/`, and give each to its container's user:
-   ```bash
-   mkdir -m 700 secrets && cd secrets
-   for s in db_superuser_password hsp_database_password keycloak_db_password \
-            keycloak_admin_password hsp_oidc_client_secret; do
-     openssl rand -base64 32 | tr -d '/+=\n' > "$s"
-   done
-   python3 -c "import base64,os; print(base64.urlsafe_b64encode(os.urandom(32)).decode(), end='')" \
-     > hsp_session_encryption_key
-   touch backup_s3_access_key backup_s3_secret_key   # filled only for an S3 backup target
-   chmod 400 *
-   chown 999 db_superuser_password keycloak_db_password      # postgres (and backup, uid 999)
-   chown 999 backup_s3_access_key backup_s3_secret_key       # backup
-   chown 10001 hsp_database_password hsp_session_encryption_key  # api, migrate
-   chown 1000 keycloak_admin_password hsp_oidc_client_secret     # keycloak
-   ```
-   Some files are read by two containers (`hsp_database_password` by postgres and the API; `keycloak_db_password` by postgres and Keycloak; `hsp_oidc_client_secret` by the API and Keycloak). Give those a group both users share, with mode 440, or make them world-readable inside a `secrets/` folder that only root can open.
-3. **TLS** (`HSP_WEB_TLS=on`): put the certificate (with its chain) and key in `tls/tls.crt` and `tls/tls.key`, readable by uid 101.
-4. **Data:** `mkdir -p /var/lib/hsp/backups && chown 999 /var/lib/hsp/backups` (or under your `HSP_DATA_DIR`).
-5. **Start:** `docker compose up -d`. Migrations run first; `docker compose ps` shows every service healthy after about a minute.
-6. **First admin:** create a user in Keycloak's `hsp` realm and give them the `hsp-admin` role, from the admin console (open it with `HSP_KEYCLOAK_ADMIN_FROM`) or inside the container with `kcadm.sh`.
+`hsp install` sets an installation up from a release bundle and starts it; that is the one supported way ([0107](../docs/decisions/0107-2026-10-21-operator-cli.md)). In the installation folder (`/opt/hsp` by default) it writes `compose.yml`, `postgres-init/`, `.env` and `backups.yml` from the bundle's `compose/`; generates the secrets in `secrets/` (each readable by the containers that mount it, inside a folder only root can open); puts the TLS certificate and key in `tls/` (`tls.key` readable by nginx's uid 101); makes `HSP_DATA_DIR/backups` belong to the backup service's uid 999; starts the stack, waiting until every service is healthy; and creates the first admin. Operators read about it in [install.md](install.md); its code is [`bin/hsp`](bin/hsp).
 
 ## Monitoring
 What HSP gives you to watch it ([0057](../docs/decisions/0057-2026-10-08-observability.md), [0105](../docs/decisions/0105-2026-10-21-metrics-and-tracing.md)):

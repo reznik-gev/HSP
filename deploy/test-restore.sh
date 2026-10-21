@@ -13,7 +13,7 @@ install="$tmp/install"
 # The installation belongs to root, as hsp install makes it (docs/0107).
 as_root() { if [[ $EUID -eq 0 ]]; then "$@"; else sudo "$@"; fi; }
 compose() { as_root docker compose --project-directory "$install" "$@"; }
-healthy() { "$root/deploy/wait-healthy.sh" "$install"; }
+healthy() { as_root "$install/bin/hsp" wait; }
 
 # The browser steps, against the installed stack.
 drill() {
