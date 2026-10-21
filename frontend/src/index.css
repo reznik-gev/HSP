@@ -39,6 +39,9 @@
   --plan-hatch: #d9dde2;
   --plan-ink: #1b1e22;
   --plan-object-stroke: #8a929c;
+  /* How strongly zones and furniture are filled: dark mode tones them down (docs/0108). */
+  --plan-zone-fill-opacity: 0.2;
+  --plan-furniture-opacity: 1;
   /* Seat states (docs/0087 choice 11). */
   --seat-person: #a9c2ea;
   --seat-unit: #cbbdf0;
@@ -64,8 +67,9 @@
   --accent: #1f2a3a;
   --accent-foreground: #b9d0f3;
   --destructive: #f2766b;
-  --border: #2a2f36;
-  --input: #353b43;
+  /* Lines that separate panels, and the 3:1 that form fields need (WCAG 1.4.11, docs/0108). */
+  --border: #343a42;
+  --input: #656e7a;
   --ring: #7aa5e8;
 
   --plan-paper: #16191d;
@@ -73,12 +77,16 @@
   --plan-hatch: #2b3036;
   --plan-ink: #e6e8eb;
   --plan-object-stroke: #6f7883;
-  --seat-person: #34568e;
-  --seat-unit: #56478a;
-  --seat-free: #1f3a28;
-  --seat-free-stroke: #5fb47c;
-  --seat-bookable: #5c4a20;
-  --seat-unavailable: #2c3036;
+  /* Light catalog colours would glare on dark paper; big zone fills turned muddy. */
+  --plan-zone-fill-opacity: 0.1;
+  --plan-furniture-opacity: 0.45;
+  /* Each seat state at least 3:1 against the paper, and apart by hue (docs/0108). */
+  --seat-person: #5b87d6;
+  --seat-unit: #8e76d9;
+  --seat-free: #2f8050;
+  --seat-free-stroke: #86e0a4;
+  --seat-bookable: #b48d2f;
+  --seat-unavailable: #646c77;
 }
 
 @theme inline {

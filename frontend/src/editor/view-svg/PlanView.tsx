@@ -94,6 +94,8 @@ const PLAN_CSS = `
   .plan-gap { stroke: var(--plan-paper); }
   .plan-column { fill: var(--plan-wall); }
   .plan-object { stroke: var(--plan-object-stroke); }
+  .plan-furniture { fill-opacity: var(--plan-furniture-opacity); }
+  .plan-zone { fill-opacity: var(--plan-zone-fill-opacity); }
   .plan-label {
     fill: var(--plan-ink);
     font-family: inherit;
