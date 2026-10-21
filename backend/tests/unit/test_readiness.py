@@ -58,14 +58,15 @@ class SpyKeycloak:
 
 
 @pytest.fixture
-def app() -> FastAPI:
-    return create_app()
+def every_check_passes(app: FastAPI) -> None:
+    """The app's /readyz checks all pass."""
+    app.state.readiness = Readiness({"database": passes, "keycloak": passes})
 
 
 @pytest.fixture
-def api(app: FastAPI) -> Iterator[TestClient]:
-    with TestClient(app) as client:
-        yield client
+def database_and_keycloak_down(app: FastAPI) -> None:
+    """The app's /readyz finds neither the database nor Keycloak."""
+    app.state.readiness = Readiness({"database": database_down, "keycloak": keycloak_down})
 
 
 @pytest.fixture
@@ -86,15 +87,15 @@ def probe(keycloak: SpyKeycloak, clock: FakeClock) -> KeycloakProbe:
 # --- /readyz --------------------------------------------------------------------------------
 
 
-def test_ready_when_every_check_passes(app: FastAPI, api: TestClient) -> None:
-    app.state.readiness = Readiness({"database": passes, "keycloak": passes})
+@pytest.mark.usefixtures("every_check_passes")
+def test_ready_when_every_check_passes(api: TestClient) -> None:
     r = api.get("/readyz")
     assert r.status_code == 200
     assert r.json()["status"] == "ready"
 
 
-def test_not_ready_names_each_failed_check(app: FastAPI, api: TestClient) -> None:
-    app.state.readiness = Readiness({"database": database_down, "keycloak": keycloak_down})
+@pytest.mark.usefixtures("database_and_keycloak_down")
+def test_not_ready_names_each_failed_check(api: TestClient) -> None:
     r = api.get("/readyz")
     assert r.status_code == 503
     assert r.headers["content-type"] == PROBLEM_JSON

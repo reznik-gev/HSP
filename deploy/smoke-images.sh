@@ -67,9 +67,15 @@ api_env=(
   -e HSP_OIDC_CLIENT_SECRET=smoke-secret
   -e HSP_API_WORKERS=2
 )
-expect "api refuses to start before migrations ran (docs/0056)" \
-  "$(timeout 60 docker run --rm --network "$net" "${api_env[@]}" "hsp-api:$version" 2>&1 || true)" \
-  "run the migrate job"
+# It must also stop, not keep restarting its workers: `timeout` would end that with 124. (uvicorn's
+# supervisor exits 0 when a worker fails to start, so 0 is what stopping looks like.)
+refused="$(timeout 60 docker run --rm --network "$net" "${api_env[@]}" "hsp-api:$version" 2>&1; echo "exit $?")"
+expect "api refuses to start before migrations ran (docs/0056)" "$refused" "run the migrate job"
+if [[ "$refused" == *"exit 124" ]]; then
+  echo "FAIL: the api kept running instead of stopping on an unmigrated database" >&2
+  exit 1
+fi
+echo "ok: and it stops instead of restarting"
 docker run --rm --network "$net" "${api_env[@]}" "hsp-api:$version" alembic upgrade head >/dev/null
 docker run -d --name "$run-api" --network "$net" --network-alias api -p 18000:8000 \
   "${api_env[@]}" "hsp-api:$version" >/dev/null
