@@ -12,6 +12,8 @@ HSP's backup service ([0058](../docs/decisions/0058-2026-10-08-backups.md), [010
 | `hsp-backup restore <name> --yes` | Replaces both databases with a backup. The stack must be stopped, except `postgres`. |
 | `hsp-backup prune [--schedule pre-upgrade] [--keep 1]` | Deletes a schedule's backups beyond the newest `--keep`. `hsp upgrade` runs it after a successful upgrade. |
 
+Exit codes: 0 when it worked; **3** when it refused before changing anything (a bad `backups.yml`, a target it can't read, a backup that isn't there, is damaged or comes from a newer HSP); 1 when PostgreSQL failed, so a restore may have stopped halfway. `hsp restore` starts HSP again after a 3.
+
 ## backups.yml
 ```yaml
 timezone: Asia/Jerusalem

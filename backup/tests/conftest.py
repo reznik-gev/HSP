@@ -7,6 +7,7 @@ from prometheus_client import CollectorRegistry
 from hsp_backup.backups import Backups
 from hsp_backup.config import BackupConfig, parse_config
 from hsp_backup.metrics import BackupMetrics
+from hsp_backup.postgres import PostgresError
 from hsp_backup.stores.base import Store
 from hsp_backup.stores.folder import FolderStore
 
@@ -30,6 +31,7 @@ class SpyPostgres:
         self.revision: str | None = "c9b2fc969b7d"
         self.restored: dict[str, bytes] = {}
         self.fail_dump = False
+        self.fail_restore = False
 
     def dump(self, database: str, out: Path) -> None:
         if self.fail_dump:
@@ -40,6 +42,8 @@ class SpyPostgres:
         return self.revision
 
     def restore(self, database: str, dump: Path) -> None:
+        if self.fail_restore:
+            raise PostgresError("pg_restore failed: out of disk space")
         self.restored[database] = dump.read_bytes()
 
 

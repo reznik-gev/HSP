@@ -30,6 +30,13 @@ EXPECTED_ERRORS_TO_OMIT_TRACEBACK = (
     PostgresError,
 )
 
+#: Refused before anything was changed: a bad backups.yml, a target that can't be read, a backup
+#: that isn't there, is damaged or comes from a newer HSP. hsp restore then starts HSP again
+#: (docs/0109). A PostgreSQL failure exits 1: a restore may have stopped halfway.
+UNCHANGED = (ConfigError, StoreError, RestoreRefused, ArchiveError)
+EXIT_FAILED = 1
+EXIT_UNCHANGED = 3
+
 
 def one_line_errors[**P](command: Callable[P, None]) -> Callable[P, None]:
     @wraps(command)
@@ -38,7 +45,9 @@ def one_line_errors[**P](command: Callable[P, None]) -> Callable[P, None]:
             command(*args, **kwargs)
         except EXPECTED_ERRORS_TO_OMIT_TRACEBACK as exc:
             typer.echo(f"hsp-backup: {exc}", err=True)
-            raise typer.Exit(1) from None
+            raise typer.Exit(
+                EXIT_UNCHANGED if isinstance(exc, UNCHANGED) else EXIT_FAILED
+            ) from None
 
     return run
 

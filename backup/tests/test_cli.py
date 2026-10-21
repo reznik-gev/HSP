@@ -16,20 +16,24 @@ HspBackup = Callable[..., Result]
 #: Colours typer adds to its own messages on a terminal, and in GitHub Actions.
 COLOURS = re.compile(r"\x1b\[[0-9;]*m")
 
+#: A well-formed backup name that no target holds.
+NEVER_TAKEN = "hsp-20200101T000000Z-nightly.tar"
+
 #: A backups.yml that names no target.
 NO_TARGETS = "targets: {}"
 
 
 @pytest.fixture
-def one_folder_installation_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, str]:
+def one_folder_installation_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, postgres: SpyPostgres
+) -> dict[str, str]:
     (tmp_path / "backups").mkdir()
     (tmp_path / "backups.yml").write_text(
         f"targets:\n  local: {{ type: folder, path: '{(tmp_path / 'backups').as_posix()}' }}\n"
         'schedules:\n  - { name: nightly, cron: "30 2 * * *", target: local, keep: 7 }\n'
     )
     (tmp_path / "pg_password").write_text("pw")
-    spy = SpyPostgres()
-    monkeypatch.setattr(cli, "PgTools", lambda *_: spy)
+    monkeypatch.setattr(cli, "PgTools", lambda *_: postgres)
     return {
         "HSP_BACKUP_CONFIG": str(tmp_path / "backups.yml"),
         "HSP_BACKUP_INSTALL_DIR": str(tmp_path),
@@ -90,7 +94,7 @@ def test_check_names_a_target_it_cant_read(
     hsp_backup: HspBackup, target_folder_gone: dict[str, str]
 ) -> None:
     done = hsp_backup(target_folder_gone, "check")
-    assert done.exit_code == 1
+    assert done.exit_code == cli.EXIT_UNCHANGED
     assert "hsp-backup: can't read local" in done.stderr
 
 
@@ -98,7 +102,7 @@ def test_a_bad_config_is_one_line_not_a_traceback(
     hsp_backup: HspBackup, no_targets: dict[str, str]
 ) -> None:
     done = hsp_backup(no_targets, "list")
-    assert done.exit_code == 1
+    assert done.exit_code == cli.EXIT_UNCHANGED
     assert done.stderr.startswith("hsp-backup: backups.yml has problems")
     assert "Traceback" not in done.stderr
 
@@ -119,6 +123,23 @@ def test_restore_asks_for_yes(
     done = hsp_backup(one_folder_installation_env, "restore", "hsp-20261021T023000Z-nightly.tar")
     assert done.exit_code == 2
     assert "add --yes" in done.stderr
+
+
+def test_a_refused_restore_says_nothing_changed(
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+) -> None:
+    # hsp restore starts HSP again after this exit code (docs/0109).
+    done = hsp_backup(one_folder_installation_env, "restore", NEVER_TAKEN, "--yes")
+    assert done.exit_code == 3
+    assert "no target holds" in done.stderr
+
+
+def test_a_restore_that_fails_partway_exits_1(
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str], postgres: SpyPostgres
+) -> None:
+    name = hsp_backup(one_folder_installation_env, "now").stdout.strip()
+    postgres.fail_restore = True
+    assert hsp_backup(one_folder_installation_env, "restore", name, "--yes").exit_code == 1
 
 
 def test_a_restore_says_what_it_restored(

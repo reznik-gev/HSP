@@ -382,6 +382,9 @@ cmd_restore() {
   need_root "hsp restore"
   need_docker
   INSTALL_DIR="$(installation)"
+  # A typo shouldn't take HSP down: check the backup is there before stopping anything.
+  backup_tool list | awk -v n="$name" '$1 == n { found = 1 } END { exit !found }' ||
+    die "no backup is named $name; hsp backup list shows them"
   if [[ -z "$yes" ]]; then
     [[ -t 0 ]] || die "restoring replaces both databases; add --yes to go on without asking"
     echo "This replaces HSP's and Keycloak's databases with $name."
@@ -391,8 +394,17 @@ cmd_restore() {
   step "Stop HSP"
   compose stop api keycloak web backup
   step "Restore $name"
-  if ! backup_tool restore "$name" --yes; then
-    echo "hsp: the restore failed; HSP is still stopped. Fix the cause above and run it again," >&2
+  local status=0
+  backup_tool restore "$name" --yes || status=$?
+  if ((status == 3)); then
+    # Refused before touching a database (e.g. a backup from a newer HSP): nothing changed.
+    step "Nothing was changed: start HSP again"
+    compose up -d
+    wait_healthy
+    die "the restore was refused (see above); HSP is running as it was"
+  elif ((status != 0)); then
+    # A database may be half-restored: leave HSP stopped rather than serve it (docs/0109).
+    echo "hsp: the restore failed partway; HSP is still stopped. Fix the cause above and run it again," >&2
     die "or start HSP as it is with: docker compose --project-directory $INSTALL_DIR up -d"
   fi
   step "Start HSP"
