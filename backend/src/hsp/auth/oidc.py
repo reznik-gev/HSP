@@ -72,6 +72,11 @@ def tokens_from_response(
     )
 
 
+def discovery_url(issuer_url: str) -> str:
+    """Where the identity provider publishes its OIDC metadata; sign-in and /readyz both ask it."""
+    return f"{issuer_url.rstrip('/')}/.well-known/openid-configuration"
+
+
 class OidcClient:
     """One instance per app; caches provider metadata and keys."""
 
@@ -99,9 +104,8 @@ class OidcClient:
 
     async def metadata(self) -> ProviderMetadata:
         if self._metadata is None:
-            issuer = self._settings.oidc_issuer_url.rstrip("/")
             async with httpx2.AsyncClient(transport=self._transport) as http:
-                r = await http.get(f"{issuer}/.well-known/openid-configuration", timeout=10)
+                r = await http.get(discovery_url(self._settings.oidc_issuer_url), timeout=10)
                 r.raise_for_status()
                 d = r.json()
             self._metadata = ProviderMetadata(

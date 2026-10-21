@@ -8,9 +8,10 @@ from pathlib import Path
 import httpx2
 from alembic.script import ScriptDirectory
 from sqlalchemy import text
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import DBAPIError, ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from hsp.auth.oidc import discovery_url
 from hsp.db import get_engine
 
 MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
@@ -61,10 +62,13 @@ async def check_schema_at_startup() -> None:
 
 
 async def database_and_schema() -> str | None:
+    """The `database` check: None when the database answers at the schema this code needs,
+    otherwise what's wrong. Only failing to reach it counts as "unreachable"; anything else,
+    like missing migrations, is a bug and is raised."""
     try:
         async with get_engine().connect() as conn:
             return await schema_problem(conn)
-    except Exception as exc:
+    except (OSError, DBAPIError) as exc:
         return f"database unreachable ({type(exc).__name__})"
 
 
@@ -81,7 +85,7 @@ class KeycloakProbe:
         timeout_s: float = 2,
         ttl_s: float = 10,
     ) -> None:
-        self._url = f"{issuer_url.rstrip('/')}/.well-known/openid-configuration"
+        self._url = discovery_url(issuer_url)
         self._transport = transport
         self._clock = clock
         self._timeout_s = timeout_s
