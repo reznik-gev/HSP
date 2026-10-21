@@ -12,6 +12,7 @@ The first release.
 - "Show free seats" on a floor's plan makes the free and bookable seats stand out.
 - A Free seats list, under Seats: the seats free to assign or to book, narrowed by site, building, floor, zone and kind, each with Show on plan.
 - English and Hebrew, with the layout mirrored for Hebrew.
+- Dark mode is easier to read: each seat state stands out against the plan, zones and furniture are toned down, and form fields and panels have clearer borders.
 
 ### For admins
 - Manage sites, buildings, floors, people, teams, the catalog of furniture and devices, and zone types.
