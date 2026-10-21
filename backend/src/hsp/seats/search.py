@@ -8,13 +8,13 @@ import uuid
 from dataclasses import dataclass
 
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from hsp import models
 from hsp.auth.principal import Principal
-from hsp.seats.published import published_seats
+from hsp.seats.published import published_seats, visible_at_published
 
 
 class Ref(BaseModel):
@@ -63,6 +63,7 @@ class SeatSearchService:
         holder_person_id: uuid.UUID | None,
         holder_unit_id: uuid.UUID | None,
         status: str | None,
+        zone_id: uuid.UUID | None,
         after: uuid.UUID | None,
         limit: int,
     ) -> list[SeatOut]:
@@ -122,6 +123,33 @@ class SeatSearchService:
         elif status == "free":
             query = query.where(
                 sa.id.is_(None), r.allocation_mode == models.AllocationMode.ASSIGNED
+            )
+        elif status == "bookable":
+            query = query.where(
+                sa.id.is_(None), r.allocation_mode == models.AllocationMode.BOOKABLE
+            )
+        elif status == "available":
+            # Free to assign or to book: the free seats list (docs/0108).
+            query = query.where(
+                sa.id.is_(None),
+                r.allocation_mode.in_(
+                    [models.AllocationMode.ASSIGNED, models.AllocationMode.BOOKABLE]
+                ),
+            )
+        if zone_id is not None:
+            # Seats whose position lies in that zone of the same floor's published plan.
+            z, ze = models.ZoneRev, aliased(models.FloorElement)
+            query = query.where(
+                exists(
+                    select(z.element_id)
+                    .join(ze, ze.id == z.element_id)
+                    .where(
+                        z.element_id == zone_id,
+                        ze.floor_id == f.id,
+                        visible_at_published(z),
+                        func.ST_Contains(z.boundary, func.ST_Force2D(r.position)),
+                    )
+                )
             )
         if after is not None:
             query = query.where(r.element_id > after)
