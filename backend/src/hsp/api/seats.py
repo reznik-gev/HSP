@@ -52,8 +52,15 @@ async def search_seats(
     holder_person_id: Annotated[uuid.UUID | None, Query()] = None,
     holder_unit_id: Annotated[uuid.UUID | None, Query()] = None,
     status: Annotated[
-        Literal["assigned", "reserved", "free"] | None,
-        Query(description="assigned = held by a person, reserved = held by a unit"),
+        Literal["assigned", "reserved", "free", "bookable", "available"] | None,
+        Query(
+            description="assigned = held by a person, reserved = held by a unit, free = nobody's "
+            "and assignable, bookable = nobody's and bookable, available = free or bookable"
+        ),
+    ] = None,
+    zone_id: Annotated[
+        uuid.UUID | None,
+        Query(description="Only seats inside this zone of the published plan (docs/0108)"),
     ] = None,
     limit: LimitParam = DEFAULT_LIMIT,
     cursor: CursorParam = None,
@@ -68,6 +75,7 @@ async def search_seats(
         "holder_person_id": holder_person_id,
         "holder_unit_id": holder_unit_id,
         "status": status,
+        "zone_id": zone_id,
     }
     rows = await search.search(
         q=q,
@@ -77,6 +85,7 @@ async def search_seats(
         holder_person_id=holder_person_id,
         holder_unit_id=holder_unit_id,
         status=status,
+        zone_id=zone_id,
         after=decode_cursor(cursor, filters),
         limit=limit + 1,
     )

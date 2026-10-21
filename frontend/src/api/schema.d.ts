@@ -4944,8 +4944,10 @@ export interface operations {
                 floor_id?: string | null;
                 holder_person_id?: string | null;
                 holder_unit_id?: string | null;
-                /** @description assigned = held by a person, reserved = held by a unit */
-                status?: ("assigned" | "reserved" | "free") | null;
+                /** @description assigned = held by a person, reserved = held by a unit, free = nobody's and assignable, bookable = nobody's and bookable, available = free or bookable */
+                status?: ("assigned" | "reserved" | "free" | "bookable" | "available") | null;
+                /** @description Only seats inside this zone of the published plan (docs/0108) */
+                zone_id?: string | null;
                 /** @description Page size */
                 limit?: number;
                 /** @description `next_cursor` from the previous page */

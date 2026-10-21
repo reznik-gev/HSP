@@ -7821,7 +7821,7 @@
             }
           },
           {
-            "description": "assigned = held by a person, reserved = held by a unit",
+            "description": "assigned = held by a person, reserved = held by a unit, free = nobody's and assignable, bookable = nobody's and bookable, available = free or bookable",
             "in": "query",
             "name": "status",
             "required": false,
@@ -7831,7 +7831,9 @@
                   "enum": [
                     "assigned",
                     "reserved",
-                    "free"
+                    "free",
+                    "bookable",
+                    "available"
                   ],
                   "type": "string"
                 },
@@ -7839,8 +7841,27 @@
                   "type": "null"
                 }
               ],
-              "description": "assigned = held by a person, reserved = held by a unit",
+              "description": "assigned = held by a person, reserved = held by a unit, free = nobody's and assignable, bookable = nobody's and bookable, available = free or bookable",
               "title": "Status"
+            }
+          },
+          {
+            "description": "Only seats inside this zone of the published plan (docs/0108)",
+            "in": "query",
+            "name": "zone_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only seats inside this zone of the published plan (docs/0108)",
+              "title": "Zone Id"
             }
           },
           {

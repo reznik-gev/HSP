@@ -2,10 +2,53 @@
 
 from typing import Any
 
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from hsp.models import new_id
+from hsp.plans.drafts import SqlDraftRepository
+from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
 from hsp.seats.search import SeatSearchService
+from tests.db.plan_helpers import add, apply, context, stub_desk, stub_zone
 from tests.db.seat_helpers import seated
 
-FILTERS = ("q", "site_id", "building_id", "holder_person_id", "holder_unit_id", "status", "after")
+FILTERS = (
+    "q",
+    "site_id",
+    "building_id",
+    "holder_person_id",
+    "holder_unit_id",
+    "status",
+    "zone_id",
+    "after",
+)
+
+
+@pytest.fixture
+async def zone_with_free_seats(rolled_back_db_session: AsyncSession) -> dict[str, Any]:
+    """A published floor with a zone (0..4000 x 0..3000) holding a free desk (inside) and a
+    bookable one (bookable_inside), and a free desk outside it (outside); nobody sits anywhere."""
+    ctx = await context(rolled_back_db_session)
+    ctx["zone"], ctx["inside"], ctx["bookable_inside"], ctx["outside"] = (
+        new_id() for _ in range(4)
+    )
+    await apply(
+        ctx,
+        0,
+        add("zone", ctx["zone"], **stub_zone(ctx, x=0)),
+        add("object", ctx["inside"], **stub_desk(ctx, x=1000, label="IN")),
+        add(
+            "object",
+            ctx["bookable_inside"],
+            **stub_desk(ctx, x=3000, label="BK", allocation_mode="bookable"),
+        ),
+        add("object", ctx["outside"], **stub_desk(ctx, x=6000, label="OUT")),
+    )
+    publishing = PublishingService(
+        SqlDraftRepository(ctx["db"]), SqlPublishRepository(ctx["db"]), ctx["admin"]
+    )
+    await publishing.publish(ctx["floor"], PublishIn(base_revision=1))
+    return ctx
 
 
 async def test_where_does_x_sit(published_floor_with_seats: dict[str, Any]) -> None:
@@ -50,3 +93,20 @@ async def test_where_does_x_sit(published_floor_with_seats: dict[str, Any]) -> N
         row.floor.id == published_floor_with_seats["floor"]
         and row.building.id == published_floor_with_seats["building"]
     )
+
+
+async def test_free_and_bookable_seats_and_by_zone(zone_with_free_seats: dict[str, Any]) -> None:
+    """The free seats list (docs/0108): free, bookable, either, and inside a zone."""
+    ctx = zone_with_free_seats
+    search = SeatSearchService(ctx["db"], ctx["admin"])
+
+    async def ids(**filters: Any) -> set[Any]:
+        base: dict[str, Any] = dict.fromkeys(FILTERS) | {"floor_id": ctx["floor"], "limit": 50}
+        return {r.id for r in await search.search(**(base | filters))}
+
+    assert await ids(status="free") == {ctx["inside"], ctx["outside"]}
+    assert await ids(status="bookable") == {ctx["bookable_inside"]}
+    assert await ids(status="available") == {ctx["inside"], ctx["outside"], ctx["bookable_inside"]}
+    assert await ids(zone_id=ctx["zone"]) == {ctx["inside"], ctx["bookable_inside"]}
+    assert await ids(zone_id=ctx["zone"], status="free") == {ctx["inside"]}
+    assert await ids(zone_id=new_id()) == set()  # no such zone
