@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => ({
   define: {
     // `vite build --mode bench` includes the /bench routes (docs/0073).
     "import.meta.env.VITE_BENCH": JSON.stringify(mode === "bench" ? "1" : ""),
+    // The release, from the same HSP_VERSION the images are built with (docs/0063, 0104).
+    "import.meta.env.VITE_HSP_VERSION": JSON.stringify(process.env.HSP_VERSION || "0.0.0-dev"),
   },
   build: {
     ...(mode === "bench" ? { outDir: "dist-bench" } : {}),
