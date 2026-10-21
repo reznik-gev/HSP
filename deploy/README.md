@@ -54,13 +54,8 @@ The `backup` service backs up HSP's and Keycloak's databases on the schedules in
 - **Backups hold personal data** (names, emails, seats). Keep the target encrypted and its access limited.
 - **Change the schedules** in `backups.yml`, check them with `docker compose exec backup hsp-backup check`, and apply them with `docker compose restart backup`.
 - **S3:** add a target with `type: s3`, and put the keys in `secrets/backup_s3_access_key` and `secrets/backup_s3_secret_key`.
-- **By hand:** `docker compose exec backup hsp-backup now` takes one, and `hsp-backup list` lists them all.
-- **Restore** replaces both databases. A backup made by a newer HSP than the one installed is refused.
-  ```bash
-  docker compose stop api keycloak web backup
-  docker compose run --rm backup hsp-backup restore hsp-20261021T023000Z-nightly.tar --yes
-  docker compose up -d
-  ```
+- **By hand:** `sudo hsp backup now` takes one, and `sudo hsp backup list` lists them all.
+- **Restore:** `sudo hsp restore hsp-20261021T023000Z-nightly.tar` replaces both databases with that backup. Everything changed since is lost, and HSP is down while it runs. A backup made by a newer HSP than the one installed is refused.
 
 ## The release bundle
 Each release is one file, `hsp-<version>.tar.gz`, on the repository's GitHub Releases page ([0054](../docs/decisions/0054-2026-10-08-release-distribution.md), [0102](../docs/decisions/0102-2026-10-19-release-workflow.md)). It holds everything an installation needs, and no registry is contacted:
@@ -89,4 +84,6 @@ The operator's command, on the Docker host ([0107](../docs/decisions/0107-2026-1
 |---|---|
 | `hsp install [bundle] [options]` | Checks the bundle's checksums, loads its images, writes the installation (default `/opt/hsp`): `.env`, `backups.yml`, generated secrets, and TLS files (yours with `--tls-cert`/`--tls-key`, or a self-signed certificate to try it out). Then starts HSP, waits until every service is healthy, and creates the first admin with a one-time password. `hsp install --help` lists the options for a scripted install, such as `--public-url`, `--tls` and `--set NAME=VALUE`. |
 | `hsp status` | The version, each service's state and health, the last backup of each schedule and any failure since, and free disk. |
+| `hsp backup now` / `hsp backup list` | Takes a backup now, to `backups.yml`'s `manual` target, and prints its name; lists every backup on every target, newest first. |
+| `hsp restore <backup>` | Replaces both databases with a backup, after you confirm (`--yes` in scripts). It stops HSP, restores, starts it again and waits until it's healthy. A backup from a newer HSP is refused. |
 
