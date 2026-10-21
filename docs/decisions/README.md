@@ -33,7 +33,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0022 | 2026-10-08 | [Device assets: light asset fields](0022-2026-10-08-device-asset-data.md)  | Accepted |
 | 0023 | 2026-10-08 | [Primary unit: deepest unit wins](0023-2026-10-08-primary-unit-rule.md)   | Superseded by 0084 |
 | 0024 | 2026-10-08 | [Unit managers: assigned in HSP only](0024-2026-10-08-unit-managers.md)   | Accepted |
-| 0025 | 2026-10-08 | [v1 scope: space modeling + seat assignment](0025-2026-10-08-v1-scope.md) | Accepted (3D view moved past v1 by 0094) |
+| 0025 | 2026-10-08 | [v1 scope: space modeling + seat assignment](0025-2026-10-08-v1-scope.md) | Accepted (3D view moved past v1 by 0094; 1.0.0 scope in 0104) |
 | 0026 | 2026-10-08 | [Line endings: normalize to LF](0026-2026-10-08-line-endings.md)          | Accepted |
 | 0027 | 2026-10-08 | [v1 interim: CSV import, admin-only editing, Keycloak login](0027-2026-10-08-v1-interim-people-and-access.md) | Accepted |
 | 0028 | 2026-10-08 | [Floor version storage: version-range rows](0028-2026-10-08-floor-version-storage.md) | Accepted |
@@ -49,7 +49,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0038 | 2026-10-08 | [API auth: BFF with HttpOnly session cookies](0038-2026-10-08-api-authentication.md) | Accepted |
 | 0039 | 2026-10-08 | [Frontend client: openapi-typescript + openapi-fetch](0039-2026-10-08-frontend-api-client.md) | Accepted |
 | 0040 | 2026-10-08 | [Pagination: cursor-based](0040-2026-10-08-pagination.md)                 | Accepted |
-| 0041 | 2026-10-08 | [Live updates in v1: polling](0041-2026-10-08-live-updates.md)            | Accepted |
+| 0041 | 2026-10-08 | [Live updates in v1: polling](0041-2026-10-08-live-updates.md)            | Accepted (ETags as body hashes in 0104) |
 | 0042 | 2026-10-08 | [2D renderer: SVG](0042-2026-10-08-2d-renderer.md)                        | Accepted |
 | 0043 | 2026-10-08 | [Editor layout: 2D main, 3D toggle/split](0043-2026-10-08-editor-view-layout.md) | Accepted (3D modes moved past v1 by 0094) |
 | 0044 | 2026-10-08 | [Wall joins: linked endpoints](0044-2026-10-08-wall-joins.md)             | Accepted |
@@ -62,17 +62,17 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0051 | 2026-10-08 | [Validation: instant client preview, server authoritative](0051-2026-10-08-validation-feedback.md) | Accepted |
 | 0052 | 2026-10-08 | [SVG commitment: renderer-agnostic core + performance gate](0052-2026-10-08-svg-commitment-and-performance-gate.md) | Accepted (v1 bounds lowered by 0074) |
 | 0053 | 2026-10-08 | [Code hosting & CI: GitHub + Actions](0053-2026-10-08-code-hosting-and-ci.md) | Accepted (partially superseded by 0068; refined by 0070) |
-| 0054 | 2026-10-08 | [Release distribution: offline bundle only](0054-2026-10-08-release-distribution.md) | Accepted |
-| 0055 | 2026-10-08 | [Deployment target: Docker Compose, single host](0055-2026-10-08-deployment-target.md) | Accepted (images refined by 0097, the stack by 0099) |
-| 0056 | 2026-10-08 | [Upgrades: maintenance window + migrate job](0056-2026-10-08-upgrades-and-migrations.md) | Accepted |
-| 0057 | 2026-10-08 | [Observability: standard outputs + optional stack](0057-2026-10-08-observability.md) | Accepted |
-| 0058 | 2026-10-08 | [Backups: built-in scheduled dumps](0058-2026-10-08-backups.md)           | Accepted |
+| 0054 | 2026-10-08 | [Release distribution: offline bundle only](0054-2026-10-08-release-distribution.md) | Accepted (`bin/hsp` refined by 0107) |
+| 0055 | 2026-10-08 | [Deployment target: Docker Compose, single host](0055-2026-10-08-deployment-target.md) | Accepted (images refined by 0097, the stack by 0099; Kubernetes after 1.0 in 0104) |
+| 0056 | 2026-10-08 | [Upgrades: maintenance window + migrate job](0056-2026-10-08-upgrades-and-migrations.md) | Accepted (`hsp upgrade` refined by 0107, the schema check by 0105) |
+| 0057 | 2026-10-08 | [Observability: standard outputs + optional stack](0057-2026-10-08-observability.md) | Accepted (refined by 0105; the monitoring profile moved past 1.0 by 0104) |
+| 0058 | 2026-10-08 | [Backups: built-in scheduled dumps](0058-2026-10-08-backups.md)           | Accepted (refined by 0106) |
 | 0059 | 2026-10-08 | [Supply chain: automated dependency updates](0059-2026-10-08-supply-chain-security.md) | Accepted |
 | 0060 | 2026-10-08 | [Reverse proxy & TLS: Nginx](0060-2026-10-08-reverse-proxy.md)            | Accepted (refined by 0098) |
 | 0061 | 2026-10-08 | [Tests: mostly mocked DB + targeted DB integration](0061-2026-10-08-test-strategy.md) | Accepted |
 | 0062 | 2026-10-08 | [Tooling: Ruff + mypy, ESLint + Prettier](0062-2026-10-08-code-quality-tooling.md) | Accepted |
 | 0063 | 2026-10-08 | [Release versioning: SemVer](0063-2026-10-08-release-versioning.md)       | Accepted |
-| 0064 | 2026-10-08 | [Branching: trunk-based with PRs](0064-2026-10-08-branching-workflow.md)  | Accepted (merge method superseded by 0069) |
+| 0064 | 2026-10-08 | [Branching: trunk-based with PRs](0064-2026-10-08-branching-workflow.md)  | Accepted (merge method superseded by 0069; supported versions in 0104) |
 | 0065 | 2026-10-08 | [Python 3.13 & dev tooling (uv, Node LTS, pnpm)](0065-2026-10-08-python-version-and-dev-tooling.md) | Accepted (Python version superseded by 0091) |
 | 0066 | 2026-10-08 | [Frontend state & UI: Zustand + shadcn/ui](0066-2026-10-08-frontend-state-and-ui-components.md) | Accepted (lower confidence) |
 | 0067 | 2026-10-08 | [Frontend: pnpm + Vite + TanStack Router](0067-2026-10-08-frontend-package-manager-and-router.md) | Accepted |
@@ -110,5 +110,9 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0099 | 2026-10-18 | [The production Compose stack: secrets, data and how it's wired](0099-2026-10-18-production-compose.md) | Accepted |
 | 0100 | 2026-10-19 | [The @claude bot runs the checks and searches the web](0100-2026-10-19-claude-bot-tools.md) | Superseded by 0101 |
 | 0101 | 2026-10-19 | [Claude on GitHub reviews; it doesn't write code](0101-2026-10-19-claude-reviews-only.md) | Accepted |
-| 0102 | 2026-10-19 | [The release workflow: build, test and publish the bundle](0102-2026-10-19-release-workflow.md) | Accepted |
+| 0102 | 2026-10-19 | [The release workflow: build, test and publish the bundle](0102-2026-10-19-release-workflow.md) | Accepted (upgrade test refined by 0107) |
 | 0103 | 2026-10-19 | [A live demo with a made-up company, and a script](0103-2026-10-19-demo.md) | Accepted |
+| 0104 | 2026-10-21 | [What 1.0.0 includes, which versions get fixes, and what comes right after](0104-2026-10-21-v1-release-scope-and-support.md) | Accepted |
+| 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted |
+| 0106 | 2026-10-21 | [Backups: our own image, with schedules in `backups.yml`](0106-2026-10-21-backups.md) | Accepted |
+| 0107 | 2026-10-21 | [`bin/hsp`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted |
