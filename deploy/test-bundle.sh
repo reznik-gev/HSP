@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install a release bundle with its own hsp install, as deploy/README.md describes, and check it
+# Install a release bundle with its own hsp install, as deploy/install.md describes, and check it
 # (docs/0102, docs/0107).
 # The release workflow runs it on a clean runner, then runs the Playwright tests against the stack.
 #   deploy/test-bundle.sh dist/hsp-1.2.0.tar.gz          # check, then stop and remove everything

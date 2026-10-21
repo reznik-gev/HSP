@@ -44,7 +44,7 @@ cp -r "$root/deploy/compose/postgres-init" "$dir/compose/"
 cp "$root/deploy/compose/backups.example.yml" "$dir/compose/"
 sed "s/^HSP_VERSION=.*/HSP_VERSION=$version/" "$root/deploy/compose/.env.example" \
   > "$dir/compose/.env.example"
-cp "$root/deploy/README.md" "$dir/docs/install.md"
+cp "$root/deploy/install.md" "$dir/docs/install.md"
 cp "$notes" "$dir/docs/release-notes.md"
 cp "$root/CHANGELOG.md" "$dir/docs/CHANGELOG.md"
 cp "$root/LICENSE" "$dir/"
