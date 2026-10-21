@@ -369,6 +369,12 @@ COMMAND="${1:-help}"
 shift || true
 case "$COMMAND" in
   install) cmd_install "$@" ;;
+  # Not listed in help: the tests wait with it, so the rule lives in one place.
+  wait)
+    need_docker
+    INSTALL_DIR="$(installation)"
+    wait_healthy
+    ;;
   status) cmd_status "$@" ;;
   help | -h | --help) usage ;;
   *) usage >&2; die "unknown command $COMMAND" ;;

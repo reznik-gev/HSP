@@ -16,7 +16,6 @@ on:
       - deploy/bin/hsp
       - deploy/bundle.sh
       - deploy/test-bundle.sh
-      - deploy/wait-healthy.sh
       - deploy/release-notes.sh
 
 concurrency:
