@@ -9,6 +9,7 @@ The first release.
 
 ### For everyone
 - See each floor's plan, and find where someone sits from the search in the top bar.
+- "Show free seats" on a floor's plan makes the free and bookable seats stand out.
 - English and Hebrew, with the layout mirrored for Hebrew.
 
 ### For admins

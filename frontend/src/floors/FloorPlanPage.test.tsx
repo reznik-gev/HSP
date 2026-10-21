@@ -74,6 +74,18 @@ describe("floor plan viewer (docs/0087)", () => {
     expect(legend).toHaveTextContent("Bookable");
   });
 
+  it("Show free seats makes the free and bookable ones stand out (docs/0108)", async () => {
+    await renderApp("/floors/f3", backend());
+    // d1 is Maya's, d2 is reserved for a team, d3 is bookable: one seat to show.
+    const toggle = await screen.findByRole("button", { name: "Show free seats (1)" });
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(document.querySelector("svg[data-lod]")).toHaveAttribute("data-only-free");
+    await userEvent.click(toggle);
+    expect(document.querySelector("svg[data-lod]")).not.toHaveAttribute("data-only-free");
+  });
+
   it("a link to a seat opens it with its holder; closing clears it", async () => {
     await renderApp("/floors/f3?seat=d1", backend());
     const panel = await screen.findByRole("complementary", { name: "Seat details" });

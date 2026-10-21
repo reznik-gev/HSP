@@ -5,7 +5,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, Link } from "@tanstack/react-router";
-import { X } from "lucide-react";
+import { Armchair, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
@@ -45,6 +45,8 @@ export function FloorPlanPage() {
   const apiPlan = useQuery({ ...publishedPlanQuery(floorId, version ?? 0), enabled: !!version });
   const zoneTypes = useQuery(zoneTypesQuery);
   const seats = useQuery(floorSeatsQuery(floorId));
+  // "Show free seats" (docs/0108): the free and bookable seats stand out.
+  const [onlyFree, setOnlyFree] = useState(false);
 
   const plan = useMemo(
     () => (apiPlan.data && zoneTypes.data ? planFromApi(apiPlan.data, zoneTypes.data) : null),
@@ -78,6 +80,19 @@ export function FloorPlanPage() {
           </h1>
         </div>
         <div className="flex shrink-0 items-center gap-4">
+          {plan && states.size > 0 && (
+            <Button
+              size="sm"
+              variant={onlyFree ? "default" : "outline"}
+              aria-pressed={onlyFree}
+              onClick={() => setOnlyFree(!onlyFree)}
+            >
+              <Armchair aria-hidden />
+              {t("plan.showFree", {
+                count: [...states.values()].filter((s) => s === "free" || s === "bookable").length,
+              })}
+            </Button>
+          )}
           {version && (
             <span className="text-xs text-muted-foreground">{t("plan.version", { version })}</span>
           )}
@@ -93,7 +108,13 @@ export function FloorPlanPage() {
       ) : place.data && !version ? (
         <p className="p-6 text-muted-foreground">{t("plan.notPublished")}</p>
       ) : plan ? (
-        <Viewer plan={plan} states={states} seats={seats.data} focusSeat={seatParam} />
+        <Viewer
+          plan={plan}
+          states={states}
+          seats={seats.data}
+          focusSeat={seatParam}
+          onlyFree={onlyFree}
+        />
       ) : (
         <div className="flex-1 bg-[var(--plan-paper)]" aria-busy="true" />
       )}
@@ -114,11 +135,13 @@ function Viewer({
   states,
   seats,
   focusSeat,
+  onlyFree,
 }: {
   plan: ReturnType<typeof planFromApi>;
   states: ReadonlyMap<string, SeatState>;
   seats: ReadonlyMap<string, Seat> | undefined;
   focusSeat: string | undefined;
+  onlyFree: boolean;
 }) {
   const [store] = useState(createEditorStore);
   const [viewer] = useState(() => new ViewerInteraction(store));
@@ -149,6 +172,7 @@ function Viewer({
         view={{
           interaction: viewer,
           seatStates: states,
+          onlyFree,
           onHover: (p) => {
             const id = p ? viewer.seatAt(p.sx, p.sy) : null;
             setHover(id && p ? { id, sx: p.sx, sy: p.sy } : null);

@@ -66,6 +66,7 @@
   "plan": {
     "breadcrumb": "Location",
     "version": "Published version {{version}}",
+    "showFree": "Show free seats ({{count}})",
     "loadFailed": "Couldn't load this floor. Reload the page to try again.",
     "notPublished": "This floor has no published plan yet.",
     "zoomIn": "Zoom in",
