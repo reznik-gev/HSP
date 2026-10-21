@@ -18,7 +18,7 @@ A PR that changes something users or operators notice adds a line under `## [Unr
    git push origin vX.Y.Z
    ```
    Only admins can create `v*` tags (a tag ruleset).
-4. **Watch the release workflow** (Actions → release). It checks the tag and the changelog, builds the images, assembles `hsp-X.Y.Z.tar.gz`, then installs it on a clean runner. There it runs the scripted check and the Playwright browser tests. This takes about 20–30 minutes.
+4. **Watch the release workflow** (Actions → release). It checks the tag and the changelog, builds the images, assembles `hsp-X.Y.Z.tar.gz`, then installs it on a clean runner. There it runs the scripted check and the Playwright browser tests. In parallel, the **upgrade test** installs the last published release (not a pre-release), upgrades it to this one with `hsp upgrade`, checks it, rolls back with `hsp rollback` and checks again ([0107](../decisions/0107-2026-10-21-operator-cli.md)). Until a release exists, it's skipped with a notice. This takes about 20–30 minutes.
 5. **Approve the publish step.** The workflow then waits at the `release` environment. Open the run, read the summary, and choose **Review deployments → Approve**. Only then does the GitHub Release appear, with the bundle, its `.sha256` file and the changelog entry as its notes.
 
 ### Release candidates
@@ -30,6 +30,7 @@ Create `release/X.Y` from the `vX.Y.Z` tag, if it doesn't exist yet. Cherry-pick
 ## When something fails
 - **"isn't a release tag"** or **"on neither main nor release/X.Y"**: delete the tag (`git push origin :vX.Y.Z`; it was never published), fix it, and tag again.
 - **"no '## [X.Y.Z]' section"**: the release PR is missing or was named differently. Fix `CHANGELOG.md` in a PR, then move the tag to the new commit.
+- **The upgrade test fails:** the new release can't upgrade an installation of the last one, or roll it back. Its job shows where, with the stack's logs. Nothing was published.
 - **The bundle test fails:** the run shows the failing check, the stack's logs and the Playwright traces (the `playwright-traces` artifact). Nothing was published. Fix it, then release a new commit.
 - **A dry run** builds and tests without publishing: Actions → release → **Run workflow**, on any branch. It uses the `## [Unreleased]` notes. PRs that change the release workflow or its scripts run one on their own.
 

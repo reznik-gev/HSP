@@ -15,6 +15,7 @@ on:
       - .github/workflows/release.yml
       - deploy/bin/hsp
       - deploy/bundle.sh
+      - deploy/test-upgrade.sh
       - deploy/test-bundle.sh
       - deploy/release-notes.sh
 
@@ -131,8 +132,61 @@ jobs:
           path: frontend/test-results/
           retention-days: 7
 
+  # Upgrade from the last published release (not a pre-release) to this one, then roll back
+  # (docs/0107). 1.0.0 has nothing before it, so until a release exists this is skipped.
+  upgrade:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      HSP_TEST_DIR: ${{ github.workspace }}/../upgrade-test
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Find the last release
+        id: last
+        run: |
+          tag="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases \
+            --json tagName --jq "[.[] | select(.tagName != \"v$VERSION\")][0].tagName // empty")"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [[ -z "$tag" ]]; then
+            echo "::notice::No earlier release to upgrade from; the upgrade test starts with the next release."
+          fi
+      - uses: actions/download-artifact@v8
+        if: steps.last.outputs.tag != ''
+        with:
+          name: bundle
+          path: dist/
+      - name: Download ${{ steps.last.outputs.tag }}
+        if: steps.last.outputs.tag != ''
+        run: gh release download "${{ steps.last.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --pattern 'hsp-*.tar.gz*' --dir old/
+      - uses: pnpm/action-setup@v6
+        if: steps.last.outputs.tag != ''
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        if: steps.last.outputs.tag != ''
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install Playwright
+        if: steps.last.outputs.tag != ''
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+      - name: Upgrade ${{ steps.last.outputs.tag }} to this release, then roll back
+        if: steps.last.outputs.tag != ''
+        run: |
+          mkdir -p "$HSP_TEST_DIR"
+          deploy/test-upgrade.sh old/hsp-*.tar.gz "dist/hsp-$VERSION.tar.gz"
+      - name: The stack's logs
+        if: failure() && steps.last.outputs.tag != ''
+        run: sudo docker compose --project-directory "$HSP_TEST_DIR/install" logs --tail 200
+
   publish:
-    needs: [build, test]
+    needs: [build, test, upgrade]
     if: needs.build.outputs.publish == 'true'
     runs-on: ubuntu-latest
     # Required reviewers on this environment: the owner approves before anything is public.
