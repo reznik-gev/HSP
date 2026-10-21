@@ -1,0 +1,75 @@
+# The weekly restore test (docs/0058, docs/0106): build the images from this commit, install the
+# bundle on a clean runner, seed it, back it up to the folder target, restore into a fresh
+# database, and check the rows, signing in and a seat search. Also runs by hand, and on PRs that
+# change the backup code or this test. GitHub emails the workflow's last editor when a scheduled
+# run fails.
+name: restore drill
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Mondays, 03:00 UTC
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/restore-drill.yml
+      - backup/**
+      - deploy/backup/**
+      - deploy/compose/**
+      - deploy/test-restore.sh
+      - deploy/wait-healthy.sh
+      - frontend/e2e/restore-drill/**
+
+concurrency:
+  group: restore-drill-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      VERSION: 0.0.0-drill
+      HSP_TEST_DIR: ${{ github.workspace }}/../drill
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      # Exposes the Actions cache token to `docker buildx` for the gha build cache.
+      - uses: crazy-max/ghaction-github-runtime@v4
+      - name: Build the images
+        run: HSP_BUILD_CACHE=gha deploy/build-images.sh "$VERSION"
+      - name: Assemble and install the bundle
+        run: |
+          mkdir dist
+          deploy/release-notes.sh Unreleased > dist/release-notes.md
+          deploy/bundle.sh "$VERSION" dist/release-notes.md dist
+          KEEP=1 deploy/test-bundle.sh "dist/hsp-$VERSION.tar.gz"
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install Playwright
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Seed, back up, restore into a fresh database, and check
+        run: deploy/test-restore.sh
+
+      - name: The stack's logs
+        if: failure()
+        run: docker compose --project-directory "$HSP_TEST_DIR/install" logs --tail 200
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-traces
+          path: frontend/test-results/
+          retention-days: 7

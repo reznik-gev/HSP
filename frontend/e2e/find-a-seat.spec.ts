@@ -3,35 +3,12 @@
  * top bar, open the seat on the floor plan. The test creates its own floor, desk and person
  * through the API and archives them afterwards (archiving frees the seat, docs/0086).
  */
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
+import { apiAs } from "./api";
 import { signIn } from "./session";
 
 const tag = Math.random().toString(36).slice(2, 7);
-const API = "/api/v1";
-
-interface Created {
-  id: string;
-}
-
-/** JSON API calls with the signed-in session and its CSRF token (docs/0038). */
-async function apiAs(page: Page) {
-  const me = (await (await page.request.get(`${API}/auth/me`)).json()) as { csrf_token: string };
-  const headers = { "X-CSRF-Token": me.csrf_token };
-  return {
-    get: async <T>(path: string) => (await (await page.request.get(API + path)).json()) as T,
-    post: async <T = Created>(path: string, data?: unknown) => {
-      const r = await page.request.post(API + path, { data, headers });
-      expect(r.ok(), `POST ${path}: ${await r.text()}`).toBeTruthy();
-      return (await r.json()) as T;
-    },
-    put: async (path: string, data: unknown) => {
-      const r = await page.request.put(API + path, { data, headers });
-      expect(r.ok(), `PUT ${path}: ${await r.text()}`).toBeTruthy();
-    },
-    delete: async (path: string) => page.request.delete(API + path, { headers }),
-  };
-}
 
 test("find where someone sits and open the seat on the plan", async ({ page }) => {
   await signIn(page, "admin");

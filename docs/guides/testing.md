@@ -11,6 +11,8 @@ How HSP is tested, where the shared test data lives, and the conventions a revie
 | Browser tests | `frontend/e2e/*.spec.ts` | Playwright | A few key flows end to end: against the running dev stack, and in the release workflow against the installed bundle ([0102](../decisions/0102-2026-10-19-release-workflow.md)). |
 | Backend unit | `backend/tests/unit/` | pytest | Services and rules against fakes and stubs; no Docker. |
 | Database | `backend/tests/db/` | pytest + PostGIS | What only a real database can check ([0061](../decisions/0061-2026-10-08-test-strategy.md) lists it). |
+| Backup service | `backup/tests/` | pytest + moto | `hsp-backup`'s config, archives, targets, retention and schedules, with PostgreSQL faked and S3 faked by moto. |
+| Restore test | `deploy/test-restore.sh`, `frontend/e2e/restore-drill/*.drill.ts` | weekly workflow | Seeds an installed bundle, backs it up, restores into a fresh database, and compares every table ([0106](../decisions/0106-2026-10-21-backups.md)). Runs every Monday, by hand (Actions → restore drill), and on PRs that change backups. |
 | Shared validation cases | `shared/validation-cases/*.json` | both suites | Plan rules as data, so the editor and the server can't drift apart ([its README](../../shared/validation-cases/README.md)). |
 | SVG bench | `frontend/src/bench/` | a browser | The 2D performance gate ([frontend/README.md](../../frontend/README.md)). |
 

@@ -92,26 +92,7 @@ chmod 777 "$tmp/data/backups"
 
 echo "== Start"
 compose up -d || { compose ps -a >&2; compose logs --tail 80 >&2; exit 1; }
-# Wait until every service is healthy and migrate has finished. No service names or count here,
-# so a service added to compose.yml is waited for too.
-healthy=""
-for _ in $(seq 60); do
-  states="$(compose ps -a --format '{{.Service}}={{.State}}/{{.Health}}/{{.ExitCode}}')"
-  if [[ "$states" == *"migrate=exited//0"* ]] &&
-    ! grep -v '^migrate=' <<<"$states" | grep -qv '=running/healthy/'; then
-    healthy=1
-    break
-  fi
-  if grep -qE '=exited//[1-9]|=running/unhealthy/' <<<"$states"; then break; fi
-  sleep 5
-done
-if [[ -z "$healthy" ]]; then
-  echo "FAIL: the stack didn't become healthy:" >&2
-  compose ps -a >&2
-  compose logs --tail 80 >&2
-  exit 1
-fi
-echo "ok: every service is healthy and migrations ran"
+"$(dirname "${BASH_SOURCE[0]}")/wait-healthy.sh" "$install"
 
 echo "== Check"
 expect "the app loads over HTTPS" "$(curl -fsSk "$url/")" '<div id="root">'
