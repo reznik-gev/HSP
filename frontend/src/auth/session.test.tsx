@@ -46,6 +46,12 @@ describe("session (docs/0038, docs/0087)", () => {
     expect(logout?.headers.get("X-CSRF-Token")).toBe(ADMIN.csrf_token);
   });
 
+  it("shows the release version at the bottom of the menu (docs/0104)", async () => {
+    await renderApp("/floors");
+    await userEvent.click(await screen.findByRole("button", { name: "Account: Noa Barak" }));
+    expect(screen.getByText("HSP 0.0.0-dev")).toBeInTheDocument();
+  });
+
   it("explains when the server can't be reached", async () => {
     await renderApp("/floors", { "GET /api/v1/auth/me": { status: 502 } });
     // /auth/me retries once (about a second) before giving up.

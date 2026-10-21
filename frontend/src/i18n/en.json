@@ -61,7 +61,8 @@
     "menu": "Account: {{name}}",
     "admin": "Administrator",
     "viewer": "Viewer",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "version": "HSP {{version}}"
   },
   "plan": {
     "breadcrumb": "Location",

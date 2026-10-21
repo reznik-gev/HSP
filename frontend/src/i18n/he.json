@@ -61,7 +61,8 @@
     "menu": "חשבון: {{name}}",
     "admin": "מנהל מערכת",
     "viewer": "צופה",
-    "signOut": "התנתקות"
+    "signOut": "התנתקות",
+    "version": "HSP {{version}}"
   },
   "plan": {
     "breadcrumb": "מיקום",

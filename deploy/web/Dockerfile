@@ -10,7 +10,9 @@ RUN corepack enable
 COPY --from=frontend package.json pnpm-lock.yaml ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 COPY --from=frontend . .
-RUN pnpm build
+# The app shows the release in its user menu (docs/0104).
+ARG HSP_VERSION=0.0.0-dev
+RUN HSP_VERSION="${HSP_VERSION}" pnpm build
 # Compressed once here, served as is (gzip_static), so no CPU is spent per request (docs/0098).
 RUN find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' -o -name '*.svg' \
       -o -name '*.json' \) -size +1k -exec gzip -k -9 {} +
