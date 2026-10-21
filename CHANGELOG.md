@@ -17,6 +17,7 @@ The first release.
 - Manage sites, buildings, floors, people, teams, the catalog of furniture and devices, and zone types.
 - Import people and teams from a CSV or Excel file.
 - Draw floors in the editor: walls, zones, seats and devices, to the centimetre, with heights shown on the plan. Problems are listed as you draw. Publish a floor when it's ready, or discard the draft.
+- Walls snap straight: horizontal, vertical or 45° from their other end, shown with a marker. Shift keeps them straight however far off you point.
 - Assign seats to people and teams. Archiving a person or deleting a floor frees their seats on its own.
 
 ### For operators
