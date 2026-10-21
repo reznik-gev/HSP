@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApiPlan, Op } from "@/editor/core/operations";
-import { createEditorStore } from "@/editor/core/store";
+import { createEditorStore, NUDGE_RUN_MS } from "@/editor/core/store";
 import { stubPlan, stubDesk } from "@/test/stubs";
 
 import { Autosave, RETRY_MS, SAVE_DELAY_MS } from "./autosave";
@@ -13,6 +13,9 @@ const PLAN = stubPlan({
   objects: [stubDesk("d1", [0, 0])],
 }) as unknown as ApiPlan;
 const label = (l: string): Op[] => [{ op: "update", kind: "object", id: "d1", data: { label: l } }];
+const at = (x: number): Op[] => [
+  { op: "update", kind: "object", id: "d1", data: { position: [x, 0, 0] } },
+];
 type Reply = { status: number; body?: unknown };
 const URL_ = "POST /api/v1/floors/f3/draft/changesets";
 const problem = (status: number, slug: string): Reply => ({
@@ -64,6 +67,30 @@ describe("autosave (docs/0089 choice 3, docs/0090)", () => {
     ]);
     expect(autosave.state.getState()).toEqual({ status: "saved", version: 3 });
     expect(store.getState().pending).toEqual([]);
+  });
+
+  it("a run of nudges is sent once, a second after its last press (docs/0108)", async () => {
+    const { store, bodies } = setup([ok(1)]);
+    for (const x of [10, 20, 30, 40]) {
+      store.getState().performRun(at(x), "nudge:d1");
+      await vi.advanceTimersByTimeAsync(NUDGE_RUN_MS - 100); // longer than a second in all
+    }
+    expect(bodies).toEqual([]);
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(bodies).toEqual([{ base_revision: 0, ops: at(40) }]);
+  });
+
+  it("a nudge never grows a change that's already being sent", async () => {
+    const { store, autosave, bodies } = setup([ok(1), ok(2)]);
+    store.getState().performRun(at(10), "nudge:d1");
+    const sending = autosave.flush(); // e.g. on Exit, while the run goes on
+    store.getState().performRun(at(20), "nudge:d1");
+    await sending;
+    await autosave.flush();
+    expect(bodies).toEqual([
+      { base_revision: 0, ops: at(10) },
+      { base_revision: 1, ops: at(20) },
+    ]);
   });
 
   it("flush sends at once, e.g. on Exit", async () => {
