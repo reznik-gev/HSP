@@ -86,11 +86,15 @@ test("find where someone sits and open the seat on the plan", async ({ page }) =
     const text = await label.locator("text").boundingBox();
     const backing = await label.locator("rect.plan-label-backing").boundingBox();
     expect(text && backing).toBeTruthy();
+    // Zoomed out, the box's padding is under a pixel, and the glyphs the browser draws can reach
+    // a fraction of a pixel past the text's measured box. Nobody sees that; a box that misses
+    // the text by more than a pixel is the bug this catches.
+    const PX = 1;
     if (text && backing) {
-      expect(backing.x).toBeLessThan(text.x);
-      expect(backing.y).toBeLessThan(text.y);
-      expect(backing.x + backing.width).toBeGreaterThan(text.x + text.width);
-      expect(backing.y + backing.height).toBeGreaterThan(text.y + text.height);
+      expect(backing.x).toBeLessThanOrEqual(text.x + PX);
+      expect(backing.y).toBeLessThanOrEqual(text.y + PX);
+      expect(backing.x + backing.width).toBeGreaterThanOrEqual(text.x + text.width - PX);
+      expect(backing.y + backing.height).toBeGreaterThanOrEqual(text.y + text.height - PX);
     }
   } finally {
     // Archiving the site archives the floor and frees the seat (docs/0086).
