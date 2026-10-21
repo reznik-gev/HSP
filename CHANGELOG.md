@@ -17,6 +17,7 @@ The first release.
 - Draw floors in the editor: walls, zones, seats and devices, to the centimetre, with heights shown on the plan. Problems are listed as you draw. Publish a floor when it's ready, or discard the draft.
 - Walls snap straight: horizontal, vertical or 45° from their other end, shown with a marker. Shift keeps them straight however far off you point.
 - Drag a selected wall to move it whole; the walls joined to it stretch to stay joined (Alt detaches it). Changing a wall's length keeps its corner and moves its free end.
+- The arrow keys nudge the selection by 1 cm, or 10 cm with Shift. A run of presses is one step to undo.
 - Assign seats to people and teams. Archiving a person or deleting a floor frees their seats on its own.
 
 ### For operators

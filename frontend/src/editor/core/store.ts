@@ -23,6 +23,28 @@ import type { SnapKind } from "./snap";
 import type { DisplayUnit } from "./units";
 import type { Viewport } from "./viewport";
 
+/**
+ * A run of arrow-key nudges ends after this pause (docs/0108). It's under autosave's one-second
+ * delay, so a run is merged into one change before anything is sent.
+ */
+export const NUDGE_RUN_MS = 800;
+
+/** `first`'s ops with `then`'s merged over them: one update per element, later data winning. */
+function mergeUpdates(first: Op[], then: Op[]): Op[] {
+  const merged = new Map<string, Op>();
+  for (const op of [...first, ...then]) {
+    const key = `${op.kind}:${op.id}`;
+    const before = merged.get(key);
+    merged.set(
+      key,
+      before?.op === "update" && op.op === "update"
+        ? { ...op, data: { ...before.data, ...op.data } }
+        : op,
+    );
+  }
+  return [...merged.values()];
+}
+
 export interface DragState {
   /** Current drag offset in plan mm (already snapped). */
   dx: number;
@@ -125,6 +147,8 @@ export interface EditorState {
   redoStack: readonly Step[];
   /** Applied changes not yet saved, oldest first. */
   pending: readonly PendingChange[];
+  /** The change autosave is sending now, if any; it can't grow any more (performRun). */
+  sending: PendingChange | null;
   problems: readonly EditorProblem[];
   /** What the editor's own checks find in the plan right now (docs/0051), live. */
   findings: readonly Finding[];
@@ -154,6 +178,11 @@ export interface EditorState {
   loadDocument(document: ApiPlan, zoneTypes: ZoneTypes): void;
   /** Applies one user action as a single undo step. */
   perform(ops: Op[]): void;
+  /**
+   * Like perform, but a change with the same `run` key within NUDGE_RUN_MS of the last merges
+   * into it: one undo step, saved as one change (the arrow keys' nudges, docs/0108).
+   */
+  performRun(ops: Op[], run: string): void;
   undo(): void;
   redo(): void;
   /** The oldest pending change was saved. */
@@ -234,6 +263,8 @@ export function createEditorStore() {
       });
     };
     /** Applies ops as a change waiting to be saved; returns its undo step. */
+    /** The run the last change belongs to, for performRun. */
+    let lastRun: { key: string; at: number } | null = null;
     const apply = (ops: Op[], step: Step | null, origin: PendingChange["origin"]): Step => {
       const { document } = get();
       if (!document) throw new Error("no plan open for editing");
@@ -265,6 +296,7 @@ export function createEditorStore() {
       undoStack: [],
       redoStack: [],
       pending: [],
+      sending: null,
       problems: [],
       findings: [],
       panelTab: "properties",
@@ -306,16 +338,54 @@ export function createEditorStore() {
       },
       perform: (ops) => {
         if (!ops.length) return;
+        lastRun = null;
         const step = apply(ops, null, "do");
         set({ undoStack: [...get().undoStack, step], redoStack: [] });
       },
+      performRun: (ops, run) => {
+        if (!ops.length) return;
+        const { document, undoStack, pending } = get();
+        const last = undoStack.at(-1);
+        const lastChange = pending.at(-1);
+        const now = Date.now();
+        const continues =
+          document &&
+          lastRun?.key === run &&
+          now - lastRun.at < NUDGE_RUN_MS &&
+          last &&
+          lastChange?.step === last &&
+          lastChange.origin === "do" &&
+          lastChange !== get().sending;
+        if (!continues) {
+          get().perform(ops);
+          lastRun = { key: run, at: now };
+          return;
+        }
+        // Merge into the run's step and its unsaved change: the later values win for the
+        // change, the earliest values for taking it back.
+        const result = applyOps(document, ops);
+        show(result.plan);
+        const step: Step = {
+          ops: mergeUpdates(last.ops, ops),
+          inverse: mergeUpdates(result.inverse, last.inverse),
+        };
+        const change: PendingChange = { ops: step.ops, inverse: step.inverse, step, origin: "do" };
+        set({
+          undoStack: [...undoStack.slice(0, -1), step],
+          redoStack: [],
+          pending: [...pending.slice(0, -1), change],
+        });
+        lastRun = { key: run, at: now };
+      },
       undo: () => {
+        lastRun = null;
         const step = get().undoStack.at(-1);
         if (!step) return;
         apply(step.inverse, step, "undo");
         set({ undoStack: get().undoStack.slice(0, -1), redoStack: [...get().redoStack, step] });
       },
       redo: () => {
+        lastRun = null;
         const step = get().redoStack.at(-1);
         if (!step) return;
         apply(step.ops, step, "redo");

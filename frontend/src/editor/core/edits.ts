@@ -277,3 +277,63 @@ export function moveJunction(plan: Plan, wallIds: readonly string[], from: Vec2,
   }
   return ops;
 }
+
+/**
+ * Moves the selection by `d`, as the arrow keys do (docs/0108): furniture and devices, columns,
+ * zones, and whole walls, whose joined walls stretch to stay joined (as dragging one does). A door
+ * or window on its own slides along its wall by the part of `d` along it, if it still fits. No
+ * ops when nothing can move, or a wall would collapse to a point.
+ */
+export function nudgeOps(plan: Plan, selection: ReadonlySet<string>, d: Vec2): Op[] {
+  const by = (p: readonly number[]): number[] => [p[0]! + d[0], p[1]! + d[1]];
+  const ops: Op[] = [];
+  for (const id of selection) {
+    const o = plan.objects[id];
+    if (o) {
+      ops.push({
+        op: "update",
+        kind: "object",
+        id,
+        data: { position: [...by(o.position), o.position[2]] },
+      });
+    }
+  }
+  for (const c of plan.columns ?? []) {
+    if (selection.has(c.id)) {
+      ops.push({
+        op: "update",
+        kind: "column",
+        id: c.id,
+        data: { footprint: c.footprint.map(by) },
+      });
+    }
+  }
+  for (const z of plan.zones) {
+    if (selection.has(z.id)) {
+      ops.push({ op: "update", kind: "zone", id: z.id, data: { boundary: z.boundary.map(by) } });
+    }
+  }
+  // Every end of a selected wall moves, and so does any other wall's end that meets it.
+  const ends = plan.walls.filter((w) => selection.has(w.id)).flatMap((w) => [w.a, w.b]);
+  const moves = (p: Vec2) => ends.some((q) => same(p, q));
+  for (const w of plan.walls) {
+    const data: Record<string, number[]> = {};
+    if (moves(w.a)) data.a = by(w.a);
+    if (moves(w.b)) data.b = by(w.b);
+    if (!Object.keys(data).length) continue;
+    const [a, b] = [data.a ?? w.a, data.b ?? w.b];
+    if (a[0] === b[0] && a[1] === b[1]) return [];
+    ops.push({ op: "update", kind: "wall", id: w.id, data });
+  }
+  for (const op of plan.openings) {
+    const w = plan.walls.find((x) => x.id === op.wall_id);
+    if (!selection.has(op.id) || !w || selection.has(w.id)) continue;
+    const length = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]);
+    const along = Math.round((d[0] * (w.b[0] - w.a[0]) + d[1] * (w.b[1] - w.a[1])) / length);
+    const offset = op.offset_mm + along;
+    if (along !== 0 && offset >= 0 && offset + op.width_mm <= length) {
+      ops.push({ op: "update", kind: "opening", id: op.id, data: { offset_mm: offset } });
+    }
+  }
+  return ops;
+}

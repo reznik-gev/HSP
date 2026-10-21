@@ -15,6 +15,7 @@ import {
   deleteSelection,
   moveJunction,
   moveWall,
+  nudgeOps,
   moveZoneVertex,
   type OpeningType,
   rotateObjects,
@@ -45,6 +46,14 @@ export interface PointerInput {
   shift: boolean;
   alt?: boolean;
 }
+
+/** Each arrow key's direction on the plan, where +y is up. */
+const NUDGES: Record<string, Vec2> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, 1],
+  ArrowDown: [0, -1],
+};
 
 /** The far ends of `walls` from their junction `at`: a dragged corner keeps straight from them
  *  (docs/0108). */
@@ -466,9 +475,22 @@ export class Interaction {
   }
 
   /** Keyboard commands; returns whether the key was used. */
-  key(key: string): boolean {
+  key(key: string, shift = false): boolean {
     const s = this.store.getState();
     switch (key) {
+      case "ArrowLeft":
+      case "ArrowRight":
+      case "ArrowUp":
+      case "ArrowDown": {
+        // Nudge the selection 1 cm, 10 cm with Shift; up is up on the plan (docs/0108).
+        if (s.tool !== "select" || !s.plan || !s.selection.size) return false;
+        const step = shift ? 100 : 10;
+        const [dx, dy] = NUDGES[key]!;
+        const ops = nudgeOps(s.plan, s.selection, [dx * step, dy * step]);
+        if (!ops.length) return false;
+        s.performRun(ops, `nudge:${[...s.selection].sort().join(",")}`);
+        return true;
+      }
       case "Escape":
         if (s.tool === "wall" && this.wallTool.finish()) return true;
         if (s.tool === "zone" && this.zoneTool.cancel()) return true;
