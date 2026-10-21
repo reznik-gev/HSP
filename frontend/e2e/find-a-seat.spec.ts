@@ -5,62 +5,28 @@
  */
 import { expect, test } from "@playwright/test";
 
-import { apiAs } from "./api";
+import { apiAs, seedSeatedPerson } from "./api";
 import { signIn } from "./session";
 
 const tag = Math.random().toString(36).slice(2, 7);
+
+/** Dana, at desk E2E-<tag> on a new floor; the tag keeps parallel runs apart. */
+const SEATED = {
+  site: `E2E ${tag}`,
+  building: "E2E building",
+  code: `E${tag}`,
+  floor: "E2E floor",
+  seat: `E2E-${tag}`,
+  person: `Dana ${tag}`,
+  email: `dana.${tag}@e2e.example`,
+};
 
 test("find where someone sits and open the seat on the plan", async ({ page }) => {
   await signIn(page, "admin");
   const api = await apiAs(page);
 
   // A published floor with one desk, and a person sitting at it.
-  const catalog = await api.get<{
-    items: { key: string; current_revision: { id: string } }[];
-  }>("/catalog-items?limit=200");
-  const deskRev = catalog.items.find((i) => i.key === "desk_1600x800")?.current_revision.id;
-  const site = await api.post("/sites", { name: `E2E ${tag}`, time_zone: "UTC" });
-  const building = await api.post("/buildings", {
-    site_id: site.id,
-    name: "E2E building",
-    code: `E${tag}`,
-  });
-  const floor = await api.post("/floors", {
-    building_id: building.id,
-    name: "E2E floor",
-    level_index: 0,
-  });
-  const deskId = crypto.randomUUID();
-  await api.post(`/floors/${floor.id}/lock`);
-  await api.post(`/floors/${floor.id}/draft/changesets`, {
-    base_revision: 0,
-    ops: [
-      {
-        op: "add",
-        kind: "wall",
-        id: crypto.randomUUID(),
-        data: { a: [0, 0], b: [8000, 0], thickness_mm: 200, height_mm: 3000 },
-      },
-      {
-        op: "add",
-        kind: "object",
-        id: deskId,
-        data: {
-          catalog_item_rev_id: deskRev,
-          position: [2000, 2000, 0],
-          allocation_mode: "assigned",
-          label: `E2E-${tag}`,
-        },
-      },
-    ],
-  });
-  await api.post(`/floors/${floor.id}/draft/publish`, { base_revision: 1 });
-  await api.delete(`/floors/${floor.id}/lock`);
-  const person = await api.post("/people", {
-    display_name: `Dana ${tag}`,
-    email: `dana.${tag}@e2e.example`,
-  });
-  await api.put(`/seats/${deskId}/assignment`, { person_id: person.id });
+  const { siteId, floorId, deskId, personId } = await seedSeatedPerson(api, SEATED);
 
   try {
     // Search from the top bar.
@@ -74,7 +40,7 @@ test("find where someone sits and open the seat on the plan", async ({ page }) =
 
     // Open it on the plan: the seat is selected and its panel names the holder.
     await row.getByRole("link", { name: `Show E2E-${tag} on the floor plan` }).click();
-    await expect(page).toHaveURL(new RegExp(`/floors/${floor.id}\\?seat=${deskId}`));
+    await expect(page).toHaveURL(new RegExp(`/floors/${floorId}\\?seat=${deskId}`));
     const panel = page.getByRole("complementary", { name: "Seat details" });
     await expect(panel).toContainText(`E2E-${tag}`);
     await expect(panel).toContainText(`Dana ${tag}`);
@@ -98,7 +64,7 @@ test("find where someone sits and open the seat on the plan", async ({ page }) =
     }
   } finally {
     // Archiving the site archives the floor and frees the seat (docs/0086).
-    await api.delete(`/sites/${site.id}`);
-    await api.delete(`/people/${person.id}`);
+    await api.delete(`/sites/${siteId}`);
+    await api.delete(`/people/${personId}`);
   }
 });
