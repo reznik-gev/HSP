@@ -25,6 +25,7 @@ x-hsp-api: &hsp-api
     # issuer (KC_HOSTNAME_BACKCHANNEL_DYNAMIC below).
     HSP_OIDC_ISSUER_URL: http://keycloak:8080/auth/realms/hsp
     HSP_API_WORKERS: ${HSP_API_WORKERS:-4}
+    HSP_LOG_LEVEL: ${HSP_LOG_LEVEL:-INFO}
     # Tracing (docs/0105): off unless an OTLP endpoint is set. The standard OpenTelemetry settings.
     OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
