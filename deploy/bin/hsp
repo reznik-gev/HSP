@@ -41,7 +41,9 @@ need_docker() {
   docker info >/dev/null 2>&1 || die "can't reach Docker: is it running, and may you use it?"
 }
 
-# The installation this copy of hsp belongs to: the folder above bin/, or HSP_DIR.
+# The installation this copy of hsp works on: HSP_DIR; else the folder above bin/ when that is an
+# installation; else /opt/hsp (when run from a bundle, as for hsp upgrade). That applies to every
+# command, so hsp status run from a bundle looks at /opt/hsp too.
 installation() {
   local here dir
   here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -487,10 +489,11 @@ merge_env() {
   done <"$example"
 }
 
-# The secret files a compose.yml names that this installation doesn't have.
+# missing_secrets <compose.yml> <installation>: the secret files the compose.yml names that the
+# installation doesn't have.
 missing_secrets() {
   grep -o 'file: \./secrets/[A-Za-z0-9_]*' "$1" | sed 's|file: \./secrets/||' | sort -u |
-    while read -r s; do [[ -e "$INSTALL_DIR/secrets/$s" ]] || echo "$s"; done
+    while read -r s; do [[ -e "$2/secrets/$s" ]] || echo "$s"; done
 }
 
 usage_upgrade() {
@@ -530,11 +533,12 @@ cmd_upgrade() {
   to="$(cat "$source/VERSION")"
   check_upgrade_path "$from" "$to"
   local missing
-  missing="$(INSTALL_DIR="$INSTALL_DIR" missing_secrets "$source/compose/compose.yml")"
+  missing="$(missing_secrets "$source/compose/compose.yml" "$INSTALL_DIR")"
   [[ -z "$missing" ]] ||
     die "HSP $to needs secret files this installation doesn't have: $missing. Its release notes say how to make them."
   ok "HSP $from -> $to, checksums match"
-  if [[ -z "$yes" && -t 0 ]]; then
+  if [[ -z "$yes" ]]; then
+    [[ -t 0 ]] || die "an upgrade stops HSP for a few minutes; add --yes to go on without asking"
     [[ "$(ask "Upgrade $INSTALL_DIR to $to? HSP is down for a few minutes. Type yes" "")" == yes ]] ||
       die "nothing was changed"
   fi
@@ -617,7 +621,8 @@ cmd_rollback() {
   step "Bring back HSP $to's files"
   cp -a "$previous/.env" "$previous/compose.yml" "$INSTALL_DIR/"
   rm -rf "$INSTALL_DIR/postgres-init" && cp -a "$previous/postgres-init" "$INSTALL_DIR/"
-  cp -a "$previous/bin/." "$INSTALL_DIR/bin/"
+  # A new file, not written over this running script: bash reads it as it goes.
+  install -m 755 "$previous/bin/hsp" "$INSTALL_DIR/bin/hsp"
   step "Restore $backup"
   backup_tool restore "$backup" --yes ||
     die "the restore failed; HSP is stopped. Fix the cause above and run hsp rollback again"
