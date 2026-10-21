@@ -52,12 +52,13 @@ docker network create "$net" >/dev/null
 docker run -d --name "$run-db" --network "$net" \
   -e POSTGRES_USER=keycloak -e POSTGRES_PASSWORD=keycloak -e POSTGRES_DB=keycloak \
   postgis/postgis:18-3.6 >/dev/null
-# The image's init scripts restart the server once, so wait for it to answer over the network.
+# The image's init scripts run a temporary server on a socket only, then restart it listening on
+# TCP: wait until TCP answers, and retry in case the restart is still settling.
 for _ in $(seq 60); do
-  docker exec "$run-db" pg_isready -h "$run-db" -U keycloak -d keycloak >/dev/null 2>&1 && break
+  docker exec -e PGPASSWORD=keycloak "$run-db" createdb -h localhost -U keycloak hsp     >/dev/null 2>&1 && break
   sleep 1
 done
-docker exec -e PGPASSWORD=keycloak "$run-db" createdb -h "$run-db" -U keycloak hsp
+docker exec -e PGPASSWORD=keycloak "$run-db" psql -h localhost -U keycloak -d hsp -c 'SELECT 1'   >/dev/null
 
 echo "== hsp-api"
 api_env=(
