@@ -20,6 +20,10 @@ schedules:
 """
 
 
+#: A target and no schedules.
+NO_SCHEDULES = "targets: { local: { type: folder, path: /b } }"
+
+
 class SpyTake:
     """Records each backup taken; a backup takes `minutes`, and can be told to fail."""
 
@@ -99,7 +103,7 @@ def test_it_sleeps_until_the_next_time_but_at_most_a_minute(clock: FakeClock) ->
 
 def test_no_schedules_means_nothing_runs(clock: FakeClock) -> None:
     take = SpyTake(clock)
-    s = scheduler_for("targets: { local: { type: folder, path: /b } }", clock, take)
+    s = scheduler_for(NO_SCHEDULES, clock, take)
     s.run_due()
     assert take.taken == []
     assert s.seconds_to_next() == 60.0

@@ -10,6 +10,7 @@ HSP's backup service ([0058](../docs/decisions/0058-2026-10-08-backups.md), [010
 | `hsp-backup now [--schedule manual]` | Takes a backup now |
 | `hsp-backup list [--json]` | Lists the backups on every target |
 | `hsp-backup restore <name> --yes` | Replaces both databases with a backup. The stack must be stopped, except `postgres`. |
+| `hsp-backup prune [--schedule pre-upgrade] [--keep 1]` | Deletes a schedule's backups beyond the newest `--keep`. `hsp upgrade` runs it after a successful upgrade. |
 
 ## Settings
 | Variable | Default | What |

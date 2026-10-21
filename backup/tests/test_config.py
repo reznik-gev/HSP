@@ -30,6 +30,50 @@ targets:
 """
 
 
+def schedule(name: str = "n", cron: str = "0 2 * * *", target: str = "local", keep: int = 1) -> str:
+    return f'  - {{ name: "{name}", cron: "{cron}", target: {target}, keep: {keep} }}\n'
+
+
+#: Bad files, each with what the refusal must say.
+REFUSED = [
+    pytest.param(
+        ONE_TARGET + "schedules:\n" + schedule(target="nas"),
+        ("schedule 'n' uses target 'nas', which isn't under targets",),
+        id="unknown-target",
+    ),
+    pytest.param(
+        ONE_TARGET + "schedules:\n" + schedule(cron="at 2"),
+        ("schedules.0.cron", "not a cron expression: 'at 2'"),
+        id="bad-cron",
+    ),
+    pytest.param(
+        ONE_TARGET + "schedules:\n" + schedule(keep=0), ("schedules.0.keep",), id="keep-zero"
+    ),
+    pytest.param(
+        ONE_TARGET + "schedules:\n" + schedule(name="Night ly"), ("lower-case",), id="name-spaces"
+    ),
+    pytest.param(
+        ONE_TARGET + "schedules:\n" + schedule(name="manual"), ("reserved",), id="reserved-name"
+    ),
+    pytest.param(
+        ONE_TARGET + "schedules:\n" + schedule() + schedule(),
+        ("schedule names must be unique: n",),
+        id="duplicate-names",
+    ),
+    pytest.param(
+        "targets:\n  local: { type: folder, pth: /b }",
+        ("targets.local.folder.pth: Extra inputs are not permitted",),
+        id="misspelt-setting",
+    ),
+    pytest.param("targets:\n  local: { type: ftp, path: /b }", ("targets.local",), id="ftp"),
+    pytest.param(
+        "timezone: Mars/Base\n" + ONE_TARGET, ("unknown time zone: 'Mars/Base'",), id="time-zone"
+    ),
+    pytest.param("targets: {}", ("name at least one target",), id="no-targets"),
+    pytest.param("targets: [", ("isn't valid YAML",), id="not-yaml"),
+]
+
+
 def refused(text: str) -> str:
     with pytest.raises(ConfigError) as caught:
         parse_config(text)
@@ -57,53 +101,11 @@ def test_without_schedules_manual_backups_go_to_the_first_target() -> None:
     assert config.timezone == "UTC"
 
 
-def test_a_schedule_must_use_a_named_target() -> None:
-    message = refused(
-        ONE_TARGET + 'schedules: [{name: n, cron: "0 2 * * *", target: nas, keep: 1}]'
-    )
-    assert "schedule 'n' uses target 'nas', which isn't under targets" in message
-
-
-def test_a_bad_cron_is_named() -> None:
-    message = refused(ONE_TARGET + 'schedules: [{name: n, cron: "at 2", target: local, keep: 1}]')
-    assert "schedules.0.cron" in message
-    assert "not a cron expression: 'at 2'" in message
-
-
-def test_keep_must_be_at_least_one() -> None:
-    message = refused(
-        ONE_TARGET + 'schedules: [{name: n, cron: "0 2 * * *", target: local, keep: 0}]'
-    )
-    assert "schedules.0.keep" in message
-
-
-def test_schedule_names_are_simple_unique_and_not_reserved() -> None:
-    line = '  - {{name: {}, cron: "0 2 * * *", target: local, keep: 1}}\n'
-    assert "lower-case" in refused(ONE_TARGET + "schedules:\n" + line.format("Night ly"))
-    assert "reserved" in refused(ONE_TARGET + "schedules:\n" + line.format("manual"))
-    twice = ONE_TARGET + "schedules:\n" + line.format("n") + line.format("n")
-    assert "schedule names must be unique: n" in refused(twice)
-
-
-def test_unknown_settings_are_refused() -> None:
-    message = refused("targets:\n  local: { type: folder, pth: /b }")
-    assert "targets.local.folder.pth: Extra inputs are not permitted" in message
-
-
-def test_an_unknown_target_type_is_refused() -> None:
-    assert "targets.local" in refused("targets:\n  local: { type: ftp, path: /b }")
-
-
-def test_an_unknown_time_zone_is_refused() -> None:
-    assert "unknown time zone: 'Mars/Base'" in refused("timezone: Mars/Base\n" + ONE_TARGET)
-
-
-def test_at_least_one_target() -> None:
-    assert "name at least one target" in refused("targets: {}")
-
-
-def test_not_yaml_is_refused() -> None:
-    assert "isn't valid YAML" in refused("targets: [")
+@pytest.mark.parametrize(("text", "messages"), REFUSED, ids=[case.id for case in REFUSED])
+def test_a_bad_file_is_refused_saying_where(text: str, messages: tuple[str, ...]) -> None:
+    message = refused(text)
+    for expected in messages:
+        assert expected in message
 
 
 def test_a_missing_file_is_named(tmp_path: Path) -> None:

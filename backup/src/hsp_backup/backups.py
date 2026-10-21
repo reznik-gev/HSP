@@ -1,7 +1,6 @@
 """Taking, deleting, listing and restoring backups (docs/0106)."""
 
 import logging
-import shutil
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -16,7 +15,7 @@ from hsp_backup.config import MANUAL, PRE_UPGRADE, Config
 from hsp_backup.metrics import BackupMetrics
 from hsp_backup.names import BackupName, expired
 from hsp_backup.postgres import DATABASES, Postgres
-from hsp_backup.stores import Store
+from hsp_backup.stores import Store, StoreError
 
 log = logging.getLogger("hsp_backup")
 
@@ -131,9 +130,10 @@ class Backups:
         """Replace both databases with backup `name`, from whichever target holds it."""
         if BackupName.parse(name) is None:
             raise RestoreRefused(f"{name!r} isn't a backup name; `hsp backup list` shows them")
-        holder = next((label for label, b in self.list() if str(b) == name), None)
+        holder, unreadable = self._holder_of(name)
         if holder is None:
-            raise RestoreRefused(f"no target holds {name}")
+            unread = f" (couldn't read {', '.join(unreadable)})" if unreadable else ""
+            raise RestoreRefused(f"no target holds {name}{unread}")
         with TemporaryDirectory(prefix="hsp-restore-") as tmp:
             archive = Path(tmp) / name
             self.stores(holder).fetch(name, archive)
@@ -143,8 +143,20 @@ class Backups:
             for db in DATABASES:
                 self.postgres.restore(db, files / f"{db}.dump")
             log.info("backup restored", extra={"backup": name, "hsp_version": manifest.hsp_version})
-            shutil.rmtree(files)
         return manifest
+
+    def _holder_of(self, name: str) -> tuple[str | None, tuple[str, ...]]:
+        """The target holding backup `name`, looking at each in turn. A target that can't be read
+        is skipped, so a broken offsite store doesn't stop a restore from a local one; the
+        skipped ones are returned too, to name them if no target holds it."""
+        unreadable: tuple[str, ...] = ()
+        for label in self.config.targets:
+            try:
+                if name in self.stores(label).names():
+                    return label, unreadable
+            except StoreError:
+                unreadable += (label,)
+        return None, unreadable
 
 
 def refuse_newer(name: str, made_by: str, installed: str) -> None:
