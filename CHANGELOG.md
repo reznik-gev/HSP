@@ -10,6 +10,7 @@ The first release.
 ### For everyone
 - See each floor's plan, and find where someone sits from the search in the top bar.
 - "Show free seats" on a floor's plan makes the free and bookable seats stand out.
+- A Free seats list, under Seats: the seats free to assign or to book, narrowed by site, building, floor, zone and kind, each with Show on plan.
 - English and Hebrew, with the layout mirrored for Hebrew.
 
 ### For admins

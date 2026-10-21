@@ -17,6 +17,7 @@ import { validateCatalogSearch } from "@/catalog/search";
 import { validateDevicesSearch } from "@/devices/search";
 import { validateOrgSearch } from "@/org/search";
 import { validatePeopleSearch } from "@/people/search";
+import { FreeSeatsPage, validateFreeSeatsSearch } from "@/seats/FreeSeatsPage";
 import { SeatsPage } from "@/seats/SeatsPage";
 
 const rootRoute = createRootRoute({ component: Outlet, notFoundComponent: NotFound });
@@ -106,6 +107,12 @@ const seatsRoute = createRoute({
     typeof search.q === "string" && search.q ? { q: search.q } : {},
   component: SeatsPage,
 });
+const freeSeatsRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/seats/free",
+  validateSearch: validateFreeSeatsSearch,
+  component: FreeSeatsPage,
+});
 
 // Dev-only benchmark routes (docs/0073): present in `pnpm dev` and `vite build --mode bench`,
 // tree-shaken out of production builds because the condition is a build-time constant.
@@ -131,6 +138,7 @@ export const routeTree = rootRoute.addChildren([
     catalogRoute,
     devicesRoute,
     seatsRoute,
+    freeSeatsRoute,
   ]),
   fullScreenRoute.addChildren([editorRoute]),
   ...benchRoutes,
