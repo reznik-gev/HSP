@@ -33,7 +33,7 @@ deploy/smoke-images.sh            # starts each image and checks it answers
 CI runs both on every PR that touches the app or the images; nothing is pushed anywhere.
 
 ## The production stack
-[`compose/compose.yml`](compose/compose.yml) runs HSP on one host ([0055](../docs/decisions/0055-2026-10-08-deployment-target.md), [0099](../docs/decisions/0099-2026-10-18-production-compose.md)): `postgres`, a one-shot `migrate`, `api`, `keycloak` and `web`. Only `web` publishes ports.
+[`compose/compose.yml`](compose/compose.yml) runs HSP on one host ([0055](../docs/decisions/0055-2026-10-08-deployment-target.md), [0099](../docs/decisions/0099-2026-10-18-production-compose.md)): `postgres`, a one-shot `migrate`, `api`, `keycloak` and `web`. `web` publishes the ports users reach; `api` publishes only its metrics port, to this host by default (see [Monitoring](#monitoring)).
 
 `hsp install` will prepare an installation. Until it exists, these are the steps by hand, on a Linux host with Docker Engine and the Compose plugin, with the images loaded: from a release bundle (below), or built with `deploy/build-images.sh <version>`:
 
@@ -57,6 +57,13 @@ CI runs both on every PR that touches the app or the images; nothing is pushed a
 4. **Data:** `mkdir -p /var/lib/hsp` (or your `HSP_DATA_DIR`).
 5. **Start:** `docker compose up -d`. Migrations run first; `docker compose ps` shows every service healthy after about a minute.
 6. **First admin:** create a user in Keycloak's `hsp` realm and give them the `hsp-admin` role, from the admin console (open it with `HSP_KEYCLOAK_ADMIN_FROM`) or inside the container with `kcadm.sh`.
+
+## Monitoring
+What HSP gives you to watch it ([0057](../docs/decisions/0057-2026-10-08-observability.md), [0105](../docs/decisions/0105-2026-10-21-metrics-and-tracing.md)):
+
+- **Logs:** every service logs to Docker (`docker compose logs`). The API writes JSON lines, one per request, with the route, status, `duration_ms`, `request_id` and the user's Keycloak subject. `HSP_LOG_LEVEL=DEBUG` adds the full path.
+- **Readiness:** `api`'s health check is `/readyz`. It's ready when the database answers, its schema matches this version, and Keycloak answers. `docker compose ps` shows it.
+- **Metrics:** Prometheus metrics on `HSP_METRICS_ADDRESS:HSP_API_METRICS_PORT`, `127.0.0.1:9464` by default, so only this host can scrape them. To scrape from another machine, set `HSP_METRICS_ADDRESS` to an internal interface's address, and keep that port closed to users. They include requests by route (`hsp_http_requests_total`, `hsp_http_request_duration_seconds`), database connections in use, changesets and publishes (`hsp_plan_operations_total`), edit-lock refusals, and the API's CPU and memory. They hold no personal data.
 
 ## The release bundle
 Each release is one file, `hsp-<version>.tar.gz`, on the repository's GitHub Releases page ([0054](../docs/decisions/0054-2026-10-08-release-distribution.md), [0102](../docs/decisions/0102-2026-10-19-release-workflow.md)). It holds everything an installation needs, and no registry is contacted:

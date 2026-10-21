@@ -19,6 +19,8 @@ dependencies = [
     "httpx2>=2.13.1",
     "joserfc>=1.7.5",
     "openpyxl>=3.1.5",
+    "prometheus-client>=0.26.0",
+    "psutil>=7.2.2",
     "pydantic-settings>=2.15.0",
     "python-multipart>=0.0.32",
     "shapely>=2.2.0",
@@ -30,7 +32,7 @@ dependencies = [
 ]
 
 [project.scripts]
-hsp-api = "hsp.main:run"
+hsp-api = "hsp.serve:main"
 hsp-export-openapi = "hsp.openapi_export:main"
 
 [build-system]
@@ -44,6 +46,7 @@ dev = [
     "pytest-asyncio>=1.4.0",
     "ruff>=0.17.0",
     "types-openpyxl>=3.1.5.20260827",
+    "types-psutil>=7.2.2.20260906",
 ]
 
 # --- Tooling (docs/0062) -----------------------------------------------------

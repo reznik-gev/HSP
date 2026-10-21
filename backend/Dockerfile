@@ -29,13 +29,14 @@ LABEL org.opencontainers.image.title="hsp-api" \
 RUN useradd --system --uid 10001 --home-dir /app hsp
 WORKDIR /app
 COPY --from=build --chown=hsp:hsp /app /app
-# The API port is never published: only hsp-web (or an ingress) reaches it, so uvicorn may trust
-# X-Forwarded-* from any address on the container network (docs/0097). The API logs each request
-# as JSON itself (docs/0105), so uvicorn's own access log is off: it would repeat them as plain
-# text, sign-in codes in callback URLs included.
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 \
-    HSP_VERSION="${HSP_VERSION}" HSP_ENVIRONMENT=production \
-    HSP_API_WORKERS=4 FORWARDED_ALLOW_IPS="*"
+# hsp-api (hsp/serve.py) serves the metrics port, then runs the uvicorn workers. The API port is
+# never published: only hsp-web (or an ingress) reaches it, so uvicorn may trust X-Forwarded-* from
+# any address on the container network (docs/0097). The API logs each request as JSON itself
+# (docs/0105), so uvicorn's own access log is off: it would repeat them as plain text, sign-in
+# codes in callback URLs included. Workers write metrics to PROMETHEUS_MULTIPROC_DIR, which exists
+# for every process (the migrate job too) and is emptied each time the API starts.
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1     HSP_VERSION="${HSP_VERSION}" HSP_ENVIRONMENT=production     HSP_API_WORKERS=4 FORWARDED_ALLOW_IPS="*" PROMETHEUS_MULTIPROC_DIR=/tmp/hsp-metrics
+RUN install -d -o 10001 -g 10001 /tmp/hsp-metrics
 USER 10001
-EXPOSE 8000
-CMD ["sh", "-c", "exec uvicorn hsp.main:create_app --factory --host 0.0.0.0 --port 8000 --workers \"$HSP_API_WORKERS\" --proxy-headers --no-access-log"]
+EXPOSE 8000 9464
+CMD ["hsp-api"]

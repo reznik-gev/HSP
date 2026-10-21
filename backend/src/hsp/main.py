@@ -8,11 +8,11 @@ import structlog
 import uuid_utils
 from fastapi import FastAPI, Request, Response
 
-from hsp import __version__
+from hsp import __version__, metrics
 from hsp.api import auth, health, v1
 from hsp.auth.oidc import OidcClient
 from hsp.config import get_settings
-from hsp.db import dispose_engine
+from hsp.db import connections_in_use, dispose_engine
 from hsp.logging import configure_logging, is_debug
 from hsp.problems import install_problem_handlers
 from hsp.readiness import check_schema_at_startup, default_readiness
@@ -63,6 +63,7 @@ def create_app() -> FastAPI:
         finally:
             if request.url.path not in UNLOGGED_PATHS:
                 log_request(request, status, started, debug=is_debug(settings.log_level))
+                record_metrics(request, status, started)
             structlog.contextvars.clear_contextvars()
         response.headers["X-Request-ID"] = rid
         return response
@@ -90,7 +91,10 @@ def log_request(request: Request, status: int, started: float, *, debug: bool) -
     structlog.get_logger().info("request", **fields)
 
 
-def run() -> None:
-    import uvicorn
-
-    uvicorn.run("hsp.main:create_app", factory=True, host="0.0.0.0", port=8000)
+def record_metrics(request: Request, status: int, started: float) -> None:
+    route = request.scope.get("route")
+    seconds = time.perf_counter() - started
+    metrics.record_request(request.method, getattr(route, "path", None), status, seconds)
+    if problem := getattr(request.state, "problem", None):
+        metrics.record_problem(problem)
+    metrics.DB_CONNECTIONS.set(connections_in_use())
