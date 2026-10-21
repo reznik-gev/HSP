@@ -20,7 +20,7 @@ The first release.
 - Assign seats to people and teams. Archiving a person or deleting a floor frees their seats on its own.
 
 ### For operators
-- Install from one offline bundle: the images, the Compose stack and its documentation. No registry is contacted.
+- Install from one offline bundle: the images, the Compose stack and its documentation. No registry is contacted. `sudo bin/hsp install` checks it, sets it up and starts it, and `hsp status` shows how it's doing.
 - Sign-in through the bundled Keycloak. HSP serves HTTPS itself, or runs behind your own proxy.
 - The API logs one JSON line per request: the route, status, time taken, request ID and who made it. Set `HSP_LOG_LEVEL=DEBUG` to add the full path.
 - `/readyz` checks the database, its schema version and Keycloak, and names what isn't ready. The API refuses to start on a database that wasn't migrated for its version.
