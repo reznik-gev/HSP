@@ -19,17 +19,18 @@ def stub_jwt(claims: dict[str, Any]) -> str:
 
 def stub_tokens(
     *,
+    subject: str,
     roles: list[str],
     access_in: timedelta = timedelta(minutes=5),
     session_in: timedelta = timedelta(hours=1),
 ) -> SessionTokens:
-    """The tokens of user u1 with realm `roles`, whose access token and session expire after
+    """The tokens of user `subject` with realm `roles`, whose access token and session expire after
     `access_in` and `session_in`."""
     now = datetime.now(UTC)
     return SessionTokens(
         access_token=stub_jwt(
             {
-                "sub": "u1",
+                "sub": subject,
                 "name": "Dev Admin",
                 "email": "a@hsp.local",
                 "realm_access": {"roles": roles},
