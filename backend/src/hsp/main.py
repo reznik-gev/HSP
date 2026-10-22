@@ -13,7 +13,7 @@ from hsp.api import auth, health, v1
 from hsp.auth.oidc import OidcClient
 from hsp.config import get_settings
 from hsp.db import dispose_engine
-from hsp.logging import configure_logging
+from hsp.logging import configure_logging, is_debug
 from hsp.problems import install_problem_handlers
 
 #: Probed every few seconds by health checks and Prometheus; logging them would drown the rest.
@@ -57,7 +57,7 @@ def create_app() -> FastAPI:
             status = response.status_code
         finally:
             if request.url.path not in UNLOGGED_PATHS:
-                log_request(request, status, started, debug=settings.log_level == "DEBUG")
+                log_request(request, status, started, debug=is_debug(settings.log_level))
             structlog.contextvars.clear_contextvars()
         response.headers["X-Request-ID"] = rid
         return response

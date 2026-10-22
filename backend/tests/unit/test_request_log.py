@@ -13,13 +13,19 @@ from hsp.main import create_app
 
 
 @pytest.fixture
-def probe_app() -> FastAPI:
-    """The app plus a probe route with a path parameter, made by a signed-in user "u1"."""
+def actor_subject() -> str:
+    """The signed-in user who calls the probe route."""
+    return "u1"
+
+
+@pytest.fixture
+def probe_app(actor_subject: str) -> FastAPI:
+    """The app plus a probe route with a path parameter, called by `actor_subject`."""
     app = create_app()
 
     @app.get("/_test/items/{item_id}")
     async def item(item_id: str, request: Request) -> dict[str, str]:
-        request.state.actor_subject = "u1"
+        request.state.actor_subject = actor_subject
         return {"id": item_id}
 
     @app.get("/_test/crash")
@@ -56,7 +62,9 @@ def request_lines(logs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [line for line in logs if line["event"] == "request"]
 
 
-def test_a_request_is_logged_once_with_its_route_template(probe_api: TestClient) -> None:
+def test_a_request_is_logged_once_with_its_route_template(
+    probe_api: TestClient, actor_subject: str
+) -> None:
     with capture_logs() as logs:
         r = probe_api.get("/_test/items/42?q=secret", headers={"X-Request-ID": "rid-1"})
 
@@ -66,12 +74,19 @@ def test_a_request_is_logged_once_with_its_route_template(probe_api: TestClient)
     assert line["status"] == r.status_code == 200
     assert isinstance(line["duration_ms"], int) and line["duration_ms"] >= 0
     assert line["request_id"] == "rid-1"
-    assert line["actor_subject"] == "u1"
+    assert line["actor_subject"] == actor_subject
     assert line["log_level"] == "info"
+
+
+def test_the_raw_path_is_not_logged_above_debug_level(probe_api: TestClient) -> None:
+    with capture_logs() as logs:
+        probe_api.get("/_test/items/42?q=secret")
+
+    [line] = request_lines(logs)
     assert "path" not in line
 
 
-def test_the_raw_path_is_logged_only_at_debug_level(debug_api: TestClient) -> None:
+def test_the_raw_path_is_logged_at_debug_level(debug_api: TestClient) -> None:
     with capture_logs() as logs:
         debug_api.get("/api/v1/does-not-exist?q=x")
 
