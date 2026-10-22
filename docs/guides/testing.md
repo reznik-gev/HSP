@@ -63,6 +63,7 @@ Extend the world rather than inventing a parallel one: a second person is `stubP
 - The test body **runs the code under test and asserts**. Data generation, closures and helper functions inside a test are a sign that a fixture or stub is missing.
 - Parametrised data goes through a fixture too: the shared validation cases are a `case` fixture feeding `content`, `refs`, `names` and `expected`.
 - **API unit tests** use `tests/unit/conftest.py`: `api` is a test client of the app that sends the CSRF header, signed in as `signed_in.principal` (the `admin` fixture until the test sets another user, e.g. `signed_in.principal = viewer`; `other_admin` is a second admin). `api_without_csrf` is the same app without the header, for tests that check the refusal. `locations_repo` plugs in an empty in-memory locations store; create sites, buildings and floors through the API with `create_site`, `create_building` and `create_floor` (`tests/unit/api_helpers.py`) rather than writing rows into a fake.
+- **Unit tests have no database**, so the autouse fixture `no_database_at_startup` (`tests/unit/conftest.py`) skips the app's schema check at startup ([0109](../decisions/0109-2026-10-23-schema-check-everywhere.md)).
 - **Split test files by area** (for example drafts → `test_versions.py`, `test_guards.py`, `test_rules.py`; the changeset engine → `tests/unit/changeset/`; sign-in → `tests/unit/auth/`), so a failure's file name already says what broke.
 
 ### 4. Frontend screen tests

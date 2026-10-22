@@ -61,7 +61,7 @@ async def check_schema_at_startup() -> None:
         raise SchemaMismatchError(problem)
 
 
-async def database_and_schema() -> str | None:
+async def check_database_and_schema() -> str | None:
     """The `database` check: None when the database answers at the schema this code needs,
     otherwise what's wrong. Only failing to reach it counts as "unreachable"; anything else,
     like missing migrations, is a bug and is raised."""
@@ -127,4 +127,6 @@ class Readiness:
 
 
 def default_readiness(oidc_issuer_url: str) -> Readiness:
-    return Readiness({"database": database_and_schema, "keycloak": KeycloakProbe(oidc_issuer_url)})
+    return Readiness(
+        {"database": check_database_and_schema, "keycloak": KeycloakProbe(oidc_issuer_url)}
+    )

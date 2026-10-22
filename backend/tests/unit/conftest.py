@@ -7,6 +7,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+import hsp.main
 from hsp.api.common import get_locations_repository
 from hsp.auth.dependencies import get_principal
 from hsp.auth.principal import Principal
@@ -14,6 +15,16 @@ from hsp.main import create_app
 from tests.fakes import InMemoryLocationsRepository
 from tests.stubs import STUB_CSRF_HEADER_NAME, STUB_CSRF_TOKEN, stub_admin, stub_viewer
 from tests.unit.api_helpers import SignedIn
+
+
+async def skip_schema_check() -> None:
+    pass
+
+
+@pytest.fixture(autouse=True)
+def no_database_at_startup(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unit tests have no database, so the app skips its schema check at startup (docs/0109)."""
+    monkeypatch.setattr(hsp.main, "check_schema_at_startup", skip_schema_check)
 
 
 @pytest.fixture

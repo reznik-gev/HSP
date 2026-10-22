@@ -27,10 +27,9 @@ AUTH_PATH_PREFIX = v1.router.prefix + auth.router.prefix + "/"
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    # In production the schema must match, or the API refuses to start (docs/0056). Development
-    # and tests see a mismatch on /readyz instead.
-    if get_settings().environment == "production":
-        await check_schema_at_startup()
+    # The schema must match, or the API refuses to start, in every environment (docs/0056,
+    # docs/0109).
+    await check_schema_at_startup()
     yield
     await dispose_engine()
 
