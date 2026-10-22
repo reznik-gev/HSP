@@ -64,7 +64,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0053 | 2026-10-08 | [Code hosting & CI: GitHub + Actions](0053-2026-10-08-code-hosting-and-ci.md) | Accepted (partially superseded by 0068; refined by 0070) |
 | 0054 | 2026-10-08 | [Release distribution: offline bundle only](0054-2026-10-08-release-distribution.md) | Accepted (`bin/hsp` refined by 0107) |
 | 0055 | 2026-10-08 | [Deployment target: Docker Compose, single host](0055-2026-10-08-deployment-target.md) | Accepted (images refined by 0097, the stack by 0099; Kubernetes after 1.0 in 0104) |
-| 0056 | 2026-10-08 | [Upgrades: maintenance window + migrate job](0056-2026-10-08-upgrades-and-migrations.md) | Accepted (`hsp upgrade` refined by 0107, the schema check by 0105) |
+| 0056 | 2026-10-08 | [Upgrades: maintenance window + migrate job](0056-2026-10-08-upgrades-and-migrations.md) | Accepted (`hsp upgrade` refined by 0107, the schema check by 0105 and 0109) |
 | 0057 | 2026-10-08 | [Observability: standard outputs + optional stack](0057-2026-10-08-observability.md) | Accepted (refined by 0105; the monitoring profile moved past 1.0 by 0104) |
 | 0058 | 2026-10-08 | [Backups: built-in scheduled dumps](0058-2026-10-08-backups.md)           | Accepted (refined by 0106) |
 | 0059 | 2026-10-08 | [Supply chain: automated dependency updates](0059-2026-10-08-supply-chain-security.md) | Accepted (signing and SBOM planned for 1.3–1.4 by 0104) |
@@ -113,6 +113,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0102 | 2026-10-19 | [The release workflow: build, test and publish the bundle](0102-2026-10-19-release-workflow.md) | Accepted (upgrade test refined by 0107) |
 | 0103 | 2026-10-19 | [A live demo with a made-up company, and a script](0103-2026-10-19-demo.md) | Accepted |
 | 0104 | 2026-10-21 | [What 1.0.0 includes, which versions get fixes, and what comes right after](0104-2026-10-21-v1-release-scope-and-support.md) | Accepted |
-| 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted |
+| 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted (the schema check at startup refined by 0109) |
 | 0106 | 2026-10-21 | [Backups: our own image, with schedules in `backups.yml`](0106-2026-10-21-backups.md) | Accepted |
 | 0107 | 2026-10-21 | [`bin/hsp`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted |
+| 0109 | 2026-10-23 | [The schema check at startup runs everywhere; unit tests opt out](0109-2026-10-23-schema-check-everywhere.md) | Accepted |
