@@ -6,7 +6,7 @@ it, as in development and tests, everything stays in this process.
 
 Labels hold route templates, never raw paths, so there's no personal data and no unbounded set.
 The API's CPU and memory come from the platform, such as `docker stats`, cAdvisor or Kubernetes,
-not from here (docs/0110).
+not from here (docs/0111).
 """
 
 import os

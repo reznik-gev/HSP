@@ -1,4 +1,4 @@
-# 0110 — The API's CPU and memory come from the platform, not its own metrics
+# 0111 — The API's CPU and memory come from the platform, not its own metrics
 
 - **Date:** 2026-10-23
 - **Status:** Accepted
