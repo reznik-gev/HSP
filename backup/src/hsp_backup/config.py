@@ -87,7 +87,7 @@ class Manual(_Strict):
     keep: int = Field(default=5, ge=1)
 
 
-class Config(_Strict):
+class BackupConfig(_Strict):
     timezone: str = "UTC"
     targets: dict[str, Target]
     schedules: list[Schedule] = []
@@ -137,19 +137,19 @@ def _where(loc: tuple[int | str, ...]) -> str:
     return ".".join(str(part) for part in loc) or "backups.yml"
 
 
-def parse_config(text: str) -> Config:
+def parse_config(text: str) -> BackupConfig:
     try:
         data = yaml.safe_load(text)
     except yaml.YAMLError as exc:
         raise ConfigError(f"backups.yml isn't valid YAML: {exc}") from None
     try:
-        return Config.model_validate(data)
+        return BackupConfig.model_validate(data)
     except ValidationError as exc:
         problems = [f"{_where(e['loc'])}: {e['msg']}" for e in exc.errors()]
         raise ConfigError("backups.yml has problems:\n  " + "\n  ".join(problems)) from None
 
 
-def load_config(path: Path) -> Config:
+def load_config(path: Path) -> BackupConfig:
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:

@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 from croniter import croniter
 
-from hsp_backup.config import Config
+from hsp_backup.config import BackupConfig
 from hsp_backup.metrics import BackupMetrics
 
 log = logging.getLogger("hsp_backup")
@@ -26,7 +26,7 @@ MAX_SLEEP_S = 60.0
 class Scheduler:
     def __init__(
         self,
-        config: Config,
+        config: BackupConfig,
         take: Callable[[str], object],
         metrics: BackupMetrics,
         clock: Callable[[], datetime],

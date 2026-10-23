@@ -8,7 +8,7 @@ import pytest
 from prometheus_client import CollectorRegistry
 
 from hsp_backup.backups import Backups
-from hsp_backup.config import Config, parse_config
+from hsp_backup.config import BackupConfig, parse_config
 from hsp_backup.metrics import BackupMetrics
 from hsp_backup.stores import FolderStore, Store
 
@@ -60,7 +60,7 @@ manual: { target: local, keep: 2 }
 
 
 @pytest.fixture
-def config() -> Config:
+def config() -> BackupConfig:
     return parse_config(CONFIG)
 
 
@@ -75,7 +75,7 @@ def postgres() -> SpyPostgres:
 
 
 @pytest.fixture
-def folders(tmp_path: Path, config: Config) -> dict[str, FolderStore]:
+def folders(tmp_path: Path, config: BackupConfig) -> dict[str, FolderStore]:
     """One folder per target in `config`, under tmp_path."""
     stores = {}
     for label in config.targets:
@@ -105,7 +105,7 @@ def registry() -> CollectorRegistry:
 @pytest.fixture
 def backups(
     registry: CollectorRegistry,
-    config: Config,
+    config: BackupConfig,
     postgres: SpyPostgres,
     folders: dict[str, FolderStore],
     install_dir: Path,

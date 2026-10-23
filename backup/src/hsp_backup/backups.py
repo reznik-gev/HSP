@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 from packaging.version import InvalidVersion, Version
 
 from hsp_backup.archive import Manifest, extract_verified, write_archive
-from hsp_backup.config import MANUAL, PRE_UPGRADE, Config
+from hsp_backup.config import MANUAL, PRE_UPGRADE, BackupConfig
 from hsp_backup.metrics import BackupMetrics
 from hsp_backup.names import BackupName, expired
 from hsp_backup.postgres import DATABASES, Postgres
@@ -41,7 +41,7 @@ def now_utc() -> datetime:
 
 @dataclass
 class Backups:
-    config: Config
+    config: BackupConfig
     postgres: Postgres
     stores: Callable[[str], Store]  # target name -> its store
     hsp_version: str
