@@ -6,7 +6,7 @@ HSP's backup service ([0058](../docs/decisions/0058-2026-10-08-backups.md), [010
 | Command | What it does |
 |---|---|
 | `hsp-backup serve` | Runs the schedules, and serves metrics on port 9465 |
-| `hsp-backup check` | Checks `backups.yml` and says what's wrong |
+| `hsp-backup check` | Checks `backups.yml` and says what's wrong, or what each schedule keeps |
 | `hsp-backup now [--schedule manual]` | Takes a backup now |
 | `hsp-backup list [--json]` | Lists the backups on every target |
 | `hsp-backup restore <name> --yes` | Replaces both databases with a backup. The stack must be stopped, except `postgres`. |

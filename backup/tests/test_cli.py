@@ -7,6 +7,7 @@ import pytest
 from typer.testing import CliRunner, Result
 
 from hsp_backup import cli
+from hsp_backup.backups import BackupPlan
 from tests.conftest import SpyPostgres
 
 #: Runs one hsp-backup command, with the given environment.
@@ -67,6 +68,22 @@ def test_check_says_the_file_is_fine(
     done = hsp_backup(one_folder_installation_env, "check")
     assert done.exit_code == 0
     assert "backups.yml is fine: 1 target(s), 1 schedule(s)" in done.stdout
+
+
+def test_check_says_what_each_schedule_keeps(
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+) -> None:
+    done = hsp_backup(one_folder_installation_env, "check")
+    assert done.stdout.splitlines()[1:] == [
+        "  nightly: the newest 7, on local",
+        "  manual: the newest 5, on local",
+        "  pre-upgrade: every backup until `hsp upgrade` succeeds, on local",
+    ]
+
+
+def test_a_schedule_with_keep_days_keeps_those_days_too() -> None:
+    plan = BackupPlan("offsite", True, keep=8, keep_days=90)
+    assert cli.what_is_kept(plan) == "the newest 8, and every one from the last 90 days, on offsite"
 
 
 def test_check_names_a_target_it_cant_read(

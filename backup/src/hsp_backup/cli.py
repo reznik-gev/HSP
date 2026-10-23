@@ -8,10 +8,11 @@ import typer
 from prometheus_client import REGISTRY, start_http_server
 
 from hsp_backup.archive import ArchiveError
-from hsp_backup.backups import Backups, RestoreRefused
+from hsp_backup.backups import BackupPlan, Backups, RestoreRefused
 from hsp_backup.config import MANUAL, PRE_UPGRADE, ConfigError, load_config
 from hsp_backup.logs import configure_logging
 from hsp_backup.metrics import PORT, BackupMetrics
+from hsp_backup.names import KEEP_FOREVER
 from hsp_backup.postgres import PgTools, PostgresError
 from hsp_backup.scheduler import BackupScheduler
 from hsp_backup.settings import BackupSettings
@@ -97,7 +98,7 @@ def serve() -> None:
 @app.command()
 @one_line_errors
 def check() -> None:
-    """Check backups.yml, and that every target can be read."""
+    """Check backups.yml and that every target can be read, and say what each schedule keeps."""
     backups = open_backups()
     config = backups.config
     for label in config.targets:
@@ -106,6 +107,15 @@ def check() -> None:
         f"backups.yml is fine: {len(config.targets)} target(s), "
         f"{len(config.schedules)} schedule(s), and every target can be read"
     )
+    for schedule in [*(s.name for s in config.schedules), MANUAL, PRE_UPGRADE]:
+        typer.echo(f"  {schedule}: {what_is_kept(backups.plan(schedule))}")
+
+
+def what_is_kept(plan: BackupPlan) -> str:
+    if plan.keep == KEEP_FOREVER:
+        return f"every backup until `hsp upgrade` succeeds, on {plan.target}"
+    days = f", and every one from the last {plan.keep_days} days" if plan.keep_days else ""
+    return f"the newest {plan.keep}{days}, on {plan.target}"
 
 
 @app.command()
