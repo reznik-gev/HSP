@@ -85,6 +85,7 @@ To let people sign in with their **Active Directory or LDAP** accounts, connect 
   - **Errors:** `rate(hsp_http_requests_total{status=~"5.."}[5m]) > 0`.
   - **HSP down:** the scrape fails (`up == 0`).
   - **A full disk:** from your host monitoring.
+- **CPU and memory** come from Docker, not from HSP's metrics ([0110](https://github.com/reznik-gev/HSP/blob/main/docs/decisions/0110-2026-10-23-cpu-and-memory-from-the-platform.md)). `sudo docker stats` shows each service live. To graph them in Prometheus, run [cAdvisor](https://github.com/google/cadvisor) on the host, or use your usual host monitoring. HSP doesn't include cAdvisor, because it needs broad access to the host.
 - **Traces:** OpenTelemetry, off until you set `OTEL_EXPORTER_OTLP_ENDPOINT` to your collector's OTLP/HTTP address. 10% of requests are sampled unless `OTEL_TRACES_SAMPLER` says otherwise.
 - **Readiness:** the API's health check is `/readyz`. It's ready when the database answers, its schema matches this version, and Keycloak answers. `hsp status` shows the result.
 
