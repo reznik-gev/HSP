@@ -15,7 +15,7 @@ from hsp_backup.config import MANUAL, PRE_UPGRADE, BackupConfig
 from hsp_backup.metrics import BackupMetrics
 from hsp_backup.names import BackupName, expired
 from hsp_backup.postgres import DATABASES, Postgres
-from hsp_backup.stores import Store, StoreError
+from hsp_backup.stores.base import Store, StoreError
 
 log = logging.getLogger("hsp_backup")
 

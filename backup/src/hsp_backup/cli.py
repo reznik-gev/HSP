@@ -20,7 +20,8 @@ from hsp_backup.config import MANUAL, PRE_UPGRADE, BackupConfig, ConfigError, lo
 from hsp_backup.metrics import PORT, BackupMetrics
 from hsp_backup.postgres import PgTools, PostgresError
 from hsp_backup.scheduler import Scheduler
-from hsp_backup.stores import Store, StoreError, open_store
+from hsp_backup.stores import open_store
+from hsp_backup.stores.base import Store, StoreError
 
 log = logging.getLogger("hsp_backup")
 

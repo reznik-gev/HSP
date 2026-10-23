@@ -8,7 +8,7 @@ from prometheus_client import CollectorRegistry
 
 from hsp_backup.archive import read_manifest
 from hsp_backup.backups import Backups, RestoreRefused, refuse_newer
-from hsp_backup.stores import FolderStore
+from hsp_backup.stores.folder import FolderStore
 from tests.conftest import FakeClock, SpyPostgres
 
 #: A well-formed backup name that no target holds.

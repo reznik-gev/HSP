@@ -10,7 +10,8 @@ from prometheus_client import CollectorRegistry
 from hsp_backup.backups import Backups
 from hsp_backup.config import BackupConfig, parse_config
 from hsp_backup.metrics import BackupMetrics
-from hsp_backup.stores import FolderStore, Store
+from hsp_backup.stores.base import Store
+from hsp_backup.stores.folder import FolderStore
 
 START = datetime(2026, 10, 21, 2, 30, tzinfo=UTC)
 
