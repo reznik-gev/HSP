@@ -116,8 +116,11 @@ expect "HTTP redirects to HTTPS" "$(status http://localhost:8088/floors)" "301 $
 headers="$(curl -fsSkI "$url/" | tr "[:upper:]" "[:lower:]")"
 expect "the app sends the content security policy" "$headers" "frame-ancestors 'none'"
 expect "the app sends HSTS" "$headers" "strict-transport-security: max-age="
-readyz="$(compose exec -T api python -c \
-  "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/readyz').read().decode())")"
+# The answer's body, even a 503's, so a failure says which check wasn't ready.
+readyz="$(compose exec -T api python -c "
+import urllib.error, urllib.request
+try: print(urllib.request.urlopen('http://localhost:8000/readyz').read().decode())
+except urllib.error.HTTPError as e: print(e.code, e.read().decode())")"
 expect "the API is ready" "$readyz" '"status":"ready"'
 expect "the API runs this release" "$readyz" "\"version\":\"$version\""
 expect "the API refuses requests without sign-in" "$(status -k "$url/api/v1/auth/me")" "401"
