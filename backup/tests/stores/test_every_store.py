@@ -1,5 +1,3 @@
-"""What every store does, whichever kind of target it is (docs/0106)."""
-
 from pathlib import Path
 
 import pytest

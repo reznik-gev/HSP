@@ -1,5 +1,3 @@
-"""backups.yml: what's accepted, and what's refused with a message that says where (docs/0106)."""
-
 from pathlib import Path
 
 import pytest

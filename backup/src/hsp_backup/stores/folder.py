@@ -1,6 +1,3 @@
-"""A folder target: a local disk or a mounted share. A backup is written under a temporary name
-and renamed, so a half-written one never shows."""
-
 import os
 import shutil
 from pathlib import Path

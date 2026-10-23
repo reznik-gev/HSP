@@ -1,5 +1,3 @@
-"""Backup names, and which old backups are deleted (docs/0106)."""
-
 from datetime import UTC, datetime, timedelta
 
 from hsp_backup.names import BackupName, expired

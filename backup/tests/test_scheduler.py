@@ -1,6 +1,3 @@
-"""Schedules run at their cron times in their time zone; one that comes due during a backup is
-skipped; a failure doesn't stop the next (docs/0106)."""
-
 from datetime import UTC, datetime
 
 from prometheus_client import CollectorRegistry
@@ -26,8 +23,6 @@ NO_SCHEDULES = "targets: { local: { type: folder, path: /b } }"
 
 
 class SpyTake:
-    """Records each backup taken; a backup takes `minutes`, and can be told to fail."""
-
     def __init__(self, clock: FakeClock) -> None:
         self.clock = clock
         self.taken: list[tuple[str, datetime]] = []

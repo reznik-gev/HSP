@@ -1,6 +1,3 @@
-"""`hsp-backup`: the backup service's commands (docs/0106), built with typer (docs/0113).
-`bin/hsp` runs them inside the backup container (docs/0107)."""
-
 import json
 from collections.abc import Callable
 from functools import cache, wraps
@@ -34,8 +31,6 @@ EXPECTED_ERRORS_TO_OMIT_TRACEBACK = (
 
 
 def one_line_errors[**P](command: Callable[P, None]) -> Callable[P, None]:
-    """The command says an expected failure in one line, without a traceback, and exits 1."""
-
     @wraps(command)
     def run(*args: P.args, **kwargs: P.kwargs) -> None:
         try:
@@ -60,14 +55,12 @@ def _start() -> None:
     configure_logging()
 
 
-@cache
+@cache  # prometheus_client refuses to register the same metrics twice
 def process_metrics() -> BackupMetrics:
-    """The metrics this process serves; registered once."""
     return BackupMetrics(REGISTRY)
 
 
 def open_backups() -> Backups:
-    """The installation's backups, as the environment and backups.yml describe them."""
     settings = BackupSettings()
     config = load_config(settings.config)
     opened: dict[str, Store] = {}

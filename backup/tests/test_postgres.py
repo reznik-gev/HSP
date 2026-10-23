@@ -1,6 +1,3 @@
-"""The PostgreSQL commands hsp-backup runs, and how their failures read (docs/0106). The weekly
-restore test runs them against a real database."""
-
 from pathlib import Path
 
 import pytest
@@ -9,8 +6,6 @@ from hsp_backup.postgres import PgTools, PostgresError, run
 
 
 class SpyRunner:
-    """Records each command and its password; answers `stdout`, or fails `failing` commands."""
-
     def __init__(self) -> None:
         self.calls: list[list[str]] = []
         self.passwords: list[str] = []

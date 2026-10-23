@@ -1,5 +1,3 @@
-"""Taking, deleting, listing and restoring backups (docs/0106)."""
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -21,7 +19,7 @@ log = structlog.get_logger()
 
 
 class RestoreRefused(Exception):
-    """The backup can't be restored onto this installation; the message says why."""
+    pass
 
 
 @dataclass(frozen=True)
@@ -47,8 +45,6 @@ class Backups:
     clock: Callable[[], datetime] = field(default=now_utc)
 
     def plan(self, schedule: str) -> Plan:
-        """Where `schedule`'s backups go and how many are kept. Manual backups keep the last
-        `manual.keep`; pre-upgrade ones stay until `hsp upgrade` succeeds (docs/0106)."""
         if schedule == MANUAL:
             return Plan(self.config.manual_target, self.config.manual_keep, None, True)
         if schedule == PRE_UPGRADE:
@@ -84,8 +80,6 @@ class Backups:
         return name
 
     def prune(self, schedule: str, *, keep: int, keep_days: int | None = None) -> list[str]:
-        """Delete `schedule`'s backups beyond what's kept. A failure is logged, not raised: the
-        new backup is already safe, and the next run tries again."""
         store = self.stores(self.plan(schedule).target)
         try:
             found = [b for n in store.names() if (b := BackupName.parse(n))]
@@ -96,13 +90,12 @@ class Backups:
             for name in gone:
                 store.delete(name)
                 log.info("old backup deleted", schedule=schedule, backup=name)
-        except Exception as exc:
+        except Exception as exc:  # the new backup is already safe; the next run tries again
             log.warning("old backups not deleted", schedule=schedule, error=str(exc))
             return []
         return gone
 
     def list(self) -> list[tuple[str, BackupName]]:
-        """Every backup on every target, newest first, as (target, name)."""
         found = [
             (label, b)
             for label in self.config.targets
@@ -112,7 +105,6 @@ class Backups:
         return sorted(found, key=lambda t: t[1], reverse=True)
 
     def restore(self, name: str) -> Manifest:
-        """Replace both databases with backup `name`, from whichever target holds it."""
         if BackupName.parse(name) is None:
             raise RestoreRefused(f"{name!r} isn't a backup name; `hsp backup list` shows them")
         holder, unreadable = self._holder_of(name)
@@ -131,21 +123,17 @@ class Backups:
         return manifest
 
     def _holder_of(self, name: str) -> tuple[str | None, tuple[str, ...]]:
-        """The target holding backup `name`, looking at each in turn. A target that can't be read
-        is skipped, so a broken offsite store doesn't stop a restore from a local one; the
-        skipped ones are returned too, to name them if no target holds it."""
         unreadable: tuple[str, ...] = ()
         for label in self.config.targets:
             try:
                 if name in self.stores(label).names():
                     return label, unreadable
-            except StoreError:
+            except StoreError:  # a broken offsite store mustn't stop a restore from a local one
                 unreadable += (label,)
         return None, unreadable
 
 
 def refuse_newer(name: str, made_by: str, installed: str) -> None:
-    """A backup from a newer HSP may hold a schema this one can't run (docs/0106)."""
     try:
         newer = Version(made_by) > Version(installed)
     except InvalidVersion:

@@ -1,6 +1,3 @@
-"""A backup file, the S3 keys, and an empty store of each kind (docs/0106). S3 is moto's fake,
-so the boto3 calls are real."""
-
 from collections.abc import Iterator
 from pathlib import Path
 

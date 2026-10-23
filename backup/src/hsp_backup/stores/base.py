@@ -1,11 +1,9 @@
-"""What every store does, and the error it raises."""
-
 from pathlib import Path
 from typing import Protocol
 
 
 class StoreError(Exception):
-    """A target can't be read or written; the message names it."""
+    pass
 
 
 class Store(Protocol):

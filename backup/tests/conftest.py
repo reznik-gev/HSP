@@ -1,6 +1,3 @@
-"""Shared test doubles: a PostgreSQL that dumps and restores in memory, folder targets in a
-temporary directory, and a clock tests move on (docs/0096)."""
-
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -28,8 +25,6 @@ class FakeClock:
 
 
 class SpyPostgres:
-    """Dumps each database as its current `content`, and records what was restored."""
-
     def __init__(self) -> None:
         self.content = {"hsp": b"hsp rows v1", "keycloak": b"keycloak rows v1"}
         self.revision: str | None = "c9b2fc969b7d"
@@ -77,7 +72,6 @@ def postgres() -> SpyPostgres:
 
 @pytest.fixture
 def folders(tmp_path: Path, config: BackupConfig) -> dict[str, FolderStore]:
-    """One folder per target in `config`, under tmp_path."""
     stores = {}
     for label in config.targets:
         (tmp_path / label).mkdir()
@@ -87,7 +81,6 @@ def folders(tmp_path: Path, config: BackupConfig) -> dict[str, FolderStore]:
 
 @pytest.fixture
 def install_dir(tmp_path: Path) -> Path:
-    """An installation folder with its config files and secrets/."""
     d = tmp_path / "install"
     (d / "secrets").mkdir(parents=True)
     (d / ".env").write_text("HSP_VERSION=1.0.0\n")
@@ -99,7 +92,6 @@ def install_dir(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def registry() -> CollectorRegistry:
-    """Where the backup metrics of one test go."""
     return CollectorRegistry()
 
 
