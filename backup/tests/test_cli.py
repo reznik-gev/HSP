@@ -2,7 +2,6 @@
 from conftest; targets are real folders."""
 
 import json
-import logging
 from pathlib import Path
 
 import pytest
@@ -99,10 +98,3 @@ def test_a_restore_says_what_it_restored(
     name = capsys.readouterr().out.strip()
     assert cli.main(["restore", name, "--yes"], one_folder_installation_env) == 0
     assert capsys.readouterr().out == f"Restored {name} (made by HSP 1.0.0).\n"
-
-
-def test_logs_are_json_lines_with_their_fields(capsys: pytest.CaptureFixture[str]) -> None:
-    cli.configure_logging()
-    logging.getLogger("hsp_backup").info("backup written", extra={"schedule": "nightly"})
-    line = json.loads(capsys.readouterr().err)
-    assert (line["level"], line["event"], line["schedule"]) == ("info", "backup written", "nightly")

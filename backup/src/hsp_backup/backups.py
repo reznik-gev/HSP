@@ -1,12 +1,12 @@
 """Taking, deleting, listing and restoring backups (docs/0106)."""
 
-import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import structlog
 from packaging.version import InvalidVersion, Version
 
 from hsp_backup.archive import Manifest, extract_verified
@@ -17,7 +17,7 @@ from hsp_backup.names import BackupName, expired
 from hsp_backup.postgres import DATABASES, Postgres
 from hsp_backup.stores.base import Store, StoreError
 
-log = logging.getLogger("hsp_backup")
+log = structlog.get_logger()
 
 
 class RestoreRefused(Exception):
@@ -74,12 +74,10 @@ class Backups:
             self.stores(plan.target).put(archive, str(name))
         log.info(
             "backup written",
-            extra={
-                "schedule": schedule,
-                "backup": str(name),
-                "target": plan.target,
-                "size": run.size,
-            },
+            schedule=schedule,
+            backup=str(name),
+            target=plan.target,
+            size=run.size,
         )
         if plan.keep is not None:
             self.prune(schedule, keep=plan.keep, keep_days=plan.keep_days)
@@ -97,9 +95,9 @@ class Backups:
             ]
             for name in gone:
                 store.delete(name)
-                log.info("old backup deleted", extra={"schedule": schedule, "backup": name})
+                log.info("old backup deleted", schedule=schedule, backup=name)
         except Exception as exc:
-            log.warning("old backups not deleted", extra={"schedule": schedule, "error": str(exc)})
+            log.warning("old backups not deleted", schedule=schedule, error=str(exc))
             return []
         return gone
 
@@ -129,7 +127,7 @@ class Backups:
             refuse_newer(name, manifest.hsp_version, self.hsp_version)
             for db in DATABASES:
                 self.postgres.restore(db, files / dump_name(db))
-            log.info("backup restored", extra={"backup": name, "hsp_version": manifest.hsp_version})
+            log.info("backup restored", backup=name, hsp_version=manifest.hsp_version)
         return manifest
 
     def _holder_of(self, name: str) -> tuple[str | None, tuple[str, ...]]:

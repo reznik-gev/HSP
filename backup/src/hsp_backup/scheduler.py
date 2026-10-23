@@ -5,18 +5,18 @@ still running is skipped and logged, and waits for its next time. A failed backu
 and measured, and the next one runs as usual: no retries.
 """
 
-import logging
 import time
 from collections.abc import Callable
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+import structlog
 from croniter import croniter
 
 from hsp_backup.config import BackupConfig
 from hsp_backup.metrics import BackupMetrics
 
-log = logging.getLogger("hsp_backup")
+log = structlog.get_logger()
 
 #: The longest sleep, so a changed system clock is noticed within a minute.
 MAX_SLEEP_S = 60.0
@@ -51,14 +51,15 @@ class Scheduler:
             try:
                 self._take(name)
             except Exception as exc:  # measured by the backup itself; the next one runs as usual
-                log.error("backup failed", extra={"schedule": name, "error": str(exc)})
+                log.error("backup failed", schedule=name, error=str(exc))
             self.due[name] = self._next(name, self.due[name])  # may have passed meanwhile
         now = self._clock()
         for name, t in self.due.items():
             if t <= now:
                 log.warning(
                     "backup skipped: another was still running",
-                    extra={"schedule": name, "due": t.isoformat()},
+                    schedule=name,
+                    due=t.isoformat(),
                 )
                 self._metrics.was_skipped(name, now)
                 self.due[name] = self._next(name, now)

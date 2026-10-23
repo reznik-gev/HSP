@@ -4,6 +4,7 @@ skipped; a failure doesn't stop the next (docs/0106)."""
 from datetime import UTC, datetime
 
 from prometheus_client import CollectorRegistry
+from structlog.testing import capture_logs
 
 from hsp_backup.config import parse_config
 from hsp_backup.metrics import BackupMetrics
@@ -85,13 +86,17 @@ def test_a_schedule_due_during_a_long_backup_is_skipped(
     assert s.due["nightly"] == datetime(2026, 10, 22, 3, tzinfo=UTC)  # not skipped
 
 
-def test_a_failure_doesnt_stop_the_next_backup(clock: FakeClock) -> None:
+def test_a_failure_is_logged_and_doesnt_stop_the_next_backup(clock: FakeClock) -> None:
     take = SpyTake(clock)
     take.failing = {"nightly"}
     s = scheduler_for(TWO_SCHEDULES, clock, take)
     clock.now = utc(3)
-    s.run_due()
+    with capture_logs() as logs:
+        s.run_due()
     assert [name for name, _ in take.taken] == ["nightly", "hourly"]
+    assert {"event": "backup failed", "schedule": "nightly", "error": "disk full"}.items() <= (
+        logs[0].items()
+    )
 
 
 def test_it_sleeps_until_the_next_time_but_at_most_a_minute(clock: FakeClock) -> None:
