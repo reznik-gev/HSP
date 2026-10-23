@@ -1,6 +1,3 @@
-"""The backup service's metrics, on port 9465 (docs/0106). Alerting on backup age is the
-operator's Prometheus: e.g. time() - hsp_backup_last_success_timestamp_seconds > 26 * 3600."""
-
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -14,8 +11,6 @@ PORT = 9465
 
 @dataclass
 class Run:
-    """One backup being measured; its size is known only once it's written."""
-
     size: int = 0
 
 
@@ -39,8 +34,6 @@ class BackupMetrics:
 
     @contextmanager
     def measure(self, schedule: str, taken: datetime) -> Iterator[Run]:
-        """Measure the backup taken at `taken` in the block: a success with its duration and
-        size, or a failure if the block raises."""
         run = Run()
         started = time.monotonic()
         try:

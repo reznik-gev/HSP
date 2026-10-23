@@ -1,5 +1,3 @@
-"""A backup file holds its dumps and a manifest with checksums; damage is found (docs/0106)."""
-
 import io
 import tarfile
 from datetime import UTC, datetime
@@ -14,7 +12,6 @@ CREATED = datetime(2026, 10, 21, 2, 30, tzinfo=UTC)
 
 @pytest.fixture
 def members(tmp_path: Path) -> dict[str, Path]:
-    """Two dumps and a config file, as a backup holds them."""
     src = tmp_path / "src"
     (src / "config").mkdir(parents=True)
     files = {"hsp.dump": b"hsp data", "keycloak.dump": b"kc data", "config/.env": b"A=1\n"}
@@ -54,7 +51,6 @@ def test_extracting_checks_every_file(archive: Path, tmp_path: Path) -> None:
 
 @pytest.fixture
 def damaged_archive(archive: Path, tmp_path: Path) -> Path:
-    """`archive` with one byte of hsp.dump changed, and its manifest left as it was."""
     damaged = tmp_path / "damaged.tar"
     with tarfile.open(archive) as src, tarfile.open(damaged, "w") as dst:
         for info in src.getmembers():

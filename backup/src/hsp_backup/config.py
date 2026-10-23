@@ -1,14 +1,3 @@
-"""`backups.yml`: named targets and a list of schedules (docs/0106).
-
-timezone: Asia/Jerusalem
-targets:
-  local:   { type: folder, path: /backups }
-  offsite: { type: s3, endpoint: https://minio.corp:9000, bucket: hsp-backups, prefix: prod/ }
-schedules:
-  - { name: nightly, cron: "30 2 * * *", target: local, keep: 7 }
-manual: { target: local, keep: 5 }
-"""
-
 import re
 from pathlib import Path
 from typing import Annotated, Literal, Self
@@ -29,7 +18,7 @@ RESERVED = frozenset({MANUAL, PRE_UPGRADE})
 
 
 class ConfigError(Exception):
-    """`backups.yml` is missing or wrong; the message says where and how."""
+    pass
 
 
 class FolderTarget(StrictModel):
@@ -79,8 +68,6 @@ class BackupSchedule(StrictModel):
 
 
 class Manual(StrictModel):
-    """Backups taken by `hsp backup now`, and before upgrades."""
-
     target: str
     keep: int = Field(default=5, ge=1)
 
@@ -117,7 +104,6 @@ class BackupConfig(StrictModel):
 
     @property
     def manual_target(self) -> str:
-        """Where manual and pre-upgrade backups go: as set, or the first target."""
         return self.manual.target if self.manual else next(iter(self.targets))
 
     @property

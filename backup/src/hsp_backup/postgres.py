@@ -1,6 +1,3 @@
-"""PostgreSQL's own tools, run as the superuser: pg_dump, pg_restore, dropdb and psql
-(docs/0106). The superuser is needed to dump and restore both databases with their owners."""
-
 import os
 import subprocess
 from pathlib import Path
@@ -11,7 +8,7 @@ DATABASES = ("hsp", "keycloak")
 
 
 class PostgresError(Exception):
-    """A PostgreSQL tool failed; the message carries the end of what it said."""
+    pass
 
 
 class Postgres(Protocol):
@@ -48,7 +45,6 @@ class PgTools:
         )
 
     def schema_revision(self) -> str | None:
-        """HSP's Alembic revision, recorded in the manifest; None if the table is missing."""
         try:
             out = self._run(
                 ["psql", "-tA", "-d", "hsp", "-c", "SELECT version_num FROM alembic_version"],
@@ -59,8 +55,7 @@ class PgTools:
         return out.strip() or None
 
     def restore(self, database: str, dump: Path) -> None:
-        """Replace `database` with the dump: drop it, then let pg_restore create it again with
-        its owner, extensions and settings."""
+        # pg_restore --create makes the database again with its owner, extensions and settings
         self._run(["dropdb", "--force", "--if-exists", database], self._env)
         self._run(
             ["pg_restore", "--create", "--exit-on-error", "--dbname=postgres", str(dump)],

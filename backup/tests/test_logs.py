@@ -1,5 +1,3 @@
-"""Logs are JSON lines on stderr, like the API's (docs/0057)."""
-
 import json
 from collections.abc import Iterator
 

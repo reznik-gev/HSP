@@ -1,5 +1,3 @@
-"""Taking, deleting, listing and restoring backups (docs/0106)."""
-
 import tarfile
 from pathlib import Path
 
@@ -143,7 +141,6 @@ def test_a_restore_replaces_both_databases(backups: Backups, postgres: SpyPostgr
 
 @pytest.fixture
 def nas_unreadable(folders: dict[str, FolderStore]) -> None:
-    """The nas target's folder is gone, e.g. the share isn't mounted."""
     folders["nas"].path.rmdir()
 
 

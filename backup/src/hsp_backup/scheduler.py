@@ -1,10 +1,3 @@
-"""Runs each schedule at its cron times, in `backups.yml`'s time zone (docs/0106).
-
-Schedules due at the same moment run one after another. One that comes due while a backup is
-still running is skipped and logged, and waits for its next time. A failed backup is logged
-and measured, and the next one runs as usual: no retries.
-"""
-
 import time
 from collections.abc import Callable
 from datetime import datetime
@@ -43,7 +36,6 @@ class BackupScheduler:
         return nxt
 
     def run_due(self) -> None:
-        """Run what's due now, then skip what came due meanwhile."""
         started = self._clock()
         for name in sorted(
             (n for n, t in self.due.items() if t <= started), key=self.due.__getitem__

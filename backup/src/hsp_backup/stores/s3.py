@@ -1,6 +1,3 @@
-"""An S3 target: AWS, MinIO or another S3-compatible store. A backup is uploaded and its size
-checked, and a failed upload is deleted, so a half-written one never shows."""
-
 from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING

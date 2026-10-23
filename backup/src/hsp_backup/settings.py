@@ -1,6 +1,3 @@
-"""Where hsp-backup finds its files and PostgreSQL: environment variables, listed in
-backup/README.md. The schedules and targets are in backups.yml (config.py)."""
-
 from pathlib import Path
 
 from pydantic import Field

@@ -1,5 +1,3 @@
-"""A folder target writes all of a backup or nothing (docs/0106)."""
-
 from pathlib import Path
 
 import pytest

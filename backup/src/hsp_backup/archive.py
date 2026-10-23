@@ -1,6 +1,3 @@
-"""A backup file: a tar of files and a manifest of their SHA-256s, checked when it's unpacked
-(docs/0106)."""
-
 import hashlib
 import json
 import tarfile
@@ -13,7 +10,7 @@ FORMAT = 1
 
 
 class ArchiveError(Exception):
-    """The backup file is damaged or isn't an HSP backup."""
+    pass
 
 
 @dataclass(frozen=True)
@@ -40,7 +37,6 @@ def write_archive(
     created: datetime,
     schedule: str,
 ) -> Manifest:
-    """Write `members` (name in the archive -> local file) and their manifest to `dest`."""
     manifest = Manifest(
         hsp_version=hsp_version,
         schema_revision=schema_revision,
@@ -76,15 +72,22 @@ def read_manifest(archive: Path) -> Manifest:
 
 
 def extract_verified(archive: Path, into: Path) -> Manifest:
-    """Unpack the files the manifest lists into `into`, and check each one's SHA-256."""
     manifest = read_manifest(archive)
+    extract_listed_files(archive, manifest, into)
+    verify_checksums(archive, manifest, into)
+    return manifest
+
+
+def extract_listed_files(archive: Path, manifest: Manifest, into: Path) -> None:
     with tarfile.open(archive, "r") as tar:
         for name in manifest.files:
             try:
                 tar.extract(name, into, filter="data")
             except KeyError:
                 raise ArchiveError(f"{archive.name} is missing {name}") from None
+
+
+def verify_checksums(archive: Path, manifest: Manifest, extracted: Path) -> None:
     for name, expected in manifest.files.items():
-        if sha256(into / name) != expected:
+        if sha256(extracted / name) != expected:
             raise ArchiveError(f"{archive.name} is damaged: {name} doesn't match its checksum")
-    return manifest

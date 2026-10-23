@@ -1,6 +1,3 @@
-"""The hsp-backup commands, as bin/hsp runs them (docs/0106, docs/0107). PostgreSQL is the spy
-from conftest; targets are real folders."""
-
 import json
 import re
 from collections.abc import Callable
@@ -24,7 +21,6 @@ NO_TARGETS = "targets: {}"
 
 @pytest.fixture
 def one_folder_installation_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, str]:
-    """An installation whose backups.yml names one folder target, with PostgreSQL faked."""
     (tmp_path / "backups").mkdir()
     (tmp_path / "backups.yml").write_text(
         f"targets:\n  local: {{ type: folder, path: '{(tmp_path / 'backups').as_posix()}' }}\n"
@@ -45,21 +41,18 @@ def one_folder_installation_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
 def target_folder_gone(
     one_folder_installation_env: dict[str, str], tmp_path: Path
 ) -> dict[str, str]:
-    """The installation, with its one target's folder missing (e.g. a share not mounted)."""
     (tmp_path / "backups").rmdir()
     return one_folder_installation_env
 
 
 @pytest.fixture
 def no_targets(one_folder_installation_env: dict[str, str], tmp_path: Path) -> dict[str, str]:
-    """The installation, with a backups.yml that names no target."""
     (tmp_path / "backups.yml").write_text(NO_TARGETS)
     return one_folder_installation_env
 
 
 @pytest.fixture
 def hsp_backup() -> HspBackup:
-    """Runs a command as its own process would: what it prints and its errors kept apart."""
     runner = CliRunner()
 
     def run(env: dict[str, str], *args: str) -> Result:

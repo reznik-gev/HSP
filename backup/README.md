@@ -12,6 +12,23 @@ HSP's backup service ([0058](../docs/decisions/0058-2026-10-08-backups.md), [010
 | `hsp-backup restore <name> --yes` | Replaces both databases with a backup. The stack must be stopped, except `postgres`. |
 | `hsp-backup prune [--schedule pre-upgrade] [--keep 1]` | Deletes a schedule's backups beyond the newest `--keep`. `hsp upgrade` runs it after a successful upgrade. |
 
+## backups.yml
+```yaml
+timezone: Asia/Jerusalem
+targets:
+  local:   { type: folder, path: /backups }
+  offsite: { type: s3, endpoint: https://minio.corp:9000, bucket: hsp-backups, prefix: prod/ }
+schedules:
+  - { name: nightly, cron: "30 2 * * *", target: local, keep: 7 }
+manual: { target: local, keep: 5 }
+```
+- **Schedules** run at their cron times, in `timezone`. Schedules due at the same moment run one after another. One that comes due while a backup is still running is skipped, logged and recorded in the metrics, and waits for its next time. A failed backup isn't retried; the next one runs as usual.
+- **Old backups** are deleted per schedule after each backup: all but the newest `keep`. With `keep_days`, backups younger than that are kept too, whichever keeps more. Age comes from the time in a backup's name, never from file dates.
+- **Manual backups** keep the newest `manual.keep`. Pre-upgrade backups stay until `hsp upgrade` succeeds.
+
+## Metrics
+On port 9465, for each schedule: when it last succeeded, failed or was skipped, and the last backup's duration and size. Alerting is the operator's Prometheus, for example `time() - hsp_backup_last_success_timestamp_seconds > 26 * 3600`.
+
 ## What a backup holds
 Each backup is one tar file, named `hsp-<UTC time>-<schedule>.tar`:
 
@@ -29,7 +46,7 @@ The tar itself isn't compressed, because the dumps already are. A restore checks
 | `HSP_BACKUP_CONFIG` | `/etc/hsp/backups.yml` | The schedules and targets |
 | `HSP_BACKUP_INSTALL_DIR` | `/etc/hsp/install` | Where `.env`, `backups.yml` and `compose.yml` are, for `include_config` |
 | `HSP_VERSION` | | The installed release, written into each backup and checked on restore |
-| `PGHOST`, `PGUSER`, `PGPASSWORD_FILE` | `postgres`, `postgres`, `/run/secrets/db_superuser_password` | The PostgreSQL superuser |
+| `PGHOST`, `PGUSER`, `PGPASSWORD_FILE` | `postgres`, `postgres`, `/run/secrets/db_superuser_password` | The PostgreSQL superuser, who can dump and restore both databases with their owners |
 | `HSP_BACKUP_SECRETS_DIR` | `/run/secrets` | Where `backup_s3_access_key` and `backup_s3_secret_key` are |
 
 ## Development

@@ -1,6 +1,3 @@
-"""An S3 target keeps to its prefix and names its bucket when it fails (docs/0106). S3 is moto's
-fake, so the boto3 calls are real."""
-
 from pathlib import Path
 
 import pytest
