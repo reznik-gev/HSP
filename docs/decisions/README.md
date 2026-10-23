@@ -22,7 +22,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0011 | 2026-10-08 | [Frontend: React + react-three-fiber](0011-2026-10-08-frontend-stack.md) | Accepted |
 | 0012 | 2026-10-08 | [Database: PostgreSQL + PostGIS](0012-2026-10-08-database.md)              | Accepted |
 | 0013 | 2026-10-08 | [ReBAC engine: OpenFGA](0013-2026-10-08-rebac-engine.md)                  | Accepted |
-| 0014 | 2026-10-08 | [Persistence: SQLAlchemy 2 + Alembic](0014-2026-10-08-persistence-layer.md) | Accepted |
+| 0014 | 2026-10-08 | [Persistence: SQLAlchemy 2 + Alembic](0014-2026-10-08-persistence-layer.md) | Accepted (some areas query the database directly; repositories after 1.2 in 0110) |
 | 0015 | 2026-10-08 | [Floor-plan versioning: draft → publish](0015-2026-10-08-floor-plan-versioning.md) | Accepted |
 | 0016 | 2026-10-08 | [Edit concurrency: exclusive lock per floor](0016-2026-10-08-edit-concurrency.md) | Accepted |
 | 0017 | 2026-10-08 | [People data: sync from AD/LDAP via Keycloak](0017-2026-10-08-people-data-source.md) | Accepted |
@@ -69,7 +69,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0058 | 2026-10-08 | [Backups: built-in scheduled dumps](0058-2026-10-08-backups.md)           | Accepted (refined by 0106) |
 | 0059 | 2026-10-08 | [Supply chain: automated dependency updates](0059-2026-10-08-supply-chain-security.md) | Accepted (signing and SBOM planned for 1.3–1.4 by 0104) |
 | 0060 | 2026-10-08 | [Reverse proxy & TLS: Nginx](0060-2026-10-08-reverse-proxy.md)            | Accepted (refined by 0098) |
-| 0061 | 2026-10-08 | [Tests: mostly mocked DB + targeted DB integration](0061-2026-10-08-test-strategy.md) | Accepted |
+| 0061 | 2026-10-08 | [Tests: mostly mocked DB + targeted DB integration](0061-2026-10-08-test-strategy.md) | Accepted (in-memory tests for every area after 1.2, by 0110) |
 | 0062 | 2026-10-08 | [Tooling: Ruff + mypy, ESLint + Prettier](0062-2026-10-08-code-quality-tooling.md) | Accepted |
 | 0063 | 2026-10-08 | [Release versioning: SemVer](0063-2026-10-08-release-versioning.md)       | Accepted |
 | 0064 | 2026-10-08 | [Branching: trunk-based with PRs](0064-2026-10-08-branching-workflow.md)  | Accepted (merge method superseded by 0069; supported versions in 0104) |
@@ -116,3 +116,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted |
 | 0106 | 2026-10-21 | [Backups: our own image, with schedules in `backups.yml`](0106-2026-10-21-backups.md) | Accepted |
 | 0107 | 2026-10-21 | [`bin/hsp`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted |
+| 0110 | 2026-10-22 | [Database queries move into repositories, after 1.2](0110-2026-10-22-repositories-after-1-2.md) | Accepted |
