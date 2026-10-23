@@ -1,25 +1,23 @@
-"""`hsp-backup`: the backup service's commands (docs/0106). `bin/hsp` runs them inside the
-backup container (docs/0107)."""
+"""`hsp-backup`: the backup service's commands (docs/0106), built with typer (docs/0113).
+`bin/hsp` runs them inside the backup container (docs/0107)."""
 
-import argparse
 import json
-import os
-import sys
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from functools import cache
-from pathlib import Path
+from collections.abc import Callable
+from functools import cache, wraps
+from typing import Annotated
 
 import structlog
+import typer
 from prometheus_client import REGISTRY, start_http_server
 
 from hsp_backup.archive import ArchiveError
 from hsp_backup.backups import Backups, RestoreRefused
-from hsp_backup.config import MANUAL, PRE_UPGRADE, BackupConfig, ConfigError, load_config
+from hsp_backup.config import MANUAL, PRE_UPGRADE, ConfigError, load_config
 from hsp_backup.logs import configure_logging
 from hsp_backup.metrics import PORT, BackupMetrics
 from hsp_backup.postgres import PgTools, PostgresError
 from hsp_backup.scheduler import Scheduler
+from hsp_backup.settings import Settings
 from hsp_backup.stores import open_store
 from hsp_backup.stores.base import Store, StoreError
 
@@ -29,27 +27,31 @@ log = structlog.get_logger()
 EXPECTED = (ConfigError, StoreError, RestoreRefused, ArchiveError, PostgresError)
 
 
-@dataclass(frozen=True)
-class Settings:
-    config: Path
-    install_dir: Path
-    hsp_version: str
-    pg_host: str
-    pg_user: str
-    pg_password_file: Path
-    secrets_dir: Path
+def one_line_errors[**P](command: Callable[P, None]) -> Callable[P, None]:
+    """The command says an expected failure in one line, without a traceback, and exits 1."""
 
-    @classmethod
-    def from_env(cls, env: Mapping[str, str]) -> Settings:
-        return cls(
-            config=Path(env.get("HSP_BACKUP_CONFIG", "/etc/hsp/backups.yml")),
-            install_dir=Path(env.get("HSP_BACKUP_INSTALL_DIR", "/etc/hsp/install")),
-            hsp_version=env.get("HSP_VERSION", "0.0.0-dev"),
-            pg_host=env.get("PGHOST", "postgres"),
-            pg_user=env.get("PGUSER", "postgres"),
-            pg_password_file=Path(env.get("PGPASSWORD_FILE", "/run/secrets/db_superuser_password")),
-            secrets_dir=Path(env.get("HSP_BACKUP_SECRETS_DIR", "/run/secrets")),
-        )
+    @wraps(command)
+    def run(*args: P.args, **kwargs: P.kwargs) -> None:
+        try:
+            command(*args, **kwargs)
+        except EXPECTED as exc:
+            typer.echo(f"hsp-backup: {exc}", err=True)
+            raise typer.Exit(1) from None
+
+    return run
+
+
+app = typer.Typer(
+    help="HSP's backups (docs/0106).",
+    no_args_is_help=True,
+    add_completion=False,
+    pretty_exceptions_enable=False,
+)
+
+
+@app.callback()
+def _start() -> None:
+    configure_logging()
 
 
 @cache
@@ -58,7 +60,10 @@ def process_metrics() -> BackupMetrics:
     return BackupMetrics(REGISTRY)
 
 
-def build(settings: Settings, config: BackupConfig) -> Backups:
+def open_backups() -> Backups:
+    """The installation's backups, as the environment and backups.yml describe them."""
+    settings = Settings()
+    config = load_config(settings.config)
     opened: dict[str, Store] = {}
 
     def store(label: str) -> Store:
@@ -76,18 +81,11 @@ def build(settings: Settings, config: BackupConfig) -> Backups:
     )
 
 
-def cmd_check(backups: Backups, _: argparse.Namespace) -> int:
-    config = backups.config
-    for label in config.targets:
-        backups.stores(label).names()  # can it be read?
-    print(
-        f"backups.yml is fine: {len(config.targets)} target(s), "
-        f"{len(config.schedules)} schedule(s), and every target can be read"
-    )
-    return 0
-
-
-def cmd_serve(backups: Backups, _: argparse.Namespace) -> int:
+@app.command()
+@one_line_errors
+def serve() -> None:
+    """Run the schedules, and serve metrics on port 9465."""
+    backups = open_backups()
     start_http_server(PORT)
     log.info(
         "backup service started",
@@ -95,17 +93,41 @@ def cmd_serve(backups: Backups, _: argparse.Namespace) -> int:
         metrics_port=PORT,
     )
     Scheduler(backups.config, backups.take, backups.metrics, backups.clock).run_forever()
-    return 0
 
 
-def cmd_now(backups: Backups, args: argparse.Namespace) -> int:
-    print(backups.take(args.schedule))
-    return 0
+@app.command()
+@one_line_errors
+def check() -> None:
+    """Check backups.yml, and that every target can be read."""
+    backups = open_backups()
+    config = backups.config
+    for label in config.targets:
+        backups.stores(label).names()  # can it be read?
+    typer.echo(
+        f"backups.yml is fine: {len(config.targets)} target(s), "
+        f"{len(config.schedules)} schedule(s), and every target can be read"
+    )
 
 
-def cmd_list(backups: Backups, args: argparse.Namespace) -> int:
-    found = backups.list()
-    if args.json:
+@app.command()
+@one_line_errors
+def now(
+    schedule: Annotated[
+        str, typer.Option(help="manual, pre-upgrade, or a schedule from backups.yml")
+    ] = MANUAL,
+) -> None:
+    """Take a backup now, and print its name."""
+    typer.echo(open_backups().take(schedule))
+
+
+@app.command("list")
+@one_line_errors
+def list_backups(
+    as_json: Annotated[bool, typer.Option("--json", help="as JSON, for bin/hsp")] = False,
+) -> None:
+    """List the backups on every target, newest first."""
+    found = open_backups().list()
+    if as_json:
         rows = [
             {
                 "name": str(b),
@@ -115,71 +137,38 @@ def cmd_list(backups: Backups, args: argparse.Namespace) -> int:
             }
             for label, b in found
         ]
-        print(json.dumps(rows, indent=2))
+        typer.echo(json.dumps(rows, indent=2))
     elif not found:
-        print("No backups yet.")
+        typer.echo("No backups yet.")
     else:
         for label, b in found:
-            print(f"{b}  {label}")
-    return 0
+            typer.echo(f"{b}  {label}")
 
 
-def cmd_restore(backups: Backups, args: argparse.Namespace) -> int:
-    if not args.yes:
-        print(
+@app.command()
+@one_line_errors
+def restore(
+    name: str,
+    yes: Annotated[bool, typer.Option("--yes", help="yes, replace the databases")] = False,
+) -> None:
+    """Replace both databases with a backup. Stop the stack first, except postgres."""
+    if not yes:
+        typer.echo(
             "hsp-backup: restoring replaces HSP's and Keycloak's databases. "
             "Stop the stack except postgres, then add --yes.",
-            file=sys.stderr,
+            err=True,
         )
-        return 2
-    manifest = backups.restore(args.name)
-    print(f"Restored {args.name} (made by HSP {manifest.hsp_version}).")
-    return 0
+        raise typer.Exit(2)
+    manifest = open_backups().restore(name)
+    typer.echo(f"Restored {name} (made by HSP {manifest.hsp_version}).")
 
 
-def cmd_prune(backups: Backups, args: argparse.Namespace) -> int:
-    for name in backups.prune(args.schedule, keep=args.keep):
-        print(f"deleted {name}")
-    return 0
-
-
-def parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="hsp-backup", description="HSP's backups (docs/0106).")
-    sub = p.add_subparsers(dest="command", required=True)
-    sub.add_parser("serve", help="run the schedules, and serve metrics on port 9465")
-    sub.add_parser("check", help="check backups.yml, and that every target can be read")
-    now = sub.add_parser("now", help="take a backup now")
-    now.add_argument(
-        "--schedule", default=MANUAL, help="manual (the default), pre-upgrade, or a schedule"
-    )
-    lst = sub.add_parser("list", help="list the backups on every target")
-    lst.add_argument("--json", action="store_true")
-    restore = sub.add_parser("restore", help="replace both databases with a backup")
-    restore.add_argument("name")
-    restore.add_argument("--yes", action="store_true", help="yes, replace the databases")
-    prune = sub.add_parser("prune", help="delete a schedule's backups beyond the newest --keep")
-    prune.add_argument("--schedule", default=PRE_UPGRADE)
-    prune.add_argument("--keep", type=int, default=1)
-    return p
-
-
-COMMANDS = {
-    "check": cmd_check,
-    "serve": cmd_serve,
-    "now": cmd_now,
-    "list": cmd_list,
-    "restore": cmd_restore,
-    "prune": cmd_prune,
-}
-
-
-def main(argv: Sequence[str] | None = None, env: Mapping[str, str] | None = None) -> int:
-    args = parser().parse_args(argv)
-    configure_logging()
-    settings = Settings.from_env(os.environ if env is None else env)
-    try:
-        backups = build(settings, load_config(settings.config))
-        return COMMANDS[args.command](backups, args)
-    except EXPECTED as exc:
-        print(f"hsp-backup: {exc}", file=sys.stderr)
-        return 1
+@app.command()
+@one_line_errors
+def prune(
+    schedule: Annotated[str, typer.Option()] = PRE_UPGRADE,
+    keep: Annotated[int, typer.Option(min=1)] = 1,
+) -> None:
+    """Delete a schedule's backups beyond the newest --keep."""
+    for gone in open_backups().prune(schedule, keep=keep):
+        typer.echo(f"deleted {gone}")
