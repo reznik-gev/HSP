@@ -9,7 +9,7 @@ import pytest
 from moto import mock_aws
 
 from hsp_backup.config import S3Target
-from hsp_backup.stores import open_store
+from hsp_backup.stores.factory import open_store
 from hsp_backup.stores.folder import FolderStore
 from hsp_backup.stores.s3 import S3_ACCESS_KEY, S3_SECRET_KEY, S3Store
 

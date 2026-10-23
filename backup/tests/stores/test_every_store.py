@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from hsp_backup.config import FolderTarget
-from hsp_backup.stores import open_store
 from hsp_backup.stores.base import Store, StoreError
+from hsp_backup.stores.factory import open_store
 from hsp_backup.stores.folder import FolderStore
 from tests.stores.conftest import NAME, OFFSITE
 

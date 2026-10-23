@@ -16,7 +16,9 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import yaml
 from croniter import croniter
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic import Field, ValidationError, field_validator, model_validator
+
+from hsp_backup.strict_model import StrictModel
 
 #: Schedule names go into file names, so they're kept simple.
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
@@ -30,16 +32,12 @@ class ConfigError(Exception):
     """`backups.yml` is missing or wrong; the message says where and how."""
 
 
-class _Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-
-class FolderTarget(_Strict):
+class FolderTarget(StrictModel):
     type: Literal["folder"]
     path: Path
 
 
-class S3Target(_Strict):
+class S3Target(StrictModel):
     type: Literal["s3"]
     bucket: str
     #: Empty for AWS itself; the URL of MinIO or another S3-compatible store otherwise.
@@ -55,7 +53,7 @@ class S3Target(_Strict):
 Target = Annotated[FolderTarget | S3Target, Field(discriminator="type")]
 
 
-class BackupSchedule(_Strict):
+class BackupSchedule(StrictModel):
     name: str
     cron: str
     target: str
@@ -80,17 +78,17 @@ class BackupSchedule(_Strict):
         return cron
 
 
-class Manual(_Strict):
+class Manual(StrictModel):
     """Backups taken by `hsp backup now`, and before upgrades."""
 
     target: str
     keep: int = Field(default=5, ge=1)
 
 
-class BackupConfig(_Strict):
+class BackupConfig(StrictModel):
     timezone: str = "UTC"
     targets: dict[str, Target]
-    schedules: list[BackupSchedule] = []
+    schedules: list[BackupSchedule] = Field(default_factory=list)
     manual: Manual | None = None
 
     @field_validator("timezone")
