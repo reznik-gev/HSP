@@ -24,6 +24,10 @@ afterEach(() => {
 
 /** Signing out of HSP sends the browser on to Keycloak's logout. */
 const SIGNED_OUT = { logout_url: "/auth/realms/hsp/logout" };
+/** The account menu's button is named after the signed-in user, ADMIN. */
+const ACCOUNT_MENU = { name: `Account: ${ADMIN.name}` };
+/** Tests build without HSP_VERSION, so vite.config.ts sets the version to 0.0.0-dev. */
+const DEV_VERSION_LINE = "HSP 0.0.0-dev";
 
 describe("session (docs/0038, docs/0087)", () => {
   it("sends a signed-out visitor to sign in, coming back to the same page", async () => {
@@ -37,8 +41,8 @@ describe("session (docs/0038, docs/0087)", () => {
     const { calls } = await renderApp("/floors", {
       "POST /api/v1/auth/logout": { status: 200, body: SIGNED_OUT },
     });
-    await userEvent.click(await screen.findByRole("button", { name: "Account: Noa Barak" }));
-    expect(screen.getByText("noa@acme.example")).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole("button", ACCOUNT_MENU));
+    expect(screen.getByText(ADMIN.email)).toBeInTheDocument();
     expect(screen.getByText("Administrator")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
     await waitFor(() => expect(assigned).toEqual(["/auth/realms/hsp/logout"]));
@@ -48,8 +52,8 @@ describe("session (docs/0038, docs/0087)", () => {
 
   it("shows the release version at the bottom of the menu (docs/0104)", async () => {
     await renderApp("/floors");
-    await userEvent.click(await screen.findByRole("button", { name: "Account: Noa Barak" }));
-    expect(screen.getByText("HSP 0.0.0-dev")).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole("button", ACCOUNT_MENU));
+    expect(screen.getByText(DEV_VERSION_LINE)).toBeInTheDocument();
   });
 
   it("explains when the server can't be reached", async () => {

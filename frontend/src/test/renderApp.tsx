@@ -10,14 +10,14 @@ import { vi } from "vitest";
 import type { Me } from "@/auth/session";
 import { routeTree } from "@/routes";
 
-export const ADMIN: Me = {
+export const ADMIN = {
   subject: "u-1",
   name: "Noa Barak",
   email: "noa@acme.example",
   roles: ["hsp-admin"],
   is_admin: true,
   csrf_token: "csrf-123",
-};
+} satisfies Me;
 
 export type Reply = { status: number; body?: unknown };
 export type Routes = Record<string, Reply | ((request: Request) => Reply)>;
