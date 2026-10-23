@@ -23,7 +23,7 @@ schedules:
 manual: { target: local, keep: 5 }
 ```
 - **Schedules** run at their cron times, in `timezone`. Schedules due at the same moment run one after another. One that comes due while a backup is still running is skipped, logged and recorded in the metrics, and waits for its next time. A failed backup isn't retried; the next one runs as usual.
-- **Old backups** are deleted per schedule after each backup: all but the newest `keep`. With `keep_days`, backups younger than that are kept too, whichever keeps more. A schedule that sets neither keeps 7, and a week's worth. Age comes from the time in a backup's name, never from file dates.
+- **Old backups** are deleted per schedule after each backup: all but the newest `keep`. With `keep_days`, backups younger than that are kept too, whichever keeps more. Every schedule must set `keep`; `keep_days` is optional. Age comes from the time in a backup's name, never from file dates.
 - **Manual backups** keep the newest `manual.keep`. Pre-upgrade backups stay until `hsp upgrade` succeeds.
 
 ## Metrics

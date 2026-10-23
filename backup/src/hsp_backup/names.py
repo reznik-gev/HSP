@@ -6,8 +6,6 @@ from datetime import UTC, datetime, timedelta
 _NAME = re.compile(r"^hsp-(\d{8}T\d{6}Z)-([a-z0-9][a-z0-9-]*)\.tar$")
 _TIME = "%Y%m%dT%H%M%SZ"
 
-DEFAULT_KEEP = 7
-DEFAULT_KEEP_DAYS = 7
 KEEP_FOREVER = -1
 
 
