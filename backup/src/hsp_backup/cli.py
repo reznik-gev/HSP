@@ -16,7 +16,7 @@ from prometheus_client import REGISTRY, start_http_server
 
 from hsp_backup.archive import ArchiveError
 from hsp_backup.backups import Backups, RestoreRefused
-from hsp_backup.config import MANUAL, PRE_UPGRADE, Config, ConfigError, load_config
+from hsp_backup.config import MANUAL, PRE_UPGRADE, BackupConfig, ConfigError, load_config
 from hsp_backup.metrics import PORT, BackupMetrics
 from hsp_backup.postgres import PgTools, PostgresError
 from hsp_backup.scheduler import Scheduler
@@ -82,7 +82,7 @@ def process_metrics() -> BackupMetrics:
     return BackupMetrics(REGISTRY)
 
 
-def build(settings: Settings, config: Config) -> Backups:
+def build(settings: Settings, config: BackupConfig) -> Backups:
     opened: dict[str, Store] = {}
 
     def store(label: str) -> Store:
