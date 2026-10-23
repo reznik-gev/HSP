@@ -8,7 +8,6 @@ and measured, and the next one runs as usual: no retries.
 import logging
 import time
 from collections.abc import Callable
-from contextlib import suppress
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -49,8 +48,10 @@ class Scheduler:
         for name in sorted(
             (n for n, t in self.due.items() if t <= started), key=self.due.__getitem__
         ):
-            with suppress(Exception):  # logged and measured by the backup itself
+            try:
                 self._take(name)
+            except Exception as exc:  # measured by the backup itself; the next one runs as usual
+                log.error("backup failed", extra={"schedule": name, "error": str(exc)})
             self.due[name] = self._next(name, self.due[name])  # may have passed meanwhile
         now = self._clock()
         for name, t in self.due.items():

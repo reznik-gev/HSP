@@ -1,7 +1,6 @@
 """Taking, deleting, listing and restoring backups (docs/0106)."""
 
 import logging
-import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -10,17 +9,15 @@ from tempfile import TemporaryDirectory
 
 from packaging.version import InvalidVersion, Version
 
-from hsp_backup.archive import Manifest, extract_verified, write_archive
+from hsp_backup.archive import Manifest, extract_verified
 from hsp_backup.config import MANUAL, PRE_UPGRADE, BackupConfig
+from hsp_backup.contents import dump_name, write_backup
 from hsp_backup.metrics import BackupMetrics
 from hsp_backup.names import BackupName, expired
 from hsp_backup.postgres import DATABASES, Postgres
 from hsp_backup.stores.base import Store, StoreError
 
 log = logging.getLogger("hsp_backup")
-
-#: The installation's files a backup holds with include_config; never secrets/ (docs/0106).
-CONFIG_FILES = (".env", "backups.yml", "compose.yml")
 
 
 class RestoreRefused(Exception):
@@ -61,38 +58,28 @@ class Backups:
 
     def take(self, schedule: str) -> BackupName:
         plan = self.plan(schedule)
-        name = BackupName(self.clock().replace(microsecond=0), schedule)
-        started = time.monotonic()
-        try:
-            with TemporaryDirectory(prefix="hsp-backup-") as tmp:
-                members: dict[str, Path] = {}
-                for db in DATABASES:
-                    members[f"{db}.dump"] = Path(tmp) / f"{db}.dump"
-                    self.postgres.dump(db, members[f"{db}.dump"])
-                if plan.include_config:
-                    for f in CONFIG_FILES:
-                        if (self.install_dir / f).is_file():
-                            members[f"config/{f}"] = self.install_dir / f
-                archive = Path(tmp) / str(name)
-                write_archive(
-                    archive,
-                    members,
-                    hsp_version=self.hsp_version,
-                    schema_revision=self.postgres.schema_revision(),
-                    created=name.created,
-                    schedule=schedule,
-                )
-                size = archive.stat().st_size
-                self.stores(plan.target).put(archive, str(name))
-        except Exception as exc:
-            self.metrics.failed(schedule, self.clock())
-            log.error("backup failed", extra={"schedule": schedule, "error": str(exc)})
-            raise
-        seconds = time.monotonic() - started
-        self.metrics.succeeded(schedule, name.created, seconds, size)
+        name = BackupName.at(self.clock(), schedule)
+        with (
+            self.metrics.measure(schedule, name.created) as run,
+            TemporaryDirectory(prefix="hsp-backup-") as tmp,
+        ):
+            archive = write_backup(
+                name,
+                Path(tmp),
+                postgres=self.postgres,
+                hsp_version=self.hsp_version,
+                config_from=self.install_dir if plan.include_config else None,
+            )
+            run.size = archive.stat().st_size
+            self.stores(plan.target).put(archive, str(name))
         log.info(
             "backup written",
-            extra={"schedule": schedule, "backup": str(name), "target": plan.target, "size": size},
+            extra={
+                "schedule": schedule,
+                "backup": str(name),
+                "target": plan.target,
+                "size": run.size,
+            },
         )
         if plan.keep is not None:
             self.prune(schedule, keep=plan.keep, keep_days=plan.keep_days)
@@ -141,7 +128,7 @@ class Backups:
             manifest = extract_verified(archive, files)
             refuse_newer(name, manifest.hsp_version, self.hsp_version)
             for db in DATABASES:
-                self.postgres.restore(db, files / f"{db}.dump")
+                self.postgres.restore(db, files / dump_name(db))
             log.info("backup restored", extra={"backup": name, "hsp_version": manifest.hsp_version})
         return manifest
 
