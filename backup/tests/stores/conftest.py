@@ -11,7 +11,9 @@ from hsp_backup.stores.folder import FolderStore
 from hsp_backup.stores.s3 import S3_ACCESS_KEY, S3_SECRET_KEY, S3Store
 
 NAME = "hsp-20261021T023000Z-nightly.tar"
-OFFSITE = S3Target(type="s3", bucket="hsp-backups", prefix="prod/", path_style=True)
+OTHER = "hsp-20261022T023000Z-nightly.tar"
+BUCKET = "hsp-backups"
+OFFSITE = S3Target(type="s3", bucket=BUCKET, prefix="prod/", path_style=True)
 
 
 @pytest.fixture
@@ -31,16 +33,21 @@ def secrets(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def folder(tmp_path: Path) -> FolderStore:
+def tmp_folder_store(tmp_path: Path) -> FolderStore:
     path = tmp_path / "backups"
     path.mkdir()
     return FolderStore("local", path)
 
 
 @pytest.fixture
-def s3(secrets: Path) -> Iterator[S3Store]:
+def fake_s3() -> Iterator[None]:
     with mock_aws():
-        boto3.client("s3", region_name="us-east-1").create_bucket(Bucket="hsp-backups")
-        store = open_store("offsite", OFFSITE, secrets)
-        assert isinstance(store, S3Store)
-        yield store
+        yield
+
+
+@pytest.fixture
+def fake_s3_store(fake_s3: None, secrets: Path) -> S3Store:
+    boto3.client("s3", region_name="us-east-1").create_bucket(Bucket=BUCKET)
+    store = open_store("offsite", OFFSITE, secrets)
+    assert isinstance(store, S3Store)
+    return store
