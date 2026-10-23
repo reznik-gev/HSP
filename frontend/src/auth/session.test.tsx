@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -53,7 +53,7 @@ describe("session (docs/0038, docs/0087)", () => {
   it("shows the release version at the bottom of the menu (docs/0104)", async () => {
     await renderApp("/floors");
     await userEvent.click(await screen.findByRole("button", ACCOUNT_MENU));
-    expect(screen.getByText(DEV_VERSION_LINE)).toBeInTheDocument();
+    expect(within(screen.getByRole("menu")).getByText(DEV_VERSION_LINE)).toBeInTheDocument();
   });
 
   it("explains when the server can't be reached", async () => {

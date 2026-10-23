@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 
 import { useSidebar } from "./sidebarState";
+import { Version } from "./Version";
 
 /** Main areas (docs/0087, docs/0088, docs/0095). */
 const AREAS: {
@@ -95,7 +96,7 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="border-t p-2">
+      <div className="flex items-center gap-2 border-t p-2">
         <Button
           variant="ghost"
           size="icon"
@@ -106,6 +107,8 @@ export function Sidebar() {
         >
           <ToggleIcon className="rtl:-scale-x-100" aria-hidden />
         </Button>
+        {/* Too wide for the collapsed sidebar; the user menu still shows it. */}
+        {!collapsed && <Version className="truncate" />}
       </div>
     </aside>
   );
