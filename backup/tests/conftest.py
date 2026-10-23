@@ -64,6 +64,11 @@ def nightly_and_weekly_config() -> BackupConfig:
 
 
 @pytest.fixture
+def never_taken_backup_name() -> str:
+    return "hsp-20200101T000000Z-nightly.tar"
+
+
+@pytest.fixture
 def fake_clock() -> FakeClock:
     return FakeClock()
 
