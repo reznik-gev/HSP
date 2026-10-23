@@ -22,7 +22,7 @@ log = structlog.get_logger()
 MAX_SLEEP_S = 60.0
 
 
-class Scheduler:
+class BackupScheduler:
     def __init__(
         self,
         config: BackupConfig,

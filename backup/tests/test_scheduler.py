@@ -8,7 +8,7 @@ from structlog.testing import capture_logs
 
 from hsp_backup.config import parse_config
 from hsp_backup.metrics import BackupMetrics
-from hsp_backup.scheduler import Scheduler
+from hsp_backup.scheduler import BackupScheduler
 from tests.conftest import FakeClock
 
 #: 02:30 UTC on 2026-10-21 is 05:30 in Jerusalem.
@@ -43,9 +43,9 @@ class SpyTake:
 
 def scheduler_for(
     text: str, clock: FakeClock, take: SpyTake, registry: CollectorRegistry | None = None
-) -> Scheduler:
+) -> BackupScheduler:
     metrics = BackupMetrics(registry or CollectorRegistry())
-    return Scheduler(parse_config(text), take, metrics, clock)
+    return BackupScheduler(parse_config(text), take, metrics, clock)
 
 
 def utc(hour: int, minute: int = 0) -> datetime:

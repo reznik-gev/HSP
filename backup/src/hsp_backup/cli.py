@@ -16,15 +16,21 @@ from hsp_backup.config import MANUAL, PRE_UPGRADE, ConfigError, load_config
 from hsp_backup.logs import configure_logging
 from hsp_backup.metrics import PORT, BackupMetrics
 from hsp_backup.postgres import PgTools, PostgresError
-from hsp_backup.scheduler import Scheduler
-from hsp_backup.settings import Settings
+from hsp_backup.scheduler import BackupScheduler
+from hsp_backup.settings import BackupSettings
 from hsp_backup.stores import open_store
 from hsp_backup.stores.base import Store, StoreError
 
 log = structlog.get_logger()
 
 #: Failures an operator can act on: said in one line, without a traceback.
-EXPECTED = (ConfigError, StoreError, RestoreRefused, ArchiveError, PostgresError)
+EXPECTED_ERRORS_TO_OMIT_TRACEBACK = (
+    ConfigError,
+    StoreError,
+    RestoreRefused,
+    ArchiveError,
+    PostgresError,
+)
 
 
 def one_line_errors[**P](command: Callable[P, None]) -> Callable[P, None]:
@@ -34,7 +40,7 @@ def one_line_errors[**P](command: Callable[P, None]) -> Callable[P, None]:
     def run(*args: P.args, **kwargs: P.kwargs) -> None:
         try:
             command(*args, **kwargs)
-        except EXPECTED as exc:
+        except EXPECTED_ERRORS_TO_OMIT_TRACEBACK as exc:
             typer.echo(f"hsp-backup: {exc}", err=True)
             raise typer.Exit(1) from None
 
@@ -62,7 +68,7 @@ def process_metrics() -> BackupMetrics:
 
 def open_backups() -> Backups:
     """The installation's backups, as the environment and backups.yml describe them."""
-    settings = Settings()
+    settings = BackupSettings()
     config = load_config(settings.config)
     opened: dict[str, Store] = {}
 
@@ -92,7 +98,7 @@ def serve() -> None:
         schedules=[s.name for s in backups.config.schedules],
         metrics_port=PORT,
     )
-    Scheduler(backups.config, backups.take, backups.metrics, backups.clock).run_forever()
+    BackupScheduler(backups.config, backups.take, backups.metrics, backups.clock).run_forever()
 
 
 @app.command()
