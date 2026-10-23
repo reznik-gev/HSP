@@ -73,8 +73,10 @@ async def check_database_and_schema() -> str | None:
 
 
 class KeycloakProbe:
-    """Asks Keycloak for its OIDC discovery document, and remembers the answer for `ttl_s`, so
-    frequent health checks don't load it (docs/0105)."""
+    """Asks Keycloak for its OIDC discovery document, and remembers a ready answer for `ttl_s`,
+    so frequent health checks don't load it (docs/0105). A not-ready answer isn't remembered:
+    each API worker has its own probe, and one still remembering Keycloak starting would say
+    "not ready" after another found it ready (docs/0116)."""
 
     def __init__(
         self,
@@ -90,14 +92,14 @@ class KeycloakProbe:
         self._clock = clock
         self._timeout_s = timeout_s
         self._ttl_s = ttl_s
-        self._last: tuple[float, str | None] | None = None
+        self._ready_at: float | None = None
 
     async def __call__(self) -> str | None:
         now = self._clock()
-        if self._last is not None and now - self._last[0] < self._ttl_s:
-            return self._last[1]
+        if self._ready_at is not None and now - self._ready_at < self._ttl_s:
+            return None
         result = await self._ask()
-        self._last = (now, result)
+        self._ready_at = now if result is None else None
         return result
 
     async def _ask(self) -> str | None:

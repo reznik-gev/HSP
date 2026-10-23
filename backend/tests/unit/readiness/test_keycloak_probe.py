@@ -84,3 +84,15 @@ async def test_keycloak_is_asked_at_most_every_10_s(
     fake_clock.now += 0.1
     assert await keycloak_probe() == "Keycloak answered 503"
     assert len(spy_keycloak.urls) == 2
+
+
+async def test_keycloak_not_ready_is_asked_again_next_time(
+    keycloak_probe: KeycloakProbe, spy_keycloak: SpyKeycloak, fake_clock: FakeClock
+) -> None:
+    # Each API worker has its own probe: one that remembered Keycloak starting would answer 503
+    # for up to 10 s after another worker found it ready.
+    spy_keycloak.status = 503
+    assert await keycloak_probe() == "Keycloak answered 503"
+    spy_keycloak.status = 200
+    fake_clock.now += 1
+    assert await keycloak_probe() is None
