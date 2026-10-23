@@ -18,8 +18,8 @@ from hsp_backup.metrics import PORT, BackupMetrics
 from hsp_backup.postgres import PgTools, PostgresError
 from hsp_backup.scheduler import BackupScheduler
 from hsp_backup.settings import BackupSettings
-from hsp_backup.stores import open_store
 from hsp_backup.stores.base import Store, StoreError
+from hsp_backup.stores.factory import open_store
 
 log = structlog.get_logger()
 

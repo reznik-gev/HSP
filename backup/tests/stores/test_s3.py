@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from moto import mock_aws
 
-from hsp_backup.stores import open_store
 from hsp_backup.stores.base import StoreError
+from hsp_backup.stores.factory import open_store
 from hsp_backup.stores.s3 import S3Store
 from tests.stores.conftest import NAME, OFFSITE
 
