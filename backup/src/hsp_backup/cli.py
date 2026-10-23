@@ -3,27 +3,27 @@ backup container (docs/0107)."""
 
 import argparse
 import json
-import logging
 import os
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from functools import cache
 from pathlib import Path
 
+import structlog
 from prometheus_client import REGISTRY, start_http_server
 
 from hsp_backup.archive import ArchiveError
 from hsp_backup.backups import Backups, RestoreRefused
 from hsp_backup.config import MANUAL, PRE_UPGRADE, BackupConfig, ConfigError, load_config
+from hsp_backup.logs import configure_logging
 from hsp_backup.metrics import PORT, BackupMetrics
 from hsp_backup.postgres import PgTools, PostgresError
 from hsp_backup.scheduler import Scheduler
 from hsp_backup.stores import open_store
 from hsp_backup.stores.base import Store, StoreError
 
-log = logging.getLogger("hsp_backup")
+log = structlog.get_logger()
 
 #: Failures an operator can act on: said in one line, without a traceback.
 EXPECTED = (ConfigError, StoreError, RestoreRefused, ArchiveError, PostgresError)
@@ -50,31 +50,6 @@ class Settings:
             pg_password_file=Path(env.get("PGPASSWORD_FILE", "/run/secrets/db_superuser_password")),
             secrets_dir=Path(env.get("HSP_BACKUP_SECRETS_DIR", "/run/secrets")),
         )
-
-
-class JsonLines(logging.Formatter):
-    """One JSON object per line, like the API's logs (docs/0057)."""
-
-    _STANDARD = frozenset(vars(logging.makeLogRecord({})))
-
-    def format(self, record: logging.LogRecord) -> str:
-        line = {
-            "timestamp": datetime.fromtimestamp(record.created, UTC).isoformat(),
-            "level": record.levelname.lower(),
-            "event": record.getMessage(),
-            **{k: v for k, v in vars(record).items() if k not in self._STANDARD},
-        }
-        return json.dumps(line, default=str)
-
-
-def configure_logging() -> None:
-    """Logs go to stderr, so a command's own output (a backup's name, list --json) stays clean
-    for bin/hsp to read; Docker keeps both."""
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(JsonLines())
-    log.handlers[:] = [handler]
-    log.setLevel(logging.INFO)
-    log.propagate = False
 
 
 @cache
@@ -116,7 +91,8 @@ def cmd_serve(backups: Backups, _: argparse.Namespace) -> int:
     start_http_server(PORT)
     log.info(
         "backup service started",
-        extra={"schedules": [s.name for s in backups.config.schedules], "metrics_port": PORT},
+        schedules=[s.name for s in backups.config.schedules],
+        metrics_port=PORT,
     )
     Scheduler(backups.config, backups.take, backups.metrics, backups.clock).run_forever()
     return 0
