@@ -2,6 +2,7 @@
 from conftest; targets are real folders."""
 
 import json
+import re
 from collections.abc import Callable
 from pathlib import Path
 
@@ -13,6 +14,9 @@ from tests.conftest import SpyPostgres
 
 #: Runs one hsp-backup command, with the given environment.
 HspBackup = Callable[..., Result]
+
+#: Colours typer adds to its own messages on a terminal, and in GitHub Actions.
+COLOURS = re.compile(r"\x1b\[[0-9;]*m")
 
 #: A backups.yml that names no target.
 NO_TARGETS = "targets: {}"
@@ -121,4 +125,4 @@ def test_prune_keeps_at_least_one(
 ) -> None:
     done = hsp_backup(one_folder_installation_env, "prune", "--keep", "0")
     assert done.exit_code == 2
-    assert "--keep" in done.stderr
+    assert "--keep" in COLOURS.sub("", done.stderr)
