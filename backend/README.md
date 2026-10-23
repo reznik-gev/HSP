@@ -16,6 +16,7 @@ The FastAPI service for HSP. Architecture decisions live in [`../docs`](../docs/
 | Run the API (reload) | `uv run uvicorn hsp.main:create_app --factory --reload` |
 | Unit tests | `uv run pytest` (DB tests are skipped) |
 | All tests incl. DB | `HSP_TEST_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test uv run pytest` |
+| Test coverage | `uv run pytest --cov --cov-report=html`; the report is `coverage/html/index.html` ([0114](../docs/decisions/0114-2026-10-23-test-coverage-report.md)) |
 | Lint / format / types | `uv run ruff check .` · `uv run ruff format .` · `uv run mypy` |
 | Export OpenAPI | `uv run hsp-export-openapi openapi.json` (commit the result, [0039](../docs/decisions/0039-2026-10-08-frontend-api-client.md)) |
 

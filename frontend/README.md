@@ -18,6 +18,7 @@ React + TypeScript single-page app ([0011](../docs/decisions/0011-2026-10-08-fro
 | Regenerate API types               | `pnpm api:types` (after `backend/openapi.json` changes; commit the result)                                                                     |
 | Lint / format / types              | `pnpm lint` · `pnpm format` · `pnpm typecheck`                                                                                                 |
 | Tests                              | `pnpm test` (`pnpm test:watch` while developing); how to write them: [docs/guides/testing.md](../docs/guides/testing.md)                       |
+| Test coverage                      | `pnpm test:coverage`; the report is `coverage/index.html` ([0114](../docs/decisions/0114-2026-10-23-test-coverage-report.md))                  |
 | Production build                   | `pnpm build`                                                                                                                                   |
 
 ## Layout

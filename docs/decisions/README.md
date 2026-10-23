@@ -125,6 +125,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0111 | 2026-10-23 | [The API's CPU and memory come from the platform, not its own metrics](0111-2026-10-23-cpu-and-memory-from-the-platform.md) | Accepted |
 | 0112 | 2026-10-23 | [The dev cycle and CI times get faster, alongside the repositories stack](0112-2026-10-23-dev-cycle-and-ci-times.md) | Accepted |
 | 0113 | 2026-10-23 | [Python command-line programs are built with typer](0113-2026-10-23-python-command-lines-with-typer.md) | Accepted |
+| 0114 | 2026-10-23 | [A test coverage report on every merge to main](0114-2026-10-23-test-coverage-report.md) | Accepted |
 | 0115 | 2026-10-23 | [The backup image: Python's slim image with PostgreSQL 18's client, running as uid 999](0115-2026-10-23-backup-image-base-and-user.md) | Accepted |
 | 0116 | 2026-10-24 | [`/readyz` remembers only a ready answer from Keycloak](0116-2026-10-24-readyz-remembers-only-ready.md) | Accepted |
 | 0117 | 2026-10-24 | [Seat labels on the plan are drawn without font hinting](0117-2026-10-24-plan-labels-without-hinting.md) | Accepted |
