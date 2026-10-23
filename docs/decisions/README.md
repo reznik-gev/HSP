@@ -118,3 +118,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0107 | 2026-10-21 | [`bin/hsp`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted |
 | 0109 | 2026-10-23 | [The schema check at startup runs everywhere; unit tests opt out](0109-2026-10-23-schema-check-everywhere.md) | Accepted |
 | 0111 | 2026-10-23 | [The API's CPU and memory come from the platform, not its own metrics](0111-2026-10-23-cpu-and-memory-from-the-platform.md) | Accepted |
+| 0113 | 2026-10-23 | [Python command-line programs are built with typer](0113-2026-10-23-python-command-lines-with-typer.md) | Accepted |

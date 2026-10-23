@@ -2,12 +2,17 @@
 from conftest; targets are real folders."""
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner, Result
 
 from hsp_backup import cli
 from tests.conftest import SpyPostgres
+
+#: Runs one hsp-backup command, with the given environment.
+HspBackup = Callable[..., Result]
 
 #: A backups.yml that names no target.
 NO_TARGETS = "targets: {}"
@@ -32,13 +37,6 @@ def one_folder_installation_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     }
 
 
-def test_check_says_the_file_is_fine(
-    one_folder_installation_env: dict[str, str], capsys: pytest.CaptureFixture[str]
-) -> None:
-    assert cli.main(["check"], one_folder_installation_env) == 0
-    assert "backups.yml is fine: 1 target(s), 1 schedule(s)" in capsys.readouterr().out
-
-
 @pytest.fixture
 def target_folder_gone(
     one_folder_installation_env: dict[str, str], tmp_path: Path
@@ -55,46 +53,72 @@ def no_targets(one_folder_installation_env: dict[str, str], tmp_path: Path) -> d
     return one_folder_installation_env
 
 
-def test_check_names_a_target_it_cant_read(
-    target_folder_gone: dict[str, str], capsys: pytest.CaptureFixture[str]
+@pytest.fixture
+def hsp_backup() -> HspBackup:
+    """Runs a command as its own process would: what it prints and its errors kept apart."""
+    runner = CliRunner()
+
+    def run(env: dict[str, str], *args: str) -> Result:
+        return runner.invoke(cli.app, list(args), env=env)
+
+    return run
+
+
+def test_check_says_the_file_is_fine(
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    assert cli.main(["check"], target_folder_gone) == 1
-    assert "hsp-backup: can't read local" in capsys.readouterr().err
+    done = hsp_backup(one_folder_installation_env, "check")
+    assert done.exit_code == 0
+    assert "backups.yml is fine: 1 target(s), 1 schedule(s)" in done.stdout
+
+
+def test_check_names_a_target_it_cant_read(
+    hsp_backup: HspBackup, target_folder_gone: dict[str, str]
+) -> None:
+    done = hsp_backup(target_folder_gone, "check")
+    assert done.exit_code == 1
+    assert "hsp-backup: can't read local" in done.stderr
 
 
 def test_a_bad_config_is_one_line_not_a_traceback(
-    no_targets: dict[str, str], capsys: pytest.CaptureFixture[str]
+    hsp_backup: HspBackup, no_targets: dict[str, str]
 ) -> None:
-    assert cli.main(["list"], no_targets) == 1
-    assert capsys.readouterr().err.startswith("hsp-backup: backups.yml has problems")
+    done = hsp_backup(no_targets, "list")
+    assert done.exit_code == 1
+    assert done.stderr.startswith("hsp-backup: backups.yml has problems")
+    assert "Traceback" not in done.stderr
 
 
 def test_now_list_and_list_json(
-    one_folder_installation_env: dict[str, str], capsys: pytest.CaptureFixture[str]
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    assert cli.main(["now"], one_folder_installation_env) == 0
-    name = capsys.readouterr().out.strip()
+    name = hsp_backup(one_folder_installation_env, "now").stdout.strip()
     assert name.endswith("-manual.tar")
-    assert cli.main(["list"], one_folder_installation_env) == 0
-    assert capsys.readouterr().out == f"{name}  local\n"
-    assert cli.main(["list", "--json"], one_folder_installation_env) == 0
-    [row] = json.loads(capsys.readouterr().out)
+    assert hsp_backup(one_folder_installation_env, "list").stdout == f"{name}  local\n"
+    [row] = json.loads(hsp_backup(one_folder_installation_env, "list", "--json").stdout)
     assert (row["name"], row["target"], row["schedule"]) == (name, "local", "manual")
 
 
 def test_restore_asks_for_yes(
-    one_folder_installation_env: dict[str, str], capsys: pytest.CaptureFixture[str]
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    assert (
-        cli.main(["restore", "hsp-20261021T023000Z-nightly.tar"], one_folder_installation_env) == 2
-    )
-    assert "add --yes" in capsys.readouterr().err
+    done = hsp_backup(one_folder_installation_env, "restore", "hsp-20261021T023000Z-nightly.tar")
+    assert done.exit_code == 2
+    assert "add --yes" in done.stderr
 
 
 def test_a_restore_says_what_it_restored(
-    one_folder_installation_env: dict[str, str], capsys: pytest.CaptureFixture[str]
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    cli.main(["now"], one_folder_installation_env)
-    name = capsys.readouterr().out.strip()
-    assert cli.main(["restore", name, "--yes"], one_folder_installation_env) == 0
-    assert capsys.readouterr().out == f"Restored {name} (made by HSP 1.0.0).\n"
+    name = hsp_backup(one_folder_installation_env, "now").stdout.strip()
+    done = hsp_backup(one_folder_installation_env, "restore", name, "--yes")
+    assert done.exit_code == 0
+    assert done.stdout == f"Restored {name} (made by HSP 1.0.0).\n"
+
+
+def test_prune_keeps_at_least_one(
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+) -> None:
+    done = hsp_backup(one_folder_installation_env, "prune", "--keep", "0")
+    assert done.exit_code == 2
+    assert "--keep" in done.stderr
