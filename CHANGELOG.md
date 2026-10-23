@@ -10,7 +10,7 @@ The first release.
 ### For everyone
 - See each floor's plan, and find where someone sits from the search in the top bar.
 - English and Hebrew, with the layout mirrored for Hebrew.
-- The user menu shows which release of HSP you're using.
+- The user menu and the bottom of the sidebar show which release of HSP you're using.
 
 ### For admins
 - Manage sites, buildings, floors, people, teams, the catalog of furniture and devices, and zone types.

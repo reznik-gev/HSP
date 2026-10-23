@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, screen } from "@testing-library/react";
+import { act, cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -20,6 +20,9 @@ afterEach(async () => {
   useSidebar.setState({ collapsed: false });
   useTheme.setState({ choice: "system" });
 });
+
+/** Tests build without HSP_VERSION, so vite.config.ts sets the version to 0.0.0-dev. */
+const DEV_VERSION_LINE = "HSP 0.0.0-dev";
 
 async function renderAt(path: string) {
   const { router } = await render(path);
@@ -53,6 +56,14 @@ describe("app shell (docs/0087)", () => {
     await userEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
     expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Seats" })).toBeInTheDocument();
+  });
+
+  it("shows the release version at the bottom of the sidebar, unless collapsed (docs/0104)", async () => {
+    await renderAt("/floors");
+    const sidebar = screen.getByRole("complementary");
+    expect(within(sidebar).getByText(DEV_VERSION_LINE)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    expect(within(sidebar).queryByText(DEV_VERSION_LINE)).not.toBeInTheDocument();
   });
 
   it("dark mode puts the dark class on the page", () => {

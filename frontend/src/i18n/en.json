@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "HSP",
-    "fullName": "Human-Space Program"
+    "fullName": "Human-Space Program",
+    "version": "HSP {{version}}"
   },
   "nav": {
     "main": "Main",
@@ -61,8 +62,7 @@
     "menu": "Account: {{name}}",
     "admin": "Administrator",
     "viewer": "Viewer",
-    "signOut": "Sign out",
-    "version": "HSP {{version}}"
+    "signOut": "Sign out"
   },
   "plan": {
     "breadcrumb": "Location",

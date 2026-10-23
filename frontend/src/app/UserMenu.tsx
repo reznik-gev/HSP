@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { Version } from "./Version";
+
 /** The signed-in person: who they are, their role, and signing out (docs/0087); and the release
  * of HSP they're using (docs/0104). */
 export function UserMenu() {
@@ -45,9 +47,7 @@ export function UserMenu() {
           {t("user.signOut")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <div className="px-2 py-1 text-xs text-muted-foreground">
-          {t("user.version", { version: import.meta.env.VITE_HSP_VERSION })}
-        </div>
+        <Version className="block px-2 py-1" />
       </DropdownMenuContent>
     </DropdownMenu>
   );
