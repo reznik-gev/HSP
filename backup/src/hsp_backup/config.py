@@ -1,12 +1,13 @@
 import re
 from pathlib import Path
-from typing import Annotated, Literal, Self
+from typing import Annotated, Any, Literal, Self
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import yaml
 from croniter import croniter
 from pydantic import Field, ValidationError, field_validator, model_validator
 
+from hsp_backup.names import DEFAULT_KEEP, DEFAULT_KEEP_DAYS
 from hsp_backup.strict_model import StrictModel
 
 #: Schedule names go into file names, so they're kept simple.
@@ -46,9 +47,16 @@ class BackupSchedule(StrictModel):
     name: str
     cron: str
     target: str
-    keep: int = Field(ge=1)
+    keep: int = Field(default=DEFAULT_KEEP, ge=1)
     keep_days: int | None = Field(default=None, ge=1)
     include_config: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def _keep_a_week_unless_told(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "keep" not in data and "keep_days" not in data:
+            return {**data, "keep_days": DEFAULT_KEEP_DAYS}
+        return data
 
     @field_validator("name")
     @classmethod

@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -8,10 +8,11 @@ import structlog
 from packaging.version import InvalidVersion, Version
 
 from hsp_backup.archive import Manifest, extract_verified
+from hsp_backup.clock import now_utc
 from hsp_backup.config import MANUAL, PRE_UPGRADE, BackupConfig
 from hsp_backup.contents import dump_name, write_backup
 from hsp_backup.metrics import BackupMetrics
-from hsp_backup.names import BackupName, expired
+from hsp_backup.names import DEFAULT_KEEP, DEFAULT_KEEP_DAYS, KEEP_FOREVER, BackupName, expired
 from hsp_backup.postgres import DATABASES, Postgres
 from hsp_backup.stores.base import Store, StoreError
 
@@ -23,15 +24,11 @@ class RestoreRefused(Exception):
 
 
 @dataclass(frozen=True)
-class Plan:
+class BackupPlan:
     target: str
-    keep: int | None  # None: never deleted automatically
-    keep_days: int | None
     include_config: bool
-
-
-def now_utc() -> datetime:
-    return datetime.now(UTC)
+    keep: int = DEFAULT_KEEP
+    keep_days: int | None = DEFAULT_KEEP_DAYS
 
 
 @dataclass
@@ -44,13 +41,15 @@ class Backups:
     metrics: BackupMetrics
     clock: Callable[[], datetime] = field(default=now_utc)
 
-    def plan(self, schedule: str) -> Plan:
+    def plan(self, schedule: str) -> BackupPlan:
         if schedule == MANUAL:
-            return Plan(self.config.manual_target, self.config.manual_keep, None, True)
-        if schedule == PRE_UPGRADE:
-            return Plan(self.config.manual_target, None, None, True)
+            return BackupPlan(
+                self.config.manual_target, True, keep=self.config.manual_keep, keep_days=None
+            )
+        if schedule == PRE_UPGRADE:  # kept until `hsp upgrade` succeeds, which prunes them
+            return BackupPlan(self.config.manual_target, True, keep=KEEP_FOREVER, keep_days=None)
         s = self.config.schedule(schedule)
-        return Plan(s.target, s.keep, s.keep_days, s.include_config)
+        return BackupPlan(s.target, s.include_config, keep=s.keep, keep_days=s.keep_days)
 
     def take(self, schedule: str) -> BackupName:
         plan = self.plan(schedule)
@@ -75,7 +74,7 @@ class Backups:
             target=plan.target,
             size=run.size,
         )
-        if plan.keep is not None:
+        if plan.keep != KEEP_FOREVER:
             self.prune(schedule, keep=plan.keep, keep_days=plan.keep_days)
         return name
 

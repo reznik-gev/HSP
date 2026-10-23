@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from hsp_backup.names import BackupName, expired
+from hsp_backup.names import KEEP_FOREVER, BackupName, expired
 
 NOW = datetime(2026, 10, 21, 12, 0, tzinfo=UTC)
 
@@ -18,6 +18,11 @@ def test_a_name_says_when_and_by_which_schedule() -> None:
 def test_other_files_are_not_backups() -> None:
     for other in ("notes.txt", "hsp-20261021T023005Z-nightly.tar.partial", "hsp-latest.tar"):
         assert BackupName.parse(other) is None
+
+
+def test_kept_forever_means_none_are_deleted() -> None:
+    old = [taken(d, "pre-upgrade") for d in range(0, 400, 50)]
+    assert expired(old, "pre-upgrade", keep=KEEP_FOREVER, keep_days=1, now=NOW) == []
 
 
 def test_all_but_the_newest_are_deleted() -> None:
