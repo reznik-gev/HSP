@@ -116,4 +116,5 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted |
 | 0106 | 2026-10-21 | [Backups: our own image, with schedules in `backups.yml`](0106-2026-10-21-backups.md) | Accepted |
 | 0107 | 2026-10-21 | [`bin/hsp`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted |
-| 0110 | 2026-10-22 | [Database queries move into repositories, after 1.2](0110-2026-10-22-repositories-after-1-2.md) | Accepted |
+| 0110 | 2026-10-22 | [Database queries move into repositories, after 1.2](0110-2026-10-22-repositories-after-1-2.md) | Accepted (with faster dev cycle and CI, 0112) |
+| 0112 | 2026-10-23 | [The dev cycle and CI times get faster, alongside the repositories stack](0112-2026-10-23-dev-cycle-and-ci-times.md) | Accepted |

@@ -26,7 +26,7 @@ All numbers below were measured on that commit. Coverage counts lines and branch
 | 5 | Show coverage in CI, without a minimum | So a drop is visible in the PR that caused it ([4.4](#44-coverage-in-ci)) | Small |
 | 6 | Bring the backend and frontend READMEs up to date | They name Python 3.13 and list a third of the packages ([5](#5-other-observations)) | Small |
 
-Each of these is a proposal. If we take one up, it gets a decision record. Two deeper reviews follow from this one: [dependencies](2026-10-22-dependencies.md) and [decision records](2026-10-22-decision-records.md). Each has its own recommendations.
+Each of these is a proposal. If we take one up, it gets a decision record. The owner also wants the dev cycle and CI times improved, alongside the repositories stack ([0112](../decisions/0112-2026-10-23-dev-cycle-and-ci-times.md)). Two deeper reviews follow from this one: [dependencies](2026-10-22-dependencies.md) and [decision records](2026-10-22-decision-records.md). Each has its own recommendations.
 
 ## 1. Coupling
 
