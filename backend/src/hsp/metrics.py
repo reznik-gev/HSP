@@ -5,14 +5,15 @@ files in that folder, and `registry()` adds them up for the metrics server (hsp/
 it, as in development and tests, everything stays in this process.
 
 Labels hold route templates, never raw paths, so there's no personal data and no unbounded set.
+The API's CPU and memory come from the platform, such as `docker stats`, cAdvisor or Kubernetes,
+not from here (docs/0110).
 """
 
 import os
 import time
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
 
-import psutil
 from prometheus_client import (
     REGISTRY,
     CollectorRegistry,
@@ -21,8 +22,6 @@ from prometheus_client import (
     Histogram,
     multiprocess,
 )
-from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily, Metric
-from prometheus_client.registry import Collector
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -94,28 +93,6 @@ def observed(operation: str) -> Iterator[None]:
         PLAN_OPERATION_DURATION.labels(operation=operation).observe(time.perf_counter() - started)
 
 
-class ProcessTreeCollector(Collector):
-    """CPU and memory of this process and all its children: the launcher and every uvicorn
-    worker, which the standard process collector would report one at a time."""
-
-    def collect(self) -> Iterable[Metric]:
-        me = psutil.Process()
-        processes = [me, *me.children(recursive=True)]
-        cpu, rss = 0.0, 0
-        for p in processes:
-            try:
-                times = p.cpu_times()
-                cpu += times.user + times.system
-                rss += p.memory_info().rss
-            except psutil.NoSuchProcess:
-                continue
-        yield CounterMetricFamily("process_cpu_seconds", "CPU time of the API's processes", cpu)
-        yield GaugeMetricFamily(
-            "process_resident_memory_bytes", "Resident memory of the API's processes", rss
-        )
-        yield GaugeMetricFamily("process_count", "The API's processes", len(processes))
-
-
 def registry() -> CollectorRegistry:
     """What /metrics reports: every worker's values when PROMETHEUS_MULTIPROC_DIR is set,
     otherwise this process's."""
@@ -123,5 +100,4 @@ def registry() -> CollectorRegistry:
         return REGISTRY
     combined = CollectorRegistry()
     multiprocess.MultiProcessCollector(combined)  # type: ignore[no-untyped-call]
-    combined.register(ProcessTreeCollector())
     return combined

@@ -22,4 +22,4 @@ The first release.
 - Sign-in through the bundled Keycloak. HSP serves HTTPS itself, or runs behind your own proxy.
 - The API logs one JSON line per request: the route, status, time taken, request ID and who made it. Set `HSP_LOG_LEVEL=DEBUG` to add the full path.
 - `/readyz` checks the database, its schema version and Keycloak, and names what isn't ready. The API refuses to start on a database that wasn't migrated for its version.
-- Prometheus metrics from the API: requests by route, changesets and publishes, edit-lock refusals, database connections, CPU and memory. Only the host itself can reach them, unless you set `HSP_METRICS_ADDRESS`.
+- Prometheus metrics from the API: requests by route, changesets and publishes, edit-lock refusals and database connections. Only the host itself can reach them, unless you set `HSP_METRICS_ADDRESS`.
