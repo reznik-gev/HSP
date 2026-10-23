@@ -18,10 +18,14 @@ What we know today, from the review and from the v1 stack:
 
 ## Decision
 1. **The dev cycle and CI times are a planned piece of work.** It comes in the same release as the repositories stack, after 1.1 and 1.2. The exact release is set when that release is planned, as 0110 says.
-2. **It starts by measuring** *(Claude's choice, lower confidence)*. Before anything changes, record a baseline:
+2. **It starts by measuring, and by profiling** (the owner's choice). Before anything changes, record a baseline:
    - how long each CI job takes, and the time from push to a green `ci-ok`;
    - how long each local check takes, on each side;
    - how long it takes to restack and check a stack.
+
+   Then profile, to find where the time goes rather than guess:
+   - **the tests:** the slowest tests and fixtures, and the time spent on setup, such as starting the app or preparing the database;
+   - **probably the code under test as well:** a slow test can be slow code, and then the fix belongs in the code, not the test.
 
    The targets are set from those numbers when the work is planned, not now.
 3. **Ideas to weigh then, none decided yet:**
@@ -33,4 +37,4 @@ What we know today, from the review and from the v1 stack:
 
 ## Consequences
 - The repositories stack and this work are planned together, so the time saved by in-memory tests is measured, not assumed.
-- The baseline numbers are recorded in the PR that starts this work, so later changes can show what they saved.
+- The baseline numbers and the profiling results are recorded in the PR that starts this work, so later changes can show what they saved.
