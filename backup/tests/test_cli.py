@@ -16,16 +16,13 @@ HspBackup = Callable[..., Result]
 #: Colours typer adds to its own messages on a terminal, and in GitHub Actions.
 COLOURS = re.compile(r"\x1b\[[0-9;]*m")
 
-#: A well-formed backup name that no target holds.
-NEVER_TAKEN = "hsp-20200101T000000Z-nightly.tar"
-
 #: A backups.yml that names no target.
 NO_TARGETS = "targets: {}"
 
 
 @pytest.fixture
 def one_folder_installation_env(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, postgres: SpyPostgres
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, spy_postgres: SpyPostgres
 ) -> dict[str, str]:
     (tmp_path / "backups").mkdir()
     (tmp_path / "backups.yml").write_text(
@@ -33,7 +30,7 @@ def one_folder_installation_env(
         'schedules:\n  - { name: nightly, cron: "30 2 * * *", target: local, keep: 7 }\n'
     )
     (tmp_path / "pg_password").write_text("pw")
-    monkeypatch.setattr(cli, "PgTools", lambda *_: postgres)
+    monkeypatch.setattr(cli, "PgTools", lambda *_: spy_postgres)
     return {
         "HSP_BACKUP_CONFIG": str(tmp_path / "backups.yml"),
         "HSP_BACKUP_INSTALL_DIR": str(tmp_path),
@@ -126,19 +123,19 @@ def test_restore_asks_for_yes(
 
 
 def test_a_refused_restore_says_nothing_changed(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str], never_taken_backup_name: str
 ) -> None:
     # hsp restore starts HSP again after this exit code (docs/0109).
-    done = hsp_backup(one_folder_installation_env, "restore", NEVER_TAKEN, "--yes")
+    done = hsp_backup(one_folder_installation_env, "restore", never_taken_backup_name, "--yes")
     assert done.exit_code == 3
     assert "no target holds" in done.stderr
 
 
 def test_a_restore_that_fails_partway_exits_1(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str], postgres: SpyPostgres
+    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str], spy_postgres: SpyPostgres
 ) -> None:
     name = hsp_backup(one_folder_installation_env, "now").stdout.strip()
-    postgres.fail_restore = True
+    spy_postgres.fail_restore = True
     assert hsp_backup(one_folder_installation_env, "restore", name, "--yes").exit_code == 1
 
 

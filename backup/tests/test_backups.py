@@ -10,11 +10,6 @@ from hsp_backup.stores.folder import FolderStore
 from tests.conftest import FakeClock, SpyPostgres
 
 
-@pytest.fixture
-def never_taken_backup_name() -> str:
-    return "hsp-20200101T000000Z-nightly.tar"
-
-
 def files_in(store: FolderStore) -> list[str]:
     return sorted(p.name for p in store.path.iterdir())
 
