@@ -41,5 +41,14 @@ export default defineConfig(({ mode }) => ({
     // Screen tests render the whole app; with every file running in parallel a slow machine
     // can need more than the default 5 s for one test.
     testTimeout: 15_000,
+    // `pnpm test:coverage` measures the app's own code. CI runs it every time and keeps the report
+    // from each push to main. It's a report, not a gate, so there are no thresholds (docs/0114).
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/**/*.test.{ts,tsx}", "src/test/**", "src/bench/**", "src/api/schema.d.ts"],
+      reporter: ["text-summary", "html", "lcov", "json-summary"],
+      reportsDirectory: "coverage",
+    },
   },
 }));

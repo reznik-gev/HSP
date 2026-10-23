@@ -24,6 +24,10 @@ dist-bench/
 .DS_Store
 Thumbs.db
 
+# Coverage reports (docs/0114)
+.coverage
+coverage/
+
 # Playwright browser-test output (frontend/e2e, docs/0087)
 frontend/test-results/
 frontend/playwright-report/

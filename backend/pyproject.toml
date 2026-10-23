@@ -47,6 +47,7 @@ dev = [
     "mypy>=2.4.0",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
     "ruff>=0.17.0",
     "types-openpyxl>=3.1.5.20260827",
 ]
@@ -92,3 +93,22 @@ asyncio_default_test_loop_scope = "session"
 markers = [
     "db: integration test against a real PostGIS database (docs/0061); requires HSP_TEST_DATABASE_URL",
 ]
+
+# Coverage: `uv run pytest --cov --cov-report=html` (docs/0114). CI measures on every run and keeps
+# the report from each push to main. It's a report, not a gate, so there's no fail_under.
+[tool.coverage.run]
+source = ["hsp"]
+branch = true
+
+[tool.coverage.report]
+skip_empty = true
+precision = 1
+
+[tool.coverage.html]
+directory = "coverage/html"
+
+[tool.coverage.xml]
+output = "coverage/coverage.xml"
+
+[tool.coverage.json]
+output = "coverage/coverage.json"
