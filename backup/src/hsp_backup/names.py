@@ -22,6 +22,11 @@ class BackupName:
         return f"hsp-{self.created.astimezone(UTC):{_TIME}}-{self.schedule}.tar"
 
     @classmethod
+    def at(cls, when: datetime, schedule: str) -> BackupName:
+        """The name of `schedule`'s backup taken at `when`, to the second."""
+        return cls(when.replace(microsecond=0), schedule)
+
+    @classmethod
     def parse(cls, name: str) -> BackupName | None:
         """The backup a file name stands for, or None for any other file."""
         m = _NAME.match(name)

@@ -1,14 +1,5 @@
-"""One backup is one tar file (docs/0106):
-
-    manifest.json        the HSP version, schema revision, time, schedule, and every file's SHA-256
-    hsp.dump             pg_dump custom format, already compressed
-    keycloak.dump
-    config/.env          with include_config; never secrets/
-    config/backups.yml
-    config/compose.yml
-
-The tar itself isn't compressed: the dumps already are.
-"""
+"""A backup file: a tar of files and a manifest of their SHA-256s, checked when it's unpacked
+(docs/0106)."""
 
 import hashlib
 import json
@@ -36,11 +27,8 @@ class Manifest:
 
 
 def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
     with path.open("rb") as f:
-        for block in iter(lambda: f.read(1 << 20), b""):
-            digest.update(block)
-    return digest.hexdigest()
+        return hashlib.file_digest(f, "sha256").hexdigest()
 
 
 def write_archive(

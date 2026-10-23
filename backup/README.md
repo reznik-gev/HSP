@@ -12,6 +12,17 @@ HSP's backup service ([0058](../docs/decisions/0058-2026-10-08-backups.md), [010
 | `hsp-backup restore <name> --yes` | Replaces both databases with a backup. The stack must be stopped, except `postgres`. |
 | `hsp-backup prune [--schedule pre-upgrade] [--keep 1]` | Deletes a schedule's backups beyond the newest `--keep`. `hsp upgrade` runs it after a successful upgrade. |
 
+## What a backup holds
+Each backup is one tar file, named `hsp-<UTC time>-<schedule>.tar`:
+
+| File | What |
+|---|---|
+| `manifest.json` | The HSP version, the database schema's revision, the time, the schedule, and every other file's SHA-256 |
+| `hsp.dump`, `keycloak.dump` | The two databases, from `pg_dump --format=custom`, already compressed |
+| `config/.env`, `config/backups.yml`, `config/compose.yml` | With `include_config`, and always in manual and pre-upgrade backups. Never `secrets/`. |
+
+The tar itself isn't compressed, because the dumps already are. A restore checks every file against its SHA-256 first.
+
 ## Settings
 | Variable | Default | What |
 |---|---|---|
