@@ -1,21 +1,17 @@
-"""Where backups are kept: a folder, or an S3 bucket (docs/0106).
+"""An S3 target: AWS, MinIO or another S3-compatible store. A backup is uploaded and its size
+checked, and a failed upload is deleted, so a half-written one never shows."""
 
-A half-written backup never counts: a folder backup is written under a temporary name and
-renamed, an S3 one is uploaded and then checked, and a failed write leaves nothing behind.
-"""
-
-import os
-import shutil
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 import boto3
 from boto3.exceptions import Boto3Error
 from botocore.client import Config as BotoConfig
 from botocore.exceptions import BotoCoreError, ClientError
 
-from hsp_backup.config import FolderTarget, S3Target
+from hsp_backup.config import S3Target
+from hsp_backup.stores.base import StoreError
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -26,47 +22,6 @@ S3_ERRORS = (BotoCoreError, ClientError, Boto3Error)
 #: The secret files an S3 target signs in with (docs/0106).
 S3_ACCESS_KEY = "backup_s3_access_key"
 S3_SECRET_KEY = "backup_s3_secret_key"
-
-
-class StoreError(Exception):
-    """A target can't be read or written; the message names it."""
-
-
-class Store(Protocol):
-    def put(self, local: Path, name: str) -> None: ...
-    def names(self) -> list[str]: ...
-    def fetch(self, name: str, dest: Path) -> None: ...
-    def delete(self, name: str) -> None: ...
-
-
-class FolderStore:
-    def __init__(self, label: str, path: Path) -> None:
-        self.label = label
-        self.path = path
-
-    def put(self, local: Path, name: str) -> None:
-        partial = self.path / f".{name}.partial"
-        try:
-            shutil.copyfile(local, partial)
-            os.replace(partial, self.path / name)
-        except OSError as exc:
-            partial.unlink(missing_ok=True)
-            raise StoreError(f"can't write to {self.label} ({self.path}): {exc.strerror}") from None
-
-    def names(self) -> list[str]:
-        try:
-            return sorted(p.name for p in self.path.iterdir() if p.is_file())
-        except OSError as exc:
-            raise StoreError(f"can't read {self.label} ({self.path}): {exc.strerror}") from None
-
-    def fetch(self, name: str, dest: Path) -> None:
-        try:
-            shutil.copyfile(self.path / name, dest)
-        except OSError as exc:
-            raise StoreError(f"can't read {name} from {self.label}: {exc.strerror}") from None
-
-    def delete(self, name: str) -> None:
-        (self.path / name).unlink(missing_ok=True)
 
 
 class S3Store:
@@ -144,9 +99,3 @@ def s3_client(target: S3Target, secrets_dir: Path) -> S3Client:
         config=BotoConfig(s3={"addressing_style": "path" if target.path_style else "auto"}),
     )
     return client
-
-
-def open_store(label: str, target: FolderTarget | S3Target, secrets_dir: Path) -> Store:
-    if isinstance(target, FolderTarget):
-        return FolderStore(label, target.path)
-    return S3Store(label, target, s3_client(target, secrets_dir))
