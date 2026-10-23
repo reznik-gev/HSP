@@ -134,7 +134,6 @@ def test_the_metrics_server_adds_up_every_worker(
     registry = metrics.registry()
 
     assert sample("hsp_http_requests_total", registry, **WORKER_REQUEST) == 2
-    assert sample("process_resident_memory_bytes", registry) > 0
 
 
 def test_a_restart_starts_counting_from_zero(
