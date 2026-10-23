@@ -99,6 +99,17 @@ def test_without_schedules_manual_backups_go_to_the_first_target() -> None:
     assert config.timezone == "UTC"
 
 
+def test_a_schedule_that_says_nothing_keeps_7_and_a_week() -> None:
+    text = ONE_TARGET + 'schedules:\n  - { name: n, cron: "0 2 * * *", target: local }\n'
+    [s] = parse_config(text).schedules
+    assert (s.keep, s.keep_days) == (7, 7)
+
+
+def test_a_schedule_that_says_how_many_has_no_age_rule() -> None:
+    [s] = parse_config(ONE_TARGET + "schedules:\n" + schedule(keep=3)).schedules
+    assert (s.keep, s.keep_days) == (3, None)
+
+
 @pytest.mark.parametrize(("text", "messages"), REFUSED, ids=[case.id for case in REFUSED])
 def test_a_bad_file_is_refused_saying_where(text: str, messages: tuple[str, ...]) -> None:
     message = refused(text)
