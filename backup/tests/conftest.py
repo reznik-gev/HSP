@@ -43,8 +43,7 @@ class SpyPostgres:
         self.restored[database] = dump.read_bytes()
 
 
-#: Nightly to a local folder, weekly to another; manual backups keep 2.
-CONFIG = """
+NIGHTLY_TO_LOCAL_WEEKLY_TO_NAS = """
 targets:
   local: { type: folder, path: /backups }
   nas: { type: folder, path: /nas }
@@ -56,24 +55,26 @@ manual: { target: local, keep: 2 }
 
 
 @pytest.fixture
-def config() -> BackupConfig:
-    return parse_config(CONFIG)
+def nightly_and_weekly_config() -> BackupConfig:
+    return parse_config(NIGHTLY_TO_LOCAL_WEEKLY_TO_NAS)
 
 
 @pytest.fixture
-def clock() -> FakeClock:
+def fake_clock() -> FakeClock:
     return FakeClock()
 
 
 @pytest.fixture
-def postgres() -> SpyPostgres:
+def spy_postgres() -> SpyPostgres:
     return SpyPostgres()
 
 
 @pytest.fixture
-def folders(tmp_path: Path, config: BackupConfig) -> dict[str, FolderStore]:
+def folder_stores_by_targets(
+    tmp_path: Path, nightly_and_weekly_config: BackupConfig
+) -> dict[str, FolderStore]:
     stores = {}
-    for label in config.targets:
+    for label in nightly_and_weekly_config.targets:
         (tmp_path / label).mkdir()
         stores[label] = FolderStore(label, tmp_path / label)
     return stores
@@ -84,7 +85,7 @@ def install_dir(tmp_path: Path) -> Path:
     d = tmp_path / "install"
     (d / "secrets").mkdir(parents=True)
     (d / ".env").write_text("HSP_VERSION=1.0.0\n")
-    (d / "backups.yml").write_text(CONFIG)
+    (d / "backups.yml").write_text(NIGHTLY_TO_LOCAL_WEEKLY_TO_NAS)
     (d / "compose.yml").write_text("name: hsp\n")
     (d / "secrets" / "db_superuser_password").write_text("never in a backup")
     return d
@@ -98,21 +99,21 @@ def registry() -> CollectorRegistry:
 @pytest.fixture
 def backups(
     registry: CollectorRegistry,
-    config: BackupConfig,
-    postgres: SpyPostgres,
-    folders: dict[str, FolderStore],
+    nightly_and_weekly_config: BackupConfig,
+    spy_postgres: SpyPostgres,
+    folder_stores_by_targets: dict[str, FolderStore],
     install_dir: Path,
-    clock: FakeClock,
+    fake_clock: FakeClock,
 ) -> Backups:
     def store(label: str) -> Store:
-        return folders[label]
+        return folder_stores_by_targets[label]
 
     return Backups(
-        config=config,
-        postgres=postgres,
+        config=nightly_and_weekly_config,
+        postgres=spy_postgres,
         stores=store,
         hsp_version="1.0.0",
         install_dir=install_dir,
         metrics=BackupMetrics(registry),
-        clock=clock,
+        clock=fake_clock,
     )

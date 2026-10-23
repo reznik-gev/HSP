@@ -9,8 +9,10 @@ from hsp_backup.backups import Backups, RestoreRefused, refuse_newer
 from hsp_backup.stores.folder import FolderStore
 from tests.conftest import FakeClock, SpyPostgres
 
-#: A well-formed backup name that no target holds.
-NEVER_TAKEN = "hsp-20200101T000000Z-nightly.tar"
+
+@pytest.fixture
+def never_taken_backup_name() -> str:
+    return "hsp-20200101T000000Z-nightly.tar"
 
 
 def files_in(store: FolderStore) -> list[str]:
@@ -27,11 +29,11 @@ def metric(registry: CollectorRegistry, name: str, schedule: str) -> float | Non
 
 
 def test_a_backup_holds_both_databases_and_a_manifest(
-    backups: Backups, folders: dict[str, FolderStore]
+    backups: Backups, folder_stores_by_targets: dict[str, FolderStore]
 ) -> None:
     name = backups.take("nightly")
     assert str(name) == "hsp-20261021T023000Z-nightly.tar"
-    archive = folders["local"].path / str(name)
+    archive = folder_stores_by_targets["local"].path / str(name)
     assert members_of(archive) == ["hsp.dump", "keycloak.dump", "manifest.json"]
     manifest = read_manifest(archive)
     assert (manifest.hsp_version, manifest.schema_revision) == ("1.0.0", "c9b2fc969b7d")
@@ -39,10 +41,10 @@ def test_a_backup_holds_both_databases_and_a_manifest(
 
 
 def test_include_config_adds_the_files_but_never_secrets(
-    backups: Backups, folders: dict[str, FolderStore]
+    backups: Backups, folder_stores_by_targets: dict[str, FolderStore]
 ) -> None:
     name = backups.take("weekly")
-    members = members_of(folders["nas"].path / str(name))
+    members = members_of(folder_stores_by_targets["nas"].path / str(name))
     assert members == [
         "config/.env",
         "config/backups.yml",
@@ -54,13 +56,13 @@ def test_include_config_adds_the_files_but_never_secrets(
 
 
 def test_each_schedule_keeps_its_newest(
-    backups: Backups, folders: dict[str, FolderStore], clock: FakeClock
+    backups: Backups, folder_stores_by_targets: dict[str, FolderStore], fake_clock: FakeClock
 ) -> None:
     for _ in range(5):
         backups.take("nightly")
-        clock.advance(days=1)
+        fake_clock.advance(days=1)
     backups.take("manual")
-    assert files_in(folders["local"]) == [
+    assert files_in(folder_stores_by_targets["local"]) == [
         "hsp-20261023T023000Z-nightly.tar",
         "hsp-20261024T023000Z-nightly.tar",
         "hsp-20261025T023000Z-nightly.tar",
@@ -69,13 +71,13 @@ def test_each_schedule_keeps_its_newest(
 
 
 def test_manual_backups_keep_their_own_count(
-    backups: Backups, folders: dict[str, FolderStore], clock: FakeClock
+    backups: Backups, folder_stores_by_targets: dict[str, FolderStore], fake_clock: FakeClock
 ) -> None:
     backups.take("nightly")
     for _ in range(3):
-        clock.advance(hours=1)
+        fake_clock.advance(hours=1)
         backups.take("manual")
-    assert [n.split("-")[-1] for n in files_in(folders["local"])] == [
+    assert [n.split("-")[-1] for n in files_in(folder_stores_by_targets["local"])] == [
         "nightly.tar",
         "manual.tar",
         "manual.tar",
@@ -83,12 +85,12 @@ def test_manual_backups_keep_their_own_count(
 
 
 def test_pre_upgrade_backups_are_never_deleted_automatically(
-    backups: Backups, folders: dict[str, FolderStore], clock: FakeClock
+    backups: Backups, folder_stores_by_targets: dict[str, FolderStore], fake_clock: FakeClock
 ) -> None:
     for _ in range(4):
         backups.take("pre-upgrade")
-        clock.advance(days=1)
-    assert len(files_in(folders["local"])) == 4
+        fake_clock.advance(days=1)
+    assert len(files_in(folder_stores_by_targets["local"])) == 4
     assert backups.prune("pre-upgrade", keep=1) == [
         "hsp-20261023T023000Z-pre-upgrade.tar",
         "hsp-20261022T023000Z-pre-upgrade.tar",
@@ -98,19 +100,21 @@ def test_pre_upgrade_backups_are_never_deleted_automatically(
 
 def test_a_failed_backup_leaves_nothing_and_keeps_the_old_ones(
     backups: Backups,
-    postgres: SpyPostgres,
-    folders: dict[str, FolderStore],
-    clock: FakeClock,
+    spy_postgres: SpyPostgres,
+    folder_stores_by_targets: dict[str, FolderStore],
+    fake_clock: FakeClock,
     registry: CollectorRegistry,
 ) -> None:
     for _ in range(3):
         backups.take("nightly")
-        clock.advance(days=1)
-    postgres.fail_dump = True
+        fake_clock.advance(days=1)
+    spy_postgres.fail_dump = True
     with pytest.raises(RuntimeError, match="connection refused"):
         backups.take("nightly")
-    assert len(files_in(folders["local"])) == 3
-    assert metric(registry, "last_failure_timestamp_seconds", "nightly") == clock.now.timestamp()
+    assert len(files_in(folder_stores_by_targets["local"])) == 3
+    assert (
+        metric(registry, "last_failure_timestamp_seconds", "nightly") == fake_clock.now.timestamp()
+    )
 
 
 def test_success_is_measured(backups: Backups, registry: CollectorRegistry) -> None:
@@ -121,9 +125,9 @@ def test_success_is_measured(backups: Backups, registry: CollectorRegistry) -> N
     assert (metric(registry, "size_bytes", "nightly") or 0) > 0
 
 
-def test_the_list_shows_every_target_newest_first(backups: Backups, clock: FakeClock) -> None:
+def test_the_list_shows_every_target_newest_first(backups: Backups, fake_clock: FakeClock) -> None:
     backups.take("weekly")
-    clock.advance(hours=1)
+    fake_clock.advance(hours=1)
     backups.take("nightly")
     assert [(label, str(b)) for label, b in backups.list()] == [
         ("local", "hsp-20261021T033000Z-nightly.tar"),
@@ -131,48 +135,52 @@ def test_the_list_shows_every_target_newest_first(backups: Backups, clock: FakeC
     ]
 
 
-def test_a_restore_replaces_both_databases(backups: Backups, postgres: SpyPostgres) -> None:
+def test_a_restore_replaces_both_databases(backups: Backups, spy_postgres: SpyPostgres) -> None:
     name = backups.take("weekly")
-    postgres.content = {"hsp": b"later", "keycloak": b"later"}
+    spy_postgres.content = {"hsp": b"later", "keycloak": b"later"}
     manifest = backups.restore(str(name))
     assert manifest.schedule == "weekly"
-    assert postgres.restored == {"hsp": b"hsp rows v1", "keycloak": b"keycloak rows v1"}
+    assert spy_postgres.restored == {"hsp": b"hsp rows v1", "keycloak": b"keycloak rows v1"}
 
 
 @pytest.fixture
-def nas_unreadable(folders: dict[str, FolderStore]) -> None:
-    folders["nas"].path.rmdir()
+def nas_unreadable(folder_stores_by_targets: dict[str, FolderStore]) -> None:
+    folder_stores_by_targets["nas"].path.rmdir()
 
 
 def test_a_restore_skips_a_target_it_cant_read(
-    backups: Backups, postgres: SpyPostgres, nas_unreadable: None
+    backups: Backups, spy_postgres: SpyPostgres, nas_unreadable: None
 ) -> None:
     name = backups.take("nightly")  # on local, which still works
     backups.restore(str(name))
-    assert postgres.restored["hsp"] == b"hsp rows v1"
+    assert spy_postgres.restored["hsp"] == b"hsp rows v1"
 
 
 @pytest.mark.usefixtures("nas_unreadable")
-def test_a_missing_backup_names_the_targets_it_couldnt_read(backups: Backups) -> None:
+def test_a_missing_backup_names_the_targets_it_couldnt_read(
+    backups: Backups, never_taken_backup_name: str
+) -> None:
     with pytest.raises(RestoreRefused, match=r"no target holds .* \(couldn't read nas\)"):
-        backups.restore(NEVER_TAKEN)
+        backups.restore(never_taken_backup_name)
 
 
-def test_a_restore_needs_a_backup_that_exists(backups: Backups) -> None:
+def test_a_restore_needs_a_backup_that_exists(
+    backups: Backups, never_taken_backup_name: str
+) -> None:
     with pytest.raises(RestoreRefused, match="no target holds"):
-        backups.restore(NEVER_TAKEN)
+        backups.restore(never_taken_backup_name)
     with pytest.raises(RestoreRefused, match="isn't a backup name"):
         backups.restore("latest")
 
 
-def test_a_backup_from_a_newer_hsp_is_refused(backups: Backups, postgres: SpyPostgres) -> None:
+def test_a_backup_from_a_newer_hsp_is_refused(backups: Backups, spy_postgres: SpyPostgres) -> None:
     name = backups.take("nightly")
     backups.hsp_version = "0.9.0"
     with pytest.raises(
         RestoreRefused, match=r"made by HSP 1\.0\.0, newer than the installed 0\.9\.0"
     ):
         backups.restore(str(name))
-    assert postgres.restored == {}
+    assert spy_postgres.restored == {}
 
 
 @pytest.mark.parametrize(
