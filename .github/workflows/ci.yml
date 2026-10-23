@@ -85,7 +85,24 @@ jobs:
       - name: Types
         run: uv run mypy
       - name: Tests (unit + DB integration; also applies all migrations to an empty DB)
-        run: uv run pytest
+        # Coverage is measured on every run, as it adds little time. A report, not a gate (docs/0114).
+        run: uv run pytest --cov --cov-report=term --cov-report=html --cov-report=xml --cov-report=json
+      - name: Coverage summary
+        run: |
+          {
+            echo "### Backend coverage"
+            echo
+            echo "| Statements | Branches | Both |"
+            echo "|---|---|---|"
+            jq -r '.totals | "| \(.percent_statements_covered_display)% | \(.percent_branches_covered_display)% | \(.percent_covered_display)% |"' coverage/coverage.json
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the coverage report (pushes to main only)
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+          retention-days: 30
       - name: Models match migrations
         run: uv run alembic check
       - name: OpenAPI schema is up to date
@@ -128,7 +145,24 @@ jobs:
       - name: Types
         run: pnpm typecheck
       - name: Tests
-        run: pnpm test
+        # Coverage is measured on every run, as it adds little time. A report, not a gate (docs/0114).
+        run: pnpm test:coverage
+      - name: Coverage summary
+        run: |
+          {
+            echo "### Frontend coverage"
+            echo
+            echo "| Statements | Branches | Functions | Lines |"
+            echo "|---|---|---|---|"
+            jq -r '.total | "| \(.statements.pct)% | \(.branches.pct)% | \(.functions.pct)% | \(.lines.pct)% |"' coverage/coverage-summary.json
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the coverage report (pushes to main only)
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 30
       - name: Build
         run: pnpm build
 
