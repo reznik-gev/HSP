@@ -13,7 +13,7 @@ Our dependencies are **few, current and free of known vulnerabilities**. The wea
 | 1 | Add the missing Dependabot entries: `backup/` (Python), and the Dockerfiles in `deploy/backup/`, `deploy/keycloak/` and `deploy/web/` | Small |
 | 2 | Decide on vulnerability scanning before 1.0.0, as 0059 asks (for example `pip-audit`, `pnpm audit` and an image scanner such as Trivy, in CI) | Small to medium |
 | 3 | Drop `uuid-utils`: Python 3.14 has `uuid.uuid7()` built in | Small |
-| 4 | Record the dependencies no decision names: psutil (raised on #102), openpyxl | Small |
+| 4 | Record the dependency no decision names: openpyxl. (psutil, raised on #102, was removed instead: [0111](../decisions/0111-2026-10-23-cpu-and-memory-from-the-platform.md).) | Small |
 
 ## 1. How many we have
 
@@ -30,7 +30,7 @@ This is a small set for an app of this size. The frontend's 700 packages are mos
 
 | Dependency | Files that use it | What for |
 |---|---|---|
-| psutil | 1 (`metrics.py`) | Memory and CPU of the API's worker processes |
+| psutil | 1 (`metrics.py`) | Memory and CPU of the API's worker processes. Removed on #102 ([0111](../decisions/0111-2026-10-23-cpu-and-memory-from-the-platform.md)). |
 | openpyxl | 1 (`imports.py`) | Reading Excel files on import |
 | email-validator | 1 | Checking emails on import |
 | cryptography | 1 (`auth/tokens.py`) | Encrypting stored tokens |
@@ -84,6 +84,6 @@ A cheap first step would be a CI job that runs `pip-audit` (backend and backup),
 ## 4. Smaller findings
 
 - **`uuid-utils` is no longer needed.** Python 3.14 added `uuid.uuid7()` to the standard library (we checked: it works in our environment). The package is used in two places (`models/base.py`, and `main.py` for request IDs).
-- **Two dependencies no decision names.** psutil ([#102](https://github.com/reznik-gev/HSP/pull/102) review, still open) and openpyxl. Every other runtime dependency is named in a decision record. These two are small and harmless, but [CLAUDE.md](../../CLAUDE.md) asks for technical choices to be recorded.
+- **Two dependencies no decision names.** psutil and openpyxl. Every other runtime dependency is named in a decision record. These two are small and harmless, but [CLAUDE.md](../../CLAUDE.md) asks for technical choices to be recorded. *Update, 2026-10-23:* psutil was removed on [#102](https://github.com/reznik-gev/HSP/pull/102). The API's CPU and memory now come from the platform ([0111](../decisions/0111-2026-10-23-cpu-and-memory-from-the-platform.md)), so only openpyxl is left to record.
 - **`tzdata` is never imported.** That is expected: it supplies time-zone data to `zoneinfo` on systems without it (slim images and Windows). A one-line comment in `pyproject.toml` would stop someone removing it.
 - **httpx2** is a new successor of httpx that Authlib now prefers. It's young, but it's used in only two files.
