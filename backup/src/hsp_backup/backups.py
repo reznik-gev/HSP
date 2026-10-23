@@ -12,7 +12,7 @@ from hsp_backup.clock import now_utc
 from hsp_backup.config import MANUAL, PRE_UPGRADE, BackupConfig
 from hsp_backup.contents import dump_name, write_backup
 from hsp_backup.metrics import BackupMetrics
-from hsp_backup.names import DEFAULT_KEEP, DEFAULT_KEEP_DAYS, KEEP_FOREVER, BackupName, expired
+from hsp_backup.names import KEEP_FOREVER, BackupName, expired
 from hsp_backup.postgres import DATABASES, Postgres
 from hsp_backup.stores.base import Store, StoreError
 
@@ -27,8 +27,8 @@ class RestoreRefused(Exception):
 class BackupPlan:
     target: str
     include_config: bool
-    keep: int = DEFAULT_KEEP
-    keep_days: int | None = DEFAULT_KEEP_DAYS
+    keep: int
+    keep_days: int | None
 
 
 @dataclass
