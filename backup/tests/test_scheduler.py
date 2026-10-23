@@ -23,8 +23,8 @@ NO_SCHEDULES = "targets: { local: { type: folder, path: /b } }"
 
 
 class SpyTake:
-    def __init__(self, clock: FakeClock) -> None:
-        self.clock = clock
+    def __init__(self, fake_clock: FakeClock) -> None:
+        self.clock = fake_clock
         self.taken: list[tuple[str, datetime]] = []
         self.minutes = 1.0
         self.failing: set[str] = set()
@@ -37,26 +37,26 @@ class SpyTake:
 
 
 def scheduler_for(
-    text: str, clock: FakeClock, take: SpyTake, registry: CollectorRegistry | None = None
+    text: str, fake_clock: FakeClock, take: SpyTake, registry: CollectorRegistry | None = None
 ) -> BackupScheduler:
     metrics = BackupMetrics(registry or CollectorRegistry())
-    return BackupScheduler(parse_config(text), take, metrics, clock)
+    return BackupScheduler(parse_config(text), take, metrics, fake_clock)
 
 
 def utc(hour: int, minute: int = 0) -> datetime:
     return datetime(2026, 10, 21, hour, minute, tzinfo=UTC)
 
 
-def test_cron_times_are_in_the_configured_time_zone(clock: FakeClock) -> None:
-    s = scheduler_for(TWO_SCHEDULES, clock, SpyTake(clock))
+def test_cron_times_are_in_the_configured_time_zone(fake_clock: FakeClock) -> None:
+    s = scheduler_for(TWO_SCHEDULES, fake_clock, SpyTake(fake_clock))
     assert s.due["nightly"] == utc(3)  # 06:00 in Jerusalem
     assert s.due["hourly"] == utc(3)
 
 
-def test_schedules_due_together_run_one_after_another(clock: FakeClock) -> None:
-    take = SpyTake(clock)
-    s = scheduler_for(TWO_SCHEDULES, clock, take)
-    clock.now = utc(3)
+def test_schedules_due_together_run_one_after_another(fake_clock: FakeClock) -> None:
+    take = SpyTake(fake_clock)
+    s = scheduler_for(TWO_SCHEDULES, fake_clock, take)
+    fake_clock.now = utc(3)
     s.run_due()
     assert [name for name, _ in take.taken] == ["nightly", "hourly"]
     assert s.due["hourly"] == utc(4)
@@ -64,11 +64,11 @@ def test_schedules_due_together_run_one_after_another(clock: FakeClock) -> None:
 
 
 def test_a_schedule_due_during_a_long_backup_is_skipped(
-    clock: FakeClock, registry: CollectorRegistry
+    fake_clock: FakeClock, registry: CollectorRegistry
 ) -> None:
-    take = SpyTake(clock)
-    s = scheduler_for(TWO_SCHEDULES, clock, take, registry)
-    clock.now = utc(3)
+    take = SpyTake(fake_clock)
+    s = scheduler_for(TWO_SCHEDULES, fake_clock, take, registry)
+    fake_clock.now = utc(3)
     take.minutes = 90  # nightly runs until 04:30, past hourly's 04:00
     s.run_due()
     assert [name for name, _ in take.taken] == ["nightly", "hourly"]
@@ -81,11 +81,11 @@ def test_a_schedule_due_during_a_long_backup_is_skipped(
     assert s.due["nightly"] == datetime(2026, 10, 22, 3, tzinfo=UTC)  # not skipped
 
 
-def test_a_failure_is_logged_and_doesnt_stop_the_next_backup(clock: FakeClock) -> None:
-    take = SpyTake(clock)
+def test_a_failure_is_logged_and_doesnt_stop_the_next_backup(fake_clock: FakeClock) -> None:
+    take = SpyTake(fake_clock)
     take.failing = {"nightly"}
-    s = scheduler_for(TWO_SCHEDULES, clock, take)
-    clock.now = utc(3)
+    s = scheduler_for(TWO_SCHEDULES, fake_clock, take)
+    fake_clock.now = utc(3)
     with capture_logs() as logs:
         s.run_due()
     assert [name for name, _ in take.taken] == ["nightly", "hourly"]
@@ -94,16 +94,16 @@ def test_a_failure_is_logged_and_doesnt_stop_the_next_backup(clock: FakeClock) -
     )
 
 
-def test_it_sleeps_until_the_next_time_but_at_most_a_minute(clock: FakeClock) -> None:
-    s = scheduler_for(TWO_SCHEDULES, clock, SpyTake(clock))
+def test_it_sleeps_until_the_next_time_but_at_most_a_minute(fake_clock: FakeClock) -> None:
+    s = scheduler_for(TWO_SCHEDULES, fake_clock, SpyTake(fake_clock))
     assert s.seconds_to_next() == 60.0  # next is 03:00, half an hour away
-    clock.now = utc(2, 59).replace(second=30)
+    fake_clock.now = utc(2, 59).replace(second=30)
     assert s.seconds_to_next() == 30.0
 
 
-def test_no_schedules_means_nothing_runs(clock: FakeClock) -> None:
-    take = SpyTake(clock)
-    s = scheduler_for(NO_SCHEDULES, clock, take)
+def test_no_schedules_means_nothing_runs(fake_clock: FakeClock) -> None:
+    take = SpyTake(fake_clock)
+    s = scheduler_for(NO_SCHEDULES, fake_clock, take)
     s.run_due()
     assert take.taken == []
     assert s.seconds_to_next() == 60.0

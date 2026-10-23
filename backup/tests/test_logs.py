@@ -8,13 +8,13 @@ from hsp_backup.logs import configure_logging
 
 
 @pytest.fixture
-def configured() -> Iterator[None]:
+def configured_logging_context() -> Iterator[None]:
     configure_logging()
     yield
     structlog.reset_defaults()
 
 
-@pytest.mark.usefixtures("configured")
+@pytest.mark.usefixtures("configured_logging_context")
 def test_logs_are_json_lines_on_stderr(capsys: pytest.CaptureFixture[str]) -> None:
     structlog.get_logger().info("backup written", schedule="nightly")
     out, err = capsys.readouterr()
