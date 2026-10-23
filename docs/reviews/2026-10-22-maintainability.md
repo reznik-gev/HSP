@@ -49,14 +49,16 @@ api (HTTP: routers and Pydantic models)
 
 | Pattern | Areas | Tested by |
 |---|---|---|
-| Service + repository | locations (sites, buildings, floors), plan reads | Unit tests with `InMemory*` fakes, plus DB tests for the repository |
-| Service writes its own SQL | org (units, people, imports), seats, catalog, devices, drafts, publishing, locks | DB tests only |
+| Service + repository | locations (sites, buildings, floors), plan reads, sign-in sessions | Unit tests with `InMemory*` fakes, plus DB tests for the repository |
+| Service writes its own SQL | five areas: org (units, people, imports), seats (assignments, occupancy, search, batch, imports), catalog (items, devices), plan drafts, publishing and locks, and preferences | DB tests only |
+
+`tenancy.py` also runs a query, but it is a single lookup of the one default tenant, with no rules in it. [0110](../decisions/0110-2026-10-22-repositories-after-1-2.md) lists each module and what is left out.
 
 For example, `org/units.py` makes 44 queries itself. Without the database, unit tests cover only 7–35% of the org and seats code. With the DB tests it is 82–99%, so the code is tested, just not the way the decisions describe.
 
 Both patterns work. The problem is that a developer can't tell which one a new feature should follow. We see two ways out:
 - **Accept both, and record when to use which.** For example: a repository when the logic is worth testing without a database, direct queries otherwise. This is cheap. The DB tests take about 13 seconds.
-- **Move the SQL into repositories** for the five areas. This would take weeks, and the gain is faster tests for code that is already tested.
+- **Move the SQL into repositories** for the five areas in the table. This would take weeks, and the gain is faster tests for code that is already tested.
 
 We recommended the first. **The owner chose the second, but not now:** the SQL moves into repositories as its own PR stack, after AD sync (1.1) and Kubernetes (1.2). Until then, new code follows the area it's in, and new areas start with a repository ([0110](../decisions/0110-2026-10-22-repositories-after-1-2.md)).
 
