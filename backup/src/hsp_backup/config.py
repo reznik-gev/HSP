@@ -55,7 +55,7 @@ class S3Target(_Strict):
 Target = Annotated[FolderTarget | S3Target, Field(discriminator="type")]
 
 
-class Schedule(_Strict):
+class BackupSchedule(_Strict):
     name: str
     cron: str
     target: str
@@ -90,7 +90,7 @@ class Manual(_Strict):
 class BackupConfig(_Strict):
     timezone: str = "UTC"
     targets: dict[str, Target]
-    schedules: list[Schedule] = []
+    schedules: list[BackupSchedule] = []
     manual: Manual | None = None
 
     @field_validator("timezone")
@@ -126,7 +126,7 @@ class BackupConfig(_Strict):
     def manual_keep(self) -> int:
         return self.manual.keep if self.manual else Manual(target="").keep
 
-    def schedule(self, name: str) -> Schedule:
+    def schedule(self, name: str) -> BackupSchedule:
         for s in self.schedules:
             if s.name == name:
                 return s

@@ -7,7 +7,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class BackupSettings(BaseSettings):
     # Each variable is named in full: some are PostgreSQL's own, so there's no common prefix.
     model_config = SettingsConfigDict(frozen=True)
 
