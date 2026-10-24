@@ -13,11 +13,12 @@ The release test failed about one run in ten with `/readyz` answering 503 althou
 |---|---|---|
 | Keep any answer for 10 s, as now | | A worker says "not ready" for up to 10 s after Keycloak is back, while other workers say "ready". |
 | Keep the answer in one place all workers share | | A file or the database just for this: more to go wrong than the problem is worth. |
-| **Keep only a ready answer; ask again after a not-ready one** | ✅ (Claude's choice) | Recovery shows on the next request, in every worker. While Keycloak is down, each check asks it again. That's one request per health check, each with the 2 s timeout, which Keycloak can take. |
+| **Keep only a ready answer; ask again after a not-ready one** | ✅ (Claude's choice, owner approved) | Recovery shows on the next request, in every worker. While Keycloak is down, each check asks it again. That's one request per health check, each with the 2 s timeout, which Keycloak can take. |
 
 ## Decision
 - `/readyz` keeps a **ready** answer from Keycloak for 10 s. A not-ready answer is not kept: the next check asks Keycloak again.
 - The rest of 0105 point 2 stands.
+- The owner reviewed this choice and approved it as a reasonable fix, and the chosen one.
 
 ## Consequences
 - After Keycloak comes back, every worker says "ready" on its next check.
