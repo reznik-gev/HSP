@@ -102,8 +102,7 @@ const PLAN_CSS = `
     stroke-width: 36px;
     stroke-linejoin: round;
     /* Its backing is measured once, at one zoom. Hinted text grows wider as the plan zooms out,
-       past the backing; unhinted, it keeps its width at every zoom
-       (docs/investigations/2026-10-24-flaky-release-tests.md). */
+       past the backing; unhinted, it keeps its width at every zoom (docs/0117). */
     text-rendering: geometricPrecision;
   }
   .plan-label-backing { fill: var(--plan-paper); }

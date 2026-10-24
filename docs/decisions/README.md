@@ -120,3 +120,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0111 | 2026-10-23 | [The API's CPU and memory come from the platform, not its own metrics](0111-2026-10-23-cpu-and-memory-from-the-platform.md) | Accepted |
 | 0113 | 2026-10-23 | [Python command-line programs are built with typer](0113-2026-10-23-python-command-lines-with-typer.md) | Accepted |
 | 0116 | 2026-10-24 | [`/readyz` remembers only a ready answer from Keycloak](0116-2026-10-24-readyz-remembers-only-ready.md) | Accepted |
+| 0117 | 2026-10-24 | [Seat labels on the plan are drawn without font hinting](0117-2026-10-24-plan-labels-without-hinting.md) | Accepted |

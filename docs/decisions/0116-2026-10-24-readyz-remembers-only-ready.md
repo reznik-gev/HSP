@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-24
 - **Status:** Accepted
+- **Refines:** [0105](0105-2026-10-21-metrics-and-tracing.md) (item 2: Keycloak's result kept for 10 s)
 
 ## Context
 [0105](0105-2026-10-21-metrics-and-tracing.md) (point 2) says `/readyz` asks for Keycloak's discovery document with a 2 s timeout, and keeps "the result" for 10 s, so frequent health checks don't load Keycloak. The API runs several worker processes ([0055](0055-2026-10-08-deployment-target.md)), and each keeps its own result.
