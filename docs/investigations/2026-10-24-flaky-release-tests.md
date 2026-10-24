@@ -2,13 +2,13 @@
 
 - **Date:** 2026-10-23 to 2026-10-24
 - **Found on:** #107 (the backup service), whose release test failed now and then
-- **Outcome:** two bugs, both already on `main` and unrelated to #107. Both are fixed in this PR.
+- **Outcome:** two bugs, both already on `main` and unrelated to #107. Both are fixed in #126.
 
 ## Summary
 The release workflow builds the offline bundle, installs it on a clean runner, checks it, and runs the browser tests against it ([0102](../decisions/0102-2026-10-19-release-workflow.md)). On the v1 stack, about one run in five failed, in one of two ways:
 
 1. **`/readyz` answered 503** right after the stack was healthy. Each API worker kept Keycloak's last answer for 10 s, a "still starting" one too. A worker that had asked while Keycloak was starting kept saying "not ready" after another worker had found it ready. **Fix:** keep only a ready answer ([0116](../decisions/0116-2026-10-24-readyz-remembers-only-ready.md)).
-2. **The find-a-seat browser test** found a seat label's text reaching past its paper-coloured box by about a pixel. The box is measured once, at one zoom. Chrome hints text by default, which makes it a little wider at some zooms. **Fix:** draw labels without hinting (`text-rendering: geometricPrecision`), so text keeps its width at every zoom.
+2. **The find-a-seat browser test** found a seat label's text reaching past its paper-coloured box by about a pixel. The box is measured once, at one zoom. Chrome hints text by default, which makes it a little wider at some zooms. **Fix:** draw labels without hinting (`text-rendering: geometricPrecision`), so text keeps its width at every zoom ([0117](../decisions/0117-2026-10-24-plan-labels-without-hinting.md)).
 
 The bundle test now also prints `/readyz`'s answer when it fails, so a failure says which check wasn't ready.
 
@@ -120,7 +120,7 @@ Then the real case. We measured the box at one zoom and showed the label at anot
 Linux reproduces CI's misses, of up to 1.33 px. Windows doesn't, which is why the test never failed on a Windows machine. Its font hinting differs.
 
 ### Fix
-Labels are drawn with `text-rendering: geometricPrecision`, so their width doesn't change with zoom and one measurement fits at every zoom. At 30 mm per pixel the box still has 1.33 px to spare on each side, which is its 40 mm of padding. That's enough for `main`'s strict check, so #108's one-pixel allowance isn't needed once this is merged.
+Labels are drawn with `text-rendering: geometricPrecision`, so their width doesn't change with zoom and one measurement fits at every zoom. Recorded as [0117](../decisions/0117-2026-10-24-plan-labels-without-hinting.md), as Claude's lower-confidence choice. At 30 mm per pixel the box still has 1.33 px to spare on each side, which is its 40 mm of padding. That's enough for `main`'s strict check, so #108's one-pixel allowance isn't needed once this is merged.
 
 Other options we weighed:
 - **Measure the label again whenever the zoom changes.** Every label would update on every scroll of the wheel, against the plan view's design of not drawing plan elements again while panning and zooming.
