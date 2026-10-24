@@ -23,7 +23,7 @@ The first release.
 - Install from one offline bundle: the images, the Compose stack and its documentation. No registry is contacted. `sudo bin/hsp install` checks it, sets it up and starts it, and `hsp status` shows how it's doing.
 - `hsp backup now` takes a backup, `hsp backup list` lists them, and `hsp restore` brings one back. On a new host, `hsp install --secrets` installs with the old host's saved secrets, so its backups can be restored.
 - `hsp upgrade` moves to a new release with a backup first, and `hsp rollback` undoes it.
-- An installation guide, `docs/install.md` in the bundle: what the host needs (with measured hardware sizes), installing, Active Directory sign-in, monitoring, backups, upgrades, every setting, and which versions get fixes.
+- An installation guide, `docs/install.md` in the bundle: what the host needs (with hardware sizes measured for up to 5,000 people), installing, Active Directory sign-in, monitoring, backups, upgrades, every setting, and which versions get fixes.
 - Sign-in through the bundled Keycloak. HSP serves HTTPS itself, or runs behind your own proxy.
 - The API logs one JSON line per request: the route, status, time taken, request ID and who made it. Set `HSP_LOG_LEVEL=DEBUG` to add the full path.
 - `/readyz` checks the database, its schema version and Keycloak, and names what isn't ready. The API refuses to start on a database that wasn't migrated for its version.
