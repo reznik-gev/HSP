@@ -1,0 +1,72 @@
+# The sizing bench (docs/0120): what a host needs, for offices of 1,000 and 5,000 people. Builds
+# the images from this commit, installs the bundle on a clean runner, and runs
+# deploy/measure-size.sh, whose summary shows on the run's page. Runs by hand (Actions → sizing),
+# and on PRs that change the bench.
+name: sizing
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/sizing.yml
+      - deploy/measure-size.sh
+      - frontend/e2e/sizing/**
+
+concurrency:
+  group: sizing-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        people: [1000, 5000]
+    name: ${{ matrix.people }} people
+    env:
+      VERSION: 0.0.0-sizing
+      HSP_TEST_DIR: ${{ github.workspace }}/../sizing
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      # Exposes the Actions cache token to `docker buildx` for the gha build cache.
+      - uses: crazy-max/ghaction-github-runtime@v4
+      - name: Build the images
+        run: HSP_BUILD_CACHE=gha deploy/build-images.sh "$VERSION"
+      - name: Assemble and install the bundle
+        run: |
+          mkdir dist
+          deploy/release-notes.sh Unreleased > dist/release-notes.md
+          deploy/bundle.sh "$VERSION" dist/release-notes.md dist
+          KEEP=1 deploy/test-bundle.sh "dist/hsp-$VERSION.tar.gz"
+          ls -l dist/
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install Playwright
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Measure ${{ matrix.people }} people
+        # bash, for pipefail: the step fails when the bench does, despite tee.
+        shell: bash
+        run: deploy/measure-size.sh "$PEOPLE" | tee -a "$GITHUB_STEP_SUMMARY"
+        env:
+          PEOPLE: ${{ matrix.people }}
+
+      - name: The stack's logs
+        if: failure()
+        run: docker compose --project-directory "$HSP_TEST_DIR/install" logs --tail 200
