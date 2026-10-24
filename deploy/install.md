@@ -63,7 +63,7 @@ sudo ./hsp-<version>/bin/hsp install --public-url https://hsp.example.com --tls 
 |---|---|
 | `/opt/hsp/.env` | Settings (see [Settings](#settings)) |
 | `/opt/hsp/backups.yml` | Backup schedules and targets (see [Backups](#backups)) |
-| `/opt/hsp/secrets/` | Generated passwords and keys, one file each, readable only by root. **Keep a copy somewhere safe:** backups never include them. |
+| `/opt/hsp/secrets/` | Generated passwords and keys, one file each, readable only by root. **Keep a copy somewhere safe:** backups never include them, and without them a backup can't be restored on a new host. |
 | `/opt/hsp/tls/` | The TLS certificate and key |
 | `/opt/hsp/bin/hsp` | The `hsp` command |
 | `/var/lib/hsp/postgres` | The database |
@@ -99,7 +99,14 @@ The `backup` service backs up HSP's and Keycloak's databases on the schedules in
 - **`sudo hsp backup now`** takes one, and **`sudo hsp backup list`** lists them all.
 - **`sudo hsp restore <backup>`** replaces both databases with a backup. Everything changed since is lost, and HSP is down while it runs. A backup made by a newer HSP than the one installed is refused.
 
-**Recovering on a new host:** install the same HSP version with `hsp install`, put your saved `secrets/` and `.env` back in `/opt/hsp`, copy the backup file into its backups folder, and run `hsp restore`.
+**Recovering on a new host** ([0119](https://github.com/reznik-gev/HSP/blob/main/docs/decisions/0119-2026-10-24-recovering-on-a-new-host.md)). You need the saved copy of the old host's `secrets/`, its settings (its `.env`) and the backup.
+1. Install the **same HSP version** with the saved secrets and the old host's settings. `--no-admin`, because the restore brings back Keycloak's users:
+   ```bash
+   sudo ./hsp-<version>/bin/hsp install --secrets <saved secrets/> --no-admin --public-url https://hsp.example.com ...
+   ```
+   The secrets must go in this way. Putting them back after an install doesn't work: PostgreSQL has already set its passwords from new ones.
+2. With a folder target, copy the backup file in, owned by the backup service's user: `sudo install -o 999 -m 640 <backup file> /var/lib/hsp/backups/`. With S3, set the target up in `backups.yml` again, and the backup is already there.
+3. `sudo hsp backup list` shows it; `sudo hsp restore <backup>` restores it.
 
 ## Upgrading
 Releases follow MAJOR.MINOR.PATCH ([0063](https://github.com/reznik-gev/HSP/blob/main/docs/decisions/0063-2026-10-08-release-versioning.md)). You can skip any number of MINOR and PATCH releases, but not a MAJOR one: go from 1.x to 3.x through 2.x. Read the release notes (`docs/release-notes.md` in the bundle) first.

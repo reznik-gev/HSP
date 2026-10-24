@@ -1,8 +1,8 @@
-# The weekly restore test (docs/0058, docs/0106): build the images from this commit, install the
-# bundle on a clean runner, seed it, back it up to the folder target, restore into a fresh
-# database, and check the rows, signing in and a seat search. Also runs by hand, and on PRs that
-# change the backup code or this test. GitHub emails the workflow's last editor when a scheduled
-# run fails.
+# The weekly restore test (docs/0058, docs/0106, docs/0119): build the images from this commit,
+# install the bundle on a clean runner, seed it, back it up to the folder target, restore into a
+# fresh database, and check the rows, signing in and a seat search; then the same on a new host.
+# Also runs by hand, and on PRs that change the backup code or this test. GitHub emails the
+# workflow's last editor when a scheduled run fails.
 name: restore drill
 
 on:
@@ -61,7 +61,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm exec playwright install --with-deps chromium
 
-      - name: Seed, back up, restore into a fresh database, and check
+      - name: Seed, back up, restore into a fresh database, recover on a new host, and check
         run: deploy/test-restore.sh
 
       - name: The stack's logs
