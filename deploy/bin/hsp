@@ -403,7 +403,7 @@ cmd_restore() {
     wait_healthy
     die "the restore was refused (see above); HSP is running as it was"
   elif ((status != 0)); then
-    # A database may be half-restored: leave HSP stopped rather than serve it (docs/0109).
+    # A database may be half-restored: leave HSP stopped rather than serve it (docs/0118).
     echo "hsp: the restore failed partway; HSP is still stopped. Fix the cause above and run it again," >&2
     die "or start HSP as it is with: docker compose --project-directory $INSTALL_DIR up -d"
   fi
