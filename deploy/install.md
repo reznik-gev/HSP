@@ -11,7 +11,7 @@ This guide is for the person who installs HSP and keeps it running. It ships in 
 - **No internet access is needed.** Everything comes in the bundle, and no registry is contacted ([0054](https://github.com/reznik-gev/HSP/blob/main/docs/decisions/0054-2026-10-08-release-distribution.md)).
 
 ### Hardware
-For an organisation of up to about **1,000 people**:
+For an organisation of up to about **5,000 people** ([0120](https://github.com/reznik-gev/HSP/blob/main/docs/decisions/0120-2026-10-24-hardware-sizes.md)):
 
 | | Minimum | Recommended |
 |---|---|---|
@@ -19,12 +19,12 @@ For an organisation of up to about **1,000 people**:
 | Memory | 4 GB | 8 GB |
 | Disk | 20 GB | 50 GB, plus room for backups kept on the host |
 
-These leave plenty of headroom over what was measured on a 4 vCPU, 16 GB host (Ubuntu 24.04, HSP 1.0):
-- **Memory:** about 1.1 GB idle, and 1.2 GB at its peak while four users at once signed in, searched, and edited and published floors. Keycloak takes most of it (630–680 MB), then the API with its 4 workers (310–330 MB), PostgreSQL (80–95 MB), the backup service (40 MB) and the web server (under 10 MB).
-- **CPU:** at that peak, the API used up to 55% of one CPU and Keycloak 22%; idle, almost nothing.
-- **Disk, for 1,000 people at 1,000 desks:** the databases take 34 MB (HSP 20 MB, Keycloak 14 MB), PostgreSQL's folder 89 MB, and one backup under 1 MB. Each further 1,000 people add roughly that much again. The images of one release take about 2 GB.
+These leave plenty of headroom over what was measured on a 4 vCPU, 16 GB host (Ubuntu 24.04), with offices of 1,000 and 5,000 people, each at their own desk, and 4 users at once signing in, editing and publishing floors, and looking people up:
+- **Memory:** about 1.1 GB idle and 1.3 GB at its peak, for 1,000 people and for 5,000 alike. Keycloak takes most of it (670–730 MB), then the API with its 4 workers (325–350 MB), PostgreSQL (80–190 MB), the backup service (50 MB) and the web server (10 MB).
+- **CPU:** at the peak, each used at most about half of one CPU: Keycloak up to 62%, PostgreSQL 52% and the API 51%. Idle, almost nothing.
+- **Disk:** for 5,000 people, the databases take 42 MB (HSP 28 MB, Keycloak 14 MB), PostgreSQL's folder 113 MB, and one backup 2 MB. The images of one release take about 2 GB.
 
-Beyond about 5,000 people, or for many people editing at once, start with the recommended host and watch the metrics (see [Every day](#every-day)); more CPU helps most, and `HSP_API_WORKERS` can then go up with it. Larger sizes aren't tested yet: ask the owner of the project.
+Beyond about 5,000 people, or for many people editing at once, sizes aren't measured yet: start with the recommended host, watch the metrics (see [Every day](#every-day)), and ask the owner of the project. More CPU helps most, and `HSP_API_WORKERS` can then go up with it.
 
 ### Network
 - **A DNS name** users reach HSP by, such as `hsp.example.com`, and **ports 80 and 443** open to them. HTTP only redirects to HTTPS.
