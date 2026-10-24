@@ -188,8 +188,7 @@ cmd_install() {
   done
   need_root "hsp install"
   need_docker
-  [[ ! -e "$dir/.env" ]] ||
-    die "$dir already holds an installation. To install again, stop it ('docker compose down' in $dir) and remove $dir first"
+  [[ ! -e "$dir/.env" ]] || die "$dir already holds an installation: use hsp upgrade"
 
   public_url="${public_url:-$(ask "Where users reach HSP" "")}"
   [[ "$public_url" =~ ^https?://[^/]+$ ]] ||
