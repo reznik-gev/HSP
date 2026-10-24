@@ -115,7 +115,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0104 | 2026-10-21 | [What 1.0.0 includes, which versions get fixes, and what comes right after](0104-2026-10-21-v1-release-scope-and-support.md) | Accepted |
 | 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted (the schema check at startup refined by 0109, CPU and memory by 0111, Keycloak's readiness by 0116) |
 | 0106 | 2026-10-21 | [Backups: our own image, with schedules in `backups.yml`](0106-2026-10-21-backups.md) | Accepted (refined by 0115) |
-| 0107 | 2026-10-21 | [`bin/hsp`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted (a failed restore refined by 0118) |
+| 0107 | 2026-10-21 | [`bin/hsp`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted (a failed restore refined by 0118, recovering on a new host by 0119) |
 | 0109 | 2026-10-23 | [The schema check at startup runs everywhere; unit tests opt out](0109-2026-10-23-schema-check-everywhere.md) | Accepted |
 | 0111 | 2026-10-23 | [The API's CPU and memory come from the platform, not its own metrics](0111-2026-10-23-cpu-and-memory-from-the-platform.md) | Accepted |
 | 0113 | 2026-10-23 | [Python command-line programs are built with typer](0113-2026-10-23-python-command-lines-with-typer.md) | Accepted |
@@ -123,3 +123,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0116 | 2026-10-24 | [`/readyz` remembers only a ready answer from Keycloak](0116-2026-10-24-readyz-remembers-only-ready.md) | Accepted |
 | 0117 | 2026-10-24 | [Seat labels on the plan are drawn without font hinting](0117-2026-10-24-plan-labels-without-hinting.md) | Accepted |
 | 0118 | 2026-10-24 | [A restore that fails partway leaves HSP stopped](0118-2026-10-24-failed-restore-leaves-hsp-stopped.md) | Accepted |
+| 0119 | 2026-10-24 | [Recovering on a new host: `hsp install --secrets`, then `hsp restore`](0119-2026-10-24-recovering-on-a-new-host.md) | Accepted |

@@ -239,7 +239,7 @@ cmd_install() {
   # (deploy/README.md, step 2).
   local s
   if [[ -n "$secrets_from" ]]; then
-    # Recovering on a new host (docs/0109): PostgreSQL takes its passwords from these on its
+    # Recovering on a new host (docs/0119): PostgreSQL takes its passwords from these on its
     # first start, so they must be the saved ones before it starts, not put back after.
     for s in "${PASSWORDS[@]}" hsp_session_encryption_key; do
       [[ -s "$secrets_from/$s" ]] || die "$secrets_from has no $s: --secrets needs a saved secrets/"
