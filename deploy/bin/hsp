@@ -334,7 +334,7 @@ backup_status() {
     }
     END { for (s in seen) print s, (s in ok ? ok[s] : 0), (s in bad ? bad[s] : 0) }
   ' <<<"$metrics" | sort)
-  [[ -n "$found" ]] || echo "  none since the backup service started (docker compose exec backup hsp-backup list)"
+  [[ -n "$found" ]] || echo "  none since the backup service started (see hsp backup list)"
 }
 
 when() {
