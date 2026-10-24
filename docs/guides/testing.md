@@ -16,6 +16,7 @@ How HSP is tested, where the shared test data lives, and the conventions a revie
 | Upgrade test | `deploy/test-upgrade.sh` | release workflow | Installs the last release, upgrades it with `hsp upgrade`, checks it, rolls back with `hsp rollback` and checks again ([0107](../decisions/0107-2026-10-21-operator-cli.md)). Skipped until a release exists. |
 | Shared validation cases | `shared/validation-cases/*.json` | both suites | Plan rules as data, so the editor and the server can't drift apart ([its README](../../shared/validation-cases/README.md)). |
 | SVG bench | `frontend/src/bench/` | a browser | The 2D performance gate ([frontend/README.md](../../frontend/README.md)). |
+| Sizing bench | `deploy/measure-size.sh`, `frontend/e2e/sizing/*.sizing.ts` | workflow, by hand | What a host needs: installs the bundle, seeds offices of 1,000 and 5,000 people, and measures CPU, memory and disk idle and under the browser tests ([0120](../decisions/0120-2026-10-24-hardware-sizes.md)). Run it from Actions → sizing before changing the sizes in `deploy/install.md`. |
 
 Running them:
 ```bash
