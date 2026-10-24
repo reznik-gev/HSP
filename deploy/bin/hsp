@@ -174,7 +174,8 @@ cmd_install() {
   done
   need_root "hsp install"
   need_docker
-  [[ ! -e "$dir/.env" ]] || die "$dir already holds an installation: use hsp upgrade"
+  [[ ! -e "$dir/.env" ]] ||
+    die "$dir already holds an installation. To install again, stop it ('docker compose down' in $dir) and remove $dir first"
 
   public_url="${public_url:-$(ask "Where users reach HSP" "")}"
   [[ "$public_url" =~ ^https?://[^/]+$ ]] ||
@@ -331,7 +332,7 @@ backup_status() {
     }
     END { for (s in seen) print s, (s in ok ? ok[s] : 0), (s in bad ? bad[s] : 0) }
   ' <<<"$metrics" | sort)
-  [[ -n "$found" ]] || echo "  none since the backup service started (see hsp backup list)"
+  [[ -n "$found" ]] || echo "  none since the backup service started (docker compose exec backup hsp-backup list)"
 }
 
 when() {
