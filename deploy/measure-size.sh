@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # The sizing bench (docs/0120): what a host needs for an office of N people. On a stack that
-# `KEEP=1 deploy/test-bundle.sh` installed: measure it idle, seed N people each at a desk, run the
-# browser tests 4 at once, 5 times each, sampling every container's CPU and memory, then measure
-# the databases, PostgreSQL's folder, a backup and the images. Prints a Markdown summary.
+# `KEEP=1 deploy/test-bundle.sh` installed: measure it idle, seed N people each at a desk, then
+# load it, sampling every container's CPU and memory: the browser tests 5 times each, then 80
+# people looked up in the seeded office and their seats opened, by 4 users at once. Then measure the
+# databases, PostgreSQL's folder, a backup and the images. Prints a Markdown summary.
 #   HSP_TEST_DIR=<test-bundle's directory> deploy/measure-size.sh 5000
 # Needs Docker with the Compose plugin, and pnpm with Playwright's Chromium in frontend/.
 set -euo pipefail
@@ -18,9 +19,10 @@ e2e() {
   (cd "$root/frontend" &&
     HSP_E2E_URL=https://localhost:8443 HSP_E2E_IGNORE_HTTPS_ERRORS=1 pnpm exec playwright test "$@")
 }
-# stats: one "container cpu% memory" line per container, from docker stats.
+# stats: one "container cpu% memory" line per container of the stack (not, say, buildx's).
 stats() {
-  as_root docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}' |
+  # shellcheck disable=SC2046 # one argument per container id
+  as_root docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}'     $(compose ps -q) |
     awk '{ print $1, $2, $3 }'
 }
 # peaks <samples>: each container's highest CPU and memory, and the highest total memory of one
@@ -57,26 +59,31 @@ echo
 
 echo "### Seed $people people" >&2
 start=$SECONDS
-HSP_SIZING_PEOPLE="$people" e2e -c e2e/sizing/playwright.config.ts >&2
+export HSP_SIZING_PEOPLE="$people"
+e2e -c e2e/sizing/playwright.config.ts office >&2
 seeded=$((SECONDS - start))
 
-echo "### The browser tests, 4 at once, 5 times each" >&2
+echo "### Load: the browser tests, then looking people up, 4 users at once" >&2
 samples="$(mktemp)"
 (while true; do stats; echo; sleep 2; done) >"$samples" &
 sampler=$!
 start=$SECONDS
 status=0
 e2e --repeat-each 5 --workers 4 >&2 || status=$?
+e2e -c e2e/sizing/playwright.config.ts browse --repeat-each 8 --workers 4 >&2 || status=$?
 loaded=$((SECONDS - start))
 kill "$sampler"
-echo "### Under load: the browser tests, 4 at once, 5 times each (${loaded} s)"
+echo "### Under load (${loaded} s)"
+echo
+echo "The browser tests (sign in, edit and publish a floor, find a seat), 5 times each, then 80"
+echo "look-ups of a random person, each opening their seat on its 500-desk floor: 4 users at once."
 echo
 echo "| Container | Peak CPU (of one vCPU) | Peak memory |"
 echo "|---|---|---|"
 peaks "$samples"
 echo
 if ((status != 0)); then
-  echo "**The browser tests failed under load (exit $status).**"
+  echo "**A test failed under load (exit $status).**"
   echo
 fi
 
