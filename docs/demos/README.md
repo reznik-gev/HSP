@@ -8,3 +8,4 @@ Walkthroughs for showing HSP to prospective clients: how to set up a demo, and a
 
 ## Feedback from demos
 - [2026-10-21, first client demo](feedback-2026-10-21.md): wall snapping, moving items by 1 cm, AD sync, finding free seats, dark mode, and network ports and power outlets.
+- [2026-10-25, a friend's demo](feedback-2026-10-25.md): office moves, starting from existing building plans, Material UI, and the frontend file layout.
