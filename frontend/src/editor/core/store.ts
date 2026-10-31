@@ -273,9 +273,9 @@ export function createEditorStore() {
         drag: null,
       });
     };
-    /** Applies ops as a change waiting to be saved; returns its undo step. */
     /** The run the last change belongs to, for performRun. */
     let lastRun: { key: string; at: number } | null = null;
+    /** Applies ops as a change waiting to be saved; returns its undo step. */
     const apply = (ops: Op[], step: Step | null, origin: PendingChange["origin"]): Step => {
       const { document } = get();
       if (!document) throw new Error("no plan open for editing");

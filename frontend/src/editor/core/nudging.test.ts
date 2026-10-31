@@ -34,7 +34,7 @@ describe("nudging with the arrow keys (docs/0108)", () => {
     expect(store.getState().plan!.objects.d1!.position[0]).toBe(2000);
   });
 
-  it("a pause, or anything else, starts a new step", () => {
+  it("a pause, or another selection, starts a new step", () => {
     const { store, interaction } = editing();
     store.getState().select(["d1"]);
     interaction.key("ArrowLeft");
@@ -42,6 +42,27 @@ describe("nudging with the arrow keys (docs/0108)", () => {
     interaction.key("ArrowLeft");
     store.getState().select(["w1"]); // another selection
     interaction.key("ArrowLeft");
+    expect(store.getState().undoStack).toHaveLength(3);
+  });
+
+  it("any other action ends the run too: an undo", () => {
+    const { store, interaction } = editing();
+    store.getState().select(["d1"]);
+    interaction.key("ArrowLeft");
+    store.getState().undo();
+    interaction.key("ArrowLeft"); // straight away, on the same selection
+    expect(store.getState().undoStack).toHaveLength(1);
+    expect(store.getState().plan!.objects.d1!.position[0]).toBe(1990);
+    store.getState().undo();
+    expect(store.getState().plan!.objects.d1!.position[0]).toBe(2000);
+  });
+
+  it("any other action ends the run too: another edit", () => {
+    const { store, interaction } = editing();
+    store.getState().select(["d1"]);
+    interaction.key("ArrowLeft");
+    interaction.key("r"); // turns the desk: its own step
+    interaction.key("ArrowLeft"); // straight away, on the same selection
     expect(store.getState().undoStack).toHaveLength(3);
   });
 

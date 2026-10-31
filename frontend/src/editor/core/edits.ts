@@ -4,7 +4,7 @@
  */
 import { isSimplePolygon } from "./geometry";
 import { type ApiPlan, newId, type Op } from "./operations";
-import type { Plan, Vec2 } from "./plan";
+import type { Plan, Vec2, Wall } from "./plan";
 
 export interface WallDefaults {
   thickness_mm: number;
@@ -238,21 +238,32 @@ export function moveWall(
 ): Op[] {
   const w = plan.walls.find((x) => x.id === wallId);
   if (!w || (d[0] === 0 && d[1] === 0)) return [];
-  const by = (p: Vec2): number[] => [p[0] + d[0], p[1] + d[1]];
+  const moves = (other: Wall, end: "a" | "b") =>
+    other.id === wallId ||
+    (joinedA.includes(other.id) && same(other[end], w.a)) ||
+    (joinedB.includes(other.id) && same(other[end], w.b));
+  return moveWallEnds(plan, moves, d) ?? [];
+}
+
+/**
+ * Moves by `d` the wall ends that `moves` picks, for moving and nudging whole walls (docs/0044,
+ * docs/0108). One op per wall. Null if that would collapse a wall to a point.
+ */
+function moveWallEnds(
+  plan: Plan,
+  moves: (w: Wall, end: "a" | "b") => boolean,
+  d: Vec2,
+): Op[] | null {
   const ops: Op[] = [];
-  for (const other of plan.walls) {
+  for (const w of plan.walls) {
     const data: Record<string, number[]> = {};
     for (const end of ["a", "b"] as const) {
-      const p = other[end];
-      if (other.id === wallId) data[end] = by(p);
-      else if (joinedA.includes(other.id) && same(p, w.a)) data[end] = by(p);
-      else if (joinedB.includes(other.id) && same(p, w.b)) data[end] = by(p);
+      if (moves(w, end)) data[end] = [w[end][0] + d[0], w[end][1] + d[1]];
     }
     if (!Object.keys(data).length) continue;
-    const a = data.a ?? other.a;
-    const b = data.b ?? other.b;
-    if (a[0] === b[0] && a[1] === b[1]) return [];
-    ops.push({ op: "update", kind: "wall", id: other.id, data });
+    const [a, b] = [data.a ?? w.a, data.b ?? w.b];
+    if (a[0] === b[0] && a[1] === b[1]) return null;
+    ops.push({ op: "update", kind: "wall", id: w.id, data });
   }
   return ops;
 }
@@ -315,24 +326,17 @@ export function nudgeOps(plan: Plan, selection: ReadonlySet<string>, d: Vec2): O
   }
   // Every end of a selected wall moves, and so does any other wall's end that meets it.
   const ends = plan.walls.filter((w) => selection.has(w.id)).flatMap((w) => [w.a, w.b]);
-  const moves = (p: Vec2) => ends.some((q) => same(p, q));
-  for (const w of plan.walls) {
-    const data: Record<string, number[]> = {};
-    if (moves(w.a)) data.a = by(w.a);
-    if (moves(w.b)) data.b = by(w.b);
-    if (!Object.keys(data).length) continue;
-    const [a, b] = [data.a ?? w.a, data.b ?? w.b];
-    if (a[0] === b[0] && a[1] === b[1]) return [];
-    ops.push({ op: "update", kind: "wall", id: w.id, data });
-  }
-  for (const op of plan.openings) {
-    const w = plan.walls.find((x) => x.id === op.wall_id);
-    if (!selection.has(op.id) || !w || selection.has(w.id)) continue;
+  const wallOps = moveWallEnds(plan, (w, end) => ends.some((q) => same(w[end], q)), d);
+  if (!wallOps) return [];
+  ops.push(...wallOps);
+  for (const o of plan.openings) {
+    const w = plan.walls.find((x) => x.id === o.wall_id);
+    if (!selection.has(o.id) || !w || selection.has(w.id)) continue;
     const length = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]);
     const along = Math.round((d[0] * (w.b[0] - w.a[0]) + d[1] * (w.b[1] - w.a[1])) / length);
-    const offset = op.offset_mm + along;
-    if (along !== 0 && offset >= 0 && offset + op.width_mm <= length) {
-      ops.push({ op: "update", kind: "opening", id: op.id, data: { offset_mm: offset } });
+    const offset = o.offset_mm + along;
+    if (along !== 0 && offset >= 0 && offset + o.width_mm <= length) {
+      ops.push({ op: "update", kind: "opening", id: o.id, data: { offset_mm: offset } });
     }
   }
   return ops;
