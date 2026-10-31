@@ -11,22 +11,30 @@ You need Docker Desktop running, and the repo set up for development (the [main 
    ```bash
    docker compose -f deploy/compose.dev.yml up -d
    ```
-2. **The API, on the demo database** (terminal 1; leave it running):
+2. **The demo database, the first time only.** The API checks the database's schema when it starts, and stops if the database is empty ([0109](../decisions/0109-2026-10-23-schema-check-everywhere.md)). So before its first start, create `hsp_demo` and bring it up to date:
+   ```bash
+   docker compose -f deploy/compose.dev.yml exec postgres psql -U hsp -d hsp -c "CREATE DATABASE hsp_demo"
+   cd backend
+   HSP_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo uv run alembic upgrade head
+   ```
+   If `CREATE DATABASE` says `hsp_demo` already exists, skip this step.
+3. **The API, on the demo database** (terminal 1; leave it running):
    ```bash
    cd backend
    HSP_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo \
      uv run uvicorn hsp.main:create_app --factory --port 8000
    ```
-3. **The app** (terminal 2; leave it running):
+   If it stops at once with `the database schema is at no revision`, step 2 is missing.
+4. **The app** (terminal 2; leave it running):
    ```bash
    cd frontend && pnpm dev
    ```
-4. **Fill in Northwind Robotics** (terminal 3). It rebuilds the `hsp_demo` database from scratch, so it's safe to run again before each demo:
+5. **Fill in Northwind Robotics** (terminal 3). It rebuilds the `hsp_demo` database from scratch, so it's safe to run again before each demo, with the API still running:
    ```bash
    cd backend && uv run python ../deploy/demo/seed.py
    ```
-   It ends with `Ready: open http://localhost:5173 ...`. If it says the API isn't using the demo database, step 2 is missing its `HSP_DATABASE_URL`.
-5. **Check it:** open <http://localhost:5173>, sign in as `dana.levin` / `demo`, and open Floors. Then use the browser in full screen, at 100% zoom.
+   It ends with `Ready: open http://localhost:5173 ...`. If it says the API isn't using the demo database, step 3 is missing its `HSP_DATABASE_URL`.
+6. **Check it:** open <http://localhost:5173>, sign in as `dana.levin` / `demo`, and open Floors. Then use the browser in full screen, at 100% zoom.
 
 Your development database is never touched: the demo lives in its own `hsp_demo` database, and the seed refuses to run if the API is on any other.
 
@@ -107,4 +115,4 @@ Your development database is never touched: the demo lives in its own `hsp_demo`
 - **When can we install it?** The product features are done. Installing, upgrading and backups are being finished before the first release.
 
 ## After the demo
-Run the seed again (step 4) to put everything back as it was. To stop, press Ctrl+C in the API and app terminals, then run `docker compose -f deploy/compose.dev.yml stop`.
+Run the seed again (step 5) to put everything back as it was. To stop, press Ctrl+C in the API and app terminals, then run `docker compose -f deploy/compose.dev.yml stop`.
