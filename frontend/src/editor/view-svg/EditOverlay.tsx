@@ -303,7 +303,10 @@ function SnapMarker({
           strokeWidth={2 * px}
         />
       )}
-      {(kind === "horizontal" || kind === "vertical" || kind === "diagonal") && (
+      {(kind === "horizontal" ||
+        kind === "vertical" ||
+        kind === "diagonal" ||
+        kind === "antidiagonal") && (
         // A short stroke along the straight line the end keeps to (docs/0108).
         <path
           className="plan-selected"
@@ -312,7 +315,9 @@ function SnapMarker({
               ? `M${x - 2 * r} ${y}L${x + 2 * r} ${y}`
               : kind === "vertical"
                 ? `M${x} ${y - 2 * r}L${x} ${y + 2 * r}`
-                : `M${x - 1.5 * r} ${y - 1.5 * r}L${x + 1.5 * r} ${y + 1.5 * r}`
+                : kind === "diagonal"
+                  ? `M${x - 1.5 * r} ${y - 1.5 * r}L${x + 1.5 * r} ${y + 1.5 * r}`
+                  : `M${x - 1.5 * r} ${y + 1.5 * r}L${x + 1.5 * r} ${y - 1.5 * r}`
           }
           strokeWidth={2 * px}
           strokeDasharray={`${2 * px} ${2 * px}`}

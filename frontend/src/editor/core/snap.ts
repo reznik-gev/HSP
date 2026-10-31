@@ -18,7 +18,15 @@ import type { Plan, Vec2 } from "./plan";
 export const SNAP_PX = 8;
 
 export type SnapKind =
-  "endpoint" | "midpoint" | "centreline" | "horizontal" | "vertical" | "diagonal" | "grid" | null;
+  | "endpoint"
+  | "midpoint"
+  | "centreline"
+  | "horizontal"
+  | "vertical"
+  | "diagonal"
+  | "antidiagonal"
+  | "grid"
+  | null;
 
 export interface Snapped {
   point: Vec2;
@@ -48,14 +56,15 @@ interface Line {
   anchor: Vec2;
   /** The line's direction, (1,0), (0,1), (1,1) or (1,-1). */
   dir: Vec2;
-  kind: "horizontal" | "vertical" | "diagonal";
+  /** Its marker's name: the two 45° lines differ, so each marker runs along its own. */
+  kind: "horizontal" | "vertical" | "diagonal" | "antidiagonal";
 }
 
 const DIRECTIONS: readonly Pick<Line, "dir" | "kind">[] = [
   { dir: [1, 0], kind: "horizontal" },
   { dir: [0, 1], kind: "vertical" },
   { dir: [1, 1], kind: "diagonal" },
-  { dir: [1, -1], kind: "diagonal" },
+  { dir: [1, -1], kind: "antidiagonal" },
 ];
 
 /** How far `p` is from `line`. */
