@@ -19,6 +19,8 @@ The owner decided each point:
 | 5 | Dark mode isn't clear enough | Rework its colours | 1.0.0 |
 | 6 | Network ports and power outlets | As scoped in the notes | after 1.1 |
 
+The owner also chose the smaller details below, such as the snap distance, the markers and the undo pause. The one exception is how shortening works, which Claude proposed and the owner approved.
+
 ### 1. Straight walls, and moving them
 The owner said walls came out "not straight", and couldn't easily be dragged or moved. Today a wall is exactly straight only when both its ends land on the grid. Dragging a wall's body pans the view; only a selected wall's ends can be dragged.
 - **Straight:** while drawing a wall or dragging a wall's end, the end snaps onto the exact horizontal, vertical or 45° line through the wall's other end. It does this when it's within about 8 screen pixels of that line, like the other snaps, with a marker saying "Horizontal", "Vertical" or "45°". `Shift` forces the nearest 45° step. `Alt` still turns all snapping off.
