@@ -13,7 +13,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | #    | Date       | Decision                                                                 | Status   |
 |------|------------|--------------------------------------------------------------------------|----------|
 | 0001 | 2026-10-07 | [Project charter & initial requirements](0001-2026-10-07-project-charter.md) | Accepted |
-| 0002 | 2026-10-07 | [Build approach: from scratch](0002-2026-10-07-build-approach.md)         | Accepted |
+| 0002 | 2026-10-07 | [Build approach: from scratch](0002-2026-10-07-build-approach.md)         | Accepted (ready-made editors weighed in 0121) |
 | 0003 | 2026-10-07 | [Tenancy: single org, SaaS-ready](0003-2026-10-07-tenancy-model.md)       | Accepted |
 | 0004 | 2026-10-07 | [Space authoring: 2D plan → extruded 3D](0004-2026-10-07-space-authoring-model.md) | Accepted |
 | 0005 | 2026-10-07 | [Deployment: on-premise / self-hosted](0005-2026-10-07-deployment-model.md) | Accepted |
@@ -132,6 +132,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0118 | 2026-10-24 | [A restore that fails partway leaves HSP stopped](0118-2026-10-24-failed-restore-leaves-hsp-stopped.md) | Accepted |
 | 0119 | 2026-10-24 | [Recovering on a new host: `hsp install --secrets`, then `hsp restore`](0119-2026-10-24-recovering-on-a-new-host.md) | Accepted |
 | 0120 | 2026-10-24 | [Hardware sizes, measured for up to 5,000 people](0120-2026-10-24-hardware-sizes.md) | Accepted |
+| 0121 | 2026-10-31 | [The floor editor stays our own code, for now](0121-2026-10-31-editor-stays-our-own.md) | Accepted |
 | 0122 | 2026-11-01 | ["Show free seats": what counts, and how the plan shows it](0122-2026-11-01-show-free-seats-details.md) | Accepted |
 | 0123 | 2026-11-03 | [The free seats list: where it lives and how it filters](0123-2026-11-03-free-seats-list-details.md) | Accepted |
 | 0125 | 2026-11-08 | [Reviews get short dated notes when a finding changes](0125-2026-11-08-dated-notes-on-reviews.md) | Accepted |
