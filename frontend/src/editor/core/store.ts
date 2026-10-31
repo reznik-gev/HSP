@@ -47,8 +47,19 @@ export type Preview =
   | { kind: "wall"; start: Vec2 | null; from: Vec2 | null; to: Vec2; snap: SnapKind }
   /** A junction being dragged: these walls' endpoints at `from` follow the pointer. */
   | { kind: "junction"; from: Vec2; to: Vec2; walls: readonly string[]; snap: SnapKind }
-  /** A whole wall being dragged by `d` (docs/0108); `at` is the end that snapped. */
-  | { kind: "wallMove"; id: string; d: Vec2; at: Vec2; snap: SnapKind }
+  /**
+   * A whole wall being dragged by `d` (docs/0108); `at` is the end that snapped. The walls
+   * joined at its ends a and b stretch with it: `joinedA` and `joinedB` (none with Alt).
+   */
+  | {
+      kind: "wallMove";
+      id: string;
+      d: Vec2;
+      at: Vec2;
+      snap: SnapKind;
+      joinedA: readonly string[];
+      joinedB: readonly string[];
+    }
   /**
    * A door or window being placed (no `id`) or slid along its wall (`id`); `wall_id` is null
    * while the pointer is over no wall it fits in.

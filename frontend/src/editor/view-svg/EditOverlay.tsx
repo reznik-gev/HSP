@@ -33,16 +33,19 @@ export function EditOverlay({ store }: { store: EditorStore }) {
 
   const selectedWalls = plan.walls.filter((w) => selection.has(w.id));
   const junction = preview?.kind === "junction" ? preview : null;
-  // A whole wall being dragged (docs/0108): its ends move by d.
+  // A whole wall being dragged (docs/0108): it moves by d, and so do the ends of the walls
+  // the preview says stretch with it (none with Alt), as moveWall saves them.
   const wallMove = preview?.kind === "wallMove" ? preview : null;
   const moving = wallMove && plan.walls.find((w) => w.id === wallMove.id);
-  const moved = (p: Vec2): Vec2 => {
-    if (junction && p[0] === junction.from[0] && p[1] === junction.from[1]) return junction.to;
+  const same = (p: Vec2, q: Vec2) => p[0] === q[0] && p[1] === q[1];
+  const moved = (w: Wall, p: Vec2): Vec2 => {
+    if (junction?.walls.includes(w.id) && same(p, junction.from)) return junction.to;
     if (
       moving &&
       wallMove &&
-      ((p[0] === moving.a[0] && p[1] === moving.a[1]) ||
-        (p[0] === moving.b[0] && p[1] === moving.b[1]))
+      (w.id === moving.id ||
+        (wallMove.joinedA.includes(w.id) && same(p, moving.a)) ||
+        (wallMove.joinedB.includes(w.id) && same(p, moving.b)))
     ) {
       return [p[0] + wallMove.d[0], p[1] + wallMove.d[1]];
     }
@@ -89,10 +92,10 @@ export function EditOverlay({ store }: { store: EditorStore }) {
       {(junction || moving) &&
         plan.walls
           .filter((w) =>
-            junction ? junction.walls.includes(w.id) : [w.a, w.b].some((p) => moved(p) !== p),
+            junction ? junction.walls.includes(w.id) : [w.a, w.b].some((p) => moved(w, p) !== p),
           )
           .map((w) => {
-            const [a, b] = [moved(w.a), moved(w.b)];
+            const [a, b] = [moved(w, w.a), moved(w, w.b)];
             return (
               <line
                 key={`j${w.id}`}
@@ -221,7 +224,7 @@ export function EditOverlay({ store }: { store: EditorStore }) {
         zoneOutline(z.id, z.boundary).map((p, i) => <Handle key={`${z.id}${i}`} at={p} px={px} />),
       )}
       {selectedWalls.flatMap((w) =>
-        [moved(w.a), moved(w.b)].map((p, i) => <Handle key={`${w.id}${i}`} at={p} px={px} />),
+        [moved(w, w.a), moved(w, w.b)].map((p, i) => <Handle key={`${w.id}${i}`} at={p} px={px} />),
       )}
       {preview?.kind === "wall" && preview.from && (
         <line
