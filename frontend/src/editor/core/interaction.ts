@@ -6,7 +6,8 @@
  * Select tool: click selects (Shift adds); dragging furniture or columns moves them, dragging a
  * door or window slides it along its wall, dragging a selected wall's end moves the junction
  * with every wall that meets there (Alt detaches just that wall, docs/0044), dragging a
- * selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
+ * selected wall's body moves the whole wall and the walls joined to it stretch (Alt detaches
+ * it, docs/0108), dragging a selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
  * Drawing tools (wall, door, window, column, zone, item): a click places, a drag pans; see
  * their classes. R turns the item being placed, or the selected furniture, a quarter turn.
  * The middle button always pans and the wheel zooms (PanZoom, shared with the viewer).
@@ -257,6 +258,8 @@ export class Interaction {
       d: [best.snapped.point[0] - best.end[0], best.snapped.point[1] - best.end[1]],
       at: best.snapped.point,
       snap: best.snapped.kind,
+      joinedA: g.joinedA,
+      joinedB: g.joinedB,
     };
   }
 

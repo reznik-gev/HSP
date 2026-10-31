@@ -57,6 +57,30 @@ describe("moving whole walls (docs/0108)", () => {
     expect(wall("w2")(plan).a).toEqual([4000, 0]);
   });
 
+  it("while dragging, the preview names the walls that stretch: w2, at w1's end b", () => {
+    const { store, interaction, click, at } = editing();
+    click([2000, 50]);
+    interaction.pointerDown(at([2000, 0]));
+    interaction.pointerMove(at([2000, 1000]));
+    expect(store.getState().preview).toMatchObject({
+      kind: "wallMove",
+      joinedA: [],
+      joinedB: ["w2"],
+    });
+  });
+
+  it("with Alt, the preview stretches no wall, as the release won't either", () => {
+    const { store, interaction, click, at } = editing();
+    click([2000, 50]);
+    interaction.pointerDown({ ...at([2000, 0]), alt: true });
+    interaction.pointerMove({ ...at([2000, 1000]), alt: true });
+    expect(store.getState().preview).toMatchObject({
+      kind: "wallMove",
+      joinedA: [],
+      joinedB: [],
+    });
+  });
+
   it("an end lands on another wall's end when it comes near", () => {
     const { store, click, drag } = editing(WITH_W3);
     click([2000, 50]); // select w1
