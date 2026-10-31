@@ -8,6 +8,17 @@ import { editing } from "./testPlan";
 // snapping reach is 80 mm.
 const opts = { mmPerPx: 10, gridMm: 50, gridSnap: true };
 
+// Straight walls (docs/0108): a wall's other end, away from the test plan's walls.
+const FROM: Vec2 = [-3000, -2000];
+const FROM_ROOM_CORNER = { ...opts, anchors: [FROM] };
+const FROM_ROOM_CORNER_NO_GRID = { ...FROM_ROOM_CORNER, gridSnap: false };
+const FORCED_STRAIGHT = { ...FROM_ROOM_CORNER, straight: true };
+const FORCED_BUT_FREE = { ...FORCED_STRAIGHT, free: true };
+// 50 mm below w1's start.
+const FROM_NEAR_W1 = { ...opts, anchors: [[0, -50] as Vec2] };
+// 2 m from w1, straight below its middle.
+const FROM_BELOW_W1 = { ...opts, anchors: [[1500, -2000] as Vec2] };
+
 describe("snapping order (docs/0047, docs/0092)", () => {
   it("wall ends, then midpoints, then a wall's centreline, then the grid", () => {
     const plan = editing().store.getState().plan!;
@@ -66,68 +77,73 @@ describe("snapping while drawing and dragging", () => {
 });
 
 describe("straight walls (docs/0108)", () => {
-  const plan = () => editing().store.getState().plan!;
-  const from: Vec2 = [-3000, -2000];
-
   it("snaps onto the horizontal, vertical or 45° line through the other end", () => {
-    const straight = { ...opts, anchors: [from] };
-    expect(snapPoint(plan(), [-983, -1960], straight)).toEqual({
+    const plan = editing().store.getState().plan!;
+    expect(snapPoint(plan, [-983, -1960], FROM_ROOM_CORNER)).toEqual({
       point: [-1000, -2000],
       kind: "horizontal",
     });
-    expect(snapPoint(plan(), [-2960, -517], straight)).toEqual({
+    expect(snapPoint(plan, [-2960, -517], FROM_ROOM_CORNER)).toEqual({
       point: [-3000, -500],
       kind: "vertical",
     });
-    expect(snapPoint(plan(), [-1990, -1030], straight)).toEqual({
+    expect(snapPoint(plan, [-1990, -1030], FROM_ROOM_CORNER)).toEqual({
       point: [-2000, -1000],
       kind: "diagonal",
     });
   });
 
+  it("the other 45° line has its own kind, so its marker runs along it", () => {
+    const plan = editing().store.getState().plan!;
+    expect(snapPoint(plan, [-1990, -2970], FROM_ROOM_CORNER)).toEqual({
+      point: [-2000, -3000],
+      kind: "antidiagonal",
+    });
+  });
+
   it("only when the pointer is near the line", () => {
-    const straight = { ...opts, anchors: [from] };
-    expect(snapPoint(plan(), [-983, -1800], straight)).toEqual({
+    const plan = editing().store.getState().plan!;
+    expect(snapPoint(plan, [-983, -1800], FROM_ROOM_CORNER)).toEqual({
       point: [-1000, -1800],
       kind: "grid",
     });
   });
 
   it("stays straight with the grid off, in whole millimetres", () => {
-    const straight = { ...opts, gridSnap: false, anchors: [from] };
-    expect(snapPoint(plan(), [-1013.4, -1975], straight)).toEqual({
+    const plan = editing().store.getState().plan!;
+    expect(snapPoint(plan, [-1013.4, -1975], FROM_ROOM_CORNER_NO_GRID)).toEqual({
       point: [-1013, -2000],
       kind: "horizontal",
     });
   });
 
   it("a wall end nearby still wins, so walls join", () => {
-    const straight = { ...opts, anchors: [[0, -50] as Vec2] };
-    expect(snapPoint(plan(), [3960, -20], straight)).toEqual({
+    const plan = editing().store.getState().plan!;
+    expect(snapPoint(plan, [3960, -20], FROM_NEAR_W1)).toEqual({
       point: [4000, 0],
       kind: "endpoint",
     });
   });
 
   it("drawn up to another wall, it meets the wall where the straight line crosses it", () => {
-    const straight = { ...opts, anchors: [[1500, -2000] as Vec2] };
-    expect(snapPoint(plan(), [1530, -30], straight)).toEqual({
+    const plan = editing().store.getState().plan!;
+    expect(snapPoint(plan, [1530, -30], FROM_BELOW_W1)).toEqual({
       point: [1500, 0],
       kind: "centreline",
     });
   });
 
   it("Shift keeps to the nearest 45° step, however far off", () => {
-    const forced = { ...opts, anchors: [from], straight: true };
-    expect(snapPoint(plan(), [-1000, -1500], forced)).toEqual({
+    const plan = editing().store.getState().plan!;
+    expect(snapPoint(plan, [-1000, -1500], FORCED_STRAIGHT)).toEqual({
       point: [-1000, -2000],
       kind: "horizontal",
     });
   });
 
   it("Alt still places freely", () => {
-    const free = { ...opts, anchors: [from], straight: true, free: true };
-    expect(snapPoint(plan(), [-983.4, -1960], free)).toEqual({
+    const plan = editing().store.getState().plan!;
+    expect(snapPoint(plan, [-983.4, -1960], FORCED_BUT_FREE)).toEqual({
       point: [-983, -1960],
       kind: null,
     });
@@ -136,11 +152,11 @@ describe("straight walls (docs/0108)", () => {
   it("the wall tool draws straight walls", () => {
     const { store, click } = editing();
     store.getState().setTool("wall");
-    click(from);
+    click(FROM);
     click([-983, -1960]);
     click([-1500, -1000], { shift: true }); // forced: nearest step from (-1000, -2000) is 135°
     const [first, second] = store.getState().plan!.walls.slice(-2);
-    expect([first!.a, first!.b]).toEqual([from, [-1000, -2000]]);
+    expect([first!.a, first!.b]).toEqual([FROM, [-1000, -2000]]);
     expect(second!.b).toEqual([-1750, -1250]);
   });
 

@@ -593,6 +593,7 @@
       "horizontal": "אופקי",
       "vertical": "אנכי",
       "diagonal": "45°",
+      "antidiagonal": "45°",
       "face": "צמוד לקיר",
       "attach": "על פריט"
     },

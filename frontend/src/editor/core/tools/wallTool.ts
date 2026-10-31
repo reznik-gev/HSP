@@ -26,8 +26,7 @@ export class WallTool {
 
   private snap(p: Vec2) {
     const s = this.store.getState();
-    const { start } = this.chain();
-    const { from } = this.chain();
+    const { start, from } = this.chain();
     return snapPoint(s.plan!, p, {
       ...snapSettings(s, s.snapFree),
       extra: start ? [start] : [],
