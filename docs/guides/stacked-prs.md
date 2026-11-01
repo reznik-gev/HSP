@@ -83,3 +83,10 @@ git rebase origin/main        # old copies of merged commits are skipped
 git push --force-with-lease
 ```
 For a whole stack, run `git rebase --update-refs origin/main` on the top branch, then push each branch.
+
+Git skips the old copies of merged commits only when they match what landed on `main`. They don't match when the PR below changed after this branch was cut, for example when it was restacked with a conflict before it merged. The rebase then stops at a conflict in a commit that isn't this PR's own. Abort it, and replay only this PR's own commits:
+```bash
+git rebase --abort
+git rebase --onto origin/main <the commit just below this PR's first commit>
+```
+`gh pr view <N> --json commits` lists the branch's commits, oldest first: the old copies of the PR below come first, then this PR's own.

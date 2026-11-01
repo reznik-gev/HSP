@@ -10,11 +10,7 @@ The owner reviews a PR only once it's up to date and the review bot's comments a
 ## 1. Restack
 Bring the PR up to date with `main`. Usually the PR below it just merged, so the branch still carries old copies of that PR's commits.
 - Work in a separate worktree, not the main checkout. The main checkout may be serving a demo, and its branch shouldn't change under it.
-- Fetch first. If the PR is part of a GitHub stack, run `gh stack sync --prune`. Otherwise, rebase the PR's own commits onto `origin/main`:
-  ```bash
-  git rebase --onto origin/main <the last commit that isn't this PR's own>
-  ```
-  `gh pr view <N> --json commits` lists the commits. The PR's own commits are the ones that aren't on `main` in any form.
+- Fetch first. If the PR is part of a GitHub stack, run `gh stack sync --prune`. Otherwise, follow "Doing it by hand" in the stacked PRs guide.
 - If a conflict comes up, resolve it when the right answer is clear (see "When there is a real conflict" in the stacked PRs guide). If it isn't clear, stop and ask the owner.
 - Force-pushing with `--force-with-lease` to restack is expected and needs no permission. Don't force-push for any other reason.
 - Also fast-forward the main checkout's `main` to `origin/main`, if it has no local changes.
@@ -31,7 +27,7 @@ For each thread, decide which kind it is:
 - **A fix:** the bot is right, and the change is clear. Make it.
 - **A disagreement:** the bot is wrong, or its fix would break something or go against a decision record. Don't change the code. Explain why to the owner in step 6.
 - **A choice:** the comment raises a question about scope, order or behaviour users notice, which is the owner's to decide (CLAUDE.md, "Working with the product owner"). Bring the options, their trade-offs and a recommendation to the owner, one question at a time. Small UI details you're confident about you may decide yourself, but record them as *(Claude's choice)* in a decision record.
-- **Someone else's thread:** the owner or another person wrote in it. Don't reply or resolve. Bring it to the owner.
+- **Someone else's thread:** the owner or another person wrote in it. Don't reply or resolve yet. Bring it to the owner, and reply once they've answered, as the git guide asks for every comment.
 
 ## 4. Fix
 - Fixes go in **new commits** on top of the PR, named "Review on #N: …". Never amend or squash reviewed commits.
@@ -42,7 +38,7 @@ For each thread, decide which kind it is:
 
 ## 5. Reply and resolve
 - Reply to every bot thread you fixed: what changed, and the commit's short hash. Then resolve it (`addPullRequestReviewThreadReply`, then `resolveReviewThread`).
-- Leave disagreements, choices and other people's threads open until the owner answers.
+- Leave disagreements, choices and other people's threads open until the owner answers. Then reply to each with the answer and what changed, and resolve it if it's the bot's.
 - **Read every reply back from GitHub** before reporting, and check the text arrived as written. Pass each body as a plain variable. Don't build it inside the command: in PowerShell, `-f body=$replies[$key]` posts the hashtable's type name instead of the text.
 
 ## 6. Report to the owner
