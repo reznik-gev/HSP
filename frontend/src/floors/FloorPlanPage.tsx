@@ -16,7 +16,7 @@ import { planFromApi } from "@/editor/core/fromApi";
 import { createEditorStore } from "@/editor/core/store";
 import { ViewerInteraction } from "@/editor/core/viewerInteraction";
 import { PlanCanvas } from "@/editor/view-svg/PlanCanvas";
-import type { SeatState } from "@/editor/view-svg/PlanView";
+import { isAvailableSeat, type SeatState } from "@/editor/view-svg/PlanView";
 import { fitPlan } from "@/editor/view-svg/ZoomControls";
 import { cn } from "@/lib/utils";
 import { SeatActions } from "@/seats/SeatActions";
@@ -45,7 +45,7 @@ export function FloorPlanPage() {
   const apiPlan = useQuery({ ...publishedPlanQuery(floorId, version ?? 0), enabled: !!version });
   const zoneTypes = useQuery(zoneTypesQuery);
   const seats = useQuery(floorSeatsQuery(floorId));
-  // "Show free seats" (docs/0108): the free and bookable seats stand out.
+  // "Show free seats" (docs/0108, 0122): the free and bookable seats stand out.
   const [onlyFree, setOnlyFree] = useState(false);
 
   const plan = useMemo(
@@ -89,7 +89,7 @@ export function FloorPlanPage() {
             >
               <Armchair aria-hidden />
               {t("plan.showFree", {
-                count: [...states.values()].filter((s) => s === "free" || s === "bookable").length,
+                count: [...states.values()].filter(isAvailableSeat).length,
               })}
             </Button>
           )}
