@@ -12,7 +12,7 @@ from hsp.api.common import get_locations_repository
 from hsp.auth.dependencies import get_principal
 from hsp.auth.principal import Principal
 from hsp.main import create_app
-from tests.fakes import InMemoryLocationsRepository
+from tests.fakes import InMemoryLocationsRepository, InMemorySessionStore
 from tests.stubs import STUB_CSRF_HEADER_NAME, STUB_CSRF_TOKEN, stub_admin, stub_viewer
 from tests.unit.api_helpers import SignedIn
 
@@ -79,3 +79,9 @@ def locations_repo(app: FastAPI) -> InMemoryLocationsRepository:
     repo = InMemoryLocationsRepository()
     app.dependency_overrides[get_locations_repository] = lambda: repo
     return repo
+
+
+@pytest.fixture
+def session_store() -> InMemorySessionStore:
+    """An empty in-memory store of sign-in sessions, for a test to plug into its app."""
+    return InMemorySessionStore()

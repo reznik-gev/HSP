@@ -30,11 +30,6 @@ from tests.unit.auth.stubs import stub_tokens
 
 
 @pytest.fixture
-def session_store() -> InMemorySessionStore:
-    return InMemorySessionStore()
-
-
-@pytest.fixture
 def idp() -> FakeIdP:
     return FakeIdP()
 
