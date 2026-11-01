@@ -58,13 +58,17 @@ export interface PlanInput {
 /** Seat states the viewer colours (docs/0087 choice 11). */
 export type SeatState = "person" | "unit" | "free" | "bookable" | "unavailable";
 
+/** Free or bookable: a seat someone could take (the API's `status=available`). */
+export const isAvailableSeat = (state: SeatState | undefined) =>
+  state === "free" || state === "bookable";
+
 export interface PlanViewProps {
   store: EditorStore;
   interaction: PlanInput;
   options: RenderOptions;
   /** Seat id -> state; seats get a state colour instead of their catalog colour. */
   seatStates?: ReadonlyMap<string, SeatState>;
-  /** "Show free seats" (docs/0108): everything but the free and bookable seats steps back. */
+  /** "Show free seats" (docs/0108, 0122): everything but the available seats steps back. */
   onlyFree?: boolean;
   /** Pointer moving with no button pressed (canvas pixels), or leaving the canvas (null). */
   onHover?: (point: { sx: number; sy: number } | null) => void;
@@ -128,13 +132,14 @@ const PLAN_CSS = `
   /* The height filter fades the other group rather than hiding it. */
   svg[data-height="floor"] .plan-raised,
   svg[data-height="raised"] .plan-floor { opacity: 0.2; }
-  /* Show free seats (docs/0108): the free and bookable seats stand out, the rest steps back;
-     walls stay, so the room still reads. No blinking: it's tiring, and hard for some people. */
-  svg[data-only-free] .plan-object:not(.seat-free):not(.seat-bookable),
-  svg[data-only-free] .plan-zone,
-  svg[data-only-free] .plan-label-group:not(.label-open) { opacity: 0.15; }
-  svg[data-only-free] .seat-free,
-  svg[data-only-free] .seat-bookable { stroke-width: 40px; }
+  /* Show free seats (docs/0108, 0122): the free and bookable seats stand out, the rest steps
+     back; walls stay, so the room still reads. No blinking: it's tiring, and hard for some
+     people. Only the static layer: a selected item's copy keeps its selected look. */
+  svg[data-only-free] .plan-static .plan-object:not(.seat-available),
+  svg[data-only-free] .plan-static .plan-zone,
+  svg[data-only-free] .plan-static .plan-tag.plan-raised,
+  svg[data-only-free] .plan-static .plan-label-group:not(.label-available) { opacity: 0.15; }
+  svg[data-only-free] .plan-static .seat-available { stroke-width: 40px; }
   .hatch-bg { fill: var(--plan-hatch); }
   .hatch-line { stroke: var(--plan-wall); }
 `;
@@ -293,7 +298,7 @@ const StaticLayer = memo(function StaticLayer({
   const wallsById = useMemo(() => new Map(plan.walls.map((w) => [w.id, w])), [plan.walls]);
 
   return (
-    <g>
+    <g className="plan-static">
       {options.zoneFills && (
         <g>
           {plan.zones.map((z) => (
@@ -355,9 +360,8 @@ const StaticLayer = memo(function StaticLayer({
         <g className="lod-detail">
           {plan.objectOrder.map((id) => {
             const obj = plan.objects[id];
-            const state = seatStates.get(id);
-            const open = state === "free" || state === "bookable";
-            return obj?.label ? <Label key={id} obj={obj} open={open} /> : null;
+            const available = isAvailableSeat(seatStates.get(id));
+            return obj?.label ? <Label key={id} obj={obj} available={available} /> : null;
           })}
           {plan.objectOrder.map((id) => {
             const obj = plan.objects[id];
@@ -395,6 +399,7 @@ const ObjectShape = memo(function ObjectShape({
   const className = [
     highlight ? "plan-selected" : "plan-object",
     state ? `seat-${state}` : "plan-furniture",
+    isAvailableSeat(state) && "seat-available",
     raised ? "plan-raised" : "plan-floor",
     item.category === "monitor" && "lod-detail",
   ]
@@ -428,12 +433,12 @@ const LABEL_PAD = 40;
 const Label = memo(function Label({
   obj,
   copy = false,
-  open = false,
+  available = false,
 }: {
   obj: PlacedObject;
   copy?: boolean;
-  /** A free or bookable seat's label: it stays when "Show free seats" fades the rest. */
-  open?: boolean;
+  /** An available seat's label: it stays when "Show free seats" fades the rest. */
+  available?: boolean;
 }) {
   const text = useRef<SVGTextElement>(null);
   const [box, setBox] = useState<DOMRect | null>(null);
@@ -449,7 +454,7 @@ const Label = memo(function Label({
   return (
     <g
       id={copy ? undefined : `l-${obj.id}`}
-      className={open ? "plan-label-group label-open" : "plan-label-group"}
+      className={available ? "plan-label-group label-available" : "plan-label-group"}
       transform={`translate(${obj.position[0]} ${obj.position[1]}) scale(1 -1)`}
     >
       {box && (
