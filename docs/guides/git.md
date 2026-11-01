@@ -18,6 +18,8 @@ How changes get from a branch to `main`: branches, commits, reviews and merging.
 - One commit per review round, or per comment when they're unrelated. The message says which review it answers ("Review on #80: …").
 - **Reply to every comment**, saying what changed and in which commit (its short hash), or answering the question. A comment that only asks something gets an answer, not necessarily a change.
 
+Claude Code sessions get a PR ready for the owner's review with the [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md) skill: restack, fix the review bot's comments, reply and resolve, and bring the owner whatever needs their choice.
+
 ## Catching up and restacking
 Bringing a branch up to date with `main`, or restacking a stack after a merge, **rebases and force-pushes**: `gh stack sync`, or `git rebase origin/main` and `git push --force-with-lease`. That's expected and needs no one's permission. It's the price of a linear `main` ([0069](../decisions/0069-2026-10-08-rebase-merges.md)). It replays the same commits; it doesn't change what was reviewed. `--force-with-lease` refuses to overwrite anything someone else pushed in the meantime.
 
