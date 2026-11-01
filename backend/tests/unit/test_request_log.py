@@ -8,8 +8,12 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 from structlog.testing import capture_logs
 
+from hsp.auth.dependencies import get_session_store
 from hsp.config import get_settings
 from hsp.main import create_app
+from hsp.tenancy import get_tenant_id
+from tests.fakes import InMemorySessionStore
+from tests.stubs import STUB_TENANT
 
 #: A floor that may not exist; its route is matched either way.
 SOME_FLOOR_URL = "/api/v1/floors/0193e3d2-0000-7000-8000-000000000001"
@@ -52,11 +56,17 @@ def api_that_survives_crashes(probe_app: FastAPI) -> Iterator[TestClient]:
 
 
 @pytest.fixture
-def debug_api(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
-    """A client of the app with HSP_LOG_LEVEL=DEBUG."""
+def debug_api(
+    monkeypatch: pytest.MonkeyPatch, session_store: InMemorySessionStore
+) -> Iterator[TestClient]:
+    """A client of the app with HSP_LOG_LEVEL=DEBUG. Sign-in finds its tenant and sessions
+    without a database."""
     monkeypatch.setenv("HSP_LOG_LEVEL", "DEBUG")
     get_settings.cache_clear()
-    with TestClient(create_app()) as client:
+    app = create_app()
+    app.dependency_overrides[get_session_store] = lambda: session_store
+    app.dependency_overrides[get_tenant_id] = lambda: STUB_TENANT
+    with TestClient(app) as client:
         yield client
     get_settings.cache_clear()
 
