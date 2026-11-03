@@ -98,6 +98,8 @@ const PLAN_CSS = `
   .plan-gap { stroke: var(--plan-paper); }
   .plan-column { fill: var(--plan-wall); }
   .plan-object { stroke: var(--plan-object-stroke); }
+  .plan-furniture { fill-opacity: var(--plan-furniture-opacity); }
+  .plan-zone { fill-opacity: var(--plan-zone-fill-opacity); }
   .plan-label {
     fill: var(--plan-ink);
     font-family: inherit;
@@ -307,7 +309,6 @@ const StaticLayer = memo(function StaticLayer({
               className="plan-zone"
               points={z.boundary.map((p) => `${p[0]},${p[1]}`).join(" ")}
               fill={z.color}
-              fillOpacity={0.2}
               stroke={z.color}
               strokeWidth={30}
             />
