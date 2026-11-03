@@ -50,6 +50,14 @@ function backend(asked: URLSearchParams[]): Routes {
   };
 }
 
+/** Pick `option` in the filter labelled `label`. Each list loads once the place above it is
+ *  chosen, so wait for the option first. */
+async function choose(label: string, option: string) {
+  const select = await screen.findByLabelText(label);
+  await within(select).findByRole("option", { name: option });
+  await userEvent.selectOptions(select, option);
+}
+
 afterEach(cleanup);
 
 describe("free seats (docs/0108)", () => {
@@ -68,12 +76,6 @@ describe("free seats (docs/0108)", () => {
   it("narrows by place, down to a zone, and by kind", async () => {
     const asked: URLSearchParams[] = [];
     await renderApp("/seats/free", backend(asked));
-    // Each list loads once the place above it is chosen.
-    const choose = async (label: string, option: string) => {
-      const select = await screen.findByLabelText(label);
-      await within(select).findByRole("option", { name: option });
-      await userEvent.selectOptions(select, option);
-    };
     await choose("Site", "Tel Aviv HQ");
     await choose("Building", "Harbor Tower");
     await choose("Floor", "Floor 3");
