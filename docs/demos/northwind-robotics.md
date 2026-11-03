@@ -49,6 +49,7 @@ Your development database is never touched: the demo lives in its own `hsp_demo`
 ![Floor 3](images/floor-plan.png)
 
 - Click a desk: the panel shows who sits there and their team.
+- **Show free seats:** click it at the top right. "The free and bookable desks stand out; everything else steps back." Ask, and note the answers for the feedback notes ([0122](../decisions/0122-2026-11-01-show-free-seats-details.md)): *Do the free desks stand out enough? Is the rest too faint to read, or not faint enough?* Click it again to turn it off.
 - **Search:** press `/`, type `Maya` and press Enter, then **Show on plan**. "Anyone can find a colleague in two clicks."
 
 ![Maya's seat, shown on the plan](images/show-on-plan.png)
