@@ -58,8 +58,11 @@ const floorsRoute = createRoute({
 const floorPlanRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "/floors/$floorId",
-  validateSearch: (search: Record<string, unknown>): { seat?: string } =>
-    typeof search.seat === "string" ? { seat: search.seat } : {},
+  // ?seat opens a seat; ?free turns on "Show free seats" (docs/0122).
+  validateSearch: (search: Record<string, unknown>): { seat?: string; free?: boolean } => ({
+    ...(typeof search.seat === "string" ? { seat: search.seat } : {}),
+    ...(search.free === true || search.free === "true" ? { free: true } : {}),
+  }),
   // Loaded on first visit: keeps the plan viewer out of the initial bundle.
   component: lazyRouteComponent(() => import("@/floors/FloorPlanPage"), "FloorPlanPage"),
 });
