@@ -73,6 +73,12 @@ describe("free seats (docs/0108)", () => {
     expect(asked.at(-1)?.get("status")).toBe("available");
   });
 
+  it("Show on plan opens the floor with Show free seats on (docs/0123)", async () => {
+    await renderApp("/seats/free", backend([]));
+    const link = await screen.findByRole("link", { name: "Show A-01 on the floor plan" });
+    expect(link).toHaveAttribute("href", "/floors/f3?seat=d1&free=true");
+  });
+
   it("narrows by place, down to a zone, and by kind", async () => {
     const asked: URLSearchParams[] = [];
     await renderApp("/seats/free", backend(asked));

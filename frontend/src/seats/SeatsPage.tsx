@@ -119,9 +119,12 @@ function Results({ q }: { q: string }) {
 export function SeatTable({
   caption,
   query,
+  showFree = false,
 }: {
   caption: string;
   query: UseInfiniteQueryResult<InfiniteData<SeatPage>>;
+  /** "Show on plan" opens the plan with "Show free seats" on (docs/0123). */
+  showFree?: boolean;
 }) {
   const { t } = useTranslation();
   const seats = query.data?.pages.flatMap((p) => p.items) ?? [];
@@ -143,7 +146,7 @@ export function SeatTable({
         </thead>
         <tbody>
           {seats.map((s) => (
-            <SeatRow key={s.id} seat={s} />
+            <SeatRow key={s.id} seat={s} showFree={showFree} />
           ))}
         </tbody>
       </table>
@@ -169,7 +172,7 @@ function unheldState(seat: Seat): "free" | "bookable" | "unavailable" {
 }
 
 /** One seat: its label, who holds it, their team, where it is, and Show on plan. */
-function SeatRow({ seat }: { seat: Seat }) {
+function SeatRow({ seat, showFree }: { seat: Seat; showFree: boolean }) {
   const { t } = useTranslation();
   const person = seat.holder_person;
   const team = person?.primary_unit?.name ?? seat.holder_unit?.name;
@@ -209,7 +212,7 @@ function SeatRow({ seat }: { seat: Seat }) {
           <Link
             to="/floors/$floorId"
             params={{ floorId: seat.floor.id }}
-            search={{ seat: seat.id }}
+            search={showFree ? { seat: seat.id, free: true } : { seat: seat.id }}
             aria-label={t("search.showOnPlanFor", { seat: seat.label ?? "" })}
           >
             <MapPin aria-hidden />
