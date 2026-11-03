@@ -14,7 +14,7 @@ The first release.
 - English and Hebrew, with the layout mirrored for Hebrew.
 - The user menu and the bottom of the sidebar show which release of HSP you're using.
 - A floor's page shows a newly published version within 30 seconds, and that someone started editing within 15, without reloading.
-- Dark mode is easier to read: each seat state stands out against the plan, zones and furniture are toned down, and form fields and panels have clearer borders.
+- Light and dark mode, following the system or chosen per person. In dark mode each seat state stands out against the plan, and zones and furniture are toned down.
 
 ### For admins
 - Manage sites, buildings, floors, people, teams, the catalog of furniture and devices, and zone types.
