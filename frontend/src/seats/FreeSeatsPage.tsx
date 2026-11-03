@@ -211,5 +211,5 @@ function Results({ filters }: { filters: FreeSeatsSearch }) {
   if (seats.data.pages.every((p) => p.items.length === 0)) {
     return <EmptyState>{t("freeSeats.none")}</EmptyState>;
   }
-  return <SeatTable caption={t("freeSeats.title")} query={seats} />;
+  return <SeatTable caption={t("freeSeats.title")} query={seats} showFree />;
 }
