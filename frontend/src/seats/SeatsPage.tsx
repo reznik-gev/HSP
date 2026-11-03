@@ -3,7 +3,12 @@
  * seat is reserved for and people's primary team. The query lives in the address (?q=), so a
  * search can be shared as a link. "Show on plan" opens the floor centred on the seat.
  */
-import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  infiniteQueryOptions,
+  useInfiniteQuery,
+  type UseInfiniteQueryResult,
+} from "@tanstack/react-query";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 import { Armchair, MapPin, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -15,6 +20,7 @@ import { EmptyState, Page } from "@/app/Page";
 import { Button } from "@/components/ui/button";
 
 type Seat = components["schemas"]["SeatOut"];
+type SeatPage = components["schemas"]["Page_SeatOut_"];
 
 const route = getRouteApi("/shell/seats");
 
@@ -102,14 +108,27 @@ function Results({ q }: { q: string }) {
       </p>
     );
   }
-  const seats = search.data.pages.flatMap((p) => p.items);
-  if (seats.length === 0) {
+  if (search.data.pages.every((p) => p.items.length === 0)) {
     return <p className="text-muted-foreground">{t("search.none", { q })}</p>;
   }
+  return <SeatTable caption={t("search.results", { q })} query={search} />;
+}
+
+/** A loaded list of seats as a table, with "More" while there are further pages. Shared by the
+ *  seat search and the free seats list; each page keeps its own loading, error and empty text. */
+export function SeatTable({
+  caption,
+  query,
+}: {
+  caption: string;
+  query: UseInfiniteQueryResult<InfiniteData<SeatPage>>;
+}) {
+  const { t } = useTranslation();
+  const seats = query.data?.pages.flatMap((p) => p.items) ?? [];
   return (
     <div>
       <table className="w-full border-collapse overflow-hidden rounded-md border bg-card text-sm">
-        <caption className="sr-only">{t("search.results", { q })}</caption>
+        <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="border-b text-xs text-muted-foreground">
             {(["seat", "holder", "team", "location"] as const).map((c) => (
@@ -128,12 +147,12 @@ function Results({ q }: { q: string }) {
           ))}
         </tbody>
       </table>
-      {search.hasNextPage && (
+      {query.hasNextPage && (
         <Button
           variant="outline"
           className="mt-4"
-          disabled={search.isFetchingNextPage}
-          onClick={() => void search.fetchNextPage()}
+          disabled={query.isFetchingNextPage}
+          onClick={() => void query.fetchNextPage()}
         >
           {t("search.more")}
         </Button>
@@ -150,7 +169,7 @@ function unheldState(seat: Seat): "free" | "bookable" | "unavailable" {
 }
 
 /** One seat: its label, who holds it, their team, where it is, and Show on plan. */
-export function SeatRow({ seat }: { seat: Seat }) {
+function SeatRow({ seat }: { seat: Seat }) {
   const { t } = useTranslation();
   const person = seat.holder_person;
   const team = person?.primary_unit?.name ?? seat.holder_unit?.name;

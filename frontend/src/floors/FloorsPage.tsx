@@ -15,20 +15,12 @@ import { AdminOnly, useIsAdmin } from "@/auth/admin";
 import { Button } from "@/components/ui/button";
 
 import { type LocationEdit, LocationMenu, LocationSheet, useArchive } from "./LocationAdmin";
+import { sitesQuery } from "./locationQueries";
 
 type Site = components["schemas"]["SiteOut"];
 type SiteOccupancy = components["schemas"]["SiteOccupancy"];
 type BuildingOccupancy = components["schemas"]["BuildingOccupancy"];
 type Counts = components["schemas"]["Counts"];
-
-export const sitesQuery = queryOptions({
-  queryKey: ["sites"],
-  queryFn: async (): Promise<Site[]> => {
-    const { data, error } = await api.GET("/api/v1/sites", { params: { query: { limit: 500 } } });
-    if (error || !data) throw new Error("Couldn't load sites");
-    return data.items;
-  },
-});
 
 const siteOccupancyQuery = (siteId: string) =>
   queryOptions({

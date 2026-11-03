@@ -1,14 +1,9 @@
 /**
- * Free seats (docs/0108): the seats nobody holds that can be assigned or booked, narrowed by
+ * Free seats (docs/0108, 0123): the seats nobody holds that can be assigned or booked, narrowed by
  * site, building, floor and zone, and by whether they're bookable. The filters live in the
  * address, so a list can be shared as a link; each row has "Show on plan".
  */
-import {
-  infiniteQueryOptions,
-  queryOptions,
-  useInfiniteQuery,
-  useQuery,
-} from "@tanstack/react-query";
+import { infiniteQueryOptions, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -16,10 +11,10 @@ import { useTranslation } from "react-i18next";
 import { api } from "@/api/client";
 import { EmptyState, Page } from "@/app/Page";
 import { Button } from "@/components/ui/button";
-import { sitesQuery } from "@/floors/FloorsPage";
+import { buildingsQuery, floorsQuery, sitesQuery } from "@/floors/locationQueries";
 import { floorPlaceQuery, publishedPlanQuery } from "@/floors/planData";
 
-import { SeatRow } from "./SeatsPage";
+import { SeatTable } from "./SeatsPage";
 
 const route = getRouteApi("/shell/seats/free");
 
@@ -72,30 +67,6 @@ const freeSeatsQuery = (f: FreeSeatsSearch) =>
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.next_cursor ?? undefined,
-  });
-
-const buildingsQuery = (siteId: string) =>
-  queryOptions({
-    queryKey: ["buildings", siteId],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/buildings", {
-        params: { query: { site_id: siteId, limit: 500 } },
-      });
-      if (error || !data) throw new Error("Couldn't load buildings");
-      return data.items;
-    },
-  });
-
-const floorsQuery = (buildingId: string) =>
-  queryOptions({
-    queryKey: ["floors", buildingId],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/floors", {
-        params: { query: { building_id: buildingId, limit: 500 } },
-      });
-      if (error || !data) throw new Error("Couldn't load floors");
-      return data.items;
-    },
   });
 
 export function FreeSeatsPage() {
@@ -237,40 +208,8 @@ function Results({ filters }: { filters: FreeSeatsSearch }) {
       </p>
     );
   }
-  const rows = seats.data.pages.flatMap((p) => p.items);
-  if (rows.length === 0) return <EmptyState>{t("freeSeats.none")}</EmptyState>;
-  return (
-    <div>
-      <table className="w-full border-collapse overflow-hidden rounded-md border bg-card text-sm">
-        <caption className="sr-only">{t("freeSeats.title")}</caption>
-        <thead>
-          <tr className="border-b text-xs text-muted-foreground">
-            {(["seat", "holder", "team", "location"] as const).map((c) => (
-              <th key={c} scope="col" className="px-3 py-2 text-start font-normal">
-                {t(`search.columns.${c}`)}
-              </th>
-            ))}
-            <th scope="col" className="px-3 py-2">
-              <span className="sr-only">{t("search.columns.actions")}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((s) => (
-            <SeatRow key={s.id} seat={s} />
-          ))}
-        </tbody>
-      </table>
-      {seats.hasNextPage && (
-        <Button
-          variant="outline"
-          className="mt-4"
-          disabled={seats.isFetchingNextPage}
-          onClick={() => void seats.fetchNextPage()}
-        >
-          {t("search.more")}
-        </Button>
-      )}
-    </div>
-  );
+  if (seats.data.pages.every((p) => p.items.length === 0)) {
+    return <EmptyState>{t("freeSeats.none")}</EmptyState>;
+  }
+  return <SeatTable caption={t("freeSeats.title")} query={seats} />;
 }
