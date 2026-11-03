@@ -309,7 +309,6 @@ const StaticLayer = memo(function StaticLayer({
               className="plan-zone"
               points={z.boundary.map((p) => `${p[0]},${p[1]}`).join(" ")}
               fill={z.color}
-              fillOpacity={0.2}
               stroke={z.color}
               strokeWidth={30}
             />
