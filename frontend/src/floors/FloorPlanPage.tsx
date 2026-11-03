@@ -4,7 +4,7 @@
  * a seat (used by search). The drawing never mirrors in Hebrew; the panels around it do.
  */
 import { useQuery } from "@tanstack/react-query";
-import { getRouteApi, Link } from "@tanstack/react-router";
+import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 import { Armchair, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -39,14 +39,15 @@ const STATES: SeatState[] = ["person", "unit", "free", "bookable", "unavailable"
 export function FloorPlanPage() {
   const { t } = useTranslation();
   const { floorId } = route.useParams();
-  const { seat: seatParam } = route.useSearch();
+  const { seat: seatParam, free } = route.useSearch();
+  // "Show free seats" (docs/0108, 0122). Only `true`: other values can reach here unparsed.
+  const onlyFree = free === true;
+  const navigate = useNavigate({ from: "/floors/$floorId" });
   const place = useQuery(floorPlaceQuery(floorId));
   const version = place.data?.floor.published_version ?? null;
   const apiPlan = useQuery({ ...publishedPlanQuery(floorId, version ?? 0), enabled: !!version });
   const zoneTypes = useQuery(zoneTypesQuery);
   const seats = useQuery(floorSeatsQuery(floorId));
-  // "Show free seats" (docs/0108, 0122): the free and bookable seats stand out.
-  const [onlyFree, setOnlyFree] = useState(false);
 
   const plan = useMemo(
     () => (apiPlan.data && zoneTypes.data ? planFromApi(apiPlan.data, zoneTypes.data) : null),
@@ -85,7 +86,13 @@ export function FloorPlanPage() {
               size="sm"
               variant={onlyFree ? "default" : "outline"}
               aria-pressed={onlyFree}
-              onClick={() => setOnlyFree(!onlyFree)}
+              onClick={() =>
+                // In the address, so a reload or a shared link keeps it (docs/0122).
+                void navigate({
+                  search: (prev) => ({ ...prev, free: onlyFree ? undefined : true }),
+                  replace: true,
+                })
+              }
             >
               <Armchair aria-hidden />
               {t("plan.showFree", {

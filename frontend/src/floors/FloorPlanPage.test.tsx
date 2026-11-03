@@ -116,15 +116,24 @@ describe("floor plan viewer (docs/0087)", () => {
   });
 
   it("Show free seats makes the free and bookable ones stand out (docs/0108)", async () => {
-    await renderApp("/floors/f3", backend());
+    const { router } = await renderApp("/floors/f3", backend());
     // d1 is Maya's, d2 is reserved for a team, d3 is bookable: one seat to show.
     const toggle = await screen.findByRole("button", { name: "Show free seats (1)" });
     expect(toggle).toHaveAttribute("aria-pressed", "false");
     await userEvent.click(toggle);
     expect(toggle).toHaveAttribute("aria-pressed", "true");
     expect(document.querySelector("svg[data-lod]")).toHaveAttribute("data-only-free");
+    await waitFor(() => expect(router.state.location.search).toMatchObject({ free: true }));
     await userEvent.click(toggle);
     expect(document.querySelector("svg[data-lod]")).not.toHaveAttribute("data-only-free");
+    await waitFor(() => expect(router.state.location.search).not.toHaveProperty("free"));
+  });
+
+  it("a link with ?free opens the plan with Show free seats on (docs/0122)", async () => {
+    await renderApp("/floors/f3?free=true", backend());
+    const toggle = await screen.findByRole("button", { name: "Show free seats (1)" });
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(document.querySelector("svg[data-lod]")).toHaveAttribute("data-only-free");
   });
 
   it("a link to a seat opens it with its holder; closing clears it", async () => {
