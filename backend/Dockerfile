@@ -2,7 +2,7 @@
 #   docker run ... hsp-api alembic upgrade head        (docs/0056)
 # Build: deploy/build-images.sh, or docker build --build-arg HSP_VERSION=1.2.0 -t hsp-api backend
 
-FROM python:3.14-slim AS build
+FROM python:3.15-slim AS build
 COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /bin/uv
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
@@ -16,7 +16,7 @@ COPY alembic.ini ./
 COPY migrations ./migrations
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev
 
-FROM python:3.14-slim
+FROM python:3.15-slim
 ARG HSP_VERSION=0.0.0-dev
 ARG HSP_REVISION=unknown
 ARG HSP_CREATED=unknown
