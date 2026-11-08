@@ -108,7 +108,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0094 | 2026-10-16 | [Move the 3D view past v1; show heights in 2D instead](0094-2026-10-16-3d-view-after-v1.md) | Accepted |
 | 0095 | 2026-10-16 | [Heights on the plan, Catalog and Devices screens (frontend phase 3c)](0095-2026-10-16-heights-catalog-and-devices.md) | Accepted |
 | 0096 | 2026-10-16 | [Test data and test-double conventions](0096-2026-10-16-test-conventions.md) | Accepted |
-| 0097 | 2026-10-18 | [Production container images](0097-2026-10-18-production-images.md) | Accepted (refined by 0098) |
+| 0097 | 2026-10-18 | [Production container images](0097-2026-10-18-production-images.md) | Accepted (refined by 0098, 0129) |
 | 0098 | 2026-10-18 | [The web entry point: TLS modes, compression, HSTS and the Keycloak console](0098-2026-10-18-web-entry-point.md) | Accepted |
 | 0099 | 2026-10-18 | [The production Compose stack: secrets, data and how it's wired](0099-2026-10-18-production-compose.md) | Accepted |
 | 0100 | 2026-10-19 | [The @claude bot runs the checks and searches the web](0100-2026-10-19-claude-bot-tools.md) | Superseded by 0101 |
@@ -140,3 +140,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0126 | 2026-11-08 | [What may change in an accepted decision record](0126-2026-11-08-what-may-change-in-an-accepted-record.md) | Accepted |
 | 0127 | 2026-11-08 | [Python 3.15 waits until after 1.0.0](0127-2026-11-08-python-3-15-after-1-0.md) | Accepted |
 | 0128 | 2026-11-08 | [Vulnerability scanning before 1.0.0, warnings only](0128-2026-11-08-vulnerability-scanning.md) | Accepted |
+| 0129 | 2026-11-08 | [What to do about the first scan's findings](0129-2026-11-08-first-scan-findings.md) | Accepted |
