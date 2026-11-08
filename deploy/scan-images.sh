@@ -22,11 +22,12 @@ warn() {
   if [[ -n "${GITHUB_ACTIONS:-}" ]]; then echo "::warning::$1"; else echo "WARNING: $1"; fi
 }
 
-# Every image the stack runs, read from compose.yml as deploy/bundle.sh does.
-mapfile -t images < <(
-  HSP_VERSION="$version" HSP_PUBLIC_URL=https://hsp.invalid \
-    docker compose -f "$root/deploy/compose/compose.yml" config --images | sort -u
-)
+# Every image the stack runs, read from compose.yml as deploy/bundle.sh does. Read into a
+# variable first, so that a compose error stops the script instead of scanning nothing.
+listed="$(HSP_VERSION="$version" HSP_PUBLIC_URL=https://hsp.invalid \
+  docker compose -f "$root/deploy/compose/compose.yml" config --images)"
+mapfile -t images < <(sort -u <<<"$listed")
+((${#images[@]} > 0)) || { echo "FAIL: compose.yml lists no images" >&2; exit 1; }
 
 {
   echo "| Image | Critical | High | Medium | Low | Unknown | Of which have a fix |"
@@ -45,7 +46,8 @@ for image in "${images[@]}"; do
   docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$cache:/root/.cache/trivy" \
     "$trivy" image --quiet --scanners vuln --format json "$image" >"$json"
   vulns="$work/vulns.json"
-  jq '[.Results[]? | .Target as $t | .Vulnerabilities[]? | . + {Target: $t}] | unique_by(.VulnerabilityID, .PkgName, .InstalledVersion)' \
+  # Debian packages are "debian", Python ones "python-pkg", Keycloak's Java ones "jar".
+  jq '[.Results[]? | .Type as $t | .Vulnerabilities[]? | . + {Type: $t}] | unique_by(.VulnerabilityID, .PkgName, .InstalledVersion)' \
     "$json" >"$vulns"
   n() { jq --arg s "$1" '[.[] | select(.Severity == $s)] | length' "$vulns"; }
   total="$(jq length "$vulns")"
@@ -58,10 +60,18 @@ for image in "${images[@]}"; do
     {
       echo "#### \`$image\`: High and Critical"
       echo
-      echo "| Severity | Package | Installed | Fixed in | Advisory | Where |"
+      # One row per advisory: a flaw in util-linux, say, touches several of its packages.
+      echo "| Severity | Advisory | Packages | Installed | Fixed in | Kind |"
       echo "|---|---|---|---|---|---|"
-      jq -r 'sort_by(.Severity, .PkgName)[] | select(.Severity == "CRITICAL" or .Severity == "HIGH") |
-        "| \(.Severity | ascii_downcase) | \(.PkgName) | \(.InstalledVersion) | \(.FixedVersion // "" | if . == "" then "no fix yet" else . end) | \(.VulnerabilityID) | \(.Target | split(" (")[0]) |"' \
+      jq -r 'map(select(.Severity == "CRITICAL" or .Severity == "HIGH"))
+        | group_by(.VulnerabilityID, .Type) | map({
+            severity: .[0].Severity, id: .[0].VulnerabilityID, kind: .[0].Type,
+            packages: (map(.PkgName) | unique | join(", ")),
+            installed: (map(.InstalledVersion) | unique | join(", ")),
+            fixed: (map(.FixedVersion // "" | select(. != "")) | unique | join(", ")
+              | if . == "" then "no fix yet" else . end)})
+        | sort_by(.severity, .packages)[]
+        | "| \(.severity | ascii_downcase) | \(.id) | \(.packages) | \(.installed) | \(.fixed) | \(.kind) |"' \
         "$vulns"
       echo
     } >>"$work/details.md"
