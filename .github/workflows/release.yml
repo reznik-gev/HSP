@@ -18,6 +18,8 @@ on:
       - deploy/test-upgrade.sh
       - deploy/test-bundle.sh
       - deploy/release-notes.sh
+      - deploy/audit-packages.sh
+      - deploy/scan-images.sh
 
 concurrency:
   group: release-${{ github.ref }}
@@ -80,6 +82,19 @@ jobs:
         run: HSP_BUILD_CACHE=gha deploy/build-images.sh "${{ steps.version.outputs.version }}"
       - name: Assemble the bundle
         run: deploy/bundle.sh "${{ steps.version.outputs.version }}" dist/release-notes.md dist
+
+      # What this release ships with, in the run's summary (docs/0128). Both only warn.
+      - name: Vulnerability scan of the images
+        run: deploy/scan-images.sh "${{ steps.version.outputs.version }}"
+      - uses: astral-sh/setup-uv@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Vulnerability scan of the packages
+        run: deploy/audit-packages.sh
 
       - uses: actions/upload-artifact@v7
         with:

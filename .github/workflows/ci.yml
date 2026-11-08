@@ -30,6 +30,7 @@ jobs:
       backup: ${{ steps.filter.outputs.backup }}
       scripts: ${{ steps.filter.outputs.scripts }}
       images: ${{ steps.filter.outputs.images }}
+      packages: ${{ steps.filter.outputs.packages }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -60,6 +61,16 @@ jobs:
               - "deploy/backup/**"
               - "backup/**"
               - "deploy/*.sh"
+              - "deploy/compose/compose.yml"
+              - ".github/workflows/ci.yml"
+            packages:
+              - "backend/pyproject.toml"
+              - "backend/uv.lock"
+              - "backup/pyproject.toml"
+              - "backup/uv.lock"
+              - "frontend/package.json"
+              - "frontend/pnpm-lock.yaml"
+              - "deploy/audit-packages.sh"
               - ".github/workflows/ci.yml"
 
   backend:
@@ -225,10 +236,30 @@ jobs:
         run: HSP_BUILD_CACHE=gha deploy/build-images.sh
       - name: Smoke test
         run: deploy/smoke-images.sh
+      - name: Vulnerability scan (warns only, docs/0128)
+        run: deploy/scan-images.sh
+
+  # Known vulnerabilities in the packages HSP ships (docs/0128). Warns only; fails only when a
+  # scanner can't run. Reads the lock files, so nothing is installed.
+  packages:
+    needs: changes
+    if: needs.changes.outputs.packages == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Vulnerability scan (warns only)
+        run: deploy/audit-packages.sh
 
   ci-ok:
     if: always()
-    needs: [changes, backend, backup, scripts, frontend, images]
+    needs: [changes, backend, backup, scripts, frontend, images, packages]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped
