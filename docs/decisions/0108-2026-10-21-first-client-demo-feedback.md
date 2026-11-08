@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-21
 - **Status:** Accepted
+- **Refined by:** [0122](0122-2026-11-01-show-free-seats-details.md), [0123](0123-2026-11-03-free-seats-list-details.md), [0129](0129-2026-11-08-learning-the-editor.md) (`Alt` mid-drag detaches a moving wall)
 - **Refines:** [0047](0047-2026-10-08-snapping.md) (snapping), [0044](0044-2026-10-08-wall-joins.md) (moving joined walls), [0104](0104-2026-10-21-v1-release-scope-and-support.md) (what comes after 1.0.0)
 
 ## Context
