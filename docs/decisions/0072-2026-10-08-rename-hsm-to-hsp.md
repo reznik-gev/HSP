@@ -49,4 +49,4 @@ Accepted records are still never edited in substance. **Pure renames** (the prod
 - The migration revision IDs are unchanged, so no database migration is needed for the rename itself.
 
 ## Updates
-- *Update, 2026-11-08:* a rename no longer needs a record of its own, but it needs the owner's explicit yes, and each renamed record gets a dated note ([0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md)).
+- *Update, 2026-11-08:* a rename needs the owner's explicit yes. A big one, like this, still gets a record of its own; a small one, such as a UI term, gets the owner's approval in the PR and a dated note in each renamed record ([0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md)).

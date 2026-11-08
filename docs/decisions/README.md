@@ -8,7 +8,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 - **Its status:** the status line and the index row, when it is superseded or deprecated. The index row may also name later records that refine it.
 - **A `Refined by:` line in its header,** naming each later record that refines it. It may also be written as a dated note.
 - **Dated notes, added at the end,** in an `## Updates` section: *Update, YYYY-MM-DD:*, then what happened later, with a link. A note never changes the decision.
-- **Rename fixes that don't change the subject,** only with the owner's explicit yes, each noted in a dated note.
+- **Rename fixes that don't change the subject,** only with the owner's explicit yes. A big rename gets a record of its own, like [0072](0072-2026-10-08-rename-hsm-to-hsp.md). A small one, such as a UI term, gets the owner's approval in the PR and a dated note in each renamed record.
 
 | #    | Date       | Decision                                                                 | Status   |
 |------|------------|--------------------------------------------------------------------------|----------|
