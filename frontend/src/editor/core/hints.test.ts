@@ -3,12 +3,24 @@ import { describe, expect, it } from "vitest";
 import { editorHint } from "./hints";
 import type { ApiPlan } from "./operations";
 import { editing } from "./testPlan";
-import { stubPlan, stubWall } from "@/test/stubs";
+import { stubPlan, stubWall, stubZone } from "@/test/stubs";
 
 // The test plan: w1 (0,0)→(4000,0) meets w2 (4000,0)→(4000,3000); desk d1 at (2000,1500).
 
 /** A wall on its own: neither end joined. */
 const LONE = stubPlan({ walls: [stubWall("w9", [0, 0], [3000, 0])] }) as unknown as ApiPlan;
+
+/** A room zone z1, 2 × 2 m, with nothing else in it. */
+const ROOM = stubPlan({
+  zones: [
+    stubZone("z1", [
+      [0, 0],
+      [2000, 0],
+      [2000, 2000],
+      [0, 2000],
+    ]),
+  ],
+}) as unknown as ApiPlan;
 
 describe("the hint line (docs/0129)", () => {
   it("with nothing selected, it says how to select and pan", () => {
@@ -16,12 +28,18 @@ describe("the hint line (docs/0129)", () => {
     expect(editorHint(store.getState())).toEqual({ key: "select" });
   });
 
-  it("a selected wall, zone or item each get their own hint", () => {
+  it("a selected wall and a selected item each get their own hint", () => {
     const { store, click } = editing();
     click([2000, 50]);
     expect(editorHint(store.getState())).toEqual({ key: "selectedWall" });
     click([2000, 1500]);
     expect(editorHint(store.getState())).toEqual({ key: "selected" });
+  });
+
+  it("a selected zone gets its own hint", () => {
+    const { store, click } = editing(ROOM);
+    click([1000, 1000]);
+    expect(editorHint(store.getState())).toEqual({ key: "selectedZone" });
   });
 
   it("dragging a corner counts the walls there, until Alt detaches the grabbed one", () => {
@@ -50,6 +68,14 @@ describe("the hint line (docs/0129)", () => {
     interaction.pointerDown(at([1500, 0]));
     interaction.pointerMove(at([1500, 500]));
     expect(editorHint(store.getState())).toEqual({ key: "wallMoveAlone" });
+  });
+
+  it("dragging an end that no other wall meets doesn't offer to detach it", () => {
+    const { store, interaction, click, at } = editing(LONE);
+    click([1500, 50]);
+    interaction.pointerDown(at([0, 0]));
+    interaction.pointerMove(at([0, 500]));
+    expect(editorHint(store.getState())).toEqual({ key: "junctionAlone" });
   });
 
   it("dragging an item offers a typed distance", () => {
