@@ -1,7 +1,7 @@
 # 0124 — Claude Code plugins in HSP: keep the seven disabled plugins off
 
 - **Date:** 2026-11-08
-- **Status:** Proposed
+- **Status:** Accepted
 - **Related:** [0101](0101-2026-10-19-claude-reviews-only.md) (Claude on GitHub reviews PRs), [0059](0059-2026-10-08-supply-chain-security.md) (supply chain), [0068](0068-2026-10-08-public-repository.md) (the repository is public)
 
 ## Context
@@ -55,7 +55,7 @@ The options for each plugin:
 Why not (c) or (d) for any of them: (c) puts one person's tool choice in a public repo, for everyone and possibly for CI, with no use to justify it. (d) brings back the context cost in every project, which is what `/doctor` removed.
 
 ## Decision
-Proposed: **keep all seven plugins off in HSP (option a).** Nothing in HSP's sessions used them, and superpowers, the built-ins and Claude on GitHub already cover each kind of work.
+The owner's choice: **keep all seven plugins off in HSP (option a).** Nothing in HSP's sessions used them, and superpowers, the built-ins and Claude on GitHub already cover each kind of work.
 
 If one is wanted later, turn it on **for HSP only, in `.claude/settings.local.json` (option b)**, never in the checked-in `settings.json`. `pr-review-toolkit` is the only one with a real use case here (test-coverage and silent-failure checks before a PR), and it is the best candidate for a trial.
 
