@@ -110,6 +110,21 @@ describe("selecting and changing walls", () => {
     expect(walls[1]!.a).toEqual([4000, 0]);
   });
 
+  it("Alt pressed mid-drag detaches too, and it stays detached after Alt is let go (docs/0129)", () => {
+    const { store, interaction, click, at } = editing();
+    click([2000, 50]);
+    interaction.pointerDown(at([4000, 0]));
+    interaction.pointerMove(at([4200, 0]));
+    expect(store.getState().preview).toMatchObject({ kind: "junction", walls: ["w1", "w2"] });
+    interaction.pointerMove({ ...at([4300, 0]), alt: true });
+    expect(store.getState().preview).toMatchObject({ kind: "junction", walls: ["w1"] });
+    interaction.pointerMove(at([4500, 0]));
+    interaction.pointerUp(at([4500, 0]));
+    const walls = store.getState().plan!.walls;
+    expect(walls[0]!.b).toEqual([4500, 0]);
+    expect(walls[1]!.a).toEqual([4000, 0]);
+  });
+
   it("Delete removes the selection with its doors; undo brings both back", () => {
     const { store, interaction, click } = editing();
     click([2000, 50]);

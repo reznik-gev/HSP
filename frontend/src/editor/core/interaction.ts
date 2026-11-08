@@ -7,7 +7,8 @@
  * door or window slides it along its wall, dragging a selected wall's end moves the junction
  * with every wall that meets there (Alt detaches just that wall, docs/0044), dragging a
  * selected wall's body moves the whole wall and the walls joined to it stretch (Alt detaches
- * it, docs/0108), dragging a selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
+ * it, docs/0108). Alt pressed at any point in either drag detaches, and it stays detached until
+ * the drag ends, while snapping follows Alt as it's held (docs/0129). Dragging a selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
  * Drawing tools (wall, door, window, column, zone, item): a click places, a drag pans; see
  * their classes. R turns the item being placed, or the selected furniture, a quarter turn.
  * The middle button always pans and the wheel zooms (PanZoom, shared with the viewer).
@@ -69,7 +70,8 @@ type Gesture =
   /** `clickClears`: a click without moving (on empty space) clears the selection. */
   | { kind: "pan"; clickClears?: boolean }
   | { kind: "drag"; start: Vec2; moved: boolean }
-  | { kind: "junction"; from: Vec2; walls: string[] }
+  /** A junction dragged by the end of the selected wall `grabbed`; `walls` move with it. */
+  | { kind: "junction"; from: Vec2; grabbed: string; walls: string[] }
   /** A selected wall dragged by its body; the walls joined at its ends stretch (docs/0108). */
   | {
       kind: "wall";
@@ -168,7 +170,7 @@ export class Interaction {
     const end = this.selectedWallEnd(p);
     if (end) {
       const walls = e.alt ? [end.wall] : wallsAt(s.plan, end.point);
-      this.gesture = { kind: "junction", from: end.point, walls };
+      this.gesture = { kind: "junction", from: end.point, grabbed: end.wall, walls };
       return "none";
     }
     const hit = hitTest(s.plan, s.hitIndex, p, tolerance);
@@ -334,6 +336,8 @@ export class Interaction {
         s.gridSnap && !e.alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
       s.setDrag({ dx: snap(p[0] - g.start[0]), dy: snap(p[1] - g.start[1]) });
     } else if (g.kind === "junction" && s.plan) {
+      // Alt pressed mid-drag detaches too, and stays detached (docs/0129).
+      if (e.alt) g.walls = [g.grabbed];
       const { point, kind } = snapPoint(s.plan, this.toPlan(e), {
         ...snapSettings(s, e.alt),
         ignore: g.from,
@@ -345,6 +349,11 @@ export class Interaction {
       });
       s.setPreview({ kind: "junction", from: g.from, to: point, walls: g.walls, snap: kind });
     } else if (g.kind === "wall" && s.plan) {
+      // Alt pressed mid-drag detaches too, and stays detached (docs/0129).
+      if (e.alt) {
+        g.joinedA = [];
+        g.joinedB = [];
+      }
       if (!s.preview && isClick(this.downAt, e.sx, e.sy)) return;
       s.setPreview(this.wallMove(g, this.toPlan(e), e.alt));
     } else if (g.kind === "numbering") {

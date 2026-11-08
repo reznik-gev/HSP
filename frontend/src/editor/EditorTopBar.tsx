@@ -1,8 +1,8 @@
 /**
  * The editor's top bar (docs/0089): Exit, the floor, where the draft stands ("Draft 4 · Saved"),
- * Undo / Redo (docs/0050), the version history, Discard draft and Publish (docs/0082).
+ * Undo / Redo (docs/0050), Keyboard and mouse (docs/0129), the version history, Discard draft and Publish (docs/0082).
  */
-import { History, Redo2, Undo2, X } from "lucide-react";
+import { CircleHelp, History, Redo2, Undo2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
@@ -20,6 +20,7 @@ export function EditorTopBar({
   save,
   onExit,
   onHistory,
+  onKeys,
   onDiscard,
   onPublish,
 }: {
@@ -30,6 +31,7 @@ export function EditorTopBar({
   save: SaveState;
   onExit: () => void;
   onHistory: () => void;
+  onKeys: () => void;
   /** Null while there's no draft to discard. */
   onDiscard: (() => void) | null;
   /** Null while there's nothing to publish yet. */
@@ -77,6 +79,15 @@ export function EditorTopBar({
         </Button>
       </div>
       <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={t("editor.keys.open")}
+          title={`${t("editor.keys.open")} (?)`}
+          onClick={onKeys}
+        >
+          <CircleHelp aria-hidden />
+        </Button>
         <Button
           variant="ghost"
           size="icon"

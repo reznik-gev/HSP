@@ -6,7 +6,7 @@
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
 
@@ -24,6 +24,8 @@ import { cn } from "@/lib/utils";
 import { EditorTopBar } from "./EditorTopBar";
 import { DimensionLabels, DimensionLines } from "./Dimensions";
 import { GridControls } from "./GridControls";
+import { HintLine } from "./HintLine";
+import { KeysSheet } from "./KeysSheet";
 import { MeasureInput } from "./MeasureInput";
 import { HistorySheet } from "./publish/HistorySheet";
 import { PublishDialog } from "./publish/PublishDialog";
@@ -75,7 +77,9 @@ export function EditorPage() {
     },
     onLockLost: lock.markLost,
   });
-  useEditorKeys(store, interaction, held);
+  const [keysOpen, setKeysOpen] = useState(false);
+  const openKeys = useCallback(() => setKeysOpen(true), []);
+  useEditorKeys(store, interaction, held, openKeys);
   const wallHeight = place.data?.floor.default_wall_height_mm;
   useEffect(() => {
     if (wallHeight) store.getState().setWallDefaults({ height_mm: wallHeight });
@@ -147,6 +151,7 @@ export function EditorPage() {
         save={save}
         onExit={() => void exit()}
         onHistory={() => actions.setHistory(true)}
+        onKeys={openKeys}
         onDiscard={held && hasDraft ? () => void actions.discard() : null}
         onPublish={held && hasDraft ? () => void actions.openPublish() : null}
       />
@@ -171,6 +176,7 @@ export function EditorPage() {
         onClose={() => actions.setHistory(false)}
         onRestored={actions.onRestored}
       />
+      <KeysSheet open={keysOpen} onClose={() => setKeysOpen(false)} />
       <LockMessage state={lock.state} onRetry={lock.retry} onTakeOver={lock.takeOver} />
       {failed ? (
         <p role="alert" className="p-6 text-destructive">
@@ -179,7 +185,7 @@ export function EditorPage() {
       ) : editorPlan.data && zoneTypes.data ? (
         <div className="flex min-h-0 flex-1">
           <ToolStrip store={store} disabled={!held} />
-          <Canvas store={store} interaction={interaction} editable={held} />
+          <Canvas store={store} interaction={interaction} editable={held} onAllKeys={openKeys} />
           {held && <SidePanel store={store} interaction={interaction} />}
         </div>
       ) : (
@@ -195,10 +201,12 @@ function Canvas({
   store,
   interaction,
   editable,
+  onAllKeys,
 }: {
   store: EditorStore;
   interaction: Interaction;
   editable: boolean;
+  onAllKeys: () => void;
 }) {
   const [viewing] = useState(() => new ViewerInteraction(store));
   const tool = useStore(store, (s) => s.tool);
@@ -225,6 +233,7 @@ function Canvas({
     >
       {editable && <ToolOptions store={store} />}
       {editable && <GridControls store={store} />}
+      {editable && <HintLine store={store} onAllKeys={onAllKeys} />}
       {editable && <MeasureInput store={store} interaction={interaction} />}
       {editable && <DimensionLabels store={store} interaction={interaction} />}
     </PlanCanvas>

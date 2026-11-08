@@ -23,6 +23,8 @@ The first release.
 - Walls snap straight: horizontal, vertical or 45° from their other end, shown with a marker. Shift keeps them straight however far off you point.
 - Drag a selected wall to move it whole; the walls joined to it stretch to stay joined (Alt detaches it). Changing a wall's length keeps its corner and moves its free end.
 - The arrow keys nudge the selection by 1 cm, or 10 cm with Shift. A run of presses is one step to undo.
+- A hint line under the floor editor's plan says what you can do at each step, and which keys change it. **Keyboard and mouse** lists every key and mouse move: press `?`, or the ? button at the top.
+- Pressing Alt in the middle of dragging a wall's corner, or a whole wall, detaches that wall from the others, as holding it beforehand does.
 - Assign seats to people and teams. Archiving a person or deleting a floor frees their seats on its own.
 
 ### For operators

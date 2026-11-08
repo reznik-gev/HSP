@@ -57,6 +57,19 @@ describe("moving whole walls (docs/0108)", () => {
     expect(wall("w2")(plan).a).toEqual([4000, 0]);
   });
 
+  it("Alt pressed mid-drag detaches it, and it stays detached after Alt is let go (docs/0129)", () => {
+    const { store, interaction, click, at } = editing();
+    click([2000, 50]);
+    interaction.pointerDown(at([2000, 0]));
+    interaction.pointerMove(at([2000, 500]));
+    interaction.pointerMove({ ...at([2000, 800]), alt: true });
+    interaction.pointerMove(at([2000, 1000]));
+    interaction.pointerUp(at([2000, 1000]));
+    const plan = store.getState().plan!;
+    expect(wall("w1")(plan).b).toEqual([4000, 1000]);
+    expect(wall("w2")(plan).a).toEqual([4000, 0]);
+  });
+
   it("while dragging, the preview names the walls that stretch: w2, at w1's end b", () => {
     const { store, interaction, click, at } = editing();
     click([2000, 50]);
