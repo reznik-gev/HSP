@@ -8,6 +8,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Pinned; Dependabot can't see it here, so it moves by hand, like Trivy's digest (docs/0128).
 pip_audit=pip-audit@2.10.1
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT

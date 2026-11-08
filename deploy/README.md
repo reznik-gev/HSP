@@ -30,8 +30,10 @@ Build and check them locally (Docker with BuildKit):
 ```bash
 deploy/build-images.sh            # tagged 0.0.0-dev; or deploy/build-images.sh 1.2.0
 deploy/smoke-images.sh            # starts each image and checks it answers
+deploy/scan-images.sh             # lists known vulnerabilities in every image the stack runs
+deploy/audit-packages.sh          # the same for the Python and frontend production packages
 ```
-CI runs both on every PR that touches the app or the images; nothing is pushed anywhere.
+CI runs the first three on every PR that touches the app or the images; nothing is pushed anywhere. The two scans only warn ([0128](../docs/decisions/0128-2026-11-08-vulnerability-scanning.md)): they list what they find and fail only when a scanner can't run. `scan-images.sh` runs Trivy from its own image and needs Docker and jq; `audit-packages.sh` needs uv, pnpm and jq, and CI runs it when a lock file changes. The release workflow runs both.
 
 ## The production stack
 [`compose/compose.yml`](compose/compose.yml) runs HSP on one host ([0055](../docs/decisions/0055-2026-10-08-deployment-target.md), [0099](../docs/decisions/0099-2026-10-18-production-compose.md)): `postgres`, a one-shot `migrate`, `api`, `keycloak`, `backup` and `web`. `web` publishes the ports users reach; `api` publishes only its metrics port, to this host by default (see [Monitoring and backups](#monitoring-and-backups)).

@@ -42,7 +42,9 @@ for image in "${images[@]}"; do
   fi
   json="$work/${image//[\/:]/_}.json"
   echo "Scanning $image..."
-  # The vulnerability database is downloaded once per run and kept in a volume between images.
+  # Trivy's vulnerability database lives in a named volume ($cache), so it is downloaded once and
+  # reused across images and runs; Trivy refreshes it when it's stale. `docker volume rm $cache`
+  # clears it.
   docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$cache:/root/.cache/trivy" \
     "$trivy" image --quiet --scanners vuln --format json "$image" >"$json"
   vulns="$work/vulns.json"
