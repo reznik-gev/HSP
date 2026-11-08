@@ -46,3 +46,6 @@ Accepted records are still never edited in substance. **Pure renames** (the prod
   Also update any local `.env` from `HSM_*` to `HSP_*`.
 - Git history, earlier commit messages and closed PR titles still say HSM. That's expected.
 - The migration revision IDs are unchanged, so no database migration is needed for the rename itself.
+
+## Updates
+- *Update, 2026-11-08:* a rename no longer needs a record of its own, but it needs the owner's explicit yes, and each renamed record gets a dated note ([0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md)).
