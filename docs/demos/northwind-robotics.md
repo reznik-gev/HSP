@@ -11,20 +11,19 @@ You need Docker Desktop running, and the repo set up for development (the [main 
    ```bash
    docker compose -f deploy/compose.dev.yml up -d
    ```
-2. **The demo database, the first time only.** The API checks the database's schema when it starts, and stops if the database is empty ([0109](../decisions/0109-2026-10-23-schema-check-everywhere.md)). So before its first start, create `hsp_demo` and bring it up to date:
+2. **The demo database.** The API checks the database's schema when it starts, and stops unless it's up to date ([0109](../decisions/0109-2026-10-23-schema-check-everywhere.md)). So before you start the API, create `hsp_demo` and bring it up to date:
    ```bash
    docker compose -f deploy/compose.dev.yml exec postgres psql -U hsp -d hsp -c "CREATE DATABASE hsp_demo"
-   cd backend
-   HSP_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo uv run alembic upgrade head
+   (cd backend && HSP_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo uv run alembic upgrade head)
    ```
-   If `CREATE DATABASE` says `hsp_demo` already exists, skip this step.
+   If `CREATE DATABASE` says `hsp_demo` already exists, that's fine: still run the `alembic` line, so a demo database from before your last pull catches up.
 3. **The API, on the demo database** (terminal 1; leave it running):
    ```bash
    cd backend
    HSP_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo \
      uv run uvicorn hsp.main:create_app --factory --port 8000
    ```
-   If it stops at once with `the database schema is at no revision`, step 2 is missing.
+   If it stops at once with `the database schema is at …`, run step 2.
 4. **The app** (terminal 2; leave it running):
    ```bash
    cd frontend && pnpm dev
