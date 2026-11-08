@@ -2,13 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { editorHint } from "./hints";
 import type { ApiPlan } from "./operations";
-import { editing } from "./testPlan";
-import { stubPlan, stubWall, stubZone } from "@/test/stubs";
+import { editing, LONE_WALL_PLAN } from "./testPlan";
+import { stubPlan, stubZone } from "@/test/stubs";
 
 // The test plan: w1 (0,0)→(4000,0) meets w2 (4000,0)→(4000,3000); desk d1 at (2000,1500).
-
-/** A wall on its own: neither end joined. */
-const LONE = stubPlan({ walls: [stubWall("w9", [0, 0], [3000, 0])] }) as unknown as ApiPlan;
 
 /** A room zone z1, 2 × 2 m, with nothing else in it. */
 const ROOM = stubPlan({
@@ -63,7 +60,7 @@ describe("the hint line (docs/0129)", () => {
   });
 
   it("dragging a wall joined to nothing doesn't offer to detach it", () => {
-    const { store, interaction, click, at } = editing(LONE);
+    const { store, interaction, click, at } = editing(LONE_WALL_PLAN);
     click([1500, 50]);
     interaction.pointerDown(at([1500, 0]));
     interaction.pointerMove(at([1500, 500]));
@@ -71,7 +68,7 @@ describe("the hint line (docs/0129)", () => {
   });
 
   it("dragging an end that no other wall meets doesn't offer to detach it", () => {
-    const { store, interaction, click, at } = editing(LONE);
+    const { store, interaction, click, at } = editing(LONE_WALL_PLAN);
     click([1500, 50]);
     interaction.pointerDown(at([0, 0]));
     interaction.pointerMove(at([0, 500]));

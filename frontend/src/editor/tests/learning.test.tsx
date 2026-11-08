@@ -16,7 +16,7 @@ afterEach(async () => {
   await act(() => i18n.changeLanguage("en"));
 });
 
-const hint = () => screen.getByTestId("hint-line");
+const hint = () => screen.getByRole("status");
 
 describe("learning the editor (docs/0129)", () => {
   it("the hint line follows the tool and the selection", async () => {

@@ -82,8 +82,8 @@ export function EditorTopBar({
         <Button
           variant="ghost"
           size="icon"
-          aria-label={t("editor.keys.open")}
-          title={`${t("editor.keys.open")} (?)`}
+          aria-label={t("editor.keys.title")}
+          title={t("editor.keys.openShortcut")}
           onClick={onKeys}
         >
           <CircleHelp aria-hidden />
