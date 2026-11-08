@@ -28,7 +28,7 @@ Checked on 2026-10-31. These projects and their licences change, so check again 
 | Smplrspace, Archilogic, Floorplanner | Commercial floor-plan SDKs | Hosted services, which [0005](0005-2026-10-07-deployment-model.md)'s on-premise, offline installs rule out |
 
 ## Decision
-**We keep our own editor.** None of the options fits HSP as well as it needs to, especially for drafts and edit locks ([0016](0016-2026-10-08-edit-concurrency.md), [0081](0081-2026-10-10-drafts-and-changesets.md)). Each one would replace only the drawing, and we'd still own the parts that make it HSP's:
+**We keep our own editor.** None of the options fits HSP as well as it needs to, especially for drafts and edit locks ([0016](0016-2026-10-08-edit-concurrency.md), [0081](0081-2026-10-10-drafts-and-changesets.md)). At most, one would replace the drawing and the basic editing. We'd still own the parts that make it HSP's:
 - drafts, autosave, the edit lock and publishing
 - the plan rules shared with the server
 - seat labels and seat numbering
