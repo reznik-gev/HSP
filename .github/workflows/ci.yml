@@ -59,6 +59,7 @@ jobs:
               - "deploy/web/**"
               - "deploy/keycloak/**"
               - "deploy/backup/**"
+              - "deploy/trivy/**"
               - "backup/**"
               - "deploy/*.sh"
               - "deploy/compose/compose.yml"
@@ -240,7 +241,7 @@ jobs:
         run: deploy/scan-images.sh
 
   # Known vulnerabilities in the packages HSP ships (docs/0128). Warns only; fails only when a
-  # scanner can't run. Reads the lock files, so nothing is installed.
+  # scanner can't run. Reads the lock files; only backend/'s environment, for pip-audit, is set up.
   packages:
     needs: changes
     if: needs.changes.outputs.packages == 'true'
@@ -248,6 +249,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
       - uses: pnpm/action-setup@v6
         with:
           package_json_file: frontend/package.json

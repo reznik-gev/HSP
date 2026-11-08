@@ -10,8 +10,9 @@ set -euo pipefail
 
 version="${1:-0.0.0-dev}"
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# Pinned by digest, so a re-pushed tag can't change what runs here.
-trivy=aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
+# Pinned by digest, so a re-pushed tag can't change what runs here. The pin lives in a Dockerfile
+# so that Dependabot keeps it current.
+trivy="$(sed -n 's/^FROM //p' "$root/deploy/trivy/Dockerfile")"
 work="$(mktemp -d)"
 cache="hsp-trivy-cache"
 trap 'rm -rf "$work"' EXIT
