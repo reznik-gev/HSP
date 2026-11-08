@@ -251,6 +251,8 @@ After that, add flows a few at a time, starting with assigning a seat and the ed
 
 CI doesn't measure coverage. The numbers above needed `pytest-cov` and `@vitest/coverage-v8`, which aren't project dependencies. We recommend adding both and printing coverage in the CI summary, with no minimum, so that a drop shows up in the PR that caused it. A minimum tends to produce tests written for the number.
 
+*Update, 2026-11-08:* done in [#125](https://github.com/reznik-gev/HSP/pull/125). Every CI run shows coverage in its summary, with no minimum, and a merge to `main` keeps the full report ([0114](../decisions/0114-2026-10-23-test-coverage-report.md)).
+
 ## 5. Other observations
 
 These are small, and noted so they aren't lost:
