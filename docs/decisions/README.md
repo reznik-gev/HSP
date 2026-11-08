@@ -130,3 +130,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0120 | 2026-10-24 | [Hardware sizes, measured for up to 5,000 people](0120-2026-10-24-hardware-sizes.md) | Accepted |
 | 0122 | 2026-11-01 | ["Show free seats": what counts, and how the plan shows it](0122-2026-11-01-show-free-seats-details.md) | Accepted |
 | 0123 | 2026-11-03 | [The free seats list: where it lives and how it filters](0123-2026-11-03-free-seats-list-details.md) | Accepted |
+| 0125 | 2026-11-08 | [Reviews get short dated notes when a finding changes](0125-2026-11-08-dated-notes-on-reviews.md) | Accepted |

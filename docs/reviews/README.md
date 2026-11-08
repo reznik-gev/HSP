@@ -2,7 +2,7 @@
 
 Point-in-time reviews of the whole codebase: how maintainable it is, and what we might change. Part of the [HSP documentation](../README.md).
 
-A review describes the code at one commit. It is not updated afterwards. A later review replaces it. A review proposes changes; what we decide to do about them goes into the [decision log](../decisions/README.md), which links back to the review.
+A review describes the code at one commit, and it isn't rewritten afterwards. When a finding is later fixed, decided, or no longer true, a short note says so where the finding is: *Update, YYYY-MM-DD*, then what changed, with a link ([0125](../decisions/0125-2026-11-08-dated-notes-on-reviews.md)). Anything more waits for a later review, which replaces this one. A review proposes changes; what we decide to do about them goes into the [decision log](../decisions/README.md), which links back to the review.
 
 | Date | Review | Commit |
 |---|---|---|
