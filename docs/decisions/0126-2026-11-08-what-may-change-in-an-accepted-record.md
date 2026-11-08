@@ -15,7 +15,9 @@ The owner's choice: **an accepted record stays frozen, as a rule of thumb.** Wha
 1. **Its status.** The status line moves to `Superseded by NNNN` or `Deprecated` when that happens, and its index row says the same. The index row may also name later records that refine it. No approval needed.
 2. **A `Refined by:` line in its header**, naming each later record that refines it, as 0031, 0042 and 0052 already have (the owner's choice). The same may also be written as a dated note in `## Updates`. No approval needed.
 3. **Dated notes, added at the end.** A record may get an `## Updates` section as its last section. Each note starts *Update, YYYY-MM-DD:*, then says what happened later, with a link: a later record that refined or partly replaced it, or something it names that was renamed or removed. A note never changes the decision. The text above it stays as written. No approval needed.
-4. **Rename fixes that don't change the subject**, only with the owner's explicit yes. For example: the product's name, a renamed module or setting, or a title that names the subject badly. A rename never changes what was decided. *(Claude's choice, lower confidence:)* a rename no longer needs a record of its own, as 0072 asked. The PR says the owner approved it, and a dated note in each renamed record says what was renamed.
+4. **Rename fixes that don't change the subject**, only with the owner's explicit yes. For example: the product's name, a renamed module or setting, or a title that names the subject badly. A rename never changes what was decided. How it is recorded depends on its size (the owner's choice):
+   - **A big rename** gets a record of its own, as 0072 did. For example, the product's name, or a name used across many records and the code.
+   - **A small one**, such as a UI term or another minor detail, needs only the owner's approval in the PR, and a dated note in each renamed record saying what was renamed.
 
 Anything else, such as rewording, correcting or adding to what was decided, needs a new record.
 
