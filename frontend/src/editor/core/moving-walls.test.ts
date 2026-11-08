@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { setWallLength } from "./edits";
 import type { ApiPlan } from "./operations";
 import type { Plan } from "./plan";
-import { editing } from "./testPlan";
+import { editing, LONE_WALL_PLAN } from "./testPlan";
 import { stubPlan, stubWall } from "@/test/stubs";
 
 // The test plan: w1 (0,0)→(4000,0) meets w2 (4000,0)→(4000,3000); door o1 on w1 at 500.
@@ -17,9 +17,6 @@ const WITH_W3 = stubPlan({
     stubWall("w3", [0, 2000], [1000, 2000]),
   ],
 }) as unknown as ApiPlan;
-
-/** A wall on its own: neither end joined. */
-const LONE = stubPlan({ walls: [stubWall("w9", [0, 0], [3000, 0])] }) as unknown as ApiPlan;
 
 describe("moving whole walls (docs/0108)", () => {
   it("dragging a selected wall moves it, and the wall joined to it stretches", () => {
@@ -113,7 +110,7 @@ describe("moving whole walls (docs/0108)", () => {
   });
 
   it("a lone wall's length moves the end it was drawn to", () => {
-    const { store } = editing(LONE);
+    const { store } = editing(LONE_WALL_PLAN);
     expect(setWallLength(store.getState().plan!, "w9", 2000)).toEqual([
       { op: "update", kind: "wall", id: "w9", data: { b: [2000, 0] } },
     ]);

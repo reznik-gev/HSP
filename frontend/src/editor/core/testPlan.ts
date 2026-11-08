@@ -19,6 +19,11 @@ export const PLAN = stubPlan({
   objects: [stubDesk("d1", [2000, 1500], { label: "A-01" }), stubMonitor("m1", "d1", [2000, 1700])],
 }) as unknown as ApiPlan;
 
+/** One wall on its own, w9 (0,0)→(3000,0): neither end joined. */
+export const LONE_WALL_PLAN = stubPlan({
+  walls: [stubWall("w9", [0, 0], [3000, 0])],
+}) as unknown as ApiPlan;
+
 export const ZONE_TYPES = new Map([
   ["zt-room", { name: "Room", color: "#93c5fd" }],
   ["zt-meet", { name: "Meeting room", color: "#c4b5fd" }],

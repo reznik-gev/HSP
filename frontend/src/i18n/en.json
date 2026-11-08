@@ -445,7 +445,7 @@
       "allKeys": "All keys (?)"
     },
     "keys": {
-      "open": "Keyboard and mouse",
+      "openShortcut": "Keyboard and mouse (?)",
       "title": "Keyboard and mouse",
       "description": "Every key and mouse move in the editor. Press ? to open this list.",
       "groups": {

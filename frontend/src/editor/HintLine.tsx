@@ -22,7 +22,7 @@ export function HintLine({ store, onAllKeys }: { store: EditorStore; onAllKeys: 
     // Clear of the grid controls at the bottom start corner.
     <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-60">
       <p
-        data-testid="hint-line"
+        role="status"
         className="pointer-events-auto rounded-md border bg-card/95 px-3 py-1.5 text-xs text-muted-foreground shadow-sm"
       >
         {text}{" "}
