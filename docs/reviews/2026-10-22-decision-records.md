@@ -65,7 +65,7 @@ None of these is wrong. But no single page states the current rules for releases
 ### 3.3 Code references that have drifted
 
 - `backend/src/hsp/models/org.py:74` cites **0023**, which was superseded by 0084. The index it guards (one primary team per person) is 0084's rule.
-- `deploy/bin/hsp` and `backup/src/hsp_backup/cli.py` cite **0109**, which doesn't exist yet. It is due with the second part of the #112 review fixes.
+- `deploy/bin/hsp` and `backup/src/hsp_backup/cli.py` cite **0109**, which doesn't exist yet. It is due with the second part of the #112 review fixes. *Update, 2026-11-08:* [0109](../decisions/0109-2026-10-23-schema-check-everywhere.md) now exists, so these references are no longer broken.
 
 Nothing checks these references. A typo or a superseded number goes unnoticed.
 

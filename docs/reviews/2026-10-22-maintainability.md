@@ -243,6 +243,8 @@ PR CI takes 3 to 7 minutes today. Its slowest job is usually `images`, which alr
 
 **First, the tests have to stop failing at random.** The release runs from the last push failed on three PRs in this stack (#107, #108, #112). Two failed because a script called Keycloak while it was still starting, which got a 503. The third failed an assertion in `find-a-seat`. If such a test blocks merges, it will block them at random. So the waits should be fixed first, and the test run a few times in a row to show it's stable. Only then should it become a required check.
 
+*Update, 2026-11-08:* both causes are found and fixed, in [#126](https://github.com/reznik-gev/HSP/pull/126). The 503 came from `/readyz` keeping Keycloak's "still starting" answer ([0116](../decisions/0116-2026-10-24-readyz-remembers-only-ready.md)). The `find-a-seat` failure came from Chrome's font hinting ([0117](../decisions/0117-2026-10-24-plan-labels-without-hinting.md)). The [investigation](../investigations/2026-10-24-flaky-release-tests.md) has the details. Running the test a few times in a row, before it becomes required, is still worth doing.
+
 After that, add flows a few at a time, starting with assigning a seat and the edit lock.
 
 ### 4.4 Coverage in CI
