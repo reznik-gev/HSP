@@ -1,5 +1,5 @@
 /**
- * Keyboard and mouse (docs/0129): every key and mouse move in the editor, in groups, in a side
+ * Keyboard and mouse (docs/0130): every key and mouse move in the editor, in groups, in a side
  * sheet so the plan stays in view. Opens with ?, from the hint line, or from the top bar.
  * A new editor move needs a row here.
  */

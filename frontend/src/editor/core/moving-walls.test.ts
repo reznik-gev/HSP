@@ -54,7 +54,7 @@ describe("moving whole walls (docs/0108)", () => {
     expect(wall("w2")(plan).a).toEqual([4000, 0]);
   });
 
-  it("Alt pressed mid-drag detaches it, and it stays detached after Alt is let go (docs/0129)", () => {
+  it("Alt pressed mid-drag detaches it, and it stays detached after Alt is let go (docs/0130)", () => {
     const { store, interaction, click, at } = editing();
     click([2000, 50]);
     interaction.pointerDown(at([2000, 0]));

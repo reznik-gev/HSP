@@ -1,5 +1,5 @@
 /**
- * What the hint line under the plan says (docs/0129): what you can do now, and which keys
+ * What the hint line under the plan says (docs/0130): what you can do now, and which keys
  * change it. It follows the tool, the selection and what's being dragged, all read from the
  * store. The result is a key under `editor.hints` in the translations.
  */

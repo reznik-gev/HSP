@@ -1,6 +1,6 @@
 /**
  * The editor's top bar (docs/0089): Exit, the floor, where the draft stands ("Draft 4 · Saved"),
- * Undo / Redo (docs/0050), Keyboard and mouse (docs/0129), the version history, Discard draft and Publish (docs/0082).
+ * Undo / Redo (docs/0050), Keyboard and mouse (docs/0130), the version history, Discard draft and Publish (docs/0082).
  */
 import { CircleHelp, History, Redo2, Undo2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";

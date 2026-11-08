@@ -1,4 +1,4 @@
-# 0129 — How a new user learns the floor editor
+# 0130 — How a new user learns the floor editor
 
 - **Date:** 2026-11-08
 - **Status:** Accepted
