@@ -83,6 +83,8 @@ The base images use tags like `python:3.14-slim` and `nginx-unprivileged:1.30`. 
 
 A cheap first step would be a CI job that runs `pip-audit` (backend and backup), `pnpm audit --prod`, and an image scanner such as Trivy on the built images. It would warn, not block, at first.
 
+*Update, 2026-11-08:* Done as proposed, warnings only, on PRs and releases ([0128](../decisions/0128-2026-11-08-vulnerability-scanning.md)).
+
 ## 4. Smaller findings
 
 - **`uuid-utils` is no longer needed.** Python 3.14 added `uuid.uuid7()` to the standard library (we checked: it works in our environment). The package is used in two places (`models/base.py`, and `main.py` for request IDs).

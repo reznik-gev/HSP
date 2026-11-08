@@ -70,7 +70,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0056 | 2026-10-08 | [Upgrades: maintenance window + migrate job](0056-2026-10-08-upgrades-and-migrations.md) | Accepted (`hsp upgrade` refined by 0107, the schema check by 0105 and 0109) |
 | 0057 | 2026-10-08 | [Observability: standard outputs + optional stack](0057-2026-10-08-observability.md) | Accepted (refined by 0105; the monitoring profile moved past 1.0 by 0104) |
 | 0058 | 2026-10-08 | [Backups: built-in scheduled dumps](0058-2026-10-08-backups.md)           | Accepted (refined by 0106) |
-| 0059 | 2026-10-08 | [Supply chain: automated dependency updates](0059-2026-10-08-supply-chain-security.md) | Accepted (signing and SBOM planned for 1.3–1.4 by 0104) |
+| 0059 | 2026-10-08 | [Supply chain: automated dependency updates](0059-2026-10-08-supply-chain-security.md) | Accepted (signing and SBOM planned for 1.3–1.4 by 0104; vulnerability scanning in 0128) |
 | 0060 | 2026-10-08 | [Reverse proxy & TLS: Nginx](0060-2026-10-08-reverse-proxy.md)            | Accepted (refined by 0098) |
 | 0061 | 2026-10-08 | [Tests: mostly mocked DB + targeted DB integration](0061-2026-10-08-test-strategy.md) | Accepted (in-memory tests for every area after 1.2, by 0110) |
 | 0062 | 2026-10-08 | [Tooling: Ruff + mypy, ESLint + Prettier](0062-2026-10-08-code-quality-tooling.md) | Accepted |
@@ -139,3 +139,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0125 | 2026-11-08 | [Reviews get short dated notes when a finding changes](0125-2026-11-08-dated-notes-on-reviews.md) | Accepted |
 | 0126 | 2026-11-08 | [What may change in an accepted decision record](0126-2026-11-08-what-may-change-in-an-accepted-record.md) | Accepted |
 | 0127 | 2026-11-08 | [Python 3.15 waits until after 1.0.0](0127-2026-11-08-python-3-15-after-1-0.md) | Accepted |
+| 0128 | 2026-11-08 | [Vulnerability scanning before 1.0.0, warnings only](0128-2026-11-08-vulnerability-scanning.md) | Accepted |
