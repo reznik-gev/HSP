@@ -20,6 +20,7 @@ on:
       - deploy/release-notes.sh
       - deploy/audit-packages.sh
       - deploy/scan-images.sh
+      - deploy/trivy/Dockerfile
 
 concurrency:
   group: release-${{ github.ref }}

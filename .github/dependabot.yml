@@ -22,7 +22,8 @@ updates:
   # The base image of every image HSP builds (docs/0097): hsp-api, hsp-backup, hsp-keycloak,
   # hsp-web.
   - package-ecosystem: docker
-    directories: [/backend, /deploy/backup, /deploy/keycloak, /deploy/web]
+    # deploy/trivy pins the scanner deploy/scan-images.sh runs (docs/0128).
+    directories: [/backend, /deploy/backup, /deploy/keycloak, /deploy/web, /deploy/trivy]
     schedule: { interval: weekly }
     ignore:
       # Python's version moves everywhere at once, as a planned change (docs/0091, docs/0127).

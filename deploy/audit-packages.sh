@@ -8,8 +8,6 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# Pinned; Dependabot can't see it here, so it moves by hand, like Trivy's digest (docs/0128).
-pip_audit=pip-audit@2.10.1
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 report="$work/report.md"
@@ -25,8 +23,9 @@ for project in backend backup; do
   (cd "$root/$project" &&
     uv export --frozen --no-dev --no-emit-project --format requirements-txt --quiet \
       >"$work/$project.txt")
-  # Exits 1 both for findings and for errors, so success is judged by the JSON it wrote.
-  uvx --quiet "$pip_audit" --disable-pip --requirement "$work/$project.txt" \
+  # pip-audit is one of backend/'s development packages, so Dependabot keeps it current. It
+  # exits 1 both for findings and for errors, so success is judged by the JSON it wrote.
+  uv run --project "$root/backend" --frozen --quiet pip-audit --disable-pip --requirement "$work/$project.txt" \
     --format json --output "$work/$project.json" >/dev/null 2>"$work/$project.err" || true
   jq -e '.dependencies' "$work/$project.json" >/dev/null 2>&1 || {
     cat "$work/$project.err" >&2
