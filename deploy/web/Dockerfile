@@ -29,6 +29,12 @@ LABEL org.opencontainers.image.title="hsp-web" \
       org.opencontainers.image.created="${HSP_CREATED}"
 # The image's own default site is replaced by ours (templates/ -> /etc/nginx/conf.d at start).
 RUN rm /etc/nginx/conf.d/default.conf
+# Debian's security fixes, even those the base image doesn't have yet (docs/0129). The image runs
+# as nginx (uid 101), so this step switches to root and back.
+USER root
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
+USER 101
 COPY templates/ /etc/nginx/templates/
 COPY hsp/ /etc/nginx/hsp/
 COPY html/ /usr/share/nginx/hsp/

@@ -26,6 +26,13 @@ LABEL org.opencontainers.image.title="hsp-api" \
       org.opencontainers.image.version="${HSP_VERSION}" \
       org.opencontainers.image.revision="${HSP_REVISION}" \
       org.opencontainers.image.created="${HSP_CREATED}"
+# Debian's security fixes, even those the base image doesn't have yet (docs/0129). HSP never runs
+# pip (the app is in /app/.venv, built by uv), and pip's own bundled packages carry known
+# vulnerabilities, so it is removed.
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/local/bin/pip* /usr/local/lib/python3*/ensurepip \
+       /usr/local/lib/python3*/site-packages/pip /usr/local/lib/python3*/site-packages/pip-*.dist-info
 RUN useradd --system --uid 10001 --home-dir /app hsp
 WORKDIR /app
 COPY --from=build --chown=hsp:hsp /app /app

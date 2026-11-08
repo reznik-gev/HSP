@@ -36,3 +36,4 @@ The first release.
 - Prometheus metrics from the API: requests by route, changesets and publishes, edit-lock refusals and database connections. Only the host itself can reach them, unless you set `HSP_METRICS_ADDRESS`.
 - OpenTelemetry tracing of requests and database queries, off until you set `OTEL_EXPORTER_OTLP_ENDPOINT`.
 - Scheduled backups of HSP's and Keycloak's databases, to a folder or to S3, on the schedules you set in `backups.yml`. Each schedule keeps its own number of backups. Restoring refuses a backup from a newer version.
+- The images include Debian's security fixes up to the day they were built. The API and backup images no longer contain pip.
