@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-08
 - **Status:** Accepted
+- **Refined by:** [0128](0128-2026-11-08-vulnerability-scanning.md) (vulnerability scanning, warnings only)
 
 ## Options considered (multi-select)
 - **Dependency updates** ✅
