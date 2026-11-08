@@ -28,8 +28,8 @@ updates:
       # Python's version moves everywhere at once, as a planned change (docs/0091, docs/0127).
       - dependency-name: python
         update-types: ["version-update:semver-minor"]
-      # hsp-web builds the frontend on the same Node major as CI (setup-node in ci.yml and
-      # release.yml), so a new major is a planned change too.
+      # Node stays on the LTS major (docs/0065), the same as setup-node in the workflows, so a
+      # new major is a planned change too.
       - dependency-name: node
         update-types: ["version-update:semver-major"]
 
