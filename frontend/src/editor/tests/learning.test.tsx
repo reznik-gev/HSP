@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** Learning the editor: the hint line and the Keyboard and mouse sheet (docs/0129). */
+/** Learning the editor: the hint line and the Keyboard and mouse sheet (docs/0130). */
 import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -18,7 +18,7 @@ afterEach(async () => {
 
 const hint = () => screen.getByRole("status");
 
-describe("learning the editor (docs/0129)", () => {
+describe("learning the editor (docs/0130)", () => {
   it("the hint line follows the tool and the selection", async () => {
     await renderApp("/floors/f3/edit", spyChangesets().routes);
     await screen.findByText("Draft 3 · Saved");

@@ -1,5 +1,5 @@
 /**
- * The hint line at the bottom of the canvas (docs/0129): what you can do now and which keys
+ * The hint line at the bottom of the canvas (docs/0130): what you can do now and which keys
  * change it, for the current tool, selection or drag. It ends with "All keys (?)", which opens
  * the Keyboard and mouse sheet.
  */

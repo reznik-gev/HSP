@@ -8,7 +8,7 @@
  * with every wall that meets there (Alt detaches just that wall, docs/0044), dragging a
  * selected wall's body moves the whole wall and the walls joined to it stretch (Alt detaches
  * it, docs/0108). Alt pressed at any point in either drag detaches, and it stays detached until
- * the drag ends, while snapping follows Alt as it's held (docs/0129). Dragging a selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
+ * the drag ends, while snapping follows Alt as it's held (docs/0130). Dragging a selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
  * Drawing tools (wall, door, window, column, zone, item): a click places, a drag pans; see
  * their classes. R turns the item being placed, or the selected furniture, a quarter turn.
  * The middle button always pans and the wheel zooms (PanZoom, shared with the viewer).
@@ -336,7 +336,7 @@ export class Interaction {
         s.gridSnap && !e.alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
       s.setDrag({ dx: snap(p[0] - g.start[0]), dy: snap(p[1] - g.start[1]) });
     } else if (g.kind === "junction" && s.plan) {
-      // Alt pressed mid-drag detaches too, and stays detached (docs/0129).
+      // Alt pressed mid-drag detaches too, and stays detached (docs/0130).
       if (e.alt) g.walls = [g.grabbed];
       const { point, kind } = snapPoint(s.plan, this.toPlan(e), {
         ...snapSettings(s, e.alt),
@@ -349,7 +349,7 @@ export class Interaction {
       });
       s.setPreview({ kind: "junction", from: g.from, to: point, walls: g.walls, snap: kind });
     } else if (g.kind === "wall" && s.plan) {
-      // Alt pressed mid-drag detaches too, and stays detached (docs/0129).
+      // Alt pressed mid-drag detaches too, and stays detached (docs/0130).
       if (e.alt) {
         g.joinedA = [];
         g.joinedB = [];

@@ -6,7 +6,7 @@
  * - Escape, Enter, Delete and Backspace go to the current tool (end a wall chain, delete the
  *   selection, …), and the arrow keys nudge the selection 1 cm, 10 cm with Shift (docs/0108);
  * - a digit while drawing a wall or dragging opens the typed-measurement box (docs/0045);
- * - ? opens Keyboard and mouse, the list of every key (docs/0129).
+ * - ? opens Keyboard and mouse, the list of every key (docs/0130).
  * None of them work while a dialog or side sheet is open over the editor.
  */
 import { useEffect } from "react";

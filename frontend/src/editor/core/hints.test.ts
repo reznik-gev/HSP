@@ -19,7 +19,7 @@ const ROOM = stubPlan({
   ],
 }) as unknown as ApiPlan;
 
-describe("the hint line (docs/0129)", () => {
+describe("the hint line (docs/0130)", () => {
   it("with nothing selected, it says how to select and pan", () => {
     const { store } = editing();
     expect(editorHint(store.getState())).toEqual({ key: "select" });

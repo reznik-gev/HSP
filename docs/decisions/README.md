@@ -55,7 +55,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0041 | 2026-10-08 | [Live updates in v1: polling](0041-2026-10-08-live-updates.md)            | Accepted (ETags as body hashes in 0104) |
 | 0042 | 2026-10-08 | [2D renderer: SVG](0042-2026-10-08-2d-renderer.md)                        | Accepted |
 | 0043 | 2026-10-08 | [Editor layout: 2D main, 3D toggle/split](0043-2026-10-08-editor-view-layout.md) | Accepted (3D modes moved past v1 by 0094) |
-| 0044 | 2026-10-08 | [Wall joins: linked endpoints](0044-2026-10-08-wall-joins.md)             | Accepted (moving whole walls in 0108; `Alt` mid-drag in 0129) |
+| 0044 | 2026-10-08 | [Wall joins: linked endpoints](0044-2026-10-08-wall-joins.md)             | Accepted (moving whole walls in 0108; `Alt` mid-drag in 0130) |
 | 0045 | 2026-10-08 | [Dimension entry: inline typing + properties panel](0045-2026-10-08-dimension-entry.md) | Accepted |
 | 0046 | 2026-10-08 | [Display units: cm default, per-user](0046-2026-10-08-display-units.md)   | Accepted |
 | 0047 | 2026-10-08 | [Snapping: grid + object/wall](0047-2026-10-08-snapping.md)               | Accepted (straight walls in 0108) |
@@ -119,7 +119,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted (the schema check at startup refined by 0109, CPU and memory by 0111, Keycloak's readiness by 0116) |
 | 0106 | 2026-10-21 | [Backups: our own image, with schedules in `backups.yml`](0106-2026-10-21-backups.md) | Accepted (refined by 0115) |
 | 0107 | 2026-10-21 | [`bin/hsp`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted (a failed restore refined by 0118, recovering on a new host by 0119, disk per release by 0120) |
-| 0108 | 2026-10-21 | [What we do with the first client demo's feedback](0108-2026-10-21-first-client-demo-feedback.md) | Accepted ("Show free seats" details in 0122, the free seats list in 0123, `Alt` mid-drag in 0129) |
+| 0108 | 2026-10-21 | [What we do with the first client demo's feedback](0108-2026-10-21-first-client-demo-feedback.md) | Accepted ("Show free seats" details in 0122, the free seats list in 0123, `Alt` mid-drag in 0130) |
 | 0109 | 2026-10-23 | [The schema check at startup runs everywhere; unit tests opt out](0109-2026-10-23-schema-check-everywhere.md) | Accepted |
 | 0110 | 2026-10-22 | [Database queries move into repositories, after 1.2](0110-2026-10-22-repositories-after-1-2.md) | Accepted (with faster dev cycle and CI, 0112) |
 | 0111 | 2026-10-23 | [The API's CPU and memory come from the platform, not its own metrics](0111-2026-10-23-cpu-and-memory-from-the-platform.md) | Accepted |
@@ -141,4 +141,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0127 | 2026-11-08 | [Python 3.15 waits until after 1.0.0](0127-2026-11-08-python-3-15-after-1-0.md) | Accepted |
 | 0128 | 2026-11-08 | [Vulnerability scanning before 1.0.0, warnings only](0128-2026-11-08-vulnerability-scanning.md) | Accepted |
 | 0129 | 2026-11-08 | [What to do about the first scan's findings](0129-2026-11-08-first-scan-findings.md) | Accepted |
-| 0129 | 2026-11-08 | [How a new user learns the floor editor](0129-2026-11-08-learning-the-editor.md) | Accepted |
+| 0130 | 2026-11-08 | [How a new user learns the floor editor](0130-2026-11-08-learning-the-editor.md) | Accepted |
