@@ -34,6 +34,8 @@ frontend/playwright-report/
 
 # Claude Code: temporary git worktrees created for background agents
 .claude/worktrees/
+# Claude Code: each person's own settings for this repo (docs/0124)
+.claude/settings.local.json
 
 # A production install tried out from deploy/compose (docs/0099): never commit these. Its .env is
 # covered by `.env` above, at any depth. secrets/ and tls/ are named by path, not at any depth,

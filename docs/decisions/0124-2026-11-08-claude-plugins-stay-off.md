@@ -62,13 +62,7 @@ If one is wanted later, turn it on **for HSP only, in `.claude/settings.local.js
 ## How to apply it
 **Option (a)** needs no change: don't create any plugin settings in HSP.
 
-**To turn one on for HSP only (option b).** First make sure the file can't be committed. Right now nothing in HSP ignores `.claude/settings.local.json` (`git check-ignore` finds no rule; only `.claude/worktrees/` is ignored). So add it to the local exclude file, which is not checked in:
-
-```bash
-echo ".claude/settings.local.json" >> .git/info/exclude
-```
-
-Then create or extend `HSP/.claude/settings.local.json`. Keep only the plugins you want on:
+**To turn one on for HSP only (option b).** The repo's `.gitignore` ignores `.claude/settings.local.json`, added with this record, so the file is never committed from any clone or worktree. Create or extend `HSP/.claude/settings.local.json`. Keep only the plugins you want on:
 
 ```json
 {
@@ -81,9 +75,7 @@ Then create or extend `HSP/.claude/settings.local.json`. Keep only the plugins y
 If the file already has other keys, add `enabledPlugins` next to them instead of replacing the file. Start a new Claude Code session in HSP, and check with `/plugin` that the plugin shows as enabled.
 
 ## How to undo it
-- **Option (b):** delete the plugin's line from `enabledPlugins` in `.claude/settings.local.json`, or delete the file if that was all it had. The machine-wide `false` then applies again. Start a new session.
-- **Option (c):** the same in `.claude/settings.json`, in a commit through a PR like any other change.
-- **Option (d):** set the plugin back to `false` under `enabledPlugins` in `~/.claude/settings.json`.
+To undo option (b), delete the plugin's line from `enabledPlugins` in `.claude/settings.local.json`, or delete the file if that was all it had. The machine-wide `false` then applies again. Start a new session.
 
 ## Consequences
 - HSP sessions keep the context saving from `/doctor` (about 2.2k tokens across the seven).
