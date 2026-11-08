@@ -17,7 +17,7 @@ RUN HSP_VERSION="${HSP_VERSION}" pnpm build
 RUN find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' -o -name '*.svg' \
       -o -name '*.json' \) -size +1k -exec gzip -k -9 {} +
 
-FROM nginxinc/nginx-unprivileged:1.30
+FROM nginxinc/nginx-unprivileged:1.31
 ARG HSP_VERSION=0.0.0-dev
 ARG HSP_REVISION=unknown
 ARG HSP_CREATED=unknown
