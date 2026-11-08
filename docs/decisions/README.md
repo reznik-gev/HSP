@@ -135,7 +135,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0121 | 2026-10-31 | [The floor editor stays our own code, for now](0121-2026-10-31-editor-stays-our-own.md) | Accepted |
 | 0122 | 2026-11-01 | ["Show free seats": what counts, and how the plan shows it](0122-2026-11-01-show-free-seats-details.md) | Accepted |
 | 0123 | 2026-11-03 | [The free seats list: where it lives and how it filters](0123-2026-11-03-free-seats-list-details.md) | Accepted |
-| 0124 | 2026-11-08 | [Claude Code plugins in HSP: keep the seven disabled plugins off](0124-2026-11-08-claude-plugins-reenable.md) | Proposed |
+| 0124 | 2026-11-08 | [Claude Code plugins in HSP: keep the seven disabled plugins off](0124-2026-11-08-claude-plugins-stay-off.md) | Proposed |
 | 0125 | 2026-11-08 | [Reviews get short dated notes when a finding changes](0125-2026-11-08-dated-notes-on-reviews.md) | Accepted |
 | 0126 | 2026-11-08 | [What may change in an accepted decision record](0126-2026-11-08-what-may-change-in-an-accepted-record.md) | Accepted |
 | 0127 | 2026-11-08 | [Python 3.15 waits until after 1.0.0](0127-2026-11-08-python-3-15-after-1-0.md) | Accepted |
