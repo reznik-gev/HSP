@@ -3,7 +3,7 @@
 HSP (Human-Space Program) manages office space: sites, buildings and floors drawn as plans, seats assigned to people and teams, and the org chart. It is a FastAPI backend (`backend/`, Python, uv) and a React frontend (`frontend/`, TypeScript, pnpm). Start with the [README](README.md) for the layout and how to run it.
 
 ## Read these first
-- [docs/decisions/](docs/decisions/README.md): every product and technical decision, numbered and indexed. Follow them. An accepted record is never edited; a new record supersedes it.
+- [docs/decisions/](docs/decisions/README.md): every product and technical decision, numbered and indexed. Follow them. An accepted record stays frozen: to change a decision, add a new record. Only its status, dated notes added at the end, and (with the owner's explicit yes) rename fixes may change it ([0126](docs/decisions/0126-2026-11-08-what-may-change-in-an-accepted-record.md)).
 - [docs/guides/git.md](docs/guides/git.md): branches, commits, review fixes and merging.
 - [docs/guides/stacked-prs.md](docs/guides/stacked-prs.md): stacked PRs with `gh stack`.
 - [.claude/skills/prepare-pr-for-review](.claude/skills/prepare-pr-for-review/SKILL.md): getting a PR ready for the owner's review.

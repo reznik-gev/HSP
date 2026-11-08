@@ -4,8 +4,10 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 
 **Naming:** `NNNN-YYYY-MM-DD-short-slug.md` — a sequential number plus the date the decision was made.
 **Status values:** `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
-A decision is never edited after it is accepted. To change it, add a new document that supersedes it and update the old one's status line.
-Exception: **pure renames** (no change to any decision) may be applied in place, recorded in their own document (see [0072](0072-2026-10-08-rename-hsm-to-hsp.md)).
+**An accepted record stays frozen, as a rule of thumb.** What it decided is never changed in place. To change a decision, add a new record that refines or supersedes it. Three kinds of edit are allowed ([0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md)):
+- **Its status:** the status line and the index row, when it is superseded or deprecated.
+- **Dated notes, added at the end,** in an `## Updates` section: *Update, YYYY-MM-DD:*, then what happened later, with a link. A note never changes the decision.
+- **Rename fixes that don't change the subject,** only with the owner's explicit yes, each noted in a dated note.
 
 | #    | Date       | Decision                                                                 | Status   |
 |------|------------|--------------------------------------------------------------------------|----------|
@@ -80,7 +82,7 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0069 | 2026-10-08 | [Merge method: rebase only, linear history](0069-2026-10-08-rebase-merges.md) | Accepted |
 | 0070 | 2026-10-08 | [CI structure: single workflow with gate job](0070-2026-10-08-ci-gate-job.md) | Accepted |
 | 0071 | 2026-10-08 | [License: proprietary (source-visible); no external contributions](0071-2026-10-08-license-and-contributions.md) | Accepted |
-| 0072 | 2026-10-08 | [Rename the product from HSM to HSP (Human-Space Program)](0072-2026-10-08-rename-hsm-to-hsp.md) | Accepted |
+| 0072 | 2026-10-08 | [Rename the product from HSM to HSP (Human-Space Program)](0072-2026-10-08-rename-hsm-to-hsp.md) | Accepted (renames in place refined by 0126) |
 | 0073 | 2026-10-08 | [SVG performance test setup](0073-2026-10-08-svg-performance-test-setup.md) | Accepted |
 | 0074 | 2026-10-08 | [SVG gate results; lowered performance bounds for v1](0074-2026-10-08-svg-gate-results-and-v1-bounds.md) | Accepted (temporary) |
 | 0075 | 2026-10-08 | [Documentation structure: decisions move to docs/decisions/](0075-2026-10-08-docs-directory-structure.md) | Accepted |
@@ -131,3 +133,4 @@ Exception: **pure renames** (no change to any decision) may be applied in place,
 | 0122 | 2026-11-01 | ["Show free seats": what counts, and how the plan shows it](0122-2026-11-01-show-free-seats-details.md) | Accepted |
 | 0123 | 2026-11-03 | [The free seats list: where it lives and how it filters](0123-2026-11-03-free-seats-list-details.md) | Accepted |
 | 0125 | 2026-11-08 | [Reviews get short dated notes when a finding changes](0125-2026-11-08-dated-notes-on-reviews.md) | Accepted |
+| 0126 | 2026-11-08 | [What may change in an accepted decision record](0126-2026-11-08-what-may-change-in-an-accepted-record.md) | Accepted |
