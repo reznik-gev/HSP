@@ -21,6 +21,10 @@ updates:
   - package-ecosystem: docker
     directory: /backend
     schedule: { interval: weekly }
+    ignore:
+      # Python's version moves everywhere at once, as a planned change (docs/0091, docs/0127).
+      - dependency-name: python
+        update-types: ["version-update:semver-minor"]
 
   - package-ecosystem: docker-compose
     directory: /deploy

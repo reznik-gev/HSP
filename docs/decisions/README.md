@@ -136,3 +136,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0123 | 2026-11-03 | [The free seats list: where it lives and how it filters](0123-2026-11-03-free-seats-list-details.md) | Accepted |
 | 0125 | 2026-11-08 | [Reviews get short dated notes when a finding changes](0125-2026-11-08-dated-notes-on-reviews.md) | Accepted |
 | 0126 | 2026-11-08 | [What may change in an accepted decision record](0126-2026-11-08-what-may-change-in-an-accepted-record.md) | Accepted |
+| 0127 | 2026-11-08 | [Python 3.15 waits until after 1.0.0](0127-2026-11-08-python-3-15-after-1-0.md) | Accepted |
