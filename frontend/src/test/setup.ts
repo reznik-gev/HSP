@@ -1,9 +1,11 @@
 // Adds DOM matchers such as toBeInTheDocument() to expect() (Testing Library, docs/0087).
 import "@testing-library/jest-dom/vitest";
 
+import { setTimeout as sleep } from "node:timers/promises";
+
 import { configure } from "@testing-library/react";
 import { toast } from "sonner";
-import { afterEach } from "vitest";
+import { afterAll, afterEach } from "vitest";
 
 // Screen tests render the whole app (router, lazy pages, i18n). With every test file running
 // in parallel, the first render can take over a second, so wait up to 5 s for elements.
@@ -56,4 +58,15 @@ if (typeof window !== "undefined") {
 // Notices live in a global store (Sonner): clear them so one test's notice can't leak into the next.
 afterEach(() => {
   toast.dismiss();
+});
+
+// Sonner removes a dismissed notice 200 ms later, on a timer that also runs when the screen is
+// already unmounted. If a file ends within those 200 ms, the timer fires after Vitest has removed
+// jsdom's window, React reads `window`, and the run fails with "window is not defined" though
+// every test passed. So a file that showed a notice waits out that timer before teardown. Once
+// per file, not after each test, so it costs at most a quarter second per file with notices.
+// node:timers, so a test's fake timers can't stall the wait. Guarded by toastTeardown.test.tsx.
+const SONNER_REMOVAL_MS = 200; // TIME_BEFORE_UNMOUNT in sonner/dist/index.mjs
+afterAll(async () => {
+  if (toast.getHistory().length > 0) await sleep(SONNER_REMOVAL_MS + 50);
 });

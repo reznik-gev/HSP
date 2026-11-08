@@ -38,6 +38,12 @@ export default defineConfig(({ mode }) => ({
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     setupFiles: ["src/test/setup.ts"],
+    // `// @vitest-environment slow-teardown`: jsdom that outlives its window (src/test/).
+    alias: {
+      "vitest-environment-slow-teardown": fileURLToPath(
+        new URL("./src/test/slowTeardownEnvironment.ts", import.meta.url),
+      ),
+    },
     // Screen tests render the whole app; with every file running in parallel a slow machine
     // can need more than the default 5 s for one test.
     testTimeout: 15_000,
