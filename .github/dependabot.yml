@@ -1,8 +1,9 @@
 # Weekly grouped dependency updates (docs/0059).
 version: 2
 updates:
+  # One PR per folder, each grouping all of its packages.
   - package-ecosystem: uv
-    directory: /backend
+    directories: [/backend, /backup]
     schedule: { interval: weekly }
     groups:
       python: { patterns: ["*"] }
@@ -18,16 +19,23 @@ updates:
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
 
+  # The base image of every image HSP builds (docs/0097): hsp-api, hsp-backup, hsp-keycloak,
+  # hsp-web.
   - package-ecosystem: docker
-    directory: /backend
+    directories: [/backend, /deploy/backup, /deploy/keycloak, /deploy/web]
     schedule: { interval: weekly }
     ignore:
       # Python's version moves everywhere at once, as a planned change (docs/0091, docs/0127).
       - dependency-name: python
         update-types: ["version-update:semver-minor"]
+      # hsp-web builds the frontend on the same Node major as CI (setup-node in ci.yml and
+      # release.yml), so a new major is a planned change too.
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
 
+  # compose.dev.yml (development) and compose/compose.yml (the production stack's PostGIS).
   - package-ecosystem: docker-compose
-    directory: /deploy
+    directories: [/deploy, /deploy/compose]
     schedule: { interval: weekly }
 
   - package-ecosystem: github-actions
