@@ -3,6 +3,7 @@
 - **Date:** 2026-10-18
 - **Status:** Accepted
 - **Refines:** [0055](0055-2026-10-08-deployment-target.md) (its `nginx` and `frontend` services become one image), [0054](0054-2026-10-08-release-distribution.md), [0063](0063-2026-10-08-release-versioning.md)
+- **Refined by:** [0129](0129-2026-11-08-first-scan-findings.md) (Debian's updates installed at build time; no pip in the Python images)
 
 ## Context
 The offline bundle ([0054](0054-2026-10-08-release-distribution.md)) ships container images, and the single-host Compose deployment ([0055](0055-2026-10-08-deployment-target.md)) runs them. Until now only the API had a Dockerfile, and only for development. This record decides which images HSP builds and how. The owner chose the five main points below. The details marked *(Claude's choice)* are lower-confidence and can change in review.
