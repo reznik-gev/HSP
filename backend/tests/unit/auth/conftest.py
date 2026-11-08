@@ -1,5 +1,6 @@
-"""Fixtures for the sign-in tests: the session store, the app logging in against a fake
-identity provider (docs/0077), and a signed-in session on an app with probe routes."""
+"""Fixtures for the sign-in tests: the app logging in against a fake identity provider
+(docs/0077), and a signed-in session on an app with probe routes. `session_store` comes from
+tests/unit/conftest.py."""
 
 from collections.abc import Iterator
 from typing import Any
