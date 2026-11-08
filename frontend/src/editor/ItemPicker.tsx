@@ -39,7 +39,6 @@ export function ItemPicker({ store }: { store: EditorStore }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <p className="text-xs text-muted-foreground">{t("editor.items.hint")}</p>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {catalog.isError && (

@@ -58,7 +58,6 @@ export function ToolOptions({ store }: { store: EditorStore }) {
           </option>
         ))}
       </Select>
-      <span className="text-xs text-muted-foreground">{t("editor.zoneHint")}</span>
     </div>
   );
 }

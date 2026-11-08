@@ -421,11 +421,167 @@
       "number": "Number seats"
     },
     "zoneType": "Zone type",
-    "zoneHint": "Click the corners; click the first one again or press Enter to finish.",
+    "hints": {
+      "select": "Click to select, Shift+click to add. Drag empty space to pan, scroll to zoom.",
+      "selectedWall": "Drag the wall to move it, or an end to move its corner. Arrows nudge 1 cm, Shift+arrows 10 cm. Delete removes it.",
+      "selectedZone": "Drag a corner to reshape the zone. Arrows nudge 1 cm, Shift+arrows 10 cm. Delete removes it.",
+      "selected": "Drag to move. Arrows nudge 1 cm, Shift+arrows 10 cm. R turns furniture. Delete removes the selection.",
+      "junction": "Moving {{walls}} walls at this corner. Press Alt to move only this one. Shift: 45° steps.",
+      "junctionDetached": "Moving only this wall; the others stay. Snapping is off while you hold Alt.",
+      "junctionAlone": "Moving this end. Shift: 45° steps. Alt: no snapping.",
+      "wallMove": "The walls joined to it stretch to stay joined. Press Alt to move it on its own.",
+      "wallMoveDetached": "Moving the wall on its own; the walls it was joined to stay. Snapping is off while you hold Alt.",
+      "wallMoveAlone": "Moving the wall. Alt: no snapping.",
+      "dragging": "Type a number for an exact distance. Alt: no snapping.",
+      "vertex": "Reshaping the zone. Alt: no snapping.",
+      "slide": "Sliding along its wall.",
+      "wall": "Click to start a wall. Shift: 45° steps. Alt: no snapping.",
+      "wallDrawing": "Click the next corner, or type a length. Enter, Esc or right-click ends the wall.",
+      "opening": "Click on a wall to place it there.",
+      "column": "Click to place a column.",
+      "zone": "Click the corners; click the first one again or press Enter to finish.",
+      "item": "Choose an item in the panel, then click on the plan to place it. R turns it.",
+      "number": "Click seats in order, or drag across them, to number them.",
+      "allKeys": "All keys (?)"
+    },
+    "keys": {
+      "open": "Keyboard and mouse",
+      "title": "Keyboard and mouse",
+      "description": "Every key and mouse move in the editor. Press ? to open this list.",
+      "groups": {
+        "tools": "Tools",
+        "select": "Selecting and moving",
+        "walls": "Walls and zones",
+        "drawing": "Drawing",
+        "editing": "Editing",
+        "view": "Moving around the plan"
+      },
+      "rows": {
+        "grid": {
+          "keys": "G",
+          "what": "Grid snap on or off"
+        },
+        "click": {
+          "keys": "Click",
+          "what": "Select"
+        },
+        "shiftClick": {
+          "keys": "Shift+click",
+          "what": "Add to the selection"
+        },
+        "esc": {
+          "keys": "Esc",
+          "what": "Clear the selection, or go back to Select"
+        },
+        "drag": {
+          "keys": "Drag",
+          "what": "Move the selection. Doors and windows slide along their wall."
+        },
+        "arrows": {
+          "keys": "Arrow keys",
+          "what": "Nudge the selection 1 cm"
+        },
+        "shiftArrows": {
+          "keys": "Shift+arrow keys",
+          "what": "Nudge the selection 10 cm"
+        },
+        "typeDistance": {
+          "keys": "A number while dragging",
+          "what": "Move exactly that far"
+        },
+        "rotate": {
+          "keys": "R",
+          "what": "Turn the selected furniture a quarter turn"
+        },
+        "delete": {
+          "keys": "Delete or Backspace",
+          "what": "Delete the selection"
+        },
+        "wallBody": {
+          "keys": "Drag a selected wall",
+          "what": "Move it; the walls joined to it stretch"
+        },
+        "wallEnd": {
+          "keys": "Drag a selected wall's end",
+          "what": "Move the corner, with every wall that meets there"
+        },
+        "altDetach": {
+          "keys": "Alt while dragging a wall",
+          "what": "Move only that wall, apart from the others. Press it at any time in the drag."
+        },
+        "zoneCorner": {
+          "keys": "Drag a selected zone's corner",
+          "what": "Reshape the zone"
+        },
+        "place": {
+          "keys": "Click",
+          "what": "Place a corner, door, window, column or item"
+        },
+        "typeLength": {
+          "keys": "A number while drawing a wall",
+          "what": "An exact length; Tab for an angle"
+        },
+        "shift": {
+          "keys": "Shift",
+          "what": "Keep walls to 45° steps"
+        },
+        "alt": {
+          "keys": "Hold Alt",
+          "what": "No snapping"
+        },
+        "endWall": {
+          "keys": "Enter, Esc or right-click",
+          "what": "End the wall"
+        },
+        "closeZone": {
+          "keys": "Enter",
+          "what": "Finish the zone"
+        },
+        "rotatePlacing": {
+          "keys": "R",
+          "what": "Turn the item before placing it"
+        },
+        "numberDrag": {
+          "keys": "Drag across seats",
+          "what": "Number them in order, with Number seats"
+        },
+        "undo": {
+          "keys": "Ctrl+Z",
+          "what": "Undo"
+        },
+        "redo": {
+          "keys": "Ctrl+Shift+Z or Ctrl+Y",
+          "what": "Redo"
+        },
+        "copy": {
+          "keys": "Ctrl+C",
+          "what": "Copy the selection"
+        },
+        "paste": {
+          "keys": "Ctrl+V",
+          "what": "Paste in the same place"
+        },
+        "pasteHere": {
+          "keys": "Ctrl+Shift+V",
+          "what": "Paste where the pointer is"
+        },
+        "help": {
+          "keys": "?",
+          "what": "Show this list"
+        },
+        "pan": {
+          "keys": "Drag empty space, or drag with the middle button",
+          "what": "Move around the plan"
+        },
+        "zoom": {
+          "keys": "Scroll wheel",
+          "what": "Zoom in and out"
+        }
+      }
+    },
     "items": {
       "title": "Place an item",
       "search": "Search the catalog",
-      "hint": "Choose an item, then click on the plan to place it. R turns it.",
       "none": "No items match.",
       "loadFailed": "Couldn't load the catalog. Reload the page to try again."
     },
