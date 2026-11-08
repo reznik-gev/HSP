@@ -71,6 +71,8 @@ Measured with `uv pip list --outdated` and `pnpm outdated` on 2026-10-22:
 
 So the production Keycloak, nginx and PostGIS images could fall behind with no PR to tell us.
 
+*Update, 2026-11-08:* Dependabot now watches all of these ([#142](https://github.com/reznik-gev/HSP/pull/142)).
+
 ### 3.2 Images follow moving tags
 
 The base images use tags like `python:3.14-slim` and `nginx-unprivileged:1.30`. These tags move: each build takes whatever the latest patch is. That gets security patches without anyone acting, but two builds of the same commit can differ, and Dependabot has nothing to bump. The alternative is to pin each image by digest and let Dependabot move the pins. Builds are then reproducible, but there are more PRs to review. Either is reasonable. Today it's a choice nobody recorded.
