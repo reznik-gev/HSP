@@ -31,7 +31,7 @@ For each thread, decide which kind it is:
 
 ## 4. Fix
 - Fixes go in **new commits** on top of the PR, named "Review on #N: …". Never amend or squash reviewed commits.
-- A fix that makes or changes a decision needs a new decision record. Accepted records stay frozen: only their status, a dated note added at the end, or a rename the owner approved may change ([0126](../../../docs/decisions/0126-2026-11-08-what-may-change-in-an-accepted-record.md)). Check the open PRs for record numbers already taken before you pick one.
+- A fix that makes or changes a decision needs a new decision record. Accepted records stay frozen: only their status, a `Refined by:` line, a dated note added at the end, or a rename the owner approved may change ([0126](../../../docs/decisions/0126-2026-11-08-what-may-change-in-an-accepted-record.md)). Check the open PRs for record numbers already taken before you pick one.
 - Where a comment says a test is missing, add the test, then check it fails when the code it covers is removed.
 - Run the checks for every side the PR touches, as CLAUDE.md lists them, before pushing. DB tests need the dev stack running and `HSP_TEST_DATABASE_URL` set (see [backend/README.md](../../../backend/README.md)). If a check fails for a reason that isn't this PR's, check whether it also fails on `main`, and say so. Don't push anything that fails because of this PR.
 - Push.

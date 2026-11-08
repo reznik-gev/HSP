@@ -4,8 +4,9 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 
 **Naming:** `NNNN-YYYY-MM-DD-short-slug.md` — a sequential number plus the date the decision was made.
 **Status values:** `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
-**An accepted record stays frozen, as a rule of thumb.** What it decided is never changed in place. To change a decision, add a new record that refines or supersedes it. Three kinds of edit are allowed ([0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md)):
-- **Its status:** the status line and the index row, when it is superseded or deprecated.
+**An accepted record stays frozen, as a rule of thumb.** What it decided is never changed in place. To change a decision, add a new record that refines or supersedes it. Four kinds of edit are allowed ([0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md)):
+- **Its status:** the status line and the index row, when it is superseded or deprecated. The index row may also name later records that refine it.
+- **A `Refined by:` line in its header,** naming each later record that refines it. It may also be written as a dated note.
 - **Dated notes, added at the end,** in an `## Updates` section: *Update, YYYY-MM-DD:*, then what happened later, with a link. A note never changes the decision.
 - **Rename fixes that don't change the subject,** only with the owner's explicit yes, each noted in a dated note.
 

@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-08
 - **Status:** Accepted
+- **Refined by:** [0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md) (renames in place)
 
 ## Context
 The product was named **HSM, "Human-Space Management"**. The product owner prefers **HSP, "Human-Space Program"**, a play on words that matches the repository name (`reznik-gev/HSP`). There are no releases, customers or production data yet, so renaming now is as cheap as it will ever be.
