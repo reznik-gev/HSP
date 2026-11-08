@@ -22,7 +22,10 @@ LABEL org.opencontainers.image.title="hsp-backup" \
       org.opencontainers.image.revision="${HSP_REVISION}" \
       org.opencontainers.image.created="${HSP_CREATED}"
 # pg_dump and pg_restore must be at least the server's version (postgis/postgis:18), so they
-# come from the PostgreSQL project's own Debian repository.
+# come from the PostgreSQL project's own Debian repository. Debian's security fixes are installed
+# too, even those the base image doesn't have yet (docs/0129). HSP never runs pip (the app is in
+# /app/.venv, built by uv), and pip's own bundled packages carry known vulnerabilities, so it is
+# removed.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl \
     && install -d /usr/share/postgresql-common/pgdg \
@@ -32,8 +35,11 @@ RUN apt-get update \
     && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" \
        > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && apt-get install -y --no-install-recommends postgresql-client-18 \
-    && apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+    && apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/local/bin/pip* /usr/local/lib/python3*/ensurepip \
+       /usr/local/lib/python3*/site-packages/pip /usr/local/lib/python3*/site-packages/pip-*.dist-info
 # Runs as uid 999, the postgres container's user, so it can read the superuser's password file
 # (secrets/db_superuser_password belongs to 999) and the backups folder belongs to it too.
 RUN useradd --system --uid 999 --home-dir /app hsp-backup
