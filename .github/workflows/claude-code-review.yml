@@ -1,8 +1,8 @@
 # Claude's code review (docs/0101): does the PR follow HSP's guides and decisions, and will it be
 # easy to maintain? Runs when a PR is opened or marked ready, and again when someone with write
 # access comments "@claude review" on the PR. It comments only; it never blocks a merge (it isn't
-# part of ci-ok) and never changes code. Dependabot's PRs are reviewed too (allowed_bots); those
-# runs get only Dependabot secrets, so CLAUDE_CODE_OAUTH_TOKEN must also be a Dependabot secret.
+# part of ci-ok) and never changes code. It skips the PRs Dependabot opens: the action refuses bot
+# runs, and those runs get no Actions secrets. "@claude review" on one still runs it.
 name: Claude Code Review
 
 on:
@@ -14,7 +14,8 @@ on:
 jobs:
   claude-review:
     if: |
-      (github.event_name == 'pull_request' && !github.event.pull_request.draft) ||
+      (github.event_name == 'pull_request' && !github.event.pull_request.draft &&
+        github.actor != 'dependabot[bot]') ||
       (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
         startsWith(github.event.comment.body, '@claude review'))
     runs-on: ubuntu-latest
@@ -39,7 +40,6 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          allowed_bots: "dependabot[bot]"
           prompt: |
             Review pull request #${{ github.event.pull_request.number || github.event.issue.number }} in ${{ github.repository }}.
             You review only. Never edit files, commit or push.
