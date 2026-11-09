@@ -112,7 +112,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0098 | 2026-10-18 | [The web entry point: TLS modes, compression, HSTS and the Keycloak console](0098-2026-10-18-web-entry-point.md) | Accepted |
 | 0099 | 2026-10-18 | [The production Compose stack: secrets, data and how it's wired](0099-2026-10-18-production-compose.md) | Accepted |
 | 0100 | 2026-10-19 | [The @claude bot runs the checks and searches the web](0100-2026-10-19-claude-bot-tools.md) | Superseded by 0101 |
-| 0101 | 2026-10-19 | [Claude on GitHub reviews; it doesn't write code](0101-2026-10-19-claude-reviews-only.md) | Accepted |
+| 0101 | 2026-10-19 | [Claude on GitHub reviews; it doesn't write code](0101-2026-10-19-claude-reviews-only.md) | Accepted (who asks for re-reviews in 0134) |
 | 0102 | 2026-10-19 | [The release workflow: build, test and publish the bundle](0102-2026-10-19-release-workflow.md) | Accepted (upgrade test refined by 0107) |
 | 0103 | 2026-10-19 | [A live demo with a made-up company, and a script](0103-2026-10-19-demo.md) | Accepted |
 | 0104 | 2026-10-21 | [What 1.0.0 includes, which versions get fixes, and what comes right after](0104-2026-10-21-v1-release-scope-and-support.md) | Accepted (AD sync in 1.1 and Kubernetes in 1.2 by 0108) |
@@ -143,3 +143,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0129 | 2026-11-08 | [What to do about the first scan's findings](0129-2026-11-08-first-scan-findings.md) | Accepted |
 | 0130 | 2026-11-08 | [How a new user learns the floor editor](0130-2026-11-08-learning-the-editor.md) | Accepted |
 | 0131 | 2026-11-09 | [A deleted element may come back with its own id](0131-2026-11-09-deleted-elements-may-come-back.md) | Accepted |
+| 0134 | 2026-11-09 | [How a change goes from a request to `main`](0134-2026-11-09-from-request-to-main.md) | Accepted |
