@@ -11,7 +11,7 @@
  * the drag ends, while snapping follows Alt as it's held (docs/0130). Dragging a selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
  * Drawing tools (wall, door, window, column, zone, item): a click places, a drag pans; see
  * their classes. R turns the item being placed, or the selected furniture, a quarter turn;
- * furniture being dragged turns where it has been dragged to, and the drag carries on.
+ * furniture being dragged turns where it has been dragged to, and the drag carries on (docs/0135).
  * The middle button always pans and the wheel zooms (PanZoom, shared with the viewer).
  */
 import {
