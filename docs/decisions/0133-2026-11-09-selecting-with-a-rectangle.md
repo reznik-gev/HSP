@@ -24,5 +24,5 @@ Holding Shift and dragging now draws a selection rectangle. The owner chose the 
 
 ## Consequences
 - Shift+drag no longer moves an item or pans. Moving a selection is a plain drag.
-- The "Keyboard and mouse" sheet and the Select hint ([0130](0130-2026-11-08-learning-the-editor.md), in review) need a row and a mention for Shift+drag. Whichever of the two changes is merged second adds them.
+- The "Keyboard and mouse" sheet lists Shift+drag, and the Select hint mentions it ([0130](0130-2026-11-08-learning-the-editor.md)).
 - The rectangle is drawn by the view from a `box` preview, like the other tools' previews ([0052](0052-2026-10-08-svg-commitment-and-performance-gate.md)). The core decides what it catches (`inBox` in `hitTest.ts`), so it's tested without a browser.
