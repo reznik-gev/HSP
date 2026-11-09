@@ -25,6 +25,7 @@ The first release.
 - The arrow keys nudge the selection by 1 cm, or 10 cm with Shift. A run of presses is one step to undo.
 - A hint line under the floor editor's plan says what you can do at each step, and which keys change it. **Keyboard and mouse** lists every key and mouse move: press `?`, or the ? button at the top.
 - Pressing Alt in the middle of dragging a wall's corner, or a whole wall, detaches that wall from the others, as holding it beforehand does.
+- Pressing R while dragging furniture turns it where it has been dragged to, and the drag carries on. It used to jump back to where it started.
 - Assign seats to people and teams. Archiving a person or deleting a floor frees their seats on its own.
 
 ### For operators

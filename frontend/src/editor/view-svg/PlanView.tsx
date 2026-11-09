@@ -621,6 +621,12 @@ function SelectionLayer({
   const hideCss = ids.map((id) => `#e-${id},#l-${id},#h-${id}`).join(",");
   const walls = new Map(plan.walls.map((w) => [w.id, w]));
   const turn = drag?.turn;
+  const spin = drag?.spin ?? 0;
+  // R pressed mid-drag turns each object where it is (before any snap turn about the pivot).
+  const objectOf = (id: string) => {
+    const obj = plan.objects[id];
+    return obj && spin ? { ...obj, rotation_ddeg: obj.rotation_ddeg + spin } : obj;
+  };
   const offset = drag
     ? `translate(${drag.dx} ${drag.dy})` +
       (turn ? ` rotate(${turn.ddeg / 10} ${turn.pivot[0]} ${turn.pivot[1]})` : "")
@@ -631,7 +637,7 @@ function SelectionLayer({
       {ids.length > 0 && <style>{`${hideCss}{display:none}`}</style>}
       <g transform={offset}>
         {ids.map((id) => {
-          const obj = plan.objects[id];
+          const obj = objectOf(id);
           return obj ? (
             <ObjectShape
               key={id}
@@ -644,12 +650,12 @@ function SelectionLayer({
         })}
         {options.labels &&
           ids.map((id) => {
-            const obj = plan.objects[id];
+            const obj = objectOf(id);
             return obj?.label ? <Label key={`l${id}`} obj={obj} copy /> : null;
           })}
         {options.labels &&
           ids.map((id) => {
-            const obj = plan.objects[id];
+            const obj = objectOf(id);
             return obj && isRaised(obj) ? (
               <ItemTag key={`h${id}`} obj={obj} item={catalogItemOf(plan, obj)} copy />
             ) : null;
