@@ -3,6 +3,7 @@
 - **Date:** 2026-10-19
 - **Status:** Accepted
 - **Supersedes:** [0100](0100-2026-10-19-claude-bot-tools.md), except that the bot still reads with read-only `git` and `gh` commands and searches the web.
+- **Refined by:** [0134](0134-2026-11-09-from-request-to-main.md) (the session asks for re-reviews, up to three bot rounds)
 
 ## Context
 After a day of review fixes by the `@claude` bot, the owner wasn't happy with its code and refactors:
