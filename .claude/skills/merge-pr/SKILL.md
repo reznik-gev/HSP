@@ -1,17 +1,17 @@
 ---
 name: merge-pr
-description: Merge an HSP pull request and clean up after it. Check for new comments, rebase-merge, restack the rest of the stack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner says "merge #N", or says they merged #N, or the app reports that the session's PR merged. Also when a PR closes without merging, to clean up after it.
+description: Merge an HSP pull request and clean up after it. Check for new comments, rebase-merge, restack the rest of the stack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner says "merge #N" or approves #N on GitHub, or says they merged #N, or the app reports that the session's PR merged. Also when a PR closes without merging, to clean up after it.
 ---
 
 # Merge a pull request, and clean up
 
-By default the owner says **"merge #N"** in the session, and the session merges. The owner may also approve or merge on GitHub. Then the session cleans up when it's woken by that, or when the owner says it merged ([0134](../../../docs/decisions/0134-2026-11-09-from-request-to-main.md)). The rules behind these steps are in [the git guide](../../../docs/guides/git.md) and [the stacked PRs guide](../../../docs/guides/stacked-prs.md). Do them in order, and say which one you're on.
+By default the owner says **"merge #N"** in the session, and the session merges. **An approval on GitHub counts the same as "merge #N".** The owner may also merge on GitHub. Then the session cleans up when it's woken by that, or when the owner says it merged ([0134](../../../docs/decisions/0134-2026-11-09-from-request-to-main.md)). The rules behind these steps are in [the git guide](../../../docs/guides/git.md) and [the stacked PRs guide](../../../docs/guides/stacked-prs.md). Do them in order, and say which one you're on.
 
 ## 1. Merged already, or yours to merge?
 ```bash
 gh pr view N --json state,mergedAt,isDraft,mergeable,baseRefName,reviewDecision
 ```
-If it's merged already, go to step 3. If it was **closed without merging**, do only the first two bullets of step 4: delete its `reserve/` branches, so its record numbers are free again, and its local branches and worktrees. Keep any memory of rules it meant to write down: they never reached a guide. Then report and archive (step 6). An approval alone isn't "merge": wait for the owner's word, unless the owner said otherwise for this PR.
+If it's merged already, go to step 3. If it was **closed without merging**, do only the first two bullets of step 4: delete its `reserve/` branches, so its record numbers are free again, and its local branches and worktrees. Keep any memory of rules it meant to write down: they never reached a guide. Then report and archive (step 6). If the owner approved it on GitHub or said "merge #N", go on to step 2, unless the owner said on the PR or in the session not to merge yet. Otherwise, wait for the owner's word.
 
 ## 2. Merge
 - **Look at the comments again** (the query in [`prepare-pr-for-review`](../prepare-pr-for-review/SKILL.md), step 2, and `gh pr view N --comments`). If anything is new and unanswered, handle it first, and tell the owner why it didn't merge yet.
@@ -30,7 +30,7 @@ If it's merged already, go to step 3. If it was **closed without merging**, do o
   gh pr view N --json files --jq '.files[].path' | grep -E '^docs/decisions/[0-9]{4}-'
   git push origin --delete reserve/decision-NNNN
   ```
-- **Branches and worktrees:** GitHub deletes the merged branch. Remove local branches and worktrees you made for this PR (`git worktree remove`, from the main checkout). Leave the session's own worktree to the app; archiving the session handles it.
+- **Branches and worktrees:** GitHub deletes the merged branch. Remove local branches, and worktrees you made for this PR with `git worktree add` (`git worktree remove`, run from the main checkout). Leave the worktree the app made for the session: archiving the session removes it.
 - **Memory:** if the PR wrote into a guide a rule that was also in Claude's memory, delete that memory and its line in `MEMORY.md`. Rules live in the guides ([0134](../../../docs/decisions/0134-2026-11-09-from-request-to-main.md)). Update any memory about the state of the work that this merge changed.
 
 ## 5. Follow-ups

@@ -13,7 +13,7 @@ The usual path of a change made in a Claude Code session ([0134](../decisions/01
 6. **Opening the PR:** [`open-pr`](../../.claude/skills/open-pr/SKILL.md). Push and open it without asking. If the owner must check something first, open it as a draft and say what to check. Turn on Auto-fix.
 7. **Bot rounds:** [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md). Fix each round of the review bot's comments, then ask it to look again, up to three bot rounds in all.
 8. **The owner's review.** Tell the owner it's ready. More rounds with the owner may follow.
-9. **Merging and cleanup:** [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md). By default the owner says "merge #N". If the owner merged on GitHub, clean up once you're woken by it or told.
+9. **Merging and cleanup:** [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md). By default the owner says "merge #N". An approval on GitHub counts the same, unless the owner says not to merge yet. If the owner merged on GitHub, clean up once you're woken by it or told.
 
 ## Branches and commits
 - Every change is a short-lived branch and a pull request into `main` (or into the PR below it, in a stack). Name branches by area and topic: `editor/height-cues`, `admin/devices`, `docs/testing-guide`.
