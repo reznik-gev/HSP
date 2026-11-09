@@ -22,7 +22,9 @@ describe("learning the editor (docs/0130)", () => {
   it("the hint line follows the tool and the selection", async () => {
     await renderApp("/floors/f3/edit", spyChangesets().routes);
     await screen.findByText("Draft 3 · Saved");
-    expect(hint()).toHaveTextContent("Click to select, Shift+click to add.");
+    expect(hint()).toHaveTextContent(
+      "Click to select, Shift+click to add, Shift+drag to add everything in a rectangle.",
+    );
     clickOnPlan([2000, 1000]); // the desk
     await waitFor(() => expect(hint()).toHaveTextContent("R turns furniture."));
     await userEvent.keyboard("w");

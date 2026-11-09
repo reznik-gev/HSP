@@ -23,6 +23,7 @@ const GROUPS: { group: string; rows: string[] }[] = [
     rows: [
       "click",
       "shiftClick",
+      "shiftDrag",
       "esc",
       "drag",
       "arrows",

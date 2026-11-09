@@ -422,7 +422,7 @@
     },
     "zoneType": "Zone type",
     "hints": {
-      "select": "Click to select, Shift+click to add. Drag empty space to pan, scroll to zoom.",
+      "select": "Click to select, Shift+click to add, Shift+drag to add everything in a rectangle. Drag empty space to pan, scroll to zoom.",
       "selectedWall": "Drag the wall to move it, or an end to move its corner. Arrows nudge 1 cm, Shift+arrows 10 cm. Delete removes it.",
       "selectedZone": "Drag a corner to reshape the zone. Arrows nudge 1 cm, Shift+arrows 10 cm. Delete removes it.",
       "selected": "Drag to move. Arrows nudge 1 cm, Shift+arrows 10 cm. R turns furniture. Delete removes the selection.",
@@ -469,6 +469,10 @@
         "shiftClick": {
           "keys": "Shift+click",
           "what": "Add to the selection"
+        },
+        "shiftDrag": {
+          "keys": "Shift+drag",
+          "what": "Select everything inside a rectangle"
         },
         "esc": {
           "keys": "Esc",

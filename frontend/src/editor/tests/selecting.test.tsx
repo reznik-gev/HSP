@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 /** Selecting with a rectangle: Shift+drag in Select (docs/0133). */
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { spyChangesets } from "@/test/editorStubs";
+import { spyChangesets, stubEditorRoutes } from "@/test/editorStubs";
 import { dragOnPlan, releaseOnPlan } from "@/test/planPointer";
 import { renderApp } from "@/test/renderApp";
 
@@ -31,5 +32,17 @@ describe("selecting with a rectangle (docs/0133)", () => {
       ),
     ).toBeVisible();
     expect(changesets).toHaveLength(0);
+  });
+
+  it("Keyboard and mouse lists it, and the Select hint mentions it (docs/0130)", async () => {
+    await renderApp("/floors/f3/edit", stubEditorRoutes());
+    await screen.findByText("Draft 3 · Saved");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Shift+drag to add everything in a rectangle.",
+    );
+    await userEvent.keyboard("?");
+    const sheet = await screen.findByRole("dialog", { name: "Keyboard and mouse" });
+    expect(within(sheet).getByText("Shift+drag")).toBeVisible();
+    expect(within(sheet).getByText("Select everything inside a rectangle")).toBeVisible();
   });
 });
