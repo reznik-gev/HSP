@@ -101,6 +101,8 @@ export type Preview =
     }
   /** A zone being drawn: the corners so far, and the pointer. */
   | { kind: "zone"; points: readonly Vec2[]; to: Vec2; snap: SnapKind }
+  /** A selection rectangle being drawn by Shift+drag, corner to corner (docs/0133). */
+  | { kind: "box"; from: Vec2; to: Vec2 }
   /** A zone corner being dragged. */
   | { kind: "vertex"; zone: string; index: number; to: Vec2; snap: SnapKind }
   /** Seats being numbered by a click or a drag (docs/0049), with the labels they'll get. */

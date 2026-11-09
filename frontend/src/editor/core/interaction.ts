@@ -3,7 +3,8 @@
  * into these calls (screen pixels relative to the canvas, plus button and modifiers); the core
  * decides what it means for the current tool and updates the store.
  *
- * Select tool: click selects (Shift adds); dragging furniture or columns moves them, dragging a
+ * Select tool: click selects (Shift adds); Shift+drag selects what's inside a rectangle
+ * (docs/0133); dragging furniture or columns moves them, dragging a
  * door or window slides it along its wall, dragging a selected wall's end moves the junction
  * with every wall that meets there (Alt detaches just that wall, docs/0044), dragging a
  * selected wall's body moves the whole wall and the walls joined to it stretch (Alt detaches
@@ -28,7 +29,7 @@ import { alongSegment } from "./geometry";
 import { viewportFor } from "./focus";
 import { type ItemShape, placeItem } from "./furnitureSnap";
 import type { Measure } from "./measure";
-import { hitTest, zoneAt } from "./hitTest";
+import { hitTest, inBox, zoneAt } from "./hitTest";
 import type { Plan, Vec2 } from "./plan";
 import { SNAP_PX, snapPoint, snapSettings } from "./snap";
 import type { EditorStore, Preview } from "./store";
@@ -87,6 +88,8 @@ type Gesture =
   /** Sliding a door or window: `grab` is where along it the pointer took hold. */
   | { kind: "slide"; id: string; grab: number }
   | { kind: "vertex"; zone: string; index: number; from: Vec2 }
+  /** A Shift+press in Select: a drag draws a selection rectangle, a click adds (docs/0133). */
+  | { kind: "box"; from: Vec2 }
   /** Numbering seats by clicking or dragging across them. */
   | { kind: "numbering" };
 
@@ -175,19 +178,24 @@ export class Interaction {
       this.gesture = { kind: "junction", from: end.point, grabbed: end.wall, walls };
       return "none";
     }
+    if (e.shift) {
+      // Wherever it starts (docs/0133); the handles above keep their drag.
+      this.gesture = { kind: "box", from: p };
+      return "none";
+    }
     const hit = hitTest(s.plan, s.hitIndex, p, tolerance);
     if (hit?.kind === "object") {
-      if (e.shift || !s.selection.has(hit.id)) s.select([hit.id], e.shift);
+      if (!s.selection.has(hit.id)) s.select([hit.id]);
       this.gesture = { kind: "drag", start: p, moved: false, spin: 0 };
       return "select";
     }
     if (hit?.kind === "column") {
-      if (e.shift || !s.selection.has(hit.id)) s.select([hit.id], e.shift);
+      if (!s.selection.has(hit.id)) s.select([hit.id]);
       this.gesture = { kind: "drag", start: p, moved: false, spin: 0 };
       return "select";
     }
     if (hit?.kind === "opening") {
-      s.select([hit.id], e.shift);
+      s.select([hit.id]);
       const o = s.plan.openings.find((x) => x.id === hit.id);
       const w = o && s.plan.walls.find((x) => x.id === o.wall_id);
       if (o && w) {
@@ -198,7 +206,7 @@ export class Interaction {
     }
     if (hit?.kind === "wall") {
       const w = s.plan.walls.find((x) => x.id === hit.id);
-      if (w && !e.shift && s.selection.size === 1 && s.selection.has(w.id)) {
+      if (w && s.selection.size === 1 && s.selection.has(w.id)) {
         // A selected wall: dragging its body moves it; Alt detaches it (docs/0108).
         const others = (p: Vec2) => (e.alt ? [] : wallsAt(s.plan!, p).filter((id) => id !== w.id));
         this.gesture = {
@@ -212,19 +220,28 @@ export class Interaction {
         };
         return "none";
       }
-      s.select([hit.id], e.shift);
+      s.select([hit.id]);
       this.pan(e);
       return "select";
     }
     const zone = zoneAt(s.plan, p);
     if (zone) {
-      s.select([zone], e.shift);
+      s.select([zone]);
       this.pan(e);
       return "select";
     }
-    // Empty space: pan, and clear selection on a plain click.
-    this.pan(e, !e.shift);
+    // Empty space: pan, and clear the selection on a click.
+    this.pan(e, true);
     return "clear";
+  }
+
+  /** Shift+click: adds the element under the pointer to the selection. */
+  private addAt(p: Vec2): void {
+    const s = this.store.getState();
+    if (!s.plan || !s.hitIndex) return;
+    const hit = hitTest(s.plan, s.hitIndex, p, 4 * s.viewport.mmPerPx);
+    const id = hit?.id ?? zoneAt(s.plan, p);
+    if (id) s.select([id], true);
   }
 
   /**
@@ -368,6 +385,9 @@ export class Interaction {
       }
       if (!s.preview && isClick(this.downAt, e.sx, e.sy)) return;
       s.setPreview(this.wallMove(g, this.toPlan(e), e.alt));
+    } else if (g.kind === "box") {
+      if (!s.preview && isClick(this.downAt, e.sx, e.sy)) return;
+      s.setPreview({ kind: "box", from: g.from, to: this.toPlan(e) });
     } else if (g.kind === "numbering") {
       this.numberTool.extend(this.toPlan(e));
     } else if (g.kind === "vertex" && s.plan) {
@@ -415,6 +435,14 @@ export class Interaction {
       s.setPreview(null);
       if (preview?.kind === "wallMove" && s.plan) {
         s.perform(moveWall(s.plan, g.id, preview.d, g.joinedA, g.joinedB));
+      }
+    } else if (g.kind === "box") {
+      s.setPreview(null);
+      if (clicked) this.addAt(g.from);
+      else if (s.plan) {
+        // Adds what's fully inside to the selection (docs/0133).
+        const caught = inBox(s.plan, g.from, this.toPlan(e), s.heightFilter);
+        if (caught.length) s.select(caught, true);
       }
     } else if (g.kind === "numbering") {
       this.numberTool.end();
@@ -517,6 +545,12 @@ export class Interaction {
         return true;
       }
       case "Escape":
+        if (this.gesture.kind === "box") {
+          // Drops the rectangle; the selection stays as it was (docs/0133).
+          this.gesture = { kind: "none" };
+          s.setPreview(null);
+          return true;
+        }
         if (s.tool === "wall" && this.wallTool.finish()) return true;
         if (s.tool === "zone" && this.zoneTool.cancel()) return true;
         if (s.tool !== "select") s.setTool("select");
