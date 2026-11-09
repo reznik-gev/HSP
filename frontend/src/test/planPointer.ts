@@ -32,3 +32,9 @@ export function dragOnPlan(from: [number, number], to: [number, number]) {
   fireEvent.pointerMove(svg, { ...b, button: 0, buttons: 1, pointerId: 1 });
   fireEvent.pointerUp(svg, { ...b, button: 0, pointerId: 1 });
 }
+
+/** Moves the pointer over a plan point without pressing a button. */
+export function hoverOnPlan(at: [number, number]) {
+  const svg = document.querySelector("svg[data-lod]")!;
+  fireEvent.pointerMove(svg, { ...onScreen(...at), button: -1, buttons: 0, pointerId: 1 });
+}

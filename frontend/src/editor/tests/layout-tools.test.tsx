@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
 import { spyChangesets } from "@/test/editorStubs";
-import { clickOnPlan } from "@/test/planPointer";
+import { clickOnPlan, hoverOnPlan } from "@/test/planPointer";
 import { renderApp } from "@/test/renderApp";
 import { page, ref, stubSeat } from "@/test/stubs";
 
@@ -66,23 +66,45 @@ describe("layout tools (docs/0049, docs/0092)", () => {
     expect(screen.getByText("Next: HT-3-03")).toBeVisible();
   });
 
-  it("Ctrl+C then Ctrl+V pastes a copy in place, without the seat label", async () => {
+  it("Ctrl+V pastes a copy at the pointer, without the seat label", async () => {
     const { routes, changesets } = spyChangesets();
     await renderApp("/floors/f3/edit", routes);
     await screen.findByText("Draft 3 · Saved");
     clickOnPlan([2000, 1000]);
     await userEvent.keyboard("{Control>}c{/Control}");
     expect(await screen.findByText("Copied 1 element")).toBeVisible();
+    hoverOnPlan([5000, 3000]);
     await userEvent.keyboard("{Control>}v{/Control}");
     await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
     expect(changesets[0]!.ops).toEqual([
       expect.objectContaining({
         op: "add",
         kind: "object",
-        data: expect.objectContaining({ position: [2000, 1000, 0], label: null }) as unknown,
+        data: expect.objectContaining({ position: [5000, 3000, 0], label: null }) as unknown,
       }),
     ]);
     // The copy is selected, and its label is empty.
     expect(screen.getByLabelText("Seat label")).toHaveValue("");
+  });
+
+  it("Ctrl+Shift+V pastes 50 cm down and right of the original, and further each time (docs/0132)", async () => {
+    const { routes, changesets } = spyChangesets();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    clickOnPlan([2000, 1000]);
+    await userEvent.keyboard("{Control>}c{/Control}");
+    expect(await screen.findByText("Copied 1 element")).toBeVisible();
+    await userEvent.keyboard("{Control>}{Shift>}v{/Shift}{/Control}");
+    await waitFor(() => expect(screen.getByLabelText("Seat label")).toHaveValue(""));
+    await userEvent.keyboard("{Control>}{Shift>}v{/Shift}{/Control}");
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    const positions = changesets
+      .flatMap((c) => c.ops)
+      .map((op) => (op as { data: { position: number[] } }).data.position);
+    // +y is north: down on the screen is -y.
+    expect(positions).toEqual([
+      [2500, 500, 0],
+      [3000, 0, 0],
+    ]);
   });
 });

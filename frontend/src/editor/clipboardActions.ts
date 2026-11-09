@@ -1,8 +1,9 @@
 /**
  * Ctrl+C / Ctrl+V in the editor (docs/0049, see core/clipboard.ts). The copy is kept in the app
  * and in this browser's storage, so it survives going to another floor's editor, a reload and
- * other tabs; it's also put on the system clipboard as JSON. Ctrl+V pastes at the same
- * coordinates; Ctrl+Shift+V at the pointer. A paste is one undo step and selects what it added.
+ * other tabs; it's also put on the system clipboard as JSON. Ctrl+V pastes at the pointer;
+ * Ctrl+Shift+V next to the original, 50 cm down and to the right, and 50 cm further each time
+ * (in place on another floor; docs/0132). A paste is one undo step and selects what it added.
  */
 import type { TFunction } from "i18next";
 
@@ -12,12 +13,16 @@ import {
   fragmentCentre,
   parseFragment,
   pasteOps,
+  shiftedOffset,
 } from "@/editor/core/clipboard";
 import type { Interaction } from "@/editor/core/interaction";
+import type { Vec2 } from "@/editor/core/plan";
 import type { EditorStore } from "@/editor/core/store";
 import { notify, notifyError } from "@/lib/notify";
 
 let copied: Fragment | null = null;
+/** How many times Ctrl+Shift+V has pasted this copy (as JSON), so the next lands further on. */
+let shifted = { copy: "", count: 0 };
 const STORAGE_KEY = "hsp.editor.clipboard";
 
 /** This browser's copy, from another tab or before a reload. Storage can be unavailable. */
@@ -65,14 +70,19 @@ async function fromSystem(): Promise<Fragment | null> {
 export async function pasteCopied(
   store: EditorStore,
   interaction: Interaction,
-  atPointer: boolean,
+  besideOriginal: boolean,
   t: TFunction,
 ): Promise<void> {
   const fragment = copied ?? fromStorage() ?? (await fromSystem());
   if (!fragment) return void notifyError(t("editor.clipboard.empty"));
   const s = store.getState();
-  let offset: [number, number] = [0, 0];
-  if (atPointer) {
+  if (!s.document) return;
+  let offset: Vec2;
+  if (besideOriginal) {
+    const copy = JSON.stringify(fragment);
+    shifted = { copy, count: shifted.copy === copy ? shifted.count + 1 : 1 };
+    offset = shiftedOffset(fragment, s.document.floor_id, shifted.count);
+  } else {
     const [px, py] = interaction.planAt(interaction.lastPointer.sx, interaction.lastPointer.sy);
     const [cx, cy] = fragmentCentre(fragment);
     const g = s.gridSnap ? s.gridMm : 1;
