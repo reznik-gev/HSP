@@ -53,7 +53,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0039 | 2026-10-08 | [Frontend client: openapi-typescript + openapi-fetch](0039-2026-10-08-frontend-api-client.md) | Accepted |
 | 0040 | 2026-10-08 | [Pagination: cursor-based](0040-2026-10-08-pagination.md)                 | Accepted |
 | 0041 | 2026-10-08 | [Live updates in v1: polling](0041-2026-10-08-live-updates.md)            | Accepted (ETags as body hashes in 0104) |
-| 0042 | 2026-10-08 | [2D renderer: SVG](0042-2026-10-08-2d-renderer.md)                        | Accepted |
+| 0042 | 2026-10-08 | [2D renderer: SVG](0042-2026-10-08-2d-renderer.md)                        | Accepted (rubber-band selection refined by 0133) |
 | 0043 | 2026-10-08 | [Editor layout: 2D main, 3D toggle/split](0043-2026-10-08-editor-view-layout.md) | Accepted (3D modes moved past v1 by 0094) |
 | 0044 | 2026-10-08 | [Wall joins: linked endpoints](0044-2026-10-08-wall-joins.md)             | Accepted (moving whole walls in 0108; `Alt` mid-drag in 0130) |
 | 0045 | 2026-10-08 | [Dimension entry: inline typing + properties panel](0045-2026-10-08-dimension-entry.md) | Accepted |
@@ -144,6 +144,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0130 | 2026-11-08 | [How a new user learns the floor editor](0130-2026-11-08-learning-the-editor.md) | Accepted |
 | 0131 | 2026-11-09 | [A deleted element may come back with its own id](0131-2026-11-09-deleted-elements-may-come-back.md) | Accepted |
 | 0132 | 2026-11-09 | [Ctrl+V pastes at the pointer, Ctrl+Shift+V next to the original](0132-2026-11-09-paste-keys.md) | Accepted |
+| 0133 | 2026-11-09 | [Selecting with a rectangle: Shift+drag in Select](0133-2026-11-09-selecting-with-a-rectangle.md) | Accepted |
 | 0134 | 2026-11-09 | [How a change goes from a request to `main`](0134-2026-11-09-from-request-to-main.md) | Accepted (the demo for checking PRs in 0136) |
 | 0135 | 2026-11-09 | [Turning furniture while dragging it](0135-2026-11-09-turning-while-dragging.md) | Accepted |
 | 0136 | 2026-11-10 | [The demo for checking PRs runs from one worktree, and switches only after asking](0136-2026-11-10-the-demo-for-checking-prs.md) | Accepted |
