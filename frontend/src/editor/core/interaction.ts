@@ -4,12 +4,15 @@
  * decides what it means for the current tool and updates the store.
  *
  * Select tool: click selects (Shift adds); Shift+drag selects what's inside a rectangle
- * (docs/0133); dragging furniture or columns moves them, dragging a
- * door or window slides it along its wall, dragging a selected wall's end moves the junction
- * with every wall that meets there (Alt detaches just that wall, docs/0044), dragging a
- * selected wall's body moves the whole wall and the walls joined to it stretch (Alt detaches
- * it, docs/0108). Alt pressed at any point in either drag detaches, and it stays detached until
- * the drag ends, while snapping follows Alt as it's held (docs/0130). Dragging a selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
+ * (docs/0133). Dragging one element of a selection with walls, zones, doors or windows moves
+ * it all, as the arrow keys do (docs/0133). Otherwise dragging furniture or columns moves them,
+ * dragging a door or window slides it along its wall, dragging a selected wall's end moves the
+ * junction with every wall that meets there (Alt detaches just that wall, docs/0044), and
+ * dragging a selected wall's body moves the whole wall and the walls joined to it stretch (Alt
+ * detaches it, docs/0108). Alt pressed at any point in a wall or group drag detaches, and it
+ * stays detached until the drag ends, while snapping follows Alt as it's held (docs/0130).
+ * Dragging a selected zone's corner reshapes it, a click inside a zone selects it, and empty
+ * space pans.
  * Drawing tools (wall, door, window, column, zone, item): a click places, a drag pans; see
  * their classes. R turns the item being placed, or the selected furniture, a quarter turn;
  * furniture being dragged turns where it has been dragged to, and the drag carries on (docs/0135).
@@ -247,6 +250,14 @@ export class Interaction {
     return "clear";
   }
 
+  /** A drag of several elements by `d`, in grid steps; whole millimetres with Alt or no grid. */
+  private gridStep(d: Vec2, alt?: boolean): Vec2 {
+    const s = this.store.getState();
+    const snap = (v: number) =>
+      s.gridSnap && !alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
+    return [snap(d[0]), snap(d[1])];
+  }
+
   /** Whether the selection has more than items and columns, which `drag` moves on its own. */
   private mixedSelection(): boolean {
     const s = this.store.getState();
@@ -260,7 +271,7 @@ export class Interaction {
     if (!s.plan) return;
     const ops = nudgeOps(s.plan, s.selection, d, detach);
     s.setDrag({ dx: d[0], dy: d[1] });
-    s.setPreview({ kind: "group", d, detach, ops, ...movedBy(s.plan, ops) });
+    s.setPreview({ kind: "group", ops, ...movedBy(s.plan, ops) });
   }
 
   /** Shift+click: adds the element under the pointer to the selection. */
@@ -375,9 +386,8 @@ export class Interaction {
       });
       return;
     }
-    const snap = (v: number) =>
-      s.gridSnap && !e.alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
-    s.setDrag({ dx: snap(p[0] - g.start[0]), dy: snap(p[1] - g.start[1]), spin });
+    const [dx, dy] = this.gridStep([p[0] - g.start[0], p[1] - g.start[1]], e.alt);
+    s.setDrag({ dx, dy, spin });
   }
 
   pointerMove(e: PointerInput): void {
@@ -398,9 +408,7 @@ export class Interaction {
       g.moved = true;
       // Grid steps, as several items move; Alt frees it while held (docs/0133).
       const p = this.toPlan(e);
-      const snap = (v: number) =>
-        s.gridSnap && !e.alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
-      this.moveGroup([snap(p[0] - g.start[0]), snap(p[1] - g.start[1])], g.detach);
+      this.moveGroup(this.gridStep([p[0] - g.start[0], p[1] - g.start[1]], e.alt), g.detach);
     } else if (g.kind === "junction" && s.plan) {
       // Alt pressed mid-drag detaches too, and stays detached (docs/0130).
       if (e.alt) g.walls = [g.grabbed];
@@ -564,22 +572,17 @@ export class Interaction {
       // Exactly that far along the drag (docs/0045).
       const len = Math.hypot(s.drag.dx, s.drag.dy);
       if (!len) return false;
+      const d: Vec2 = [
+        Math.round((s.drag.dx / len) * m.lengthMm),
+        Math.round((s.drag.dy / len) * m.lengthMm),
+      ];
       if (this.gesture.kind === "group") {
-        const d: Vec2 = [
-          Math.round((s.drag.dx / len) * m.lengthMm),
-          Math.round((s.drag.dy / len) * m.lengthMm),
-        ];
         this.moveGroup(d, this.gesture.detach);
         this.commitGroup();
-        this.gesture = { kind: "none" };
-        return true;
+      } else {
+        s.setDrag({ dx: d[0], dy: d[1], spin: s.drag.spin });
+        s.commitDrag();
       }
-      s.setDrag({
-        dx: Math.round((s.drag.dx / len) * m.lengthMm),
-        dy: Math.round((s.drag.dy / len) * m.lengthMm),
-        spin: s.drag.spin,
-      });
-      s.commitDrag();
       this.gesture = { kind: "none" };
       return true;
     }
@@ -604,10 +607,11 @@ export class Interaction {
         return true;
       }
       case "Escape":
-        if (this.gesture.kind === "box") {
-          // Drops the rectangle; the selection stays as it was (docs/0133).
+        if (this.gesture.kind === "box" || this.gesture.kind === "group") {
+          // Drops the rectangle or the group's move; the selection stays as it was (docs/0133).
           this.gesture = { kind: "none" };
           s.setPreview(null);
+          s.setDrag(null);
           return true;
         }
         if (s.tool === "wall" && this.wallTool.finish()) return true;

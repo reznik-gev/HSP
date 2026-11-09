@@ -1,14 +1,18 @@
 // @vitest-environment jsdom
 /** Selecting with a rectangle, and dragging what was selected together (docs/0133). */
-import { cleanup, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
+import i18n from "@/i18n";
 import { spyChangesets, stubEditorRoutes } from "@/test/editorStubs";
 import { dragOnPlan, releaseOnPlan } from "@/test/planPointer";
 import { renderApp } from "@/test/renderApp";
 
-afterEach(cleanup);
+afterEach(async () => {
+  cleanup();
+  await act(() => i18n.changeLanguage("en"));
+});
 
 // Floor 3's draft: wall w1 from (0, 0) to (8000, 0), and desk d1 (160 × 80 cm) at (2000, 1000).
 describe("selecting with a rectangle (docs/0133)", () => {
@@ -44,6 +48,9 @@ describe("selecting with a rectangle (docs/0133)", () => {
     const sheet = await screen.findByRole("dialog", { name: "Keyboard and mouse" });
     expect(within(sheet).getByText("Shift+drag")).toBeVisible();
     expect(within(sheet).getByText("Select everything inside a rectangle")).toBeVisible();
+    await act(() => i18n.changeLanguage("he"));
+    expect(within(sheet).getByText("Shift+גרירה")).toBeVisible();
+    expect(within(sheet).getByText("בחירת כל מה שבתוך מלבן")).toBeVisible();
   });
 
   it("dragging one of the selection moves it all, saved as one change", async () => {
