@@ -102,14 +102,12 @@ export type Preview =
   /** A zone being drawn: the corners so far, and the pointer. */
   | { kind: "zone"; points: readonly Vec2[]; to: Vec2; snap: SnapKind }
   /**
-   * A selection with walls, zones, doors or windows being dragged by `d` (docs/0133): the ops
-   * that will save it, and what they move, as `movedBy` gives it. Items and columns are drawn by
-   * `drag`, which carries the same offset.
+   * A selection with walls, zones, doors or windows being dragged (docs/0133): the ops that will
+   * save it, and what they move, as `movedBy` gives it. Items and columns are drawn by `drag`,
+   * which carries the same offset.
    */
   | {
       kind: "group";
-      d: Vec2;
-      detach: boolean;
       ops: readonly Op[];
       walls: readonly Wall[];
       zones: readonly Zone[];

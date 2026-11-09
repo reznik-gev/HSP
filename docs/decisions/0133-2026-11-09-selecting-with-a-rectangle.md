@@ -30,7 +30,7 @@ Each choice below says whether the owner made it. Those marked *(Claude's choice
 - **It moves in grid steps,** as several items already did. Alt frees it while held. **A typed distance** moves the group exactly that far along the drag ([0045](0045-2026-10-08-dimension-entry.md)). Nothing snaps to walls or other items. *(The owner's choice)*
   - The other option was to snap the grabbed element as if dragged alone, with the rest following. It's a question for the next demo: the script asks people what they expect.
 - **Pressing an element outside the selection** selects it alone, and only it moves, as before. *(The owner's choice)*
-- **A click without moving** on one element of the group keeps the group selected. *(Claude's choice)*
+- **A click without moving** on one element of the group keeps the group selected. **Esc** during the drag drops the move, and the group stays selected, as Esc drops the rectangle. *(Claude's choice)*
 - **A selection of only items and columns** moves as before. One item, with what's attached to it, still snaps as when it's placed. *(Claude's choice)*
 - **The handles** of a selected wall's end or zone corner keep their own drag, in a group too. *(Claude's choice)*
 - What a group drag saves is drawn while dragging: walls and zones at their new places, and items and columns moved as one. *(Claude's choice)*

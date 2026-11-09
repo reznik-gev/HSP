@@ -128,6 +128,19 @@ describe("dragging a group (docs/0133)", () => {
     expect(store.getState().preview).toBeNull();
   });
 
+  it("Esc during the drag drops the move; the group stays selected", () => {
+    const { store, interaction, at } = withSelected("d1", "w2");
+    interaction.pointerDown(at([2000, 1300]));
+    interaction.pointerMove(at([3000, 1300]));
+    expect(interaction.key("Escape")).toBe(true);
+    expect(store.getState().preview).toBeNull();
+    expect(store.getState().drag).toBeNull();
+    interaction.pointerUp(at([3000, 1300]));
+    expect(store.getState().plan!.objects.d1!.position).toEqual([2000, 1500, 0]);
+    expect(store.getState().undoStack).toHaveLength(0);
+    expect(store.getState().selection).toEqual(new Set(["d1", "w2"]));
+  });
+
   it("a click on one of the group keeps the group selected", () => {
     const { store, click } = withSelected("d1", "w2");
     click([4000, 1500]);
