@@ -5,6 +5,7 @@ import { stubDesk, stubPlan } from "@/test/stubs";
 import type { PlanCatalogItem } from "./edits";
 import type { ApiPlan } from "./operations";
 import type { Vec2 } from "./plan";
+import { dragged } from "./store";
 import { STUB_DESK_ITEM, editing } from "./testPlan";
 
 // The test plan: w1 (0,0)→(4000,0) meets w2 (4000,0)→(4000,3000); desk d1 at (2000,1500)
@@ -17,30 +18,11 @@ const TWO_DESKS = stubPlan({
 
 type Editing = ReturnType<typeof editing>;
 
-/**
- * Where an object is shown and how it's turned: where it's being dragged to, while a drag is
- * on, as the plan view draws it.
- */
+/** Where an object is shown and how it's turned: where it's going, while a drag is on. */
 function shown({ store }: Editing, id: string): { at: Vec2; rotation_ddeg: number } {
   const { plan, drag } = store.getState();
   const o = plan!.objects[id]!;
-  let at: Vec2 = [o.position[0], o.position[1]];
-  let rotation_ddeg = o.rotation_ddeg;
-  if (drag) {
-    rotation_ddeg += drag.spin ?? 0;
-    if (drag.turn) {
-      const { ddeg, pivot } = drag.turn;
-      const a = (ddeg / 10) * (Math.PI / 180);
-      const [x, y] = [at[0] - pivot[0], at[1] - pivot[1]];
-      at = [
-        pivot[0] + x * Math.cos(a) - y * Math.sin(a),
-        pivot[1] + x * Math.sin(a) + y * Math.cos(a),
-      ];
-      rotation_ddeg += ddeg;
-    }
-    at = [Math.round(at[0] + drag.dx), Math.round(at[1] + drag.dy)];
-  }
-  return { at, rotation_ddeg: ((rotation_ddeg % 3600) + 3600) % 3600 };
+  return dragged(o, drag ?? { dx: 0, dy: 0 });
 }
 
 describe("R while dragging", () => {
