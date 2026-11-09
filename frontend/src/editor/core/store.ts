@@ -51,6 +51,11 @@ export interface DragState {
   dy: number;
   /** A single item turned by a face snap (docs/0047): by how much, about which point. */
   turn?: { ddeg: number; pivot: Vec2 };
+  /**
+   * R pressed while dragging: each selected object turns by this much where it is, as R does
+   * when nothing is dragged. Applied before `turn`.
+   */
+  spin?: number;
   /** A single attachable item: the host it now sits on, or null to detach it. */
   attachTo?: { id: string; host: string | null };
 }
@@ -469,10 +474,12 @@ export function createEditorStore() {
             ops.push({ op: "update", kind: "column", id: c.id, data: { footprint } });
           }
           const turn = drag.turn?.ddeg ?? 0;
+          const spin = drag.spin ?? 0;
           for (const id of selection) {
             const o = plan.objects[id];
             const attach = drag.attachTo?.id === id ? drag.attachTo.host : undefined;
-            if (!o || (drag.dx === 0 && drag.dy === 0 && !turn && attach === undefined)) continue;
+            const still = drag.dx === 0 && drag.dy === 0 && !turn && !spin;
+            if (!o || (still && attach === undefined)) continue;
             // Turned about the pivot, then moved; whole millimetres only (docs/0029).
             const [x, y] = drag.turn
               ? rotateAbout([o.position[0], o.position[1]], drag.turn.pivot, turn)
@@ -480,7 +487,8 @@ export function createEditorStore() {
             const data: Record<string, unknown> = {
               position: [Math.round(x + drag.dx), Math.round(y + drag.dy), o.position[2]],
             };
-            if (turn) data.rotation_ddeg = (((o.rotation_ddeg + turn) % 3600) + 3600) % 3600;
+            const rotation = o.rotation_ddeg + spin + turn;
+            if (turn || spin) data.rotation_ddeg = ((rotation % 3600) + 3600) % 3600;
             if (attach !== undefined && attach !== o.attached_to) data.attached_to = attach;
             ops.push({ op: "update", kind: "object", id, data });
           }
