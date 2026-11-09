@@ -39,6 +39,8 @@ export function copySelection(store: EditorStore, t: TFunction): boolean {
   const fragment = s.document && copyFragment(s.document, s.selection);
   if (!fragment) return false;
   copied = fragment;
+  // A new Ctrl+C starts the Ctrl+Shift+V steps again at 50 cm, even for the same selection.
+  shifted = { copy: "", count: 0 };
   const json = JSON.stringify(fragment);
   try {
     localStorage.setItem(STORAGE_KEY, json);

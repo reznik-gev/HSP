@@ -107,4 +107,28 @@ describe("layout tools (docs/0049, docs/0092)", () => {
       [3000, 0, 0],
     ]);
   });
+
+  it("a new Ctrl+C starts Ctrl+Shift+V at 50 cm again, even of the same selection (docs/0132)", async () => {
+    const { routes, changesets } = spyChangesets();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    clickOnPlan([2000, 1000]);
+    await userEvent.keyboard("{Control>}c{/Control}");
+    await userEvent.keyboard("{Control>}{Shift>}v{/Shift}{/Control}");
+    await waitFor(() => expect(screen.getByLabelText("Seat label")).toHaveValue(""));
+    clickOnPlan([2000, 1000]);
+    await waitFor(() => expect(screen.getByLabelText("Seat label")).not.toHaveValue(""));
+    await userEvent.keyboard("{Control>}c{/Control}");
+    await userEvent.keyboard("{Control>}{Shift>}v{/Shift}{/Control}");
+    await waitFor(() => expect(changesets.flatMap((c) => c.ops)).toHaveLength(2), {
+      timeout: 3000,
+    });
+    const positions = changesets
+      .flatMap((c) => c.ops)
+      .map((op) => (op as { data: { position: number[] } }).data.position);
+    expect(positions).toEqual([
+      [2500, 500, 0],
+      [2500, 500, 0],
+    ]);
+  });
 });
