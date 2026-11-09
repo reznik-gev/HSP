@@ -18,6 +18,8 @@ export type HintKey =
   | "wallMoveDetached"
   | "wallMoveAlone"
   | "dragging"
+  /** Dragging with furniture in the selection: R turns it too. */
+  | "draggingFurniture"
   | "vertex"
   | "slide"
   | "wall"
@@ -68,9 +70,12 @@ export function editorHint(s: HintState): Hint {
   }
   if (p?.kind === "vertex") return { key: "vertex" };
   if (p?.kind === "opening" && p.id) return { key: "slide" };
-  if (s.drag) return { key: "dragging" };
-  if (!s.selection.size || !plan) return { key: "select" };
   const ids = [...s.selection];
+  if (s.drag) {
+    const furniture = plan && ids.some((id) => plan.objects[id]);
+    return { key: furniture ? "draggingFurniture" : "dragging" };
+  }
+  if (!s.selection.size || !plan) return { key: "select" };
   if (ids.length === 1 && plan.walls.some((w) => w.id === ids[0])) return { key: "selectedWall" };
   if (ids.length === 1 && plan.zones.some((z) => z.id === ids[0])) return { key: "selectedZone" };
   return { key: "selected" };

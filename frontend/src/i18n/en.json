@@ -433,6 +433,7 @@
       "wallMoveDetached": "Moving the wall on its own; the walls it was joined to stay. Snapping is off while you hold Alt.",
       "wallMoveAlone": "Moving the wall. Alt: no snapping.",
       "dragging": "Type a number for an exact distance. Alt: no snapping.",
+      "draggingFurniture": "Type a number for an exact distance. R turns it where it is. Alt: no snapping.",
       "vertex": "Reshaping the zone. Alt: no snapping.",
       "slide": "Sliding along its wall.",
       "wall": "Click to start a wall. Shift: 45° steps. Alt: no snapping.",
@@ -491,7 +492,7 @@
         },
         "rotate": {
           "keys": "R",
-          "what": "Turn the selected furniture a quarter turn"
+          "what": "Turn the selected furniture a quarter turn, also while dragging it"
         },
         "delete": {
           "keys": "Delete or Backspace",

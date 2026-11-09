@@ -7,6 +7,14 @@ import type { ApiPlan } from "./operations";
 import type { Vec2 } from "./plan";
 import { STUB_DESK_ITEM, editing } from "./testPlan";
 
+// The test plan: w1 (0,0)→(4000,0) meets w2 (4000,0)→(4000,3000); desk d1 at (2000,1500)
+// with monitor m1 on it.
+
+/** Two desks on their own: d1 at (1000, 1500) and d2 at (-1000, 1500). */
+const TWO_DESKS = stubPlan({
+  objects: [stubDesk("d1", [1000, 1500]), stubDesk("d2", [-1000, 1500])],
+}) as unknown as ApiPlan;
+
 type Editing = ReturnType<typeof editing>;
 
 /**
@@ -63,10 +71,7 @@ describe("R while dragging", () => {
   });
 
   it("turns each of several dragged objects where it is now", () => {
-    const plan = stubPlan({
-      objects: [stubDesk("d1", [1000, 1500]), stubDesk("d2", [-1000, 1500])],
-    }) as unknown as ApiPlan;
-    const e = editing(plan);
+    const e = editing(TWO_DESKS);
     const { store, interaction, click, at } = e;
     click([1000, 1500]);
     click([-1000, 1500], { shift: true });
