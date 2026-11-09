@@ -793,7 +793,7 @@
     "clipboard": {
       "copied_one": "Copied {{count}} element",
       "copied_other": "Copied {{count}} elements",
-      "howToPaste": "Ctrl+V pastes in place, Ctrl+Shift+V at the pointer, on this floor or another.",
+      "howToPaste": "Ctrl+V pastes at the pointer. Ctrl+Shift+V pastes next to the original, or in the same place on another floor.",
       "empty": "Nothing to paste. Select something and press Ctrl+C first."
     }
   },

@@ -143,4 +143,5 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0129 | 2026-11-08 | [What to do about the first scan's findings](0129-2026-11-08-first-scan-findings.md) | Accepted |
 | 0130 | 2026-11-08 | [How a new user learns the floor editor](0130-2026-11-08-learning-the-editor.md) | Accepted |
 | 0131 | 2026-11-09 | [A deleted element may come back with its own id](0131-2026-11-09-deleted-elements-may-come-back.md) | Accepted |
+| 0132 | 2026-11-09 | [Ctrl+V pastes at the pointer, Ctrl+Shift+V next to the original](0132-2026-11-09-paste-keys.md) | Accepted |
 | 0134 | 2026-11-09 | [How a change goes from a request to `main`](0134-2026-11-09-from-request-to-main.md) | Accepted |

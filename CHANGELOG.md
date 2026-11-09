@@ -26,6 +26,7 @@ The first release.
 - A hint line under the floor editor's plan says what you can do at each step, and which keys change it. **Keyboard and mouse** lists every key and mouse move: press `?`, or the ? button at the top.
 - Pressing Alt in the middle of dragging a wall's corner, or a whole wall, detaches that wall from the others, as holding it beforehand does.
 - Undo brings back a deleted wall, door or anything else that was already published, instead of failing with "Something with this ID is already on the plan".
+- Copy with Ctrl+C, on this floor or another. Ctrl+V pastes at the pointer. Ctrl+Shift+V pastes 50 cm down and to the right of the original, further each time, or in the same place on another floor.
 - Assign seats to people and teams. Archiving a person or deleting a floor frees their seats on its own.
 
 ### For operators

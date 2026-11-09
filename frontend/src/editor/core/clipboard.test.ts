@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { stubDoor, stubPlan, stubWall, stubZone } from "@/test/stubs";
 
-import { copyFragment, fragmentCentre, parseFragment, pasteOps } from "./clipboard";
+import { copyFragment, fragmentCentre, parseFragment, pasteOps, shiftedOffset } from "./clipboard";
 import { type ApiPlan, applyOps } from "./operations";
 import { editing } from "./testPlan";
 
@@ -84,5 +84,21 @@ describe("Ctrl+C, Ctrl+V on another floor", () => {
     expect(other.getState().plan!.objectOrder).toHaveLength(2);
     expect(other.getState().selection.size).toBe(2);
     expect(other.getState().undoStack).toHaveLength(1);
+  });
+});
+
+describe("Ctrl+Shift+V's shift (docs/0132)", () => {
+  const f = () => copyFragment(doc(), new Set(["d1"]))!;
+
+  it("goes 50 cm down and to the right each time, on the floor it was copied from", () => {
+    expect(f().floor_id).toBe(doc().floor_id);
+    // +y is north: down on the screen is -y.
+    expect(shiftedOffset(f(), doc().floor_id, 1)).toEqual([500, -500]);
+    expect(shiftedOffset(f(), doc().floor_id, 3)).toEqual([1500, -1500]);
+  });
+
+  it("is none on another floor, or for a copy that doesn't say its floor", () => {
+    expect(shiftedOffset(f(), "another-floor", 2)).toEqual([0, 0]);
+    expect(shiftedOffset({ ...f(), floor_id: undefined }, doc().floor_id, 1)).toEqual([0, 0]);
   });
 });

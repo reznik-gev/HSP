@@ -14,6 +14,8 @@ type P = ApiPlan;
 export interface Fragment {
   format: "hsp-plan-fragment";
   version: 1;
+  /** The floor it was copied from; older copies don't say. */
+  floor_id?: string;
   walls: P["walls"];
   openings: P["openings"];
   columns: P["columns"];
@@ -32,6 +34,7 @@ export function copyFragment(doc: ApiPlan, selection: ReadonlySet<string>): Frag
   const fragment: Fragment = {
     format: "hsp-plan-fragment",
     version: 1,
+    floor_id: doc.floor_id,
     walls,
     // A door or window needs its wall.
     openings: doc.openings.filter((o) => wallIds.has(o.wall_id)),
@@ -63,6 +66,19 @@ function points(f: Fragment): Vec2[] {
 export function fragmentCentre(f: Fragment): Vec2 {
   const b = boundsOf(points(f));
   return [(b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2];
+}
+
+/** How far each Ctrl+Shift+V moves the copy on, on both axes (docs/0132). */
+export const PASTE_STEP_MM = 500;
+
+/**
+ * Where Ctrl+Shift+V puts the `n`th paste (from 1) of a copy, as an offset from the original:
+ * `n` steps down and to the right on the floor it was copied from, so each copy shows; exactly
+ * in place on another floor, to repeat a layout there (docs/0132).
+ */
+export function shiftedOffset(f: Fragment, floorId: string, n: number): Vec2 {
+  // +y is north, up on the screen (docs/0042): down is -y.
+  return f.floor_id === floorId ? [n * PASTE_STEP_MM, -n * PASTE_STEP_MM] : [0, 0];
 }
 
 /** The operations that paste `f` moved by `offset` (mm), and the new ids to select. */

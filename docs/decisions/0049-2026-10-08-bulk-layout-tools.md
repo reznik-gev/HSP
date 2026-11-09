@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-08
 - **Status:** Accepted
+- **Refined by:** [0132](0132-2026-11-09-paste-keys.md) (Ctrl+V pastes at the pointer; Ctrl+Shift+V next to the original, or in the same place on another floor)
 
 ## Options considered (multi-select)
 - **Array / repeat** ✅
