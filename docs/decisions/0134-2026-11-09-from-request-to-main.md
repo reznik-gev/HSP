@@ -31,7 +31,7 @@ When a change needs the owner's eyes before review:
 - Stop before pushing and ask.
 
 How a merge happens:
-- **The owner says "merge #N" in the session** ✅, and the session merges and cleans up. The owner may also approve or merge on GitHub. Then the session cleans up when GitHub's notice wakes it, or when the owner says it merged.
+- **The owner says "merge #N" in the session** ✅, and the session merges and cleans up. An approval on GitHub counts the same as "merge #N". The owner may also merge on GitHub. Then the session cleans up when GitHub's notice wakes it, or when the owner says it merged.
 - GitHub auto-merge once the owner approves.
 - The owner always merges on GitHub.
 
@@ -47,8 +47,8 @@ The owner's choices are the four marked above. Together with the rules already i
 7. **Auto-fix** is turned on for every PR the session opens, without asking. *(The owner's choice)*
 8. **Bot rounds.** The bot reviews the PR when it opens or is marked ready. The session fixes each round (the [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md) skill), then comments `@claude review` itself, **up to three bot rounds in all**. *(The owner's choice)* It stops earlier when a round brings only nitpicks or nothing new. *(Claude's choice)*
 9. **The owner's review.** The session tells the owner the PR is ready, with a push notification when the owner may be away. There may be more rounds with the owner.
-10. **Merging.** By default the owner says **"merge #N"** in the session, and the session merges. The owner may also approve or merge on GitHub. If that wakes the session, it goes on to the cleanup. Otherwise the owner tells it the PR merged. *(The owner's choice)*
-11. **Cleanup and follow-ups.** The session restacks the rest of the stack, fast-forwards the main checkout's `main`, deletes the PR's `reserve/` branches, and removes its worktree. It names any follow-up work, then archives the session if nothing is left in it.
+10. **Merging.** By default the owner says **"merge #N"** in the session, and the session merges. **An approval on GitHub counts the same as "merge #N"**, unless the owner says on the PR or in the session not to merge yet. The owner may also merge on GitHub. If the approval or the merge wakes the session, it goes on to merging or the cleanup. Otherwise the owner tells it. *(The owner's choice)*
+11. **Cleanup and follow-ups.** The session restacks the rest of the stack, fast-forwards the main checkout's `main`, deletes the PR's `reserve/` branches, and removes any worktrees it made for the PR with `git worktree add`. It names any follow-up work, then archives the session if nothing is left in it. Archiving removes the worktree the app made for the session. *(Claude's choice: a session never removes the worktree it runs in)*
 
 ### Claiming a record number
 - The session finds the highest number on `main`, in the open PRs and on `reserve/decision-*` branches, and takes the next one.
