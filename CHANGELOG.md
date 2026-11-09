@@ -25,6 +25,7 @@ The first release.
 - The arrow keys nudge the selection by 1 cm, or 10 cm with Shift. A run of presses is one step to undo.
 - A hint line under the floor editor's plan says what you can do at each step, and which keys change it. **Keyboard and mouse** lists every key and mouse move: press `?`, or the ? button at the top.
 - Pressing Alt in the middle of dragging a wall's corner, or a whole wall, detaches that wall from the others, as holding it beforehand does.
+- Undo brings back a deleted wall, door or anything else that was already published, instead of failing with "Something with this ID is already on the plan".
 - Assign seats to people and teams. Archiving a person or deleting a floor frees their seats on its own.
 
 ### For operators

@@ -92,7 +92,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0078 | 2026-10-08 | [Archive semantics: DELETE archives, restore endpoint, block on active children](0078-2026-10-08-archive-semantics.md) | Accepted |
 | 0079 | 2026-10-08 | [Stacked PR workflow: parent-based PRs, auto-retarget, restack script](0079-2026-10-08-stacked-pr-workflow.md) | Superseded by 0093 |
 | 0080 | 2026-10-10 | [Floor-plan read access and diff format](0080-2026-10-10-plan-read-access-and-diff.md) | Accepted |
-| 0081 | 2026-10-10 | [Drafts and changesets: numbering, auto-create, rules](0081-2026-10-10-drafts-and-changesets.md) | Accepted |
+| 0081 | 2026-10-10 | [Drafts and changesets: numbering, auto-create, rules](0081-2026-10-10-drafts-and-changesets.md) | Accepted (refined by 0131) |
 | 0082 | 2026-10-10 | [Publish, discard and restore](0082-2026-10-10-publish-discard-restore.md) | Accepted |
 | 0083 | 2026-10-10 | [Catalog, zone type and device API](0083-2026-10-10-catalog-and-device-api.md) | Accepted |
 | 0084 | 2026-10-10 | [People, org units and the CSV/Excel import](0084-2026-10-10-people-org-api-and-import.md) | Accepted |
@@ -142,3 +142,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0128 | 2026-11-08 | [Vulnerability scanning before 1.0.0, warnings only](0128-2026-11-08-vulnerability-scanning.md) | Accepted |
 | 0129 | 2026-11-08 | [What to do about the first scan's findings](0129-2026-11-08-first-scan-findings.md) | Accepted |
 | 0130 | 2026-11-08 | [How a new user learns the floor editor](0130-2026-11-08-learning-the-editor.md) | Accepted |
+| 0131 | 2026-11-09 | [A deleted element may come back with its own id](0131-2026-11-09-deleted-elements-may-come-back.md) | Accepted |

@@ -13,6 +13,8 @@ from hsp.problems import ProblemException
 from tests.db.plan_helpers import (
     add,
     apply,
+    lock,
+    make_floor,
     plan,
     publish_by_hand,
     stub_desk,
@@ -126,17 +128,69 @@ async def test_added_then_deleted_in_the_same_draft_leaves_no_trace(
     assert await admin_editing_new_floor["db"].get(models.FloorElement, w) is None
 
 
-async def test_ids_are_never_reused(admin_editing_new_floor: dict[str, Any]) -> None:
-    """An element deleted in a new draft still exists in the published version, so its id is
-    permanent: re-adding it is refused (docs/0028)."""
+async def test_undo_brings_back_a_deleted_published_wall_with_its_door(
+    admin_editing_new_floor: dict[str, Any],
+) -> None:
+    """Undo re-adds what a delete removed, with the same ids (docs/0050). The wall still exists in
+    the published version, so it comes back as a new revision of the same element (docs/0131)."""
+    ctx = admin_editing_new_floor
+    w, door = new_id(), new_id()
+    await apply(ctx, 0, add("wall", w, **stub_wall()), add("opening", door, **stub_door(w)))
+    await publish_by_hand(ctx)
+    deleted = await apply(ctx, 0, {"op": "delete", "kind": "wall", "id": str(w)})  # draft v2
+    assert deleted.cascaded == [{"kind": "opening", "id": str(door)}]
+
+    undone = await apply(
+        ctx, 1, add("wall", w, **stub_wall()), add("opening", door, **stub_door(w))
+    )
+    assert undone.revision == 2
+
+    v1, v2 = await plan(ctx, 1), await plan(ctx, 2)
+    assert ([x.id for x in v1.walls], [x.id for x in v1.openings]) == ([w], [door])
+    assert ([x.id for x in v2.walls], [x.id for x in v2.openings]) == ([w], [door])
+    assert await revisions(ctx, models.WallRev, w) == 2  # v1's, closed at 2, and v2's
+
+
+async def test_an_edited_published_wall_can_be_deleted_and_brought_back(
+    admin_editing_new_floor: dict[str, Any],
+) -> None:
+    """Editing first gives the wall a revision that starts in the draft; deleting removes that
+    one, and bringing the wall back starts a new one."""
+    ctx = admin_editing_new_floor
     w = new_id()
-    await apply(admin_editing_new_floor, 0, add("wall", w, **stub_wall()))
-    await publish_by_hand(admin_editing_new_floor)
-    await apply(
-        admin_editing_new_floor, 0, {"op": "delete", "kind": "wall", "id": str(w)}
-    )  # draft v2
+    await apply(ctx, 0, add("wall", w, **stub_wall()))
+    await publish_by_hand(ctx)
+    await apply(ctx, 0, {"op": "update", "kind": "wall", "id": str(w), "data": {"height_mm": 3000}})
+    await apply(ctx, 1, {"op": "delete", "kind": "wall", "id": str(w)})
+    await apply(ctx, 2, add("wall", w, **{**stub_wall(), "height_mm": 3000}))
+
+    assert (await plan(ctx, 1)).walls[0].height_mm == 2800
+    assert (await plan(ctx, 2)).walls[0].height_mm == 3000
+
+
+async def test_an_id_from_another_floor_is_refused(admin_editing_new_floor: dict[str, Any]) -> None:
+    ctx = admin_editing_new_floor
+    other, _ = await make_floor(ctx["db"], ctx["tenant"], ctx["building"], level=1)
+    await lock(ctx["db"], ctx["tenant"], other)
+    w = new_id()
+    await apply(ctx, 0, add("wall", w, **stub_wall()), floor=other)
 
     with pytest.raises(ProblemException) as exc:
-        await apply(admin_editing_new_floor, 1, add("wall", w, **stub_wall()))
+        await apply(ctx, 0, add("wall", w, **stub_wall()))
+    assert exc.value.errors is not None
+    assert (exc.value.errors[0].code, exc.value.errors[0].op_index) == ("duplicate_id", 0)
+
+
+async def test_a_deleted_elements_id_is_refused_for_another_kind(
+    admin_editing_new_floor: dict[str, Any],
+) -> None:
+    ctx = admin_editing_new_floor
+    w = new_id()
+    await apply(ctx, 0, add("wall", w, **stub_wall()))
+    await publish_by_hand(ctx)
+    await apply(ctx, 0, {"op": "delete", "kind": "wall", "id": str(w)})
+
+    with pytest.raises(ProblemException) as exc:
+        await apply(ctx, 1, add("object", w, **stub_desk(ctx)))
     assert exc.value.errors is not None
     assert (exc.value.errors[0].code, exc.value.errors[0].op_index) == ("duplicate_id", 0)

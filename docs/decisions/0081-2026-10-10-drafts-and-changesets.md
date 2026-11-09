@@ -3,6 +3,7 @@
 - **Date:** 2026-10-10
 - **Status:** Accepted
 - **Refines:** [0015](0015-2026-10-08-floor-plan-versioning.md), [0016](0016-2026-10-08-edit-concurrency.md), [0028](0028-2026-10-08-floor-version-storage.md), [0036](0036-2026-10-08-floor-plan-io.md), [0076](0076-2026-10-08-backend-delivery-plan.md)
+- **Refined by:** [0131](0131-2026-11-09-deleted-elements-may-come-back.md) (a deleted element may come back with its own id)
 
 ## Decisions
 | Question | Options considered | Decision |
