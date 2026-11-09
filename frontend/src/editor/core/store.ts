@@ -248,6 +248,23 @@ function rotateAbout(p: Vec2, pivot: Vec2, ddeg: number): Vec2 {
   ];
 }
 
+/**
+ * Where a dragged object goes and how it's turned: R's spin in place, then the snap turn about
+ * its pivot, then the offset. Whole millimetres only (docs/0029).
+ */
+export function dragged(
+  o: { position: readonly number[]; rotation_ddeg: number },
+  drag: DragState,
+): { at: Vec2; rotation_ddeg: number } {
+  const from: Vec2 = [o.position[0]!, o.position[1]!];
+  const [x, y] = drag.turn ? rotateAbout(from, drag.turn.pivot, drag.turn.ddeg) : from;
+  const rotation = o.rotation_ddeg + (drag.spin ?? 0) + (drag.turn?.ddeg ?? 0);
+  return {
+    at: [Math.round(x + drag.dx), Math.round(y + drag.dy)],
+    rotation_ddeg: ((rotation % 3600) + 3600) % 3600,
+  };
+}
+
 /** Whether any element of the plan has this id. */
 function exists(plan: Plan, id: string): boolean {
   return Boolean(
@@ -480,15 +497,9 @@ export function createEditorStore() {
             const attach = drag.attachTo?.id === id ? drag.attachTo.host : undefined;
             const still = drag.dx === 0 && drag.dy === 0 && !turn && !spin;
             if (!o || (still && attach === undefined)) continue;
-            // Turned about the pivot, then moved; whole millimetres only (docs/0029).
-            const [x, y] = drag.turn
-              ? rotateAbout([o.position[0], o.position[1]], drag.turn.pivot, turn)
-              : [o.position[0], o.position[1]];
-            const data: Record<string, unknown> = {
-              position: [Math.round(x + drag.dx), Math.round(y + drag.dy), o.position[2]],
-            };
-            const rotation = o.rotation_ddeg + spin + turn;
-            if (turn || spin) data.rotation_ddeg = ((rotation % 3600) + 3600) % 3600;
+            const { at, rotation_ddeg } = dragged(o, drag);
+            const data: Record<string, unknown> = { position: [at[0], at[1], o.position[2]] };
+            if (turn || spin) data.rotation_ddeg = rotation_ddeg;
             if (attach !== undefined && attach !== o.attached_to) data.attached_to = attach;
             ops.push({ op: "update", kind: "object", id, data });
           }
