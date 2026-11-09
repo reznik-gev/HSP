@@ -11,7 +11,7 @@ By default the owner says **"merge #N"** in the session, and the session merges.
 ```bash
 gh pr view N --json state,mergedAt,isDraft,mergeable,baseRefName,reviewDecision
 ```
-If it's merged already, go to step 3. If it was **closed without merging**, skip to step 4: delete its `reserve/` branches, so its record numbers are free again, and its local branches and worktrees. Then report and archive (step 6). An approval alone isn't "merge": wait for the owner's word, unless the owner said otherwise for this PR.
+If it's merged already, go to step 3. If it was **closed without merging**, do only the first two bullets of step 4: delete its `reserve/` branches, so its record numbers are free again, and its local branches and worktrees. Keep any memory of rules it meant to write down: they never reached a guide. Then report and archive (step 6). An approval alone isn't "merge": wait for the owner's word, unless the owner said otherwise for this PR.
 
 ## 2. Merge
 - **Look at the comments again** (the query in [`prepare-pr-for-review`](../prepare-pr-for-review/SKILL.md), step 2, and `gh pr view N --comments`). If anything is new and unanswered, handle it first, and tell the owner why it didn't merge yet.
