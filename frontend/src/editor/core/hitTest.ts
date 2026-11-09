@@ -13,6 +13,7 @@ import {
   polygonArea,
   rotatedRectCorners,
 } from "./geometry";
+import { type HeightFilter, isRaised } from "./heights";
 import { catalogItemOf, type Plan, type Vec2, type Wall } from "./plan";
 import { SpatialIndex } from "./spatialIndex";
 
@@ -90,6 +91,59 @@ export function zoneAt(plan: Plan, p: Vec2): string | null {
     if (!best || area < best.area) best = { id: z.id, area };
   }
   return best?.id ?? null;
+}
+
+/** The rectangle `half` mm either side of the segment a→b: a wall's or an opening's outline. */
+function segmentCorners(a: Vec2, b: Vec2, half: number): Vec2[] {
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+  const nx = (-(b[1] - a[1]) / len) * half;
+  const ny = ((b[0] - a[0]) / len) * half;
+  return [
+    [a[0] + nx, a[1] + ny],
+    [b[0] + nx, b[1] + ny],
+    [b[0] - nx, b[1] - ny],
+    [a[0] - nx, a[1] - ny],
+  ];
+}
+
+/**
+ * What a selection rectangle from corner `a` to corner `b` catches (docs/0133): every wall,
+ * door, window, column, zone and item whose whole outline is inside it. With the height filter
+ * on Floor or Raised, the faded items aren't caught; the rest is never faded.
+ */
+export function inBox(plan: Plan, a: Vec2, b: Vec2, filter: HeightFilter = "all"): string[] {
+  const [x0, x1] = a[0] < b[0] ? [a[0], b[0]] : [b[0], a[0]];
+  const [y0, y1] = a[1] < b[1] ? [a[1], b[1]] : [b[1], a[1]];
+  const inside = (ps: readonly Vec2[]) =>
+    ps.every(([x, y]) => x >= x0 && x <= x1 && y >= y0 && y <= y1);
+  const ids: string[] = [];
+  for (const w of plan.walls) {
+    if (inside(segmentCorners(w.a, w.b, w.thickness_mm / 2))) ids.push(w.id);
+  }
+  const walls = new Map(plan.walls.map((w) => [w.id, w]));
+  for (const o of plan.openings) {
+    const w = walls.get(o.wall_id);
+    if (!w) continue;
+    const len = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) || 1;
+    const at = (along: number): Vec2 => [
+      w.a[0] + ((w.b[0] - w.a[0]) * along) / len,
+      w.a[1] + ((w.b[1] - w.a[1]) * along) / len,
+    ];
+    const span = segmentCorners(at(o.offset_mm), at(o.offset_mm + o.width_mm), w.thickness_mm / 2);
+    if (inside(span)) ids.push(o.id);
+  }
+  for (const c of plan.columns ?? []) if (inside(c.footprint)) ids.push(c.id);
+  for (const z of plan.zones) if (inside(z.boundary)) ids.push(z.id);
+  for (const id of plan.objectOrder) {
+    const o = plan.objects[id];
+    if (!o) continue;
+    // The filter fades the other group (docs/0095); what's faded isn't caught.
+    if (filter !== "all" && isRaised(o) !== (filter === "raised")) continue;
+    const item = catalogItemOf(plan, o);
+    const c: Vec2 = [o.position[0], o.position[1]];
+    if (inside(rotatedRectCorners(c, item.width_mm, item.depth_mm, o.rotation_ddeg))) ids.push(id);
+  }
+  return ids;
 }
 
 /** Selecting an object also selects everything attached to it (docs/0047, e.g. monitors). */

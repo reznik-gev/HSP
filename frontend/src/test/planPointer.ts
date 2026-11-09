@@ -24,13 +24,27 @@ export function clickOnPlan(at: [number, number]) {
   fireEvent.pointerUp(svg, { ...p, button: 0, pointerId: 1 });
 }
 
-export function dragOnPlan(from: [number, number], to: [number, number]) {
+/**
+ * Drags across the plan, with Shift held if `shiftKey`. With `release: false` the button stays
+ * down, to look at the plan mid-drag; `releaseOnPlan` lets go.
+ */
+export function dragOnPlan(
+  from: [number, number],
+  to: [number, number],
+  { shiftKey = false, release = true } = {},
+) {
   const svg = document.querySelector("svg[data-lod]")!;
   const a = onScreen(...from);
   const b = onScreen(...to);
-  fireEvent.pointerDown(svg, { ...a, button: 0, pointerId: 1 });
-  fireEvent.pointerMove(svg, { ...b, button: 0, buttons: 1, pointerId: 1 });
-  fireEvent.pointerUp(svg, { ...b, button: 0, pointerId: 1 });
+  fireEvent.pointerDown(svg, { ...a, button: 0, pointerId: 1, shiftKey });
+  fireEvent.pointerMove(svg, { ...b, button: 0, buttons: 1, pointerId: 1, shiftKey });
+  if (release) fireEvent.pointerUp(svg, { ...b, button: 0, pointerId: 1, shiftKey });
+}
+
+/** Lets go of the button at `at`, ending a drag started with `release: false`. */
+export function releaseOnPlan(at: [number, number]) {
+  const svg = document.querySelector("svg[data-lod]")!;
+  fireEvent.pointerUp(svg, { ...onScreen(...at), button: 0, pointerId: 1 });
 }
 
 /** Moves the pointer over a plan point without pressing a button. */

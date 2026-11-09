@@ -1,8 +1,9 @@
 /**
  * What the editor draws over the plan (docs/0089): selected walls with handles on their ends,
  * selected doors, windows, columns and zones (zones with handles on their corners), what a
- * tool is about to place, a junction or zone corner being dragged, and the snap marker. Plan millimetres inside
- * PlanView's y-up group; sizes meant in screen pixels are scaled by the zoom.
+ * tool is about to place, a junction or zone corner being dragged, the Shift+drag selection
+ * rectangle (docs/0133), and the snap marker. Plan millimetres inside PlanView's y-up group;
+ * sizes meant in screen pixels are scaled by the zoom.
  */
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
@@ -74,6 +75,19 @@ export function EditOverlay({ store }: { store: EditorStore }) {
           strokeWidth={2 * px}
           strokeDasharray={`${6 * px} ${4 * px}`}
           data-testid="zone-preview"
+        />
+      )}
+      {preview?.kind === "box" && (
+        <rect
+          className="plan-selected"
+          x={Math.min(preview.from[0], preview.to[0])}
+          y={Math.min(preview.from[1], preview.to[1])}
+          width={Math.abs(preview.to[0] - preview.from[0])}
+          height={Math.abs(preview.to[1] - preview.from[1])}
+          fill="var(--primary)"
+          fillOpacity={0.08}
+          strokeWidth={px}
+          data-testid="selection-box"
         />
       )}
       {selectedWalls.map((w) => (
