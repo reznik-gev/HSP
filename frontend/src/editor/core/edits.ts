@@ -4,7 +4,7 @@
  */
 import { isSimplePolygon } from "./geometry";
 import { type ApiPlan, newId, type Op } from "./operations";
-import type { Plan, Vec2, Wall } from "./plan";
+import type { Opening, Plan, Vec2, Wall, Zone } from "./plan";
 
 export interface WallDefaults {
   thickness_mm: number;
@@ -293,9 +293,15 @@ export function moveJunction(plan: Plan, wallIds: readonly string[], from: Vec2,
  * Moves the selection by `d`, as the arrow keys do (docs/0108): furniture and devices, columns,
  * zones, and whole walls, whose joined walls stretch to stay joined (as dragging one does). A door
  * or window on its own slides along its wall by the part of `d` along it, if it still fits. No
- * ops when nothing can move, or a wall would collapse to a point.
+ * ops when nothing can move, or a wall would collapse to a point. Dragging a group moves it the
+ * same way (docs/0133); with `detach` (Alt) the walls joined to it don't stretch.
  */
-export function nudgeOps(plan: Plan, selection: ReadonlySet<string>, d: Vec2): Op[] {
+export function nudgeOps(
+  plan: Plan,
+  selection: ReadonlySet<string>,
+  d: Vec2,
+  detach = false,
+): Op[] {
   const by = (p: readonly number[]): number[] => [p[0]! + d[0], p[1]! + d[1]];
   const ops: Op[] = [];
   for (const id of selection) {
@@ -326,7 +332,11 @@ export function nudgeOps(plan: Plan, selection: ReadonlySet<string>, d: Vec2): O
   }
   // Every end of a selected wall moves, and so does any other wall's end that meets it.
   const ends = plan.walls.filter((w) => selection.has(w.id)).flatMap((w) => [w.a, w.b]);
-  const wallOps = moveWallEnds(plan, (w, end) => ends.some((q) => same(w[end], q)), d);
+  const wallOps = moveWallEnds(
+    plan,
+    (w, end) => selection.has(w.id) || (!detach && ends.some((q) => same(w[end], q))),
+    d,
+  );
   if (!wallOps) return [];
   ops.push(...wallOps);
   for (const o of plan.openings) {
@@ -340,4 +350,33 @@ export function nudgeOps(plan: Plan, selection: ReadonlySet<string>, d: Vec2): O
     }
   }
   return ops;
+}
+
+/**
+ * What a group drag's ops (`nudgeOps`) will change, for drawing it before it's saved
+ * (docs/0133): the walls and zones they move, and the doors and windows on moved walls or slid
+ * along theirs, each as it will be.
+ */
+export function movedBy(
+  plan: Plan,
+  ops: readonly Op[],
+): { walls: Wall[]; zones: Zone[]; openings: Opening[] } {
+  const updates = (kind: Op["kind"]) =>
+    new Map(
+      ops.flatMap((op) => (op.op === "update" && op.kind === kind ? [[op.id, op.data]] : [])),
+    ) as Map<string, Record<string, unknown>>;
+  const wallData = updates("wall");
+  const zoneData = updates("zone");
+  const openingData = updates("opening");
+  const walls = plan.walls
+    .filter((w) => wallData.has(w.id))
+    .map((w) => ({ ...w, ...(wallData.get(w.id) as Partial<Wall>) }));
+  const zones = plan.zones
+    .filter((z) => zoneData.has(z.id))
+    .map((z) => ({ ...z, ...(zoneData.get(z.id) as Partial<Zone>) }));
+  const movedWalls = new Set(walls.map((w) => w.id));
+  const openings = plan.openings
+    .filter((o) => openingData.has(o.id) || movedWalls.has(o.wall_id))
+    .map((o) => ({ ...o, ...(openingData.get(o.id) as Partial<Opening>) }));
+  return { walls, zones, openings };
 }

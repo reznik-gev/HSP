@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-/** Selecting with a rectangle: Shift+drag in Select (docs/0133). */
-import { cleanup, screen, within } from "@testing-library/react";
+/** Selecting with a rectangle, and dragging what was selected together (docs/0133). */
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -44,5 +44,25 @@ describe("selecting with a rectangle (docs/0133)", () => {
     const sheet = await screen.findByRole("dialog", { name: "Keyboard and mouse" });
     expect(within(sheet).getByText("Shift+drag")).toBeVisible();
     expect(within(sheet).getByText("Select everything inside a rectangle")).toBeVisible();
+  });
+
+  it("dragging one of the selection moves it all, saved as one change", async () => {
+    const { routes, changesets } = spyChangesets();
+    await renderApp("/floors/f3/edit", routes);
+    await screen.findByText("Draft 3 · Saved");
+    dragOnPlan([-200, -300], [8200, 1500], { shiftKey: true }); // the wall and the desk
+
+    dragOnPlan([2000, 1000], [2000, 2000], { release: false }); // by the desk
+    expect(screen.getByTestId("group-wall")).toBeInTheDocument();
+    releaseOnPlan([2000, 2000]);
+    expect(screen.queryByTestId("group-wall")).not.toBeInTheDocument();
+
+    await waitFor(() => expect(changesets).toHaveLength(1), { timeout: 3000 });
+    expect(changesets[0]!.ops).toEqual(
+      expect.arrayContaining([
+        { op: "update", kind: "object", id: "d1", data: { position: [2000, 2000, 0] } },
+        { op: "update", kind: "wall", id: "w1", data: { a: [0, 1000], b: [8000, 1000] } },
+      ]),
+    );
   });
 });

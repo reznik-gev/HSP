@@ -18,7 +18,7 @@ import type { HeightFilter } from "./heights";
 import { parsePattern } from "./numbering";
 import { buildHitIndex, type HitIndex, moveObjects, withAttachments } from "./hitTest";
 import { type ApiPlan, applyOps, type Op } from "./operations";
-import type { Plan, Vec2 } from "./plan";
+import type { Opening, Plan, Vec2, Wall, Zone } from "./plan";
 import type { SnapKind } from "./snap";
 import type { DisplayUnit } from "./units";
 import type { Viewport } from "./viewport";
@@ -101,6 +101,20 @@ export type Preview =
     }
   /** A zone being drawn: the corners so far, and the pointer. */
   | { kind: "zone"; points: readonly Vec2[]; to: Vec2; snap: SnapKind }
+  /**
+   * A selection with walls, zones, doors or windows being dragged by `d` (docs/0133): the ops
+   * that will save it, and what they move, as `movedBy` gives it. Items and columns are drawn by
+   * `drag`, which carries the same offset.
+   */
+  | {
+      kind: "group";
+      d: Vec2;
+      detach: boolean;
+      ops: readonly Op[];
+      walls: readonly Wall[];
+      zones: readonly Zone[];
+      openings: readonly Opening[];
+    }
   /** A selection rectangle being drawn by Shift+drag, corner to corner (docs/0133). */
   | { kind: "box"; from: Vec2; to: Vec2 }
   /** A zone corner being dragged. */
