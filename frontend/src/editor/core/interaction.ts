@@ -10,7 +10,8 @@
  * it, docs/0108). Alt pressed at any point in either drag detaches, and it stays detached until
  * the drag ends, while snapping follows Alt as it's held (docs/0130). Dragging a selected zone's corner reshapes it, a click inside a zone selects it, and empty space pans.
  * Drawing tools (wall, door, window, column, zone, item): a click places, a drag pans; see
- * their classes. R turns the item being placed, or the selected furniture, a quarter turn.
+ * their classes. R turns the item being placed, or the selected furniture, a quarter turn;
+ * furniture being dragged turns where it has been dragged to, and the drag carries on.
  * The middle button always pans and the wheel zooms (PanZoom, shared with the viewer).
  */
 import {
@@ -69,7 +70,8 @@ type Gesture =
   | { kind: "none" }
   /** `clickClears`: a click without moving (on empty space) clears the selection. */
   | { kind: "pan"; clickClears?: boolean }
-  | { kind: "drag"; start: Vec2; moved: boolean }
+  /** Moving the selection: `spin` is how far R turned it on the way, `last` the latest move. */
+  | { kind: "drag"; start: Vec2; moved: boolean; spin: number; last?: PointerInput }
   /** A junction dragged by the end of the selected wall `grabbed`; `walls` move with it. */
   | { kind: "junction"; from: Vec2; grabbed: string; walls: string[] }
   /** A selected wall dragged by its body; the walls joined at its ends stretch (docs/0108). */
@@ -176,12 +178,12 @@ export class Interaction {
     const hit = hitTest(s.plan, s.hitIndex, p, tolerance);
     if (hit?.kind === "object") {
       if (e.shift || !s.selection.has(hit.id)) s.select([hit.id], e.shift);
-      this.gesture = { kind: "drag", start: p, moved: false };
+      this.gesture = { kind: "drag", start: p, moved: false, spin: 0 };
       return "select";
     }
     if (hit?.kind === "column") {
       if (e.shift || !s.selection.has(hit.id)) s.select([hit.id], e.shift);
-      this.gesture = { kind: "drag", start: p, moved: false };
+      this.gesture = { kind: "drag", start: p, moved: false, spin: 0 };
       return "select";
     }
     if (hit?.kind === "opening") {
@@ -299,6 +301,40 @@ export class Interaction {
     return null;
   }
 
+  /** Moves the selection being dragged to follow the pointer at `e`, turned by `g.spin`. */
+  private dragTo(g: Extract<Gesture, { kind: "drag" }>, e: PointerInput): void {
+    g.last = e;
+    const s = this.store.getState();
+    const p = this.toPlan(e);
+    const spin = g.spin || undefined;
+    const single = this.singleItem();
+    if (single && s.plan) {
+      // One item: it snaps against walls and onto hosts like a newly placed one.
+      const o = single.object;
+      const from: Vec2 = [o.position[0], o.position[1]];
+      const want: Vec2 = [from[0] + p[0] - g.start[0], from[1] + p[1] - g.start[1]];
+      const rotation = o.rotation_ddeg + g.spin;
+      const placed = placeItem(s.plan, single.shape, want, rotation, {
+        ...snapSettings(s, e.alt),
+        ignoreIds: single.moving,
+      });
+      const turn = placed.rotation_ddeg - rotation;
+      s.setDrag({
+        dx: placed.at[0] - from[0],
+        dy: placed.at[1] - from[1],
+        spin,
+        turn: turn ? { ddeg: turn, pivot: from } : undefined,
+        attachTo: single.shape.attaches_to_categories?.length
+          ? { id: o.id, host: placed.attachedTo }
+          : undefined,
+      });
+      return;
+    }
+    const snap = (v: number) =>
+      s.gridSnap && !e.alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
+    s.setDrag({ dx: snap(p[0] - g.start[0]), dy: snap(p[1] - g.start[1]), spin });
+  }
+
   pointerMove(e: PointerInput): void {
     this.lastPointer = { sx: e.sx, sy: e.sy };
     this.store.getState().setSnapFree(Boolean(e.alt));
@@ -310,31 +346,7 @@ export class Interaction {
     } else if (g.kind === "drag") {
       if (!g.moved && isClick(this.downAt, e.sx, e.sy)) return;
       g.moved = true;
-      const p = this.toPlan(e);
-      const single = this.singleItem();
-      if (single && s.plan) {
-        // One item: it snaps against walls and onto hosts like a newly placed one.
-        const o = single.object;
-        const from: Vec2 = [o.position[0], o.position[1]];
-        const want: Vec2 = [from[0] + p[0] - g.start[0], from[1] + p[1] - g.start[1]];
-        const placed = placeItem(s.plan, single.shape, want, o.rotation_ddeg, {
-          ...snapSettings(s, e.alt),
-          ignoreIds: single.moving,
-        });
-        const turn = placed.rotation_ddeg - o.rotation_ddeg;
-        s.setDrag({
-          dx: placed.at[0] - from[0],
-          dy: placed.at[1] - from[1],
-          turn: turn ? { ddeg: turn, pivot: from } : undefined,
-          attachTo: single.shape.attaches_to_categories?.length
-            ? { id: o.id, host: placed.attachedTo }
-            : undefined,
-        });
-        return;
-      }
-      const snap = (v: number) =>
-        s.gridSnap && !e.alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
-      s.setDrag({ dx: snap(p[0] - g.start[0]), dy: snap(p[1] - g.start[1]) });
+      this.dragTo(g, e);
     } else if (g.kind === "junction" && s.plan) {
       // Alt pressed mid-drag detaches too, and stays detached (docs/0130).
       if (e.alt) g.walls = [g.grabbed];
@@ -478,6 +490,7 @@ export class Interaction {
       s.setDrag({
         dx: Math.round((s.drag.dx / len) * m.lengthMm),
         dy: Math.round((s.drag.dy / len) * m.lengthMm),
+        spin: s.drag.spin,
       });
       s.commitDrag();
       this.gesture = { kind: "none" };
@@ -529,6 +542,13 @@ export class Interaction {
         if (s.tool !== "select" || !s.plan) return false;
         const ops = rotateObjects(s.plan, s.selection);
         if (!ops.length) return false;
+        const g = this.gesture;
+        if (g.kind === "drag" && g.moved && g.last) {
+          // Mid-drag: turn it where it's been dragged to, and keep dragging.
+          g.spin = (g.spin + 900) % 3600;
+          this.dragTo(g, g.last);
+          return true;
+        }
         s.perform(ops);
         return true;
       }
