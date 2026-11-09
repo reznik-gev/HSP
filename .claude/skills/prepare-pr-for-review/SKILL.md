@@ -39,7 +39,7 @@ For each thread, decide which kind it is:
 ## 5. Reply and resolve
 - Reply to every bot thread you fixed: what changed, and the commit's short hash. Then resolve it (`addPullRequestReviewThreadReply`, then `resolveReviewThread`).
 - Leave disagreements, choices and other people's threads open until the owner answers. Then reply to each with the answer and what changed, and resolve it if it's the bot's.
-- **Read every reply back from GitHub** before reporting, and check the text arrived as written. Pass each body as a plain variable. Don't build it inside the command: in PowerShell, `-f body=$replies[$key]` posts the hashtable's type name instead of the text.
+- **Read every reply back from GitHub** before reporting, as [the git guide](../../../docs/guides/git.md#read-back-what-you-post) says.
 
 ## 6. Ask the bot to look again
 The bot's review when the PR opened (or was marked ready) is round 1. Count the rounds by the bot's summary comments on the PR.
