@@ -145,6 +145,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0131 | 2026-11-09 | [A deleted element may come back with its own id](0131-2026-11-09-deleted-elements-may-come-back.md) | Accepted |
 | 0132 | 2026-11-09 | [Ctrl+V pastes at the pointer, Ctrl+Shift+V next to the original](0132-2026-11-09-paste-keys.md) | Accepted |
 | 0134 | 2026-11-09 | [How a change goes from a request to `main`](0134-2026-11-09-from-request-to-main.md) | Accepted |
+| 0135 | 2026-11-09 | [Turning furniture while dragging it](0135-2026-11-09-turning-while-dragging.md) | Accepted |
 | 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted |
 | 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted |
 | 0140 | 2026-11-10 | [The token helper moves to GevTools, and renews only before `gh`](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) | Accepted |
