@@ -23,6 +23,9 @@ from tests.db.plan_helpers import (
     stub_zone,
 )
 
+PUBLISHED_HEIGHT_MM = stub_wall()["height_mm"]
+EDITED_HEIGHT_MM = 3000
+
 
 async def revisions(
     admin_editing_new_floor: dict[str, Any], model: Any, element_id: uuid.UUID
@@ -160,12 +163,16 @@ async def test_an_edited_published_wall_can_be_deleted_and_brought_back(
     w = new_id()
     await apply(ctx, 0, add("wall", w, **stub_wall()))
     await publish_by_hand(ctx)
-    await apply(ctx, 0, {"op": "update", "kind": "wall", "id": str(w), "data": {"height_mm": 3000}})
+    await apply(
+        ctx,
+        0,
+        {"op": "update", "kind": "wall", "id": str(w), "data": {"height_mm": EDITED_HEIGHT_MM}},
+    )
     await apply(ctx, 1, {"op": "delete", "kind": "wall", "id": str(w)})
-    await apply(ctx, 2, add("wall", w, **{**stub_wall(), "height_mm": 3000}))
+    await apply(ctx, 2, add("wall", w, **{**stub_wall(), "height_mm": EDITED_HEIGHT_MM}))
 
-    assert (await plan(ctx, 1)).walls[0].height_mm == 2800
-    assert (await plan(ctx, 2)).walls[0].height_mm == 3000
+    assert (await plan(ctx, 1)).walls[0].height_mm == PUBLISHED_HEIGHT_MM
+    assert (await plan(ctx, 2)).walls[0].height_mm == EDITED_HEIGHT_MM
 
 
 async def test_an_id_from_another_floor_is_refused(admin_editing_new_floor: dict[str, Any]) -> None:

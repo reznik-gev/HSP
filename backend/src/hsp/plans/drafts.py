@@ -159,14 +159,11 @@ class DraftRepository(Protocol):
         device_ids: set[uuid.UUID],
     ) -> References: ...
 
-    async def existing_element_ids(self, ids: Iterable[uuid.UUID]) -> set[uuid.UUID]:
-        """Ids already used by any element, including ones only present in old versions."""
-        ...
-
     async def element_owners(
         self, ids: Iterable[uuid.UUID]
     ) -> dict[uuid.UUID, tuple[uuid.UUID, models.ElementKind]]:
-        """The floor and kind of each id already used by an element, in any version."""
+        """The floor and kind of each id already used by an element, including ones only present
+        in old versions."""
         ...
 
     async def save(
@@ -307,16 +304,6 @@ class SqlDraftRepository:
             catalog=catalog, zone_type_ids=frozenset(zone_types), device_ids=frozenset(devices)
         )
 
-    async def existing_element_ids(self, ids: Iterable[uuid.UUID]) -> set[uuid.UUID]:
-        wanted = set(ids)
-        if not wanted:
-            return set()
-        return set(
-            await self._db.scalars(
-                select(models.FloorElement.id).where(models.FloorElement.id.in_(wanted))
-            )
-        )
-
     async def element_owners(
         self, ids: Iterable[uuid.UUID]
     ) -> dict[uuid.UUID, tuple[uuid.UUID, models.ElementKind]]:
@@ -359,8 +346,8 @@ class SqlDraftRepository:
 
         # 2) New elements: insert all floor_element rows before any revision references them
         #    (the models declare no ORM relationships, so flush order must be explicit).
-        new_ids = {eid for (_, eid) in upserted} - await self.existing_element_ids(
-            eid for (_, eid) in upserted
+        new_ids = {eid for (_, eid) in upserted} - set(
+            await self.element_owners(eid for (_, eid) in upserted)
         )
         for (kind, element_id), _ in upserted.items():
             if element_id in new_ids:
