@@ -19,6 +19,22 @@ const ROOM = stubPlan({
   ],
 }) as unknown as ApiPlan;
 
+/** A 40 cm column c1 centred on (-2000, -2000), with nothing else. */
+const ONE_COLUMN = stubPlan({
+  columns: [
+    {
+      id: "c1",
+      footprint: [
+        [-2200, -2200],
+        [-1800, -2200],
+        [-1800, -1800],
+        [-2200, -1800],
+      ],
+      height_mm: 3000,
+    },
+  ],
+}) as unknown as ApiPlan;
+
 describe("the hint line (docs/0130)", () => {
   it("with nothing selected, it says how to select and pan", () => {
     const { store } = editing();
@@ -75,11 +91,17 @@ describe("the hint line (docs/0130)", () => {
     expect(editorHint(store.getState())).toEqual({ key: "junctionAlone" });
   });
 
-  it("dragging an item offers a typed distance", () => {
+  it("dragging furniture offers a typed distance and R; a column only the distance", () => {
     const { store, interaction, at } = editing();
     interaction.pointerDown(at([2000, 1500]));
     interaction.pointerMove(at([2500, 1500]));
-    expect(editorHint(store.getState())).toEqual({ key: "dragging" });
+    expect(editorHint(store.getState())).toEqual({ key: "draggingFurniture" });
+    interaction.pointerUp(at([2500, 1500]));
+
+    const column = editing(ONE_COLUMN);
+    column.interaction.pointerDown(column.at([-2000, -2000]));
+    column.interaction.pointerMove(column.at([-1500, -2000]));
+    expect(editorHint(column.store.getState())).toEqual({ key: "dragging" });
   });
 
   it("the wall tool says how to start, then how to end the wall", () => {
