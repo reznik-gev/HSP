@@ -163,6 +163,12 @@ class DraftRepository(Protocol):
         """Ids already used by any element, including ones only present in old versions."""
         ...
 
+    async def element_owners(
+        self, ids: Iterable[uuid.UUID]
+    ) -> dict[uuid.UUID, tuple[uuid.UUID, models.ElementKind]]:
+        """The floor and kind of each id already used by an element, in any version."""
+        ...
+
     async def save(
         self,
         tenant_id: uuid.UUID,
@@ -310,6 +316,19 @@ class SqlDraftRepository:
                 select(models.FloorElement.id).where(models.FloorElement.id.in_(wanted))
             )
         )
+
+    async def element_owners(
+        self, ids: Iterable[uuid.UUID]
+    ) -> dict[uuid.UUID, tuple[uuid.UUID, models.ElementKind]]:
+        wanted = set(ids)
+        if not wanted:
+            return {}
+        rows = await self._db.execute(
+            select(
+                models.FloorElement.id, models.FloorElement.floor_id, models.FloorElement.kind
+            ).where(models.FloorElement.id.in_(wanted))
+        )
+        return {element_id: (floor_id, kind) for element_id, floor_id, kind in rows}
 
     async def _open_revision(self, kind: Kind, element_id: uuid.UUID) -> Any:
         rev = REV_MODEL[kind]
@@ -504,9 +523,16 @@ class DraftsService:
             | {z.id for z in content.zones}
             | {o.id for o in content.objects}
         )
-        added = {element_id for (_, element_id) in effects.upserted} - in_draft
-        reused = await self.repo.existing_element_ids(added)
-        if reused:  # ids from old versions or other floors are permanent (docs/0028)
+        added = {(kind, eid) for (kind, eid) in effects.upserted if eid not in in_draft}
+        owners = await self.repo.element_owners(eid for (_, eid) in added)
+        # An element of this floor's history may come back, as undo does after a delete; an id
+        # from another floor or of another kind stays taken (docs/0131).
+        reused = {
+            eid
+            for (kind, eid) in added
+            if eid in owners and owners[eid] != (floor_id, ELEMENT_KIND[kind])
+        }
+        if reused:
             raise _invalid(
                 [
                     ProblemError(
