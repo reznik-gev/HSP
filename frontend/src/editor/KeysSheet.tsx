@@ -46,7 +46,7 @@ const GROUPS: { group: string; rows: string[] }[] = [
       "numberDrag",
     ],
   },
-  { group: "editing", rows: ["undo", "redo", "copy", "paste", "pasteHere", "help"] },
+  { group: "editing", rows: ["undo", "redo", "copy", "paste", "pasteBeside", "help"] },
   { group: "view", rows: ["pan", "zoom"] },
 ];
 

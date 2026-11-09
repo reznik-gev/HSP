@@ -566,11 +566,11 @@
         },
         "paste": {
           "keys": "Ctrl+V",
-          "what": "הדבקה באותו מקום"
-        },
-        "pasteHere": {
-          "keys": "Ctrl+Shift+V",
           "what": "הדבקה במקום הסמן"
+        },
+        "pasteBeside": {
+          "keys": "Ctrl+Shift+V",
+          "what": "הדבקה ליד המקור"
         },
         "help": {
           "keys": "?",

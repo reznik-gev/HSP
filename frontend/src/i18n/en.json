@@ -559,11 +559,11 @@
         },
         "paste": {
           "keys": "Ctrl+V",
-          "what": "Paste in the same place"
-        },
-        "pasteHere": {
-          "keys": "Ctrl+Shift+V",
           "what": "Paste where the pointer is"
+        },
+        "pasteBeside": {
+          "keys": "Ctrl+Shift+V",
+          "what": "Paste next to the original"
         },
         "help": {
           "keys": "?",
