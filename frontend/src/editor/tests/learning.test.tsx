@@ -35,6 +35,7 @@ describe("learning the editor (docs/0130)", () => {
     await userEvent.keyboard("?");
     const sheet = await screen.findByRole("dialog", { name: "Keyboard and mouse" });
     expect(within(sheet).getByText("Ctrl+Shift+V")).toBeVisible();
+    expect(within(sheet).getByText("Paste next to the original")).toBeVisible();
     expect(within(sheet).getByText("Alt while dragging a wall")).toBeVisible();
     expect(within(sheet).getByRole("heading", { name: "Tools" })).toBeVisible();
     await userEvent.keyboard("w");
