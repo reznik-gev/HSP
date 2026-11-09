@@ -22,7 +22,7 @@ Who asks the bot to review again after fixes:
 
 How a session claims a record number:
 - **A reservation branch on GitHub** ✅. Pushing an empty commit to `reserve/decision-NNNN` fails if another session already holds that name, so two sessions can't both claim it, cloud sessions included. No CI runs on these branches.
-- A reserved-numbers file on `main`, through a small PR per claim. Everything in one file, but each claim waits for CI.
+- A claim merged into `main` through a small PR: a line in a reserved-numbers file, or the record's row in the index marked "Reserved". The claim would be in `main`'s history, and abandoned numbers would stay explained. Set aside after the owner weighed it on 2026-11-09: each claim takes a PR, CI and a merge (1–2 minutes), the session would merge its own PR without the owner, and the review bot would have to skip these PRs.
 - Checking `main`, the open PRs and local worktrees, then opening a draft PR at once. Simplest, but two sessions in the same minute can still clash.
 
 When a change needs the owner's eyes before review:
