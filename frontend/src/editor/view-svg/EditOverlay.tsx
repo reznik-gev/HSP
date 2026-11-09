@@ -1,9 +1,9 @@
 /**
  * What the editor draws over the plan (docs/0089): selected walls with handles on their ends,
  * selected doors, windows, columns and zones (zones with handles on their corners), what a
- * tool is about to place, a junction or zone corner being dragged, the Shift+drag selection
- * rectangle (docs/0133), and the snap marker. Plan millimetres inside PlanView's y-up group;
- * sizes meant in screen pixels are scaled by the zoom.
+ * tool is about to place, a junction, zone corner or group being dragged, the Shift+drag
+ * selection rectangle (docs/0133), and the snap marker. Plan millimetres inside PlanView's
+ * y-up group; sizes meant in screen pixels are scaled by the zoom.
  */
 import { useTranslation } from "react-i18next";
 import { useStore } from "zustand";
@@ -28,8 +28,15 @@ export function EditOverlay({ store }: { store: EditorStore }) {
   const wallsById = new Map(plan.walls.map((w) => [w.id, w]));
   const opening = preview?.kind === "opening" ? preview : null;
   const vertex = preview?.kind === "vertex" ? preview : null;
+  // A group being dragged (docs/0133): its walls, zones, doors and windows where they'll be.
+  const group = preview?.kind === "group" ? preview : null;
+  const groupZones = new Map(group?.zones.map((z) => [z.id, z.boundary]));
+  const groupWalls = new Map(group?.walls.map((w) => [w.id, w]));
+  const groupOpenings = new Map(group?.openings.map((o) => [o.id, o]));
   const zoneOutline = (id: string, boundary: readonly Vec2[]) =>
-    vertex?.zone === id ? boundary.map((p, i) => (i === vertex.index ? vertex.to : p)) : boundary;
+    vertex?.zone === id
+      ? boundary.map((p, i) => (i === vertex.index ? vertex.to : p))
+      : (groupZones.get(id) ?? boundary);
   const selectedZones = plan.zones.filter((z) => selection.has(z.id));
 
   const selectedWalls = plan.walls.filter((w) => selection.has(w.id));
@@ -123,11 +130,25 @@ export function EditOverlay({ store }: { store: EditorStore }) {
               />
             );
           })}
+      {group?.walls.map((w) => (
+        <line
+          key={`g${w.id}`}
+          className="plan-selected"
+          x1={w.a[0]}
+          y1={w.a[1]}
+          x2={w.b[0]}
+          y2={w.b[1]}
+          strokeWidth={w.thickness_mm}
+          strokeOpacity={0.6}
+          data-testid="group-wall"
+        />
+      ))}
       {plan.openings
         .filter((o) => selection.has(o.id) && o.id !== opening?.id)
         .map((o) => {
-          const w = wallsById.get(o.wall_id);
-          return w ? <Span key={o.id} wall={w} offset={o.offset_mm} width={o.width_mm} /> : null;
+          const w = groupWalls.get(o.wall_id) ?? wallsById.get(o.wall_id);
+          const offset = groupOpenings.get(o.id)?.offset_mm ?? o.offset_mm;
+          return w ? <Span key={o.id} wall={w} offset={offset} width={o.width_mm} /> : null;
         })}
       {opening?.wall_id && wallsById.get(opening.wall_id) && (
         <Span

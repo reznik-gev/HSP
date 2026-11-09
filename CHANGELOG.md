@@ -28,7 +28,7 @@ The first release.
 - Undo brings back a deleted wall, door or anything else that was already published, instead of failing with "Something with this ID is already on the plan".
 - Copy with Ctrl+C, on this floor or another. Ctrl+V pastes at the pointer. Ctrl+Shift+V pastes 50 cm down and to the right of the original, further each time, or in the same place on another floor.
 - Pressing R while dragging furniture turns it where it has been dragged to, and the drag carries on. It used to jump back to where it started.
-- Shift+drag in the editor draws a rectangle and adds everything fully inside it to the selection. With the height filter on Floor or Raised, the faded items aren't caught.
+- Shift+drag in the editor draws a rectangle and adds everything fully inside it to the selection. With the height filter on Floor or Raised, the faded items aren't caught. Dragging any element of the selection then moves it all, walls and zones included, as the arrow keys do.
 - Assign seats to people and teams. Archiving a person or deleting a floor frees their seats on its own.
 
 ### For operators

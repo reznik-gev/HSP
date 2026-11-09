@@ -21,6 +21,7 @@ import {
   moveWall,
   nudgeOps,
   moveZoneVertex,
+  movedBy,
   type OpeningType,
   rotateObjects,
   wallsAt,
@@ -73,6 +74,11 @@ type Gesture =
   | { kind: "pan"; clickClears?: boolean }
   /** Moving the selection: `spin` is how far R turned it on the way, `last` the latest move. */
   | { kind: "drag"; start: Vec2; moved: boolean; spin: number; last?: PointerInput }
+  /**
+   * A selection with walls, zones, doors or windows, dragged by one of them (docs/0133).
+   * `detach`: Alt was held at some point, so the walls joined to it don't stretch (docs/0130).
+   */
+  | { kind: "group"; start: Vec2; moved: boolean; detach: boolean }
   /** A junction dragged by the end of the selected wall `grabbed`; `walls` move with it. */
   | { kind: "junction"; from: Vec2; grabbed: string; walls: string[] }
   /** A selected wall dragged by its body; the walls joined at its ends stretch (docs/0108). */
@@ -184,6 +190,12 @@ export class Interaction {
       return "none";
     }
     const hit = hitTest(s.plan, s.hitIndex, p, tolerance);
+    const grabbed = hit?.id ?? zoneAt(s.plan, p);
+    if (grabbed && s.selection.size > 1 && s.selection.has(grabbed) && this.mixedSelection()) {
+      // One of a group: they all move, as the arrow keys move them (docs/0133).
+      this.gesture = { kind: "group", start: p, moved: false, detach: Boolean(e.alt) };
+      return "select";
+    }
     if (hit?.kind === "object") {
       if (!s.selection.has(hit.id)) s.select([hit.id]);
       this.gesture = { kind: "drag", start: p, moved: false, spin: 0 };
@@ -233,6 +245,22 @@ export class Interaction {
     // Empty space: pan, and clear the selection on a click.
     this.pan(e, true);
     return "clear";
+  }
+
+  /** Whether the selection has more than items and columns, which `drag` moves on its own. */
+  private mixedSelection(): boolean {
+    const s = this.store.getState();
+    const columns = new Set((s.plan?.columns ?? []).map((c) => c.id));
+    return [...s.selection].some((id) => !s.plan?.objects[id] && !columns.has(id));
+  }
+
+  /** The group moved by `d`: the drag offset for items and columns, the preview for the rest. */
+  private moveGroup(d: Vec2, detach: boolean): void {
+    const s = this.store.getState();
+    if (!s.plan) return;
+    const ops = nudgeOps(s.plan, s.selection, d, detach);
+    s.setDrag({ dx: d[0], dy: d[1] });
+    s.setPreview({ kind: "group", d, detach, ops, ...movedBy(s.plan, ops) });
   }
 
   /** Shift+click: adds the element under the pointer to the selection. */
@@ -364,6 +392,15 @@ export class Interaction {
       if (!g.moved && isClick(this.downAt, e.sx, e.sy)) return;
       g.moved = true;
       this.dragTo(g, e);
+    } else if (g.kind === "group") {
+      if (e.alt) g.detach = true;
+      if (!g.moved && isClick(this.downAt, e.sx, e.sy)) return;
+      g.moved = true;
+      // Grid steps, as several items move; Alt frees it while held (docs/0133).
+      const p = this.toPlan(e);
+      const snap = (v: number) =>
+        s.gridSnap && !e.alt ? Math.round(v / s.gridMm) * s.gridMm : Math.round(v);
+      this.moveGroup([snap(p[0] - g.start[0]), snap(p[1] - g.start[1])], g.detach);
     } else if (g.kind === "junction" && s.plan) {
       // Alt pressed mid-drag detaches too, and stays detached (docs/0130).
       if (e.alt) g.walls = [g.grabbed];
@@ -424,6 +461,8 @@ export class Interaction {
     const clicked = isClick(this.downAt, e.sx, e.sy);
     if (g.kind === "drag" && g.moved) {
       s.commitDrag();
+    } else if (g.kind === "group") {
+      this.commitGroup();
     } else if (g.kind === "junction") {
       const preview = s.preview;
       s.setPreview(null);
@@ -477,6 +516,15 @@ export class Interaction {
     s.setViewport(viewport);
   }
 
+  /** Saves the group's move, as one step to undo. */
+  private commitGroup(): void {
+    const s = this.store.getState();
+    const preview = s.preview;
+    s.setPreview(null);
+    s.setDrag(null);
+    if (preview?.kind === "group") s.perform([...preview.ops]);
+  }
+
   wheel(sx: number, sy: number, deltaY: number): void {
     this.view.wheel(sx, sy, deltaY);
   }
@@ -501,7 +549,8 @@ export class Interaction {
    */
   measureTarget(): "wall" | "move" | null {
     const s = this.store.getState();
-    if (this.gesture.kind === "drag" && this.gesture.moved && s.drag) return "move";
+    const g = this.gesture;
+    if ((g.kind === "drag" || g.kind === "group") && g.moved && s.drag) return "move";
     if (s.tool === "wall" && this.wallTool.drawing()) return "wall";
     return null;
   }
@@ -515,6 +564,16 @@ export class Interaction {
       // Exactly that far along the drag (docs/0045).
       const len = Math.hypot(s.drag.dx, s.drag.dy);
       if (!len) return false;
+      if (this.gesture.kind === "group") {
+        const d: Vec2 = [
+          Math.round((s.drag.dx / len) * m.lengthMm),
+          Math.round((s.drag.dy / len) * m.lengthMm),
+        ];
+        this.moveGroup(d, this.gesture.detach);
+        this.commitGroup();
+        this.gesture = { kind: "none" };
+        return true;
+      }
       s.setDrag({
         dx: Math.round((s.drag.dx / len) * m.lengthMm),
         dy: Math.round((s.drag.dy / len) * m.lengthMm),
