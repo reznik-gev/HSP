@@ -492,7 +492,7 @@
         },
         "rotate": {
           "keys": "R",
-          "what": "Turn the selected furniture a quarter turn, also while dragging it"
+          "what": "Turn the selected furniture a quarter turn"
         },
         "delete": {
           "keys": "Delete or Backspace",

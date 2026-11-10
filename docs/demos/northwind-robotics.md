@@ -89,6 +89,7 @@ Your development database is never touched: the demo lives in its own `hsp_demo`
 - Choose **Place item** in the tools on the left. The catalog opens on the right: pick **Desk 160 × 80**, then click the empty space right of the core to place it (R turns it). Its measurements are exact, to the centimetre.
 - The **Problems** tab now shows **1**: "This seat has no label yet." "HSP checks the plan as you draw." Select the desk, type a **Seat label**, `HT-4-33`, in **Properties**, and the problem goes away.
 - **Undo** and **Redo** are at the top. **Number seats** (in the tools) labels a whole row of desks in one go.
+- **Turning while dragging:** drag a desk that has a monitor on it, and press R before letting go. The desk turns where it is, and so does the monitor, each on its own spot. Ask, and note the answers for the feedback notes ([0135](../decisions/0135-2026-11-09-turning-while-dragging.md)): *Should a monitor on a desk swing round with the desk when it turns, staying where it was on the desk? Or is turning on its own spot fine?*
 - **Publish.** The dialog lists what changed (the new desk, the renamed zone) and takes a note for the history. The new layout is live for everyone.
 - The history button at the top lists every published version. An older one can be restored as a draft.
 - Optional: **Raised** and **Floor** at the bottom show only what's on the floor, or what's mounted higher, such as the boardroom display.
