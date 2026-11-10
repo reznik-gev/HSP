@@ -9,7 +9,7 @@ Claude Code sessions push, open PRs and comment with the owner's own GitHub acco
 
 What's true today, checked on 2026-11-10:
 - `reznik-gev/HSP` is public. The `main` ruleset requires a PR, with 0 approvals and no bypass.
-- The `main` ruleset's list of required status checks is **empty**, although the [git guide](../guides/git.md) says `ci-ok` must pass.
+- The `main` ruleset's list of required status checks is **empty**, although [0070](0070-2026-10-08-ci-gate-job.md) makes `ci-ok` the only required check, and the [git guide](../guides/git.md) says it must pass. The ruleset has drifted from an accepted decision.
 - The review bot ([`claude.yml`](../../.github/workflows/claude.yml), [`claude-code-review.yml`](../../.github/workflows/claude-code-review.yml)) runs on each job's own `GITHUB_TOKEN`, so its comments come from `github-actions`. `claude-code-action` refuses runs started by a bot account unless that bot is listed in its `allowed_bots` input.
 - Cloud sessions push through Anthropic's git proxy, with the GitHub connection of the owner's claude.ai account. Whatever local sessions use, cloud sessions keep acting as the owner.
 - Coding agents today usually act under their own bot identity, and a person approves their work. GitHub's own docs recommend a GitHub App over a user's token for long-lived automation.
@@ -46,6 +46,7 @@ Who is named as a commit's author:
 
 ### Setup, step by step (the owner's to do)
 Sessions don't change credentials, tokens or repository settings themselves.
+0. **Now, apart from the App:** add `ci-ok` back as a required status check on the `main` ruleset (Settings → Rules → `main` → Require status checks to pass), as [0070](0070-2026-10-08-ci-gate-job.md) decided.
 1. **Create the App.** GitHub → Settings → Developer settings → GitHub Apps → New GitHub App. Name it `reznik-gev-claude`, and give the repository URL as its homepage. Untick "Active" under Webhook. Set the permissions in point 2. Pick "Only on this account". Note the **App ID**.
 2. **Make a private key.** On the App's page, "Generate a private key". Store the `.pem` file as in point 7.
 3. **Install it.** On the App's page, Install App → your account → "Only select repositories" → `HSP`. Note the **installation ID** from the page's URL.
@@ -59,7 +60,7 @@ Sessions don't change credentials, tokens or repository settings themselves.
   - `allowed_bots: reznik-gev-claude[bot]` in both Claude workflows, so the bot still reviews the App's PRs and its `@claude review` comments;
   - the guides and skills updated for decision points 4 and 5: [How a change is made](../guides/making-a-change.md) step 10, [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md), [`open-pr`](../../.claude/skills/open-pr/SKILL.md) for the commit lines, and the [git guide](../guides/git.md).
   Until it merges and the ruleset changes, 0134's path stays as it is.
-- **`ci-ok` isn't a required check today** (see Context). Whether to add it is the owner's call. It matters more once approvals merge, and auto-merge would need it.
+- **`ci-ok` isn't a required check today** (see Context), although [0070](0070-2026-10-08-ci-gate-job.md) makes it the only required check. The owner adds it back with setup step 0, without waiting for the App. It matters more once approvals merge, and auto-merge would need it.
 - **To consider later:** GitHub auto-merge, and changing the `merge-pr` skill to go with it. *(The owner's request)*
 - The review bot keeps its `GITHUB_TOKEN`, so its comments still come from `github-actions`. The rule on which threads a session may resolve is unchanged.
 - In a future project, the owner installs the same App on the new repository and adds the same ruleset. Each machine already has the key.
