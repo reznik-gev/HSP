@@ -80,8 +80,8 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0066 | 2026-10-08 | [Frontend state & UI: Zustand + shadcn/ui](0066-2026-10-08-frontend-state-and-ui-components.md) | Accepted (lower confidence) |
 | 0067 | 2026-10-08 | [Frontend: pnpm + Vite + TanStack Router](0067-2026-10-08-frontend-package-manager-and-router.md) | Accepted |
 | 0068 | 2026-10-08 | [Repository visibility: public](0068-2026-10-08-public-repository.md)       | Accepted |
-| 0069 | 2026-10-08 | [Merge method: rebase only, linear history](0069-2026-10-08-rebase-merges.md) | Accepted |
-| 0070 | 2026-10-08 | [CI structure: single workflow with gate job](0070-2026-10-08-ci-gate-job.md) | Accepted |
+| 0069 | 2026-10-08 | [Merge method: rebase only, linear history](0069-2026-10-08-rebase-merges.md) | Accepted (refined by 0141) |
+| 0070 | 2026-10-08 | [CI structure: single workflow with gate job](0070-2026-10-08-ci-gate-job.md) | Accepted (refined by 0141) |
 | 0071 | 2026-10-08 | [License: proprietary (source-visible); no external contributions](0071-2026-10-08-license-and-contributions.md) | Accepted |
 | 0072 | 2026-10-08 | [Rename the product from HSM to HSP (Human-Space Program)](0072-2026-10-08-rename-hsm-to-hsp.md) | Accepted (renames in place refined by 0126) |
 | 0073 | 2026-10-08 | [SVG performance test setup](0073-2026-10-08-svg-performance-test-setup.md) | Accepted |
@@ -149,3 +149,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted |
 | 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted |
 | 0140 | 2026-11-10 | [The token helper moves to GevTools, and renews only before `gh`](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) | Accepted |
+| 0141 | 2026-11-11 | [No merge commits in a PR, and CI checks it](0141-2026-11-11-no-merge-commits-in-a-pr.md) | Accepted |

@@ -1,6 +1,6 @@
 # Working with Git and pull requests
 
-How changes get from a branch to `main`: branches, commits, reviews and merging. Stacks of PRs have their own guide, [Working with stacked pull requests](stacked-prs.md). The whole path of a change, from the owner's request to the cleanup after merging, is in [How a change is made](making-a-change.md). The decisions behind this are [0064](../decisions/0064-2026-10-08-branching-workflow.md) (trunk-based branches), [0069](../decisions/0069-2026-10-08-rebase-merges.md) (rebase-only merges), [0070](../decisions/0070-2026-10-08-ci-gate-job.md) (the `ci-ok` gate), [0093](../decisions/0093-2026-10-16-github-stacked-prs.md) (GitHub stacks) and [0134](../decisions/0134-2026-11-09-from-request-to-main.md) (who asks for re-reviews, and merging).
+How changes get from a branch to `main`: branches, commits, reviews and merging. Stacks of PRs have their own guide, [Working with stacked pull requests](stacked-prs.md). The whole path of a change, from the owner's request to the cleanup after merging, is in [How a change is made](making-a-change.md). The decisions behind this are [0064](../decisions/0064-2026-10-08-branching-workflow.md) (trunk-based branches), [0069](../decisions/0069-2026-10-08-rebase-merges.md) (rebase-only merges), [0070](../decisions/0070-2026-10-08-ci-gate-job.md) (the `ci-ok` gate), [0093](../decisions/0093-2026-10-16-github-stacked-prs.md) (GitHub stacks) [0134](../decisions/0134-2026-11-09-from-request-to-main.md) (who asks for re-reviews, and merging) and [0141](../decisions/0141-2026-11-11-no-merge-commits-in-a-pr.md) (no merge commits in a PR).
 
 ## Branches and commits
 - Every change is a short-lived branch and a pull request into `main` (or into the PR below it, in a stack). Name branches by area and topic: `editor/height-cues`, `admin/devices`, `docs/testing-guide`.
@@ -31,6 +31,8 @@ After posting a comment, a reply or a PR description with `gh`, read it back fro
 
 ## Catching up and restacking
 Bringing a branch up to date with `main`, or restacking a stack after a merge, **rebases and force-pushes**: `gh stack sync`, or `git rebase origin/main` and `git push --force-with-lease`. That's expected and needs no one's permission. It's the price of a linear `main` ([0069](../decisions/0069-2026-10-08-rebase-merges.md)). It replays the same commits; it doesn't change what was reviewed. `--force-with-lease` refuses to overwrite anything someone else pushed in the meantime.
+
+**Never merge `main` (or the PR below) into a branch.** That holds when Auto-fix reports a merge conflict and says to merge `FETCH_HEAD`: rebase instead, settle the conflicts, run the checks and push with `--force-with-lease`. The `linear-history` CI job fails any PR that carries a merge commit ([0141](../decisions/0141-2026-11-11-no-merge-commits-in-a-pr.md)).
 
 **Any other force-push needs the owner's yes first**, for example amending or rewording a commit already pushed. To fix your own just-pushed commit, add a new commit. Claude Code's auto mode may still block a rebase push; if it does, tell the owner, who can add a permission rule.
 
