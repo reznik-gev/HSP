@@ -11,6 +11,7 @@ Every design decision is recorded in **[docs/decisions/](docs/decisions/README.m
 | [`backup/`](backup/README.md) | The backup service: scheduled dumps to a folder or S3, and restore (Python 3.14, uv) |
 | [`frontend/`](frontend/README.md) | React + TypeScript app with the headless editor core (pnpm, Vite) |
 | `deploy/` | Docker Compose: `compose.dev.yml` for local development. Production images and stack ([0097](docs/decisions/0097-2026-10-18-production-images.md), [0099](docs/decisions/0099-2026-10-18-production-compose.md)): see [deploy/README.md](deploy/README.md). Installing and running HSP: [deploy/install.md](deploy/install.md). The offline release bundle and how releases are made: [docs/guides/releasing.md](docs/guides/releasing.md) ([0054](docs/decisions/0054-2026-10-08-release-distribution.md), [0102](docs/decisions/0102-2026-10-19-release-workflow.md)) |
+| [`tools/github-app/`](tools/github-app/README.md) | Gives Claude Code sessions the owner's GitHub App's tokens, for git and `gh` ([0139](docs/decisions/0139-2026-11-10-how-sessions-get-the-apps-tokens.md); Python 3.14, uv) |
 | `shared/` | Language-neutral validation test cases ([0051](docs/decisions/0051-2026-10-08-validation-feedback.md)) |
 | `authz/` | OpenFGA model (deferred past v1) |
 | `docs/` | Documentation: [decision records](docs/decisions/README.md), [guides](docs/guides/README.md), with more sections to come ([0075](docs/decisions/0075-2026-10-08-docs-directory-structure.md)) |
