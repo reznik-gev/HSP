@@ -19,6 +19,28 @@ permissions:
   contents: read
 
 jobs:
+  # A PR carries no merge commits (docs/0141): branches catch up by rebasing. Checks the PR's own
+  # commits, from its base to its head, not the merge ref GitHub checks out by default.
+  linear-history:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: No merge commits between the base and the head
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          merges=$(git rev-list --merges "$BASE..$HEAD_SHA")
+          if [ -n "$merges" ]; then
+            git log --oneline --no-walk $merges
+            echo "::error::This PR has merge commits. HSP merges by rebase only (docs/0141): rebase onto the base branch (git rebase origin/main) and push with --force-with-lease. Never merge main in, even when Auto-fix says to."
+            exit 1
+          fi
+
   changes:
     runs-on: ubuntu-latest
     permissions:
@@ -262,7 +284,7 @@ jobs:
 
   ci-ok:
     if: always()
-    needs: [changes, backend, backup, scripts, frontend, images, packages]
+    needs: [changes, linear-history, backend, backup, scripts, frontend, images, packages]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped
