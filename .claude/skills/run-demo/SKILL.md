@@ -21,7 +21,7 @@ Get-NetTCPConnection -State Listen -LocalPort 8000,5173 -ErrorAction SilentlyCon
 git -C $demo log -1 --format='%h %s'
 ```
 - If anything is on 8000 or 5173, **ask the owner before going on**: say what it shows (the folder, and the PR or commit). Don't start a second demo.
-- If the demo already shows the PR's latest commit, skip to step 6. Go to step 5 first only if the owner wants fresh data.
+- If the demo already shows the PR's latest commit and both 8000 and 5173 are in use, skip to step 6. Go to step 5 first only if the owner wants fresh data. If it's on that commit but a server is down, go to step 3.
 
 ## 2. Get the PR's code
 The first time, create the worktree: `git -C $main worktree add --detach $demo origin/main`. Then:
