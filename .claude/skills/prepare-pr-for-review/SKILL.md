@@ -35,7 +35,7 @@ The review bot's login is `github-actions`. A thread is the bot's only if every 
 - Run the checks for every side the PR touches (CLAUDE.md), then push.
 
 ## 5. Reply and resolve
-- Reply to every bot thread you fixed: what changed, and the commit's short hash. Then resolve it (`resolveReviewThread`).
+- Reply to every bot thread you fixed: what changed, and the commit's short hash. Then resolve it (`addPullRequestReviewThreadReply`, then `resolveReviewThread`).
 - Leave disagreements, choices and other people's threads open until the owner answers. Then reply with the answer and what changed, and resolve it if it's the bot's.
 - **Read every reply back from GitHub** ([how](../../../docs/guides/git.md#read-back-what-you-post)).
 

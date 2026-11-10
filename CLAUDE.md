@@ -21,5 +21,5 @@ Run the checks for each side you changed, the same ones CI runs (see each side's
 - When the owner reviews a set of choices, present them one by one, in order.
 - Every user-facing text exists in **English and Hebrew** (`frontend/src/i18n/`).
 - Write in plain English: short sentences, no jargon the reader needs to look up.
-- **Ask what "done" means** before building, unless the request says. **A review fix that changes behaviour users notice is the owner's question**, never a quiet fix ([0134](docs/decisions/0134-2026-11-09-from-request-to-main.md)).
+- **Ask what "done" means** before building, unless the request says. For a small fix whose outcome is plain, state your own and go on. **A review fix that changes behaviour users notice is the owner's question**, never a quiet fix ([0134](docs/decisions/0134-2026-11-09-from-request-to-main.md)).
 - **Rules go in the guides and skills, not in Claude's memory.** Memory keeps only the state of the work, and a new rule until the PR that writes it down merges ([0134](docs/decisions/0134-2026-11-09-from-request-to-main.md)).
