@@ -27,7 +27,6 @@ git push origin "$sha:refs/heads/reserve/decision-NNNN"
 ```
 - If GitHub refuses the push, another session holds that number. Take the next one and try again.
 - **Never force-push a `reserve/` branch.** That takes a number away from another session.
-- No workflow runs on `reserve/` branches: each starts only on a PR, a push to `main`, a `v*` tag, a schedule or by hand. Nothing enforces that, so [0134](../../../docs/decisions/0134-2026-11-09-from-request-to-main.md) asks any later workflow that runs on other branches' pushes to skip `reserve/**`.
 - [`merge-pr`](../merge-pr/SKILL.md) deletes them after the PR merges or closes.
 
 ## 3. Write the record
