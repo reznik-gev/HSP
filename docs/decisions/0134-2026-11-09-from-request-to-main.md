@@ -3,7 +3,7 @@
 - **Date:** 2026-11-09
 - **Status:** Accepted
 - **Refines:** [0101](0101-2026-10-19-claude-reviews-only.md) (who asks the review bot to look again)
-- **Refined by:** [0136](0136-2026-11-10-the-demo-for-checking-prs.md) (the demo for checking PRs), [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (sessions push as a GitHub App, and the owner's approval is the go-ahead to merge)
+- **Refined by:** [0136](0136-2026-11-10-the-demo-for-checking-prs.md) (the demo for checking PRs), [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (sessions push as a GitHub App, and the owner's approval is the go-ahead to merge), [0142](0142-2026-11-11-no-auto-fix-for-app-prs.md) (no Auto-fix for PRs opened as the App: the owner starts each review round)
 
 ## Context
 Most HSP work follows the same path. The owner asks for a change. A Claude Code session works out what's needed, asks the owner what's theirs to decide, builds it and tests it. Then it opens a PR, the review bot reviews it, the session fixes the review, and the owner reviews and merges.

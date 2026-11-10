@@ -1,0 +1,34 @@
+# 0142 — No Auto-fix for PRs opened as the App: the owner starts each review round
+
+- **Date:** 2026-11-11
+- **Status:** Accepted
+- **Refines:** [0134](0134-2026-11-09-from-request-to-main.md) (point 7: Auto-fix on every PR; point 8: how the next bot round reaches the session), [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (point 4: the session wakes on the owner's approval)
+
+## Context
+[0134](0134-2026-11-09-from-request-to-main.md) has a session turn on Auto-fix for every PR it opens, without asking. Auto-fix is the Claude desktop app's switch that wakes a session on CI failures, merge conflicts and review comments. [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md), [0139](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) and [0140](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) moved local sessions to push and open PRs as the owner's GitHub App, `reznik-gev-claude[bot]`.
+
+On [#161](https://github.com/reznik-gev/HSP/pull/161), on 2026-11-11, the app refused to turn Auto-fix on: "GitHub does not list the account gh is signed in with on github.com as the PR's author; the user can turn on Auto-fix for it themselves." What's true today, checked on 2026-11-11:
+- The app's `set_monitor` tool turns Auto-fix on only for a PR opened by the account the app's own `gh` is signed in with, which is the owner's. No app setting changes that.
+- The owner can still turn Auto-fix on by hand from the PR bar.
+- Without Auto-fix, the review bot's comments and CI failures don't wake the session.
+
+The owner said why they chose as they did: running several sessions at once, they felt they were losing control of them. They want the review loop to move on their word, not on its own.
+
+## Options considered
+What a session does after it opens a PR as the App:
+- **No Auto-fix. The owner tells the session when to go on** ✅. The owner says "prepare #N" when the bot's review is in, and tells the session about CI failures. Nothing moves without the owner, which is what they want. The cost: the owner keeps watch over the PR on GitHub.
+- The session asks the owner to turn Auto-fix on from the PR bar. One click per PR, then everything works as before. Claude recommended it. The owner set it aside: the loop would run on its own again.
+- Open PRs with the owner's account, so Auto-fix works. That undoes [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md).
+
+## Decision
+1. **A session doesn't turn on Auto-fix for a PR it opened as the App,** and doesn't ask the owner to. It still binds the PR to the session (`get_status`, then `bind_pr`). *(The owner's choice)*
+2. **The owner starts each review round.** When the bot's review is in, the owner says "prepare #N", and the session runs [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md). After a round of fixes, the session still comments `@claude review` itself, as 0134 point 8 says, and then stops. It goes on when the owner says "prepare #N" again. *(The owner's choice)*
+3. **CI failures:** the session reports CI's state when it opens the PR and after each push. After that, the owner tells it when CI fails. *(The owner's choice)*
+4. **The owner's approval may not wake the session.** If it doesn't, the owner tells the session it's approved, or says "merge #N", and the session merges with [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md) as [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) says. *(Claude's choice: not checked yet whether the app wakes a session on an approval without Auto-fix)*
+5. **PRs opened with the owner's own account** (a machine not set up for the App) keep 0134 point 7: Auto-fix on, without asking. *(Claude's choice: the owner's answer was about App PRs, and the app accepts these)*
+6. **When a session opens an App PR, its report says** that Auto-fix is off, and that the owner says "prepare #N" when the bot's review is in. *(Claude's choice)*
+
+## Consequences
+- [`open-pr`](../../.claude/skills/open-pr/SKILL.md) step 5 and its report, [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md) step 6, and [How a change is made](../guides/making-a-change.md) steps 6, 7 and 9 change to match.
+- The owner can still turn Auto-fix on by hand from the PR bar for a PR they want to run on its own.
+- **To consider later:** if the owner finds the watching too much, the option set aside above (one click per PR) is the next step.

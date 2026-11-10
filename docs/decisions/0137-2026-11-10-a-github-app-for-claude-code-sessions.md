@@ -3,7 +3,7 @@
 - **Date:** 2026-11-10
 - **Status:** Accepted
 - **Refines:** [0134](0134-2026-11-09-from-request-to-main.md) (the "to consider later" identity, and how a merge happens)
-- **Refined by:** [0139](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) (gh's token kept on disk for at most an hour and renewed by a hook; every project on the machine; the helper and the machine setup), [0143](0143-2026-11-11-the-owner-merges-their-own-prs.md) (PRs from the owner's account are merged by the owner, on GitHub)
+- **Refined by:** [0139](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) (gh's token kept on disk for at most an hour and renewed by a hook; every project on the machine; the helper and the machine setup), [0143](0143-2026-11-11-the-owner-merges-their-own-prs.md) (PRs from the owner's account are merged by the owner, on GitHub), [0142](0142-2026-11-11-no-auto-fix-for-app-prs.md) (the approval may not wake the session, and then the owner tells it)
 
 ## Context
 Claude Code sessions push, open PRs and comment with the owner's own GitHub account. GitHub doesn't let anyone approve their own PR, so the `main` ruleset requires no approvals, and the only merge signal is the owner saying "merge #N" in the session ([0134](0134-2026-11-09-from-request-to-main.md)). 0134 listed a separate identity for sessions as something to consider later, for HSP and for the owner's future projects. The owner and Claude went over it on 2026-11-10.
