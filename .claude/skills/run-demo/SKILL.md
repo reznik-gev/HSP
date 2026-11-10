@@ -13,8 +13,8 @@ There is one demo, in `.claude/worktrees/demo` under the main checkout, on ports
 ```bash
 uv run python ../deploy/demo/demo.py status
 ```
-- If the API or the app is up, **ask the owner before going on**: say which commit the demo shows. Don't start a second demo.
-- If it already shows the PR's latest commit and both are up, skip to step 3. Reseed first (`uv run python ../deploy/demo/seed.py`, from the demo worktree's `backend/`) only if the owner wants fresh data.
+- If it already shows the PR's latest commit and both are up, skip to step 3. Reseed first (`uv run python ../deploy/demo/seed.py`, from the demo worktree's `backend/`) only if the owner says yes.
+- Otherwise, if the API or the app is up, **ask the owner before going on**: say which commit the demo shows. Don't start a second demo.
 
 ## 2. Switch it
 Only after the owner said yes in step 1:
