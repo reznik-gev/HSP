@@ -146,3 +146,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0132 | 2026-11-09 | [Ctrl+V pastes at the pointer, Ctrl+Shift+V next to the original](0132-2026-11-09-paste-keys.md) | Accepted |
 | 0134 | 2026-11-09 | [How a change goes from a request to `main`](0134-2026-11-09-from-request-to-main.md) | Accepted |
 | 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted |
+| 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted |
