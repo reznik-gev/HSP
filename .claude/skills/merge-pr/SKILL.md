@@ -1,6 +1,6 @@
 ---
 name: merge-pr
-description: Merge an HSP pull request and clean up after it. Check for new comments, rebase-merge, restack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner approves the session's PR on GitHub or says "merge #N", or says #N merged or closed, or the app reports that the session's PR merged or closed.
+description: Merge an HSP pull request and clean up after it. Check for new comments, rebase-merge, restack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner says #N is approved and ready to merge, or "merge #N", or says #N merged or closed, or the app reports that the session's PR merged or closed.
 ---
 
 # Merge a pull request, and clean up
@@ -13,8 +13,9 @@ gh pr view N --json state,mergedAt,isDraft,mergeable,reviewDecision,author
 ```
 - **Merged already:** go to step 3.
 - **Closed without merging:** do only the first two bullets of step 4. Keep any memory of rules it meant to write down: they never reached a guide. Then step 6.
-- **A PR opened as the App** (`author.login` is `app/reznik-gev-claude`) **that the owner approved** (`reviewDecision` is `APPROVED`): the approval is the go-ahead ([0137](../../../docs/decisions/0137-2026-11-10-a-github-app-for-claude-code-sessions.md)). Go to step 2. If the owner says "merge #N" before approving, ask them to approve it on GitHub: the App can't merge without it.
-- **A PR opened with the owner's account, and the owner said "merge #N":** go to step 2. If this session acts as the App (`gh auth status` shows `reznik-gev-claude[bot]`), the owner merges it, not you: see step 2 ([0143](../../../docs/decisions/0143-2026-11-11-the-owner-merges-their-own-prs.md)).
+- **The owner said it's approved and ready to merge** (or "merge #N"): that's the go-ahead ([0142](../../../docs/decisions/0142-2026-11-11-no-auto-fix.md)). Don't merge on an approval the owner hasn't told you about.
+  - **A PR opened as the App** (`author.login` is `app/reznik-gev-claude`): it also needs the owner's approval on GitHub (`reviewDecision` is `APPROVED`), since the App can't merge without it ([0137](../../../docs/decisions/0137-2026-11-10-a-github-app-for-claude-code-sessions.md)). If it's there, go to step 2. If not, ask the owner to approve it on GitHub.
+  - **A PR opened with the owner's account:** go to step 2. If this session acts as the App (`gh auth status` shows `reznik-gev-claude[bot]`), the owner merges it, not you: see step 2 ([0143](../../../docs/decisions/0143-2026-11-11-the-owner-merges-their-own-prs.md)).
 - Otherwise, wait for the owner's word.
 
 ## 2. Merge
