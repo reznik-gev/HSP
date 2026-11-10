@@ -28,6 +28,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
       backup: ${{ steps.filter.outputs.backup }}
+      tools: ${{ steps.filter.outputs.tools }}
       scripts: ${{ steps.filter.outputs.scripts }}
       images: ${{ steps.filter.outputs.images }}
       packages: ${{ steps.filter.outputs.packages }}
@@ -48,6 +49,9 @@ jobs:
               - ".github/workflows/ci.yml"
             backup:
               - "backup/**"
+              - ".github/workflows/ci.yml"
+            tools:
+              - "tools/**"
               - ".github/workflows/ci.yml"
             scripts:
               - "deploy/**/*.sh"
@@ -145,6 +149,29 @@ jobs:
     defaults:
       run:
         working-directory: backup
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Types
+        run: uv run mypy
+      - name: Tests
+        run: uv run pytest
+
+  # The helper that gives Claude Code sessions the GitHub App's tokens (docs/0139).
+  tools:
+    needs: changes
+    if: needs.changes.outputs.tools == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/github-app
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
@@ -262,7 +289,7 @@ jobs:
 
   ci-ok:
     if: always()
-    needs: [changes, backend, backup, scripts, frontend, images, packages]
+    needs: [changes, backend, backup, tools, scripts, frontend, images, packages]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped
