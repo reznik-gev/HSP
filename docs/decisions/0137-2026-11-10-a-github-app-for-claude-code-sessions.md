@@ -64,5 +64,5 @@ Sessions don't change credentials, tokens or repository settings themselves.
 - **`ci-ok` isn't a required check today** (see Context), although [0070](0070-2026-10-08-ci-gate-job.md) makes it the only required check. The owner adds it back with setup step 0, without waiting for the App. It matters more once approvals merge, and auto-merge would need it.
 - **To consider later:** GitHub auto-merge, and changing the `merge-pr` skill to go with it. *(The owner's request)*
 - The review bot keeps its `GITHUB_TOKEN`, so its comments still come from `github-actions`. The rule on which threads a session may resolve is unchanged.
-- In a future project, the owner installs the same App on the new repository and adds the same ruleset. Each machine already has the key.
+- In a future project, the owner installs the same App on the new repository and adds the same two rulesets: `main`, with no bypass, and `main approvals`. Each machine already has the key.
 - The owner's approval still isn't independent of the request: the owner asked for the change too. GitHub's own coding agent doesn't count such approvals. In a one-owner project there is no one else, and the approval is still a deliberate step, recorded on GitHub.
