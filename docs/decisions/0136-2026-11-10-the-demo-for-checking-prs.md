@@ -23,8 +23,8 @@ Taking over a demo that's running:
 - **It runs from `.claude/worktrees/demo`,** with the commit checked out detached, so the branch can stay checked out in the PR's own worktree. *(The owner's choice.)*
 - **Before switching or reseeding a running demo, the session asks the owner,** naming the PR it shows now. *(The owner's choice.)*
 - **It never removes the demo worktree, and stops the servers only to switch them.** *(Claude's choice.)*
+- **The servers start as background processes,** not Browser-pane preview servers or terminal tabs, so they keep running after the session that started them is archived. *(Claude's choice.)*
 
 ## Consequences
 - `docs/guides/making-a-change.md` (step 6) and the `open-pr` skill point to `run-demo` for drafts the owner must check. `merge-pr` leaves the demo worktree in place.
-- The servers start as background processes, not Browser-pane preview servers or terminal tabs, so they keep running after the session that started them is archived. *(Claude's choice.)*
 - The first move to the demo worktree took the demo from #152's worktree (`brave-perlman-89a14c`) and put it on `main`.

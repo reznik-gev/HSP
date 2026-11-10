@@ -28,12 +28,15 @@ You need Docker Desktop running, and the repo set up for development (the [main 
    ```bash
    cd frontend && pnpm dev
    ```
+   If `pnpm` isn't found, use `corepack pnpm dev`.
 5. **Fill in Northwind Robotics** (terminal 3). It rebuilds the `hsp_demo` database from scratch, so it's safe to run again before each demo, with the API still running:
    ```bash
    cd backend && uv run python ../deploy/demo/seed.py
    ```
    It ends with `Ready: open http://localhost:5173 ...`. If it says the API isn't using the demo database, step 3 is missing its `HSP_DATABASE_URL`.
 6. **Check it:** open <http://localhost:5173>, sign in as `dana.levin` / `demo`, and open Floors. Then use the browser in full screen, at 100% zoom.
+
+To check a PR's change by hand, Claude Code sessions use the [`run-demo`](../../.claude/skills/run-demo/SKILL.md) skill instead. It runs the same demo from its own worktree.
 
 Your development database is never touched: the demo lives in its own `hsp_demo` database, and the seed refuses to run if the API is on any other.
 
