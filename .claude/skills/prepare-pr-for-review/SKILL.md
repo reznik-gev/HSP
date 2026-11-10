@@ -46,11 +46,11 @@ The review bot's login is `github-actions`. A thread is the bot's only if every 
 ## 6. Ask the bot to look again
 - If this round changed code or docs, comment `@claude review` yourself, without asking, and read it back. There's no limit on rounds: the owner decides when to stop.
 - Reply to nitpicks you didn't fix, saying why.
-- Then report (step 7) and **stop**. Don't poll, and don't wait for the bot. Go back to step 2 when the owner starts the next round.
+- Then report (step 7), with CI's state on this round's push, and **stop**. Don't poll, and don't wait for the bot. Go back to step 2 when the owner starts the next round.
 
 ## 7. Report to the owner
 One message. If the owner may be away, also send a short push notification:
-- **Ready, or not:** the PR's link, whether it's mergeable, and whether CI passed.
+- **Ready, or not:** the PR's link, whether it's mergeable, and how CI did on your latest push: running, passed or failed. Auto-fix is off, so this is how the owner hears about CI ([0142](../../../docs/decisions/0142-2026-11-11-no-auto-fix.md) point 5).
 - **What changed:** each comment, the bot's and the owner's, and what you did about it. Whether you asked the bot to look again.
 - **Checks:** which ran and passed, which you skipped and why, and what you couldn't check.
 - **Questions:** each disagreement or choice, with your recommendation, one at a time. If there are none, say so.
