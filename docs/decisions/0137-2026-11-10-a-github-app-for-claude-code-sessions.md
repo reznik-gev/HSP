@@ -54,7 +54,7 @@ Sessions don't change credentials, tokens or repository settings themselves.
 3. **Install it.** On the App's page, Install App → your account → "Only select repositories" → `HSP`. Note the **installation ID** from the page's URL.
 4. **Merge the follow-up PR** (below): the token helper, and `allowed_bots` in both Claude workflows. Comment-triggered workflows run from `main`'s copy, so this goes first.
 5. **On each machine,** set up the helper with the App ID, installation ID and key path, as the follow-up PR's guide says. Then check it on a test PR: the push, the PR and the bot's review all come from the App.
-6. **Add the approval ruleset last.** Settings → Rules → New branch ruleset, named `main approvals`, targeting the default branch. Add "Require a pull request before merging" with required approvals 1, and tick "Require approval of the most recent reviewable push". Add the "Repository admin" role as a bypass with "For pull requests only". Leave the existing `main` ruleset with no bypass.
+6. **Add the approval ruleset last.** Settings → Rules → New branch ruleset, named `main-approvals`, targeting the default branch. Add "Require a pull request before merging" with required approvals 1, and tick "Require approval of the most recent reviewable push". Add the "Repository admin" role as a bypass with "For pull requests only". Leave the existing `main` ruleset with no bypass.
 
 ## Consequences
 - **A follow-up PR, once the App exists:**
@@ -65,5 +65,8 @@ Sessions don't change credentials, tokens or repository settings themselves.
 - **`ci-ok` isn't a required check today** (see Context), although [0070](0070-2026-10-08-ci-gate-job.md) makes it the only required check. The owner adds it back with setup step 0, without waiting for the App. It matters more once approvals merge, and auto-merge would need it.
 - **To consider later:** GitHub auto-merge, and changing the `merge-pr` skill to go with it. *(The owner's request)*
 - The review bot keeps its `GITHUB_TOKEN`, so its comments still come from `github-actions`. The rule on which threads a session may resolve is unchanged.
-- In a future project, the owner installs the same App on the new repository and adds the same two rulesets: `main`, with no bypass, and `main approvals`. Each machine already has the key.
+- In a future project, the owner installs the same App on the new repository and adds the same two rulesets: `main`, with no bypass, and `main-approvals`. Each machine already has the key.
 - The owner's approval still isn't independent of the request: the owner asked for the change too. GitHub's own coding agent doesn't count such approvals. In a one-owner project there is no one else, and the approval is still a deliberate step, recorded on GitHub.
+
+## Updates
+*Update, 2026-11-11:* the owner named the approval ruleset `main-approvals` on GitHub, with a hyphen. This record's mentions of `main approvals` now use that name, with the owner's yes (0126 point 4).
