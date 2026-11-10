@@ -28,13 +28,12 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 import httpx2
+from demo_settings import APP_PORT, DATABASE, DATABASE_URL
 from openpyxl import Workbook
 
 ROOT = Path(__file__).resolve().parents[2]
 COMPOSE = ["docker", "compose", "-f", str(ROOT / "deploy" / "compose.dev.yml")]
-DATABASE = "hsp_demo"
-DATABASE_URL = f"postgresql+asyncpg://hsp:hsp@localhost:5432/{DATABASE}"
-APP = "http://localhost:5173"  # The frontend dev server: sign-in comes back to it.
+APP = f"http://localhost:{APP_PORT}"
 API = f"{APP}/api/v1"
 KEYCLOAK = "http://localhost:8080/auth"
 PASSWORD = "demo"

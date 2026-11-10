@@ -28,9 +28,10 @@ import urllib.request
 from pathlib import Path
 from typing import NoReturn
 
-DATABASE_URL = "postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo"  # As in seed.py.
-PORTS = {"api": 8000, "app": 5173}
-READY = "http://localhost:8000/readyz"
+from demo_settings import API_PORT, APP_PORT, DATABASE_URL
+
+PORTS = {"api": API_PORT, "app": APP_PORT}
+READY = f"http://localhost:{API_PORT}/readyz"
 WINDOWS = sys.platform == "win32"
 
 
@@ -204,7 +205,7 @@ def switch(args: argparse.Namespace) -> None:
     servers = {
         "api": start(
             "api",
-            ["uv", "run", "uvicorn", "hsp.main:create_app", "--factory", "--port", "8000"],
+            ["uv", "run", "uvicorn", "hsp.main:create_app", "--factory", "--port", str(API_PORT)],
             demo / "backend",
             logs,
             db,
