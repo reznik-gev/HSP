@@ -46,6 +46,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # The owner's GitHub App, which Claude Code sessions work as (docs/0137). The action
+          # refuses runs started by bot accounts unless they're listed here.
+          allowed_bots: "reznik-gev-claude[bot]"
 
           # Reads: the code, read-only git and gh (`gh api` for review comments, which `gh pr view`
           # doesn't show), CI results and the web. Writes: comments and inline suggestions only.
