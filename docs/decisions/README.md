@@ -151,5 +151,5 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted |
 | 0140 | 2026-11-10 | [The token helper moves to GevTools, and renews only before `gh`](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) | Accepted |
 | 0141 | 2026-11-11 | [No merge commits in a PR, and CI checks it](0141-2026-11-11-no-merge-commits-in-a-pr.md) | Accepted |
-| 0142 | 2026-11-11 | [No Auto-fix for PRs opened as the App: the owner starts each review round](0142-2026-11-11-no-auto-fix-for-app-prs.md) | Accepted |
+| 0142 | 2026-11-11 | [No Auto-fix: the owner starts each review round](0142-2026-11-11-no-auto-fix.md) | Accepted |
 | 0143 | 2026-11-11 | [The owner merges PRs opened from their own account, on GitHub](0143-2026-11-11-the-owner-merges-their-own-prs.md) | Accepted |
