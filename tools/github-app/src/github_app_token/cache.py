@@ -110,12 +110,12 @@ class Reach(Enum):
 
 def reach(
     config: Config, state: State, owner: str, name: str, http: github.Http = github.send
-) -> tuple[State, Reach]:
+) -> Reach:
     """Whether the App reaches owner/name. For the owner's repositories it looks again first,
     in case the owner just installed the App there."""
     if state.reaches(owner, name):
-        return state, Reach.INSTALLED
+        return Reach.INSTALLED
     if owner.lower() != state.account.lower():
-        return state, Reach.OTHER_ACCOUNT
+        return Reach.OTHER_ACCOUNT
     state = recheck_repositories(config, state, http)
-    return state, Reach.INSTALLED if state.reaches(owner, name) else Reach.OWNERS_WITHOUT_APP
+    return Reach.INSTALLED if state.reaches(owner, name) else Reach.OWNERS_WITHOUT_APP
