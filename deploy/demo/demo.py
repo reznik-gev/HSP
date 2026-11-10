@@ -28,7 +28,7 @@ import urllib.request
 from pathlib import Path
 from typing import NoReturn
 
-DATABASE_URL = "postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo"
+DATABASE_URL = "postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo"  # As in seed.py.
 PORTS = {"api": 8000, "app": 5173}
 READY = "http://localhost:8000/readyz"
 WINDOWS = sys.platform == "win32"
@@ -135,8 +135,11 @@ def stop(demo: Path) -> None:
     saved = state_dir(demo) / "servers.json"
     if saved.exists():
         for name, pid in json.loads(saved.read_text()).items():
-            print(f"   stopping the {name} (process {pid})")
-            kill_tree(pid)
+            # After a reboot or a crash the id may belong to another process by now: kill it
+            # only while its port is still in use.
+            if in_use(PORTS[name]):
+                print(f"   stopping the {name} (process {pid})")
+                kill_tree(pid)
         saved.unlink()
     for _ in range(20):
         if not any(in_use(p) for p in PORTS.values()):
@@ -191,13 +194,9 @@ def switch(args: argparse.Namespace) -> None:
 
     step("A fresh hsp_demo database")
     compose("up", "-d", "--wait")
-    compose(
-        "exec", "-T", "postgres", "psql", "-U", "hsp", "-d", "hsp",
-        "-c", "DROP DATABASE IF EXISTS hsp_demo WITH (FORCE)",
-        "-c", "CREATE DATABASE hsp_demo",
-    )  # fmt: skip
+    # The API won't start on another PR's schema, so the seed's own rebuild runs first, here.
+    run("uv", "run", "python", "../deploy/demo/seed.py", "--reset-only", cwd=demo / "backend")
     db = {"HSP_DATABASE_URL": DATABASE_URL}
-    run("uv", "run", "alembic", "upgrade", "head", cwd=demo / "backend", env=db)
 
     step("Starting the servers")
     logs = state_dir(demo)
