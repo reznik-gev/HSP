@@ -114,7 +114,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0100 | 2026-10-19 | [The @claude bot runs the checks and searches the web](0100-2026-10-19-claude-bot-tools.md) | Superseded by 0101 |
 | 0101 | 2026-10-19 | [Claude on GitHub reviews; it doesn't write code](0101-2026-10-19-claude-reviews-only.md) | Accepted (who asks for re-reviews in 0134) |
 | 0102 | 2026-10-19 | [The release workflow: build, test and publish the bundle](0102-2026-10-19-release-workflow.md) | Accepted (upgrade test refined by 0107) |
-| 0103 | 2026-10-19 | [A live demo with a made-up company, and a script](0103-2026-10-19-demo.md) | Accepted |
+| 0103 | 2026-10-19 | [A live demo with a made-up company, and a script](0103-2026-10-19-demo.md) | Accepted (used to check PRs in 0136) |
 | 0104 | 2026-10-21 | [What 1.0.0 includes, which versions get fixes, and what comes right after](0104-2026-10-21-v1-release-scope-and-support.md) | Accepted (AD sync in 1.1 and Kubernetes in 1.2 by 0108) |
 | 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted (the schema check at startup refined by 0109, CPU and memory by 0111, Keycloak's readiness by 0116) |
 | 0106 | 2026-10-21 | [Backups: our own image, with schedules in `backups.yml`](0106-2026-10-21-backups.md) | Accepted (refined by 0115) |
@@ -144,8 +144,9 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0130 | 2026-11-08 | [How a new user learns the floor editor](0130-2026-11-08-learning-the-editor.md) | Accepted |
 | 0131 | 2026-11-09 | [A deleted element may come back with its own id](0131-2026-11-09-deleted-elements-may-come-back.md) | Accepted |
 | 0132 | 2026-11-09 | [Ctrl+V pastes at the pointer, Ctrl+Shift+V next to the original](0132-2026-11-09-paste-keys.md) | Accepted |
-| 0134 | 2026-11-09 | [How a change goes from a request to `main`](0134-2026-11-09-from-request-to-main.md) | Accepted |
+| 0134 | 2026-11-09 | [How a change goes from a request to `main`](0134-2026-11-09-from-request-to-main.md) | Accepted (the demo for checking PRs in 0136) |
 | 0135 | 2026-11-09 | [Turning furniture while dragging it](0135-2026-11-09-turning-while-dragging.md) | Accepted |
+| 0136 | 2026-11-10 | [The demo for checking PRs runs from one worktree, and switches only after asking](0136-2026-11-10-the-demo-for-checking-prs.md) | Accepted |
 | 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted |
 | 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted |
 | 0140 | 2026-11-10 | [The token helper moves to GevTools, and renews only before `gh`](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) | Accepted |

@@ -36,7 +36,7 @@ gh pr view N --json state,mergedAt,isDraft,mergeable,reviewDecision,author
   gh pr view N --json files --jq '.files[].path' | grep -E '^docs/decisions/[0-9]{4}-'
   git push origin --delete reserve/decision-NNNN
   ```
-- **Branches and worktrees:** remove local branches, and worktrees you made with `git worktree add` (`git worktree remove`, from the main checkout). Leave the worktree the app made for the session: archiving removes it.
+- **Branches and worktrees:** remove local branches, and worktrees you made with `git worktree add` (`git worktree remove`, from the main checkout), but never the demo's, `.claude/worktrees/demo` ([`run-demo`](../run-demo/SKILL.md)). Leave the worktree the app made for the session: archiving removes it.
 - **Memory:** delete any memory whose rule the PR wrote into a guide, and its line in `MEMORY.md`. Update any memory about the state of the work that this merge changed.
 
 ## 5. Follow-ups

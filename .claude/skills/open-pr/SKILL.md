@@ -14,7 +14,7 @@ Don't ask the owner before opening it. Do these steps in order, and say which on
 ## 2. Run the checks
 - Run the checks for each side the branch changes (CLAUDE.md). DB tests need the dev stack running and `HSP_TEST_DATABASE_URL` set ([backend/README.md](../../../backend/README.md)).
 - If a check fails for a reason that isn't this branch's, check whether it also fails on `main`, and say so in the PR.
-- If the change shows on screen, look at it in the browser pane: both languages, and a narrow width if layout changed. Keep screenshots of what the owner will want to see.
+- If the change shows on screen, look at it in the browser pane: both languages, and a narrow width if layout changed. Keep screenshots of what the owner will want to see. For a draft the owner will check by hand, do it in the demo with [`run-demo`](../run-demo/SKILL.md) once the PR is open.
 
 ## 3. The CHANGELOG
 If users or operators notice the change, add a line under `## [Unreleased]` in `CHANGELOG.md` ([how](../../../docs/guides/releasing.md#between-releases-keep-the-changelog)).
