@@ -41,9 +41,7 @@ The review bot's login is `github-actions`. A thread is the bot's only if every 
 
 ## 6. Ask the bot to look again
 The bot's review when the PR opened or was marked ready is round 1. Count rounds by the bot's summary comments.
-- If this round brought fixes that matter and fewer than three rounds have run, comment `@claude review` yourself, without asking, and read it back. Don't poll.
-  - **A PR opened as the App:** Auto-fix is off, so the next round won't wake this session. Tell the owner a new round is running, and stop. Go back to step 2 when the owner says "prepare #N" ([0142](../../../docs/decisions/0142-2026-11-11-no-auto-fix-for-app-prs.md)).
-  - **A PR opened with the owner's account:** the next round's comments wake this session (Auto-fix). Go back to step 2.
+- If this round brought fixes that matter and fewer than three rounds have run, comment `@claude review` yourself, without asking, and read it back. Auto-fix is off, so the next round won't wake this session. Tell the owner a new round is running, and stop. Don't poll. Go back to step 2 when the owner says "prepare #N" ([0142](../../../docs/decisions/0142-2026-11-11-no-auto-fix.md)).
 - **Stop** after the third round, or sooner when a round brings only nitpicks or nothing new. Reply to nitpicks you didn't fix, saying why.
 
 ## 7. Report to the owner
