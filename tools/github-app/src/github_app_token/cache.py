@@ -7,7 +7,7 @@ with when it expires and which repositories it reaches, in `github-app-token.jso
 import json
 import os
 import tempfile
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -94,12 +94,6 @@ def current(config: Config, now: datetime, http: github.Http = github.send) -> S
 
 def recheck_repositories(config: Config, state: State, http: github.Http = github.send) -> State:
     """Reads the App's repositories again, in case the owner just installed it on one more."""
-    state = State(
-        token=state.token,
-        expires_at=state.expires_at,
-        bot_login=state.bot_login,
-        account=state.account,
-        repositories=tuple(github.repositories(state.token, http)),
-    )
+    state = replace(state, repositories=tuple(github.repositories(state.token, http)))
     save(config, state)
     return state

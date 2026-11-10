@@ -34,6 +34,6 @@ Which sessions act as the App:
 ## Consequences
 - New: [`tools/github-app/`](../../tools/github-app/README.md), a `tools` job in CI, and the machine setup in its README.
 - `allowed_bots: reznik-gev-claude[bot]` in both Claude workflows, so the review bot accepts the App's PRs and its `@claude review` comments.
-- The guides and skills switch to the approval as the go-ahead to merge (0137 point 4): [How a change is made](../guides/making-a-change.md), the [git guide](../guides/git.md), and the [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md) and [`open-pr`](../../.claude/skills/open-pr/SKILL.md) skills. They hold from the time a machine is set up for the App. Until then, and for PRs from the owner's account, "merge #N" stays the signal.
+- The guides and skills switch to the approval as the go-ahead to merge (0137 point 4): [How a change is made](../guides/making-a-change.md), the [git guide](../guides/git.md), and the [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md) and [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md) skills. They hold from the time a machine is set up for the App. Until then, and for PRs from the owner's account, "merge #N" stays the signal.
 - The owner's steps, in order, after this PR merges: set up this machine as the README says, check it on a test PR, then add the `main approvals` ruleset (0137 setup step 6).
 - **To consider later,** as in 0137: GitHub auto-merge, and the `merge-pr` changes to go with it.
