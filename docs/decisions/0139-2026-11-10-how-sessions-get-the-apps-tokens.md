@@ -3,7 +3,7 @@
 - **Date:** 2026-11-10
 - **Status:** Accepted
 - **Refines:** [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (where tokens are kept, which sessions use the App, and the setup)
-- **Refined by:** [0140](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) (the helper moves to GevTools, and renews only before `gh`)
+- **Refined by:** [0140](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) (the helper moves to GevTools, and renews only before `gh`), [0143](0143-2026-11-11-the-owner-merges-their-own-prs.md) (point 7: a session acting as the App can't use `--admin`, so the owner merges such PRs on GitHub)
 
 ## Context
 [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) decided that local Claude Code sessions push and use `gh` as the GitHub App `reznik-gev-claude`. It left a token helper to a follow-up PR, and said tokens are never written to disk. On 2026-11-10 the owner created the App and installed it on HSP, and Claude tested it on the owner's Windows machine:
