@@ -17,11 +17,12 @@ function onScreen(x: number, y: number): { clientX: number; clientY: number } {
   return { clientX: ((x - vx) / vw) * 800, clientY: ((-y - vy) / vh) * 600 };
 }
 
-export function clickOnPlan(at: [number, number]) {
+/** Clicks the plan, with Shift held if `shiftKey`. */
+export function clickOnPlan(at: [number, number], { shiftKey = false } = {}) {
   const svg = document.querySelector("svg[data-lod]")!;
   const p = onScreen(...at);
-  fireEvent.pointerDown(svg, { ...p, button: 0, pointerId: 1 });
-  fireEvent.pointerUp(svg, { ...p, button: 0, pointerId: 1 });
+  fireEvent.pointerDown(svg, { ...p, button: 0, pointerId: 1, shiftKey });
+  fireEvent.pointerUp(svg, { ...p, button: 0, pointerId: 1, shiftKey });
 }
 
 /**

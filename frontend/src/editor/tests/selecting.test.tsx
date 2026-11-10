@@ -5,9 +5,15 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
 import i18n from "@/i18n";
-import { spyChangesets, stubEditorRoutes } from "@/test/editorStubs";
-import { dragOnPlan, releaseOnPlan } from "@/test/planPointer";
+import {
+  spyChangesets,
+  stubEditorRoutes,
+  stubFloor3Plan,
+  withEditedDesk,
+} from "@/test/editorStubs";
+import { clickOnPlan, dragOnPlan, releaseOnPlan } from "@/test/planPointer";
 import { renderApp } from "@/test/renderApp";
+import { stubDoor } from "@/test/stubs";
 
 afterEach(async () => {
   cleanup();
@@ -55,12 +61,22 @@ describe("selecting with a rectangle (docs/0133)", () => {
 
   it("dragging one of the selection moves it all, saved as one change", async () => {
     const { routes, changesets } = spyChangesets();
-    await renderApp("/floors/f3/edit", routes);
+    // A door on the wall, which isn't selected but moves with it.
+    const draft = withEditedDesk(stubFloor3Plan(3, "draft"));
+    await renderApp("/floors/f3/edit", {
+      ...routes,
+      "GET /api/v1/floors/f3/draft": {
+        status: 200,
+        body: { ...draft, openings: [stubDoor("o1", "w1", 500)] },
+      },
+    });
     await screen.findByText("Draft 3 · Saved");
-    dragOnPlan([-200, -300], [8200, 1500], { shiftKey: true }); // the wall and the desk
+    dragOnPlan([1100, 500], [2900, 1500], { shiftKey: true }); // the desk, not the door
+    clickOnPlan([6000, 0], { shiftKey: true }); // and the wall
 
     dragOnPlan([2000, 1000], [2000, 2000], { release: false }); // by the desk
     expect(screen.getByTestId("group-wall")).toBeInTheDocument();
+    expect(screen.getByTestId("group-opening")).toBeInTheDocument();
     releaseOnPlan([2000, 2000]);
     expect(screen.queryByTestId("group-wall")).not.toBeInTheDocument();
 
