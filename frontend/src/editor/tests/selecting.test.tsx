@@ -21,6 +21,12 @@ afterEach(async () => {
 });
 
 // Floor 3's draft: wall w1 from (0, 0) to (8000, 0), and desk d1 (160 × 80 cm) at (2000, 1000).
+// The group-drag test adds door o1, spanning 500–1400 along w1.
+const DRAFT_WITH_DOOR = {
+  ...withEditedDesk(stubFloor3Plan(3, "draft")),
+  openings: [stubDoor("o1", "w1", 500)],
+};
+
 describe("selecting with a rectangle (docs/0133)", () => {
   it("Shift+drag draws a rectangle and selects what's inside it when you let go", async () => {
     const { routes, changesets } = spyChangesets();
@@ -61,14 +67,10 @@ describe("selecting with a rectangle (docs/0133)", () => {
 
   it("dragging one of the selection moves it all, saved as one change", async () => {
     const { routes, changesets } = spyChangesets();
-    // A door on the wall, which isn't selected but moves with it.
-    const draft = withEditedDesk(stubFloor3Plan(3, "draft"));
+    // The door isn't selected, but moves with its wall.
     await renderApp("/floors/f3/edit", {
       ...routes,
-      "GET /api/v1/floors/f3/draft": {
-        status: 200,
-        body: { ...draft, openings: [stubDoor("o1", "w1", 500)] },
-      },
+      "GET /api/v1/floors/f3/draft": { status: 200, body: DRAFT_WITH_DOOR },
     });
     await screen.findByText("Draft 3 · Saved");
     dragOnPlan([1100, 500], [2900, 1500], { shiftKey: true }); // the desk, not the door
