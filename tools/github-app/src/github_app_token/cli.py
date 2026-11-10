@@ -71,11 +71,10 @@ def session_context(
     if repo is None:
         return identity
     owner, name = repo
-    if not state.reaches(owner, name) and owner.lower() == state.account.lower():
-        state = cache.recheck_repositories(cfg, state, http)
-    if state.reaches(owner, name):
+    _, reach = cache.reach(cfg, state, owner, name, http)
+    if reach is cache.Reach.INSTALLED:
         return identity
-    if owner.lower() == state.account.lower():
+    if reach is cache.Reach.OWNERS_WITHOUT_APP:
         return (
             f"{identity} But the App isn't installed on {owner}/{name}, so git refuses to push or "
             "fetch here, and gh can only read what's public. Before any git or gh work, ask the "
@@ -140,15 +139,13 @@ def git_credential(
         if repo is None:
             return answer(state.token)  # git didn't say which repository (no useHttpPath)
         owner, name = repo
-        if state.reaches(owner, name):
-            return answer(state.token)
-        if owner.lower() != state.account.lower():
-            return 0  # Another account's repository: git uses the owner's own login (docs/0139)
-        state = cache.recheck_repositories(cfg, state, http)
-        if state.reaches(owner, name):
-            return answer(state.token)
+        _, reach = cache.reach(cfg, state, owner, name, http)
     except Exception as error:
         return refuse(f"couldn't get the App's token: {error}")
+    if reach is cache.Reach.INSTALLED:
+        return answer(state.token)
+    if reach is cache.Reach.OTHER_ACCOUNT:
+        return 0  # Another account's repository: git uses the owner's own login (docs/0139)
     return refuse(
         f"the GitHub App isn't installed on {owner}/{name}. Install it at {cfg.install_url} "
         "(Repository access), then try again."

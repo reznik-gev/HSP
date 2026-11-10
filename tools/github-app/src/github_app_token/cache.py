@@ -9,6 +9,7 @@ import os
 import tempfile
 from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timedelta
+from enum import Enum, auto
 from pathlib import Path
 
 from github_app_token import github
@@ -97,3 +98,24 @@ def recheck_repositories(config: Config, state: State, http: github.Http = githu
     state = replace(state, repositories=tuple(github.repositories(state.token, http)))
     save(config, state)
     return state
+
+
+class Reach(Enum):
+    """Whether the App reaches a repository, and if not, why (docs/0139 points 4 and 5)."""
+
+    INSTALLED = auto()
+    OWNERS_WITHOUT_APP = auto()
+    OTHER_ACCOUNT = auto()
+
+
+def reach(
+    config: Config, state: State, owner: str, name: str, http: github.Http = github.send
+) -> tuple[State, Reach]:
+    """Whether the App reaches owner/name. For the owner's repositories it looks again first,
+    in case the owner just installed the App there."""
+    if state.reaches(owner, name):
+        return state, Reach.INSTALLED
+    if owner.lower() != state.account.lower():
+        return state, Reach.OTHER_ACCOUNT
+    state = recheck_repositories(config, state, http)
+    return state, Reach.INSTALLED if state.reaches(owner, name) else Reach.OWNERS_WITHOUT_APP
