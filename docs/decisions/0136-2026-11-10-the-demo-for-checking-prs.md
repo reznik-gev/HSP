@@ -11,7 +11,7 @@ Only one demo can run at a time: ports 8000 and 5173, the Keycloak redirect and 
 
 ## Options considered
 Where the demo's code lives:
-- **One demo worktree, `.claude/worktrees/demo`, that checks out each PR's commit** ✅. The servers always run from the same folder. A PR's worktree can be removed at merge like any other. The frontend picks up the new code by itself, and only the API needs a restart.
+- **One demo worktree, `.claude/worktrees/demo`, that checks out each PR's commit** ✅. The servers always run from the same folder. A PR's worktree can be removed at merge like any other.
 - The PR's own worktree, as before. Its worktree has to be kept until the demo moves on, and `merge-pr` has to know to skip it.
 
 Taking over a demo that's running:
