@@ -144,12 +144,24 @@ export function EditOverlay({ store }: { store: EditorStore }) {
         />
       ))}
       {plan.openings
-        .filter((o) => selection.has(o.id) && o.id !== opening?.id)
+        .filter((o) => selection.has(o.id) && o.id !== opening?.id && !groupOpenings.has(o.id))
         .map((o) => {
-          const w = groupWalls.get(o.wall_id) ?? wallsById.get(o.wall_id);
-          const offset = groupOpenings.get(o.id)?.offset_mm ?? o.offset_mm;
-          return w ? <Span key={o.id} wall={w} offset={offset} width={o.width_mm} /> : null;
+          const w = wallsById.get(o.wall_id);
+          return w ? <Span key={o.id} wall={w} offset={o.offset_mm} width={o.width_mm} /> : null;
         })}
+      {group?.openings.map((o) => {
+        // Moving with its wall, or sliding along it, selected or not.
+        const w = groupWalls.get(o.wall_id) ?? wallsById.get(o.wall_id);
+        return w ? (
+          <Span
+            key={`g${o.id}`}
+            wall={w}
+            offset={o.offset_mm}
+            width={o.width_mm}
+            testId="group-opening"
+          />
+        ) : null;
+      })}
       {opening?.wall_id && wallsById.get(opening.wall_id) && (
         <Span
           wall={wallsById.get(opening.wall_id)!}

@@ -33,7 +33,7 @@ import { alongSegment } from "./geometry";
 import { viewportFor } from "./focus";
 import { type ItemShape, placeItem } from "./furnitureSnap";
 import type { Measure } from "./measure";
-import { hitTest, inBox, zoneAt } from "./hitTest";
+import { type Hit, hitTest, inBox, zoneAt } from "./hitTest";
 import type { Plan, Vec2 } from "./plan";
 import { SNAP_PX, snapPoint, snapSettings } from "./snap";
 import type { EditorStore, Preview } from "./store";
@@ -175,7 +175,6 @@ export class Interaction {
     }
     if (e.button !== 0) return "none";
     const p = this.toPlan(e);
-    const tolerance = 4 * s.viewport.mmPerPx; // ~4 px of slop at any zoom
     const corner = this.selectedZoneCorner(p);
     if (corner) {
       this.gesture = { kind: "vertex", ...corner };
@@ -192,8 +191,7 @@ export class Interaction {
       this.gesture = { kind: "box", from: p };
       return "none";
     }
-    const hit = hitTest(s.plan, s.hitIndex, p, tolerance);
-    const grabbed = hit?.id ?? zoneAt(s.plan, p);
+    const { hit, id: grabbed } = this.pick(p);
     if (grabbed && s.selection.size > 1 && s.selection.has(grabbed) && this.mixedSelection()) {
       // One of a group: they all move, as the arrow keys move them (docs/0133).
       this.gesture = { kind: "group", start: p, moved: false, detach: Boolean(e.alt) };
@@ -274,13 +272,21 @@ export class Interaction {
     s.setPreview({ kind: "group", ops, ...movedBy(s.plan, ops) });
   }
 
+  /**
+   * What's under the pointer in Select: what `hitTest` finds, with about 4 px of slop at any
+   * zoom, and its id, or else the innermost zone's. A press and a Shift+click pick the same.
+   */
+  private pick(p: Vec2): { hit: Hit | null; id: string | null } {
+    const s = this.store.getState();
+    if (!s.plan || !s.hitIndex) return { hit: null, id: null };
+    const hit = hitTest(s.plan, s.hitIndex, p, 4 * s.viewport.mmPerPx);
+    return { hit, id: hit?.id ?? zoneAt(s.plan, p) };
+  }
+
   /** Shift+click: adds the element under the pointer to the selection. */
   private addAt(p: Vec2): void {
-    const s = this.store.getState();
-    if (!s.plan || !s.hitIndex) return;
-    const hit = hitTest(s.plan, s.hitIndex, p, 4 * s.viewport.mmPerPx);
-    const id = hit?.id ?? zoneAt(s.plan, p);
-    if (id) s.select([id], true);
+    const { id } = this.pick(p);
+    if (id) this.store.getState().select([id], true);
   }
 
   /**
