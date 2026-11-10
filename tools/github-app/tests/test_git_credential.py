@@ -71,9 +71,7 @@ def test_store_and_erase_do_nothing(cfg: Config, spy_github: SpyGitHub, action: 
 
 
 def test_when_no_token_can_be_made_git_doesnt_fall_back_to_the_owners_login(
-    cfg: Config, spy_github: SpyGitHub, capsys: pytest.CaptureFixture[str]
+    cfg: Config, github_down: SpyGitHub, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    spy_github.failing = True
-
-    assert ask(cfg, spy_github, HSP) == "quit=1\n"
+    assert ask(cfg, github_down, HSP) == "quit=1\n"
     assert "network is unreachable" in capsys.readouterr().err
