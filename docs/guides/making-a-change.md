@@ -1,0 +1,18 @@
+# How a change is made
+
+The usual path of a change made in a Claude Code session, from the owner's request to the cleanup after merging ([0134](../decisions/0134-2026-11-09-from-request-to-main.md)). Each step names the skill that does it. The Git and GitHub rules behind the steps are in [Working with Git and pull requests](git.md) and [Working with stacked pull requests](stacked-prs.md). Part of the [guides](README.md).
+
+## The steps
+
+1. **The request.** The owner asks for a change.
+2. **What "done" means.** Ask the owner what done looks like, unless the request already says. For a small fix whose outcome is plain, state your own definition of done and go on.
+3. **Questions.** Scope, order and behaviour users notice go to the owner, one at a time ([CLAUDE.md](../../CLAUDE.md)). Small details you're sure about, decide yourself and mark *(Claude's choice)*.
+4. **The decision record:** [`record-decision`](../../.claude/skills/record-decision/SKILL.md). It claims the record's number first, so parallel sessions don't clash.
+5. **Building and testing**, in a worktree, with the checks CLAUDE.md lists.
+6. **Opening the PR:** [`open-pr`](../../.claude/skills/open-pr/SKILL.md). Push and open it without asking. If the owner must check something first, open it as a draft and say what to check. Turn on Auto-fix.
+7. **Bot rounds:** [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md). Fix each round of the review bot's comments, then ask it to look again, up to three bot rounds in all.
+8. **The owner's review.** Tell the owner it's ready. More rounds with the owner may follow.
+9. **Merging and cleanup:** [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md). By default the owner says "merge #N". An approval on GitHub counts the same, unless the owner says not to merge yet. If the owner merged on GitHub, clean up once you're woken by it or told.
+
+## Where the rules live
+Rules for working on HSP go in the guides and skills, not in one machine's Claude memory. Every session reads them, on any machine or in the cloud, and so does the review bot. A change to them goes through a PR, so the owner sees it. Claude's memory keeps only the state of the work, and a new rule until the PR that writes it into a guide merges.

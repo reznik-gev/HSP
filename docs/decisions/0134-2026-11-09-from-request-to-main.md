@@ -53,6 +53,7 @@ The owner's choices are the four marked above. Together with the rules already i
 ### Claiming a record number
 - The session finds the highest number on `main`, in the open PRs and on `reserve/decision-*` branches, and takes the next one.
 - It pushes an empty commit on top of `origin/main` to `reserve/decision-NNNN`. The commit message says what the record is about and which branch it's for. *(Claude's choice)* Each commit is new, so a second session's push is not a fast-forward and GitHub refuses it. Checked on 2026-11-09. If the push is refused, the session takes the next number. **It never force-pushes a `reserve/` branch.**
+- **No workflow runs on `reserve/` branches.** Today every workflow starts on a PR, a push to `main`, a `v*` tag, a schedule or by hand, so nothing does. A workflow added later that runs on pushes to other branches must skip `reserve/**` (`branches-ignore`). *(Claude's choice)*
 - After the PR merges or closes, the `reserve/` branches for its records are deleted.
 
 ### Where the rules live
@@ -62,6 +63,6 @@ Rules for working on HSP go in the guides and skills, not in one machine's Claud
 
 ## Consequences
 - New skills: [`record-decision`](../../.claude/skills/record-decision/SKILL.md), [`open-pr`](../../.claude/skills/open-pr/SKILL.md) and [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md). [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md) gets the bot-round limit.
-- The [git guide](../guides/git.md) gets the whole path. It also takes over three rules that until now were only in Claude's memory: force-push only to rebase, which review threads a session may resolve, and reading back what it posted on GitHub.
+- A new guide, [How a change is made](../guides/making-a-change.md), gets the whole path. *(The owner's choice: it's a path of work, and only partly about Git)* The [git guide](../guides/git.md) takes over three rules that until now were only in Claude's memory: force-push only to rebase, which review threads a session may resolve, and reading back what it posted on GitHub.
 - Open PRs from before this record (0131–0133) have no reservation branches. Checking the open PRs covers them.
 - The owner's review stays the only review from outside Claude, since the review bot is Claude too. The owner accepted this for now: HSP's users can ask for changes later.
