@@ -34,7 +34,7 @@ Bringing a branch up to date with `main`, or restacking a stack after a merge, *
 **Any other force-push needs the owner's yes first**, for example amending or rewording a commit already pushed. To fix your own just-pushed commit, add a new commit. Claude Code's auto mode may still block a rebase push; if it does, tell the owner, who can add a permission rule.
 
 ## Merging
-- **Right before merging, look at the PR's comments again.** If anything is new and unanswered, handle it first, even when the PR was approved earlier.
+- **Right before merging, look at the PR's comments again.** If anything is new and unanswered, handle it first, even when the owner said to merge earlier.
 - Merge with **Rebase and merge**, or with `gh stack merge <PR number> --rebase` in a stack. Then catch the rest of the stack up with `gh stack sync --prune`.
 - After merging, delete the branch (GitHub does it for merged PRs; `--prune` does it locally), and the PR's `reserve/decision-*` branches. A PR that closes without merging also gets its `reserve/` branches deleted, so its numbers are free again.
 - Claude Code sessions merge with the [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md) skill, which also cleans up after a merge the owner made on GitHub, or after a PR closed without merging.

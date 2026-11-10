@@ -31,8 +31,8 @@ When a change needs the owner's eyes before review:
 - Stop before pushing and ask.
 
 How a merge happens:
-- **The owner says "merge #N" in the session** ✅, and the session merges and cleans up. An approval on GitHub counts the same as "merge #N". The owner may also merge on GitHub. Then the session cleans up when GitHub's notice wakes it, or when the owner says it merged.
-- GitHub auto-merge once the owner approves.
+- **The owner says "merge #N" in the session** ✅, and the session merges and cleans up. The owner may also merge on GitHub. Then the session cleans up when GitHub's notice wakes it, or when the owner says it merged.
+- GitHub auto-merge, or an approval on GitHub counting as "merge #N". Neither can work today: sessions open PRs with the owner's GitHub account, and GitHub doesn't let anyone approve their own PR.
 - The owner always merges on GitHub.
 
 ## Decision
@@ -47,7 +47,7 @@ The owner's choices are the four marked above. Together with the rules already i
 7. **Auto-fix** is turned on for every PR the session opens, without asking. *(The owner's choice)*
 8. **Bot rounds.** The bot reviews the PR when it opens or is marked ready. The session fixes each round (the [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md) skill), then comments `@claude review` itself, **up to three bot rounds in all**. *(The owner's choice)* It stops earlier when a round brings only nitpicks or nothing new. *(Claude's choice)*
 9. **The owner's review.** The session tells the owner the PR is ready, with a push notification when the owner may be away. There may be more rounds with the owner.
-10. **Merging.** By default the owner says **"merge #N"** in the session, and the session merges. **An approval on GitHub counts the same as "merge #N"**, unless the owner says on the PR or in the session not to merge yet. The owner may also merge on GitHub. If the approval or the merge wakes the session, it goes on to merging or the cleanup. Otherwise the owner tells it. *(The owner's choice)*
+10. **Merging.** By default the owner says **"merge #N"** in the session, and the session merges. "merge #N" is the only word that has the session merge: the owner can't approve PRs on GitHub, since they are opened with the owner's own account. The owner may also merge on GitHub. If that wakes the session, it goes on to the cleanup. Otherwise the owner tells it. *(The owner's choice)*
 11. **Cleanup and follow-ups.** The session restacks the rest of the stack, fast-forwards the main checkout's `main`, deletes the PR's `reserve/` branches, and removes any worktrees it made for the PR with `git worktree add`. It names any follow-up work, then archives the session if nothing is left in it. Archiving removes the worktree the app made for the session. *(Claude's choice: a session never removes the worktree it runs in)*
 
 ### Claiming a record number
@@ -65,4 +65,5 @@ Rules for working on HSP go in the guides and skills, not in one machine's Claud
 - New skills: [`record-decision`](../../.claude/skills/record-decision/SKILL.md), [`open-pr`](../../.claude/skills/open-pr/SKILL.md) and [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md). [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md) gets the bot-round limit.
 - A new guide, [How a change is made](../guides/making-a-change.md), gets the whole path. *(The owner's choice: it's a path of work, and only partly about Git)* The [git guide](../guides/git.md) takes over three rules that until now were only in Claude's memory: force-push only to rebase, which review threads a session may resolve, and reading back what it posted on GitHub.
 - Open PRs from before this record (0131–0133) have no reservation branches. Checking the open PRs covers them.
+- **To consider later:** a separate GitHub account or app for Claude Code sessions, in HSP and in future projects. Then the owner could approve PRs for real, and the `main` ruleset could require it. *(The owner's request)*
 - The owner's review stays the only review from outside Claude, since the review bot is Claude too. The owner accepted this for now: HSP's users can ask for changes later.
