@@ -14,13 +14,14 @@ gh pr view N --json state,mergedAt,isDraft,mergeable,reviewDecision,author
 - **Merged already:** go to step 3.
 - **Closed without merging:** do only the first two bullets of step 4. Keep any memory of rules it meant to write down: they never reached a guide. Then step 6.
 - **A PR opened as the App** (`author.login` is `app/reznik-gev-claude`) **that the owner approved** (`reviewDecision` is `APPROVED`): the approval is the go-ahead ([0137](../../../docs/decisions/0137-2026-11-10-a-github-app-for-claude-code-sessions.md)). Go to step 2. If the owner says "merge #N" before approving, ask them to approve it on GitHub: the App can't merge without it.
-- **A PR opened with the owner's account, and the owner said "merge #N":** go to step 2.
+- **A PR opened with the owner's account, and the owner said "merge #N":** go to step 2. If this session acts as the App (`gh auth status` shows `reznik-gev-claude[bot]`), the owner merges it, not you: see step 2 ([0143](../../../docs/decisions/0143-2026-11-11-the-owner-merges-their-own-prs.md)).
 - Otherwise, wait for the owner's word.
 
 ## 2. Merge
 - **Look at the comments again** (the query in [`prepare-pr-for-review`](../prepare-pr-for-review/SKILL.md), step 2, and `gh pr view N --comments`). If anything is new and unanswered, handle it first, and tell the owner why it didn't merge yet.
 - `ci-ok` must pass, and the PR must be mergeable and not a draft. If not, say what's in the way.
-- Merge with a rebase. **Never `--admin` for a PR opened as the App.** For a PR opened with the owner's account, add `--admin` only when GitHub refuses the merge for want of an approval: it uses the owner's bypass of the `main approvals` ruleset, and the `main` ruleset still requires `ci-ok` ([0139](../../../docs/decisions/0139-2026-11-10-how-sessions-get-the-apps-tokens.md)).
+- **A PR opened with the owner's account, while this session acts as the App:** don't merge it. The owner can't approve their own PR, and the App has no bypass, so GitHub refuses it, `--admin` too. Tell the owner it's ready: the link, and to merge it on GitHub with "Merge without waiting for requirements to be met", then "Rebase and merge". In a stack, list the PRs to merge, bottom first. Then wait: once you're woken by the merge, or told, go to step 3 ([0143](../../../docs/decisions/0143-2026-11-11-the-owner-merges-their-own-prs.md)).
+- Otherwise, merge with a rebase. **Never `--admin` while acting as the App.** A session acting as the owner (`gh auth status` shows `reznik-gev`) may add `--admin` to a PR opened with the owner's account, only when GitHub refuses the merge for want of an approval: it uses the owner's bypass of the `main approvals` ruleset, and the `main` ruleset still requires `ci-ok` ([0139](../../../docs/decisions/0139-2026-11-10-how-sessions-get-the-apps-tokens.md)).
   - A PR on its own: `gh pr merge N --rebase`.
   - In a stack: `gh stack merge N --rebase`. It also merges **every unmerged PR below N**. If any of them wasn't meant to merge now, stop and ask the owner.
 
