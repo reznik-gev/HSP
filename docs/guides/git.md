@@ -6,6 +6,7 @@ How changes get from a branch to `main`: branches, commits, reviews and merging.
 - Every change is a short-lived branch and a pull request into `main` (or into the PR below it, in a stack). Name branches by area and topic: `editor/height-cues`, `admin/devices`, `docs/testing-guide`.
 - Merges are **rebase-only**, so every commit lands on `main` as it is. Make each one a meaningful step that passes the checks on its own.
 - Commit messages: a short summary line that says what changes for someone using HSP, then a body explaining why, with the decision records it follows.
+- **Who wrote it.** A Claude Code session set up for the owner's GitHub App commits as `reznik-gev-claude[bot]` ([0139](../decisions/0139-2026-11-10-how-sessions-get-the-apps-tokens.md), [tools/github-app](../../tools/github-app/README.md)). Its messages end with two lines: `Co-Authored-By:` for the owner, with the name and email from `git config user.name` and `git config user.email`, and then the one for Claude. A session not set up for the App commits as the owner, with only Claude's line.
 
 ## Pull requests
 - The description says what changes for the user, how it's built, what was decided along the way and how it was tested, including what wasn't tested.
@@ -37,4 +38,5 @@ Bringing a branch up to date with `main`, or restacking a stack after a merge, *
 - **Right before merging, look at the PR's comments again.** If anything is new and unanswered, handle it first, even when the owner said to merge earlier.
 - Merge with **Rebase and merge**, or with `gh stack merge <PR number> --rebase` in a stack. Then catch the rest of the stack up with `gh stack sync --prune`.
 - After merging, delete the branch (GitHub does it for merged PRs; `--prune` does it locally), and the PR's `reserve/decision-*` branches. A PR that closes without merging also gets its `reserve/` branches deleted, so its numbers are free again.
+- **What starts a merge:** for a PR opened as the App, the owner's approval on GitHub. For a PR opened with the owner's own account, the owner saying "merge #N" ([0137](../decisions/0137-2026-11-10-a-github-app-for-claude-code-sessions.md)).
 - Claude Code sessions merge with the [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md) skill, which also cleans up after a merge the owner made on GitHub, or after a PR closed without merging.

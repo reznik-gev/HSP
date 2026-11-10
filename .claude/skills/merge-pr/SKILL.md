@@ -1,6 +1,6 @@
 ---
 name: merge-pr
-description: Merge an HSP pull request and clean up after it. Check for new comments, rebase-merge, restack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner says "merge #N", or says #N merged or closed, or the app reports that the session's PR merged or closed.
+description: Merge an HSP pull request and clean up after it. Check for new comments, rebase-merge, restack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner approves the session's PR on GitHub or says "merge #N", or says #N merged or closed, or the app reports that the session's PR merged or closed.
 ---
 
 # Merge a pull request, and clean up
@@ -9,17 +9,18 @@ Do these steps in order, and say which one you're on.
 
 ## 1. Merged already, or yours to merge?
 ```bash
-gh pr view N --json state,mergedAt,isDraft,mergeable,reviewDecision
+gh pr view N --json state,mergedAt,isDraft,mergeable,reviewDecision,author
 ```
 - **Merged already:** go to step 3.
 - **Closed without merging:** do only the first two bullets of step 4. Keep any memory of rules it meant to write down: they never reached a guide. Then step 6.
-- **The owner said "merge #N":** go to step 2.
+- **A PR opened as the App** (`author.login` is `app/reznik-gev-claude`) **that the owner approved** (`reviewDecision` is `APPROVED`): the approval is the go-ahead ([0137](../../../docs/decisions/0137-2026-11-10-a-github-app-for-claude-code-sessions.md)). Go to step 2. If the owner says "merge #N" before approving, ask them to approve it on GitHub: the App can't merge without it.
+- **A PR opened with the owner's account, and the owner said "merge #N":** go to step 2.
 - Otherwise, wait for the owner's word.
 
 ## 2. Merge
 - **Look at the comments again** (the query in [`prepare-pr-for-review`](../prepare-pr-for-review/SKILL.md), step 2, and `gh pr view N --comments`). If anything is new and unanswered, handle it first, and tell the owner why it didn't merge yet.
 - `ci-ok` must pass, and the PR must be mergeable and not a draft. If not, say what's in the way.
-- Merge with a rebase, never `--admin`:
+- Merge with a rebase. **Never `--admin` for a PR opened as the App.** For a PR opened with the owner's account, add `--admin` only when GitHub refuses the merge for want of an approval: it uses the owner's bypass of the `main approvals` ruleset, and the `main` ruleset still requires `ci-ok` ([0139](../../../docs/decisions/0139-2026-11-10-how-sessions-get-the-apps-tokens.md)).
   - A PR on its own: `gh pr merge N --rebase`.
   - In a stack: `gh stack merge N --rebase`. It also merges **every unmerged PR below N**. If any of them wasn't meant to merge now, stop and ask the owner.
 
