@@ -1,6 +1,6 @@
 ---
 name: merge-pr
-description: Merge an HSP pull request and clean up after it. Check for new comments, rebase-merge, restack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner says "merge #N", approves #N on GitHub, or says #N merged or closed, or the app reports that the session's PR merged or closed.
+description: Merge an HSP pull request and clean up after it. Check for new comments, rebase-merge, restack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner says "merge #N", or says #N merged or closed, or the app reports that the session's PR merged or closed.
 ---
 
 # Merge a pull request, and clean up
@@ -13,7 +13,7 @@ gh pr view N --json state,mergedAt,isDraft,mergeable,reviewDecision
 ```
 - **Merged already:** go to step 3.
 - **Closed without merging:** do only the first two bullets of step 4. Keep any memory of rules it meant to write down: they never reached a guide. Then step 6.
-- **The owner said "merge #N", or approved it on GitHub:** go to step 2, unless the owner said not to merge yet.
+- **The owner said "merge #N":** go to step 2.
 - Otherwise, wait for the owner's word.
 
 ## 2. Merge
