@@ -71,7 +71,7 @@ def session_context(
     if repo is None:
         return identity
     owner, name = repo
-    _, reach = cache.reach(cfg, state, owner, name, http)
+    reach = cache.reach(cfg, state, owner, name, http)
     if reach is cache.Reach.INSTALLED:
         return identity
     if reach is cache.Reach.OWNERS_WITHOUT_APP:
@@ -139,7 +139,7 @@ def git_credential(
         if repo is None:
             return answer(state.token)  # git didn't say which repository (no useHttpPath)
         owner, name = repo
-        _, reach = cache.reach(cfg, state, owner, name, http)
+        reach = cache.reach(cfg, state, owner, name, http)
     except Exception as error:
         return refuse(f"couldn't get the App's token: {error}")
     if reach is cache.Reach.INSTALLED:
