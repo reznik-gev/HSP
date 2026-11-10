@@ -50,3 +50,4 @@ One message. If the owner may be away, also send a short push notification:
 - **What changed:** each bot comment and what you did about it. How many bot rounds ran, and why you stopped.
 - **Checks:** which ran and passed, which you skipped and why, and what you couldn't check.
 - **Questions:** each disagreement or choice, with your recommendation, one at a time. If there are none, say so.
+- **How to merge it:** for a PR opened as the App, approving it on GitHub; for one opened with the owner's account, "merge #N" ([0137](../../../docs/decisions/0137-2026-11-10-a-github-app-for-claude-code-sessions.md)).
