@@ -17,7 +17,7 @@ uv run python ../deploy/demo/demo.py status
 - Otherwise, if the API or the app is up, **ask the owner before going on**: say which commit the demo shows. Don't start a second demo.
 
 ## 2. Switch it
-Only after the owner said yes in step 1:
+Only after the owner said yes in step 1, or when neither server was up:
 ```bash
 uv run python ../deploy/demo/demo.py switch --pr <N>    # or --main
 ```

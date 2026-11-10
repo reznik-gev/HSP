@@ -12,6 +12,8 @@ from backend/, with the dev stack, the API on hsp_demo and the frontend dev serv
 (docs/demos/northwind-robotics.md):
 
     uv run python ../deploy/demo/seed.py
+
+`--reset-only` rebuilds the database and stops there, for deploy/demo/demo.py.
 """
 
 import csv
@@ -742,6 +744,8 @@ def seats(hsp: Hsp, units: dict[str, str], people: dict[str, str]) -> None:
 
 def main() -> None:
     reset_database()
+    if sys.argv[1:] == ["--reset-only"]:  # demo.py: the API needs the schema before it starts
+        return
     demo_users()
     hsp = Hsp("dana.levin")
     check_api_uses_demo_database(hsp)
