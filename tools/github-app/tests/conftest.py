@@ -7,6 +7,7 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
+from github_app_token import cache
 from github_app_token.config import Config
 
 APP_ID = "5699699"
@@ -16,10 +17,12 @@ ACCOUNT = "reznik-gev"
 INSTALLED = ["reznik-gev/HSP"]
 NOW = datetime(2026, 11, 10, 12, 0, tzinfo=UTC)
 TOKEN_LIFETIME = timedelta(hours=1)
+INSTALL_URL = f"https://github.com/settings/installations/{INSTALLATION_ID}"
 
 
-class FakeGitHub:
-    """GitHub's App endpoints, enough for the helper. Checks the App's JWT like GitHub does."""
+class SpyGitHub:
+    """GitHub's App endpoints, enough for the helper. Checks the App's JWT like GitHub does,
+    and records the tokens it mints."""
 
     def __init__(self, public_key: rsa.RSAPublicKey) -> None:
         self.public_key = public_key
@@ -78,5 +81,18 @@ def cfg(tmp_path: Path, app_key: rsa.RSAPrivateKey) -> Config:
 
 
 @pytest.fixture
-def fake_github(app_key: rsa.RSAPrivateKey) -> FakeGitHub:
-    return FakeGitHub(app_key.public_key())
+def spy_github(app_key: rsa.RSAPrivateKey) -> SpyGitHub:
+    return SpyGitHub(app_key.public_key())
+
+
+@pytest.fixture
+def github_down(spy_github: SpyGitHub) -> SpyGitHub:
+    """GitHub can't be reached, so no token can be made."""
+    spy_github.failing = True
+    return spy_github
+
+
+@pytest.fixture
+def saved_token(cfg: Config, spy_github: SpyGitHub) -> cache.State:
+    """A token minted at NOW and saved, as a session's first command leaves it."""
+    return cache.current(cfg, NOW, spy_github)
