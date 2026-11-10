@@ -69,4 +69,4 @@ Sessions don't change credentials, tokens or repository settings themselves.
 - The owner's approval still isn't independent of the request: the owner asked for the change too. GitHub's own coding agent doesn't count such approvals. In a one-owner project there is no one else, and the approval is still a deliberate step, recorded on GitHub.
 
 ## Updates
-*Update, 2026-11-11:* the owner named the approval ruleset `main-approvals` on GitHub, with a hyphen. This record's mentions of `main approvals` now use that name, with the owner's yes (0126 point 4).
+- *Update, 2026-11-11:* the owner named the approval ruleset `main-approvals` on GitHub, with a hyphen. This record's mentions of `main approvals` now use that name, with the owner's yes ([0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md) point 4).
