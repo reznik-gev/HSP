@@ -40,6 +40,5 @@ Which sessions act as the App:
 - **To consider later,** as in 0137: GitHub auto-merge, and the `merge-pr` changes to go with it.
 
 ## Updates
-*Update, 2026-11-11:* the owner named the approval ruleset `main-approvals` on GitHub, with a hyphen. This record's mentions of `main approvals` now use that name, with the owner's yes (0126 point 4).
-
-*Update, 2026-11-11:* the helper moved to GevTools ([0140](0140-2026-11-10-the-token-helper-moves-to-gevtools.md)), so this record's links to `tools/github-app/` no longer lead anywhere. Its README is now [`github-app-token/README.md`](https://github.com/reznik-gev/GevTools/blob/main/github-app-token/README.md) in GevTools.
+- *Update, 2026-11-11:* the owner named the approval ruleset `main-approvals` on GitHub, with a hyphen. This record's mentions of `main approvals` now use that name, with the owner's yes ([0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md) point 4).
+- *Update, 2026-11-11:* the helper moved to GevTools ([0140](0140-2026-11-10-the-token-helper-moves-to-gevtools.md)), so this record's links to `tools/github-app/` no longer lead anywhere. Its README is now [`github-app-token/README.md`](https://github.com/reznik-gev/GevTools/blob/main/github-app-token/README.md) in GevTools.
