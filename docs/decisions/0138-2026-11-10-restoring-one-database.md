@@ -2,7 +2,7 @@
 
 - **Date:** 2026-11-10
 - **Status:** Accepted
-- **Refines:** [0106](0106-2026-10-21-backups.md) (what a restore replaces)
+- **Refines:** [0106](0106-2026-10-21-backups.md) (what a restore replaces), [0107](0107-2026-10-21-operator-cli.md) (`hsp restore`)
 
 ## Context
 Each backup holds two databases: HSP's and Keycloak's ([0106](0106-2026-10-21-backups.md)). A restore always replaces both. That came up on 2026-11-10, while the owner and Claude discussed whether the demo (0136) could be restored from a backup instead of being seeded. In the dev stack, Keycloak's database is shared by every session. A restore of both would overwrite it for all of them. The demo stays on the seed. But the owner wants a restore that can pick one database, for operators too. One example is undoing a bad people import without touching sign-ins, or the other way round.
