@@ -41,7 +41,7 @@ def test_in_another_accounts_repository_the_session_hears_git_uses_the_owners_lo
 def test_outside_github_the_session_hears_only_its_identity(
     cfg: Config, spy_github: SpyGitHub
 ) -> None:
-    assert context(cfg, spy_github, NOT_GITHUB).endswith("(docs/0137).")
+    assert context(cfg, spy_github, NOT_GITHUB) == context(cfg, spy_github, HSP)
 
 
 def test_when_no_token_can_be_made_the_session_is_told_to_tell_the_owner(
