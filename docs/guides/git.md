@@ -1,19 +1,6 @@
 # Working with Git and pull requests
 
-How changes get from a branch to `main`: branches, commits, reviews and merging. Stacks of PRs have their own guide, [Working with stacked pull requests](stacked-prs.md). The decisions behind this are [0064](../decisions/0064-2026-10-08-branching-workflow.md) (trunk-based branches), [0069](../decisions/0069-2026-10-08-rebase-merges.md) (rebase-only merges), [0070](../decisions/0070-2026-10-08-ci-gate-job.md) (the `ci-ok` gate), [0093](../decisions/0093-2026-10-16-github-stacked-prs.md) (GitHub stacks) and [0134](../decisions/0134-2026-11-09-from-request-to-main.md) (from a request to `main`).
-
-## From a request to `main`
-The usual path of a change made in a Claude Code session ([0134](../decisions/0134-2026-11-09-from-request-to-main.md)). Each step names the skill that does it.
-
-1. **The request.** The owner asks for a change.
-2. **What "done" means.** Ask the owner what done looks like, unless the request already says. For a small fix whose outcome is plain, state your own definition of done and go on.
-3. **Questions.** Scope, order and behaviour users notice go to the owner, one at a time ([CLAUDE.md](../../CLAUDE.md)). Small details you're sure about, decide yourself and mark *(Claude's choice)*.
-4. **The decision record:** [`record-decision`](../../.claude/skills/record-decision/SKILL.md). It claims the record's number first, so parallel sessions don't clash.
-5. **Building and testing**, in a worktree, with the checks CLAUDE.md lists.
-6. **Opening the PR:** [`open-pr`](../../.claude/skills/open-pr/SKILL.md). Push and open it without asking. If the owner must check something first, open it as a draft and say what to check. Turn on Auto-fix.
-7. **Bot rounds:** [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md). Fix each round of the review bot's comments, then ask it to look again, up to three bot rounds in all.
-8. **The owner's review.** Tell the owner it's ready. More rounds with the owner may follow.
-9. **Merging and cleanup:** [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md). By default the owner says "merge #N". An approval on GitHub counts the same, unless the owner says not to merge yet. If the owner merged on GitHub, clean up once you're woken by it or told.
+How changes get from a branch to `main`: branches, commits, reviews and merging. Stacks of PRs have their own guide, [Working with stacked pull requests](stacked-prs.md). The whole path of a change, from the owner's request to the cleanup after merging, is in [How a change is made](making-a-change.md). The decisions behind this are [0064](../decisions/0064-2026-10-08-branching-workflow.md) (trunk-based branches), [0069](../decisions/0069-2026-10-08-rebase-merges.md) (rebase-only merges), [0070](../decisions/0070-2026-10-08-ci-gate-job.md) (the `ci-ok` gate), [0093](../decisions/0093-2026-10-16-github-stacked-prs.md) (GitHub stacks) and [0134](../decisions/0134-2026-11-09-from-request-to-main.md) (who asks for re-reviews, and merging).
 
 ## Branches and commits
 - Every change is a short-lived branch and a pull request into `main` (or into the PR below it, in a stack). Name branches by area and topic: `editor/height-cues`, `admin/devices`, `docs/testing-guide`.

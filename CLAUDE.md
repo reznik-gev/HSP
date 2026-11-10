@@ -6,7 +6,7 @@ HSP (Human-Space Program) manages office space: sites, buildings and floors draw
 - [docs/decisions/](docs/decisions/README.md): every product and technical decision, numbered and indexed. Follow them. An accepted record stays frozen: to change a decision, add a new record. Only its status, a `Refined by:` line, dated notes added at the end, and (with the owner's explicit yes) rename fixes may change it ([0126](docs/decisions/0126-2026-11-08-what-may-change-in-an-accepted-record.md)).
 - [docs/guides/git.md](docs/guides/git.md): branches, commits, review fixes and merging.
 - [docs/guides/stacked-prs.md](docs/guides/stacked-prs.md): stacked PRs with `gh stack`.
-- [docs/guides/git.md, "From a request to `main`"](docs/guides/git.md#from-a-request-to-main): the usual path of a change, and the skill for each step: [record-decision](.claude/skills/record-decision/SKILL.md), [open-pr](.claude/skills/open-pr/SKILL.md), [prepare-pr-for-review](.claude/skills/prepare-pr-for-review/SKILL.md) and [merge-pr](.claude/skills/merge-pr/SKILL.md).
+- [docs/guides/making-a-change.md](docs/guides/making-a-change.md): the usual path of a change, and the skill for each step: [record-decision](.claude/skills/record-decision/SKILL.md), [open-pr](.claude/skills/open-pr/SKILL.md), [prepare-pr-for-review](.claude/skills/prepare-pr-for-review/SKILL.md) and [merge-pr](.claude/skills/merge-pr/SKILL.md).
 - [docs/guides/releasing.md](docs/guides/releasing.md): the changelog, and how a release is built, tested and published.
 - [docs/guides/testing.md](docs/guides/testing.md): how tests are written, with a review checklist.
 - [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md): commands, layout and conventions for each side.
