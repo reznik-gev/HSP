@@ -248,7 +248,10 @@ export class Interaction {
       }
       case "Escape":
         // Drops a selection rectangle or a group's move first (docs/0133).
-        if (this.gesture.kind === "select" && this.selectTool.cancel()) return true;
+        if (this.gesture.kind === "select" && this.selectTool.cancel()) {
+          this.gesture = { kind: "none" };
+          return true;
+        }
         if (s.tool === "wall" && this.wallTool.finish()) return true;
         if (s.tool === "zone" && this.zoneTool.cancel()) return true;
         if (s.tool !== "select") s.setTool("select");
