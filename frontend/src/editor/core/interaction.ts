@@ -36,7 +36,7 @@ import type { Measure } from "./measure";
 import { type Hit, hitTest, inBox, zoneAt } from "./hitTest";
 import type { Plan, Vec2 } from "./plan";
 import { SNAP_PX, snapPoint, snapSettings } from "./snap";
-import type { EditorStore, Preview } from "./store";
+import { dragged, type EditorStore, type Preview } from "./store";
 import { ColumnTool } from "./tools/columnTool";
 import { ItemTool } from "./tools/itemTool";
 import { NumberTool } from "./tools/numberTool";
@@ -279,15 +279,18 @@ export class Interaction {
     const s = this.store.getState();
     if (!s.plan) return;
     const plan = s.plan;
-    const turned = (id: string) =>
-      (((plan.objects[id]!.rotation_ddeg + g.spin) % 3600) + 3600) % 3600;
-    // R's turns go with the move: each item about its own centre, one step to undo (docs/0135).
+    const drag = { dx: g.d[0], dy: g.d[1], spin: g.spin || undefined };
+    // R's turns go with the move, one step to undo; `dragged` says how each item turns, as it
+    // does on screen (docs/0135).
     const ops = nudgeOps(plan, s.selection, g.d, g.detach).map((op) =>
       g.spin && op.op === "update" && op.kind === "object"
-        ? { ...op, data: { ...op.data, rotation_ddeg: turned(op.id) } }
+        ? {
+            ...op,
+            data: { ...op.data, rotation_ddeg: dragged(plan.objects[op.id]!, drag).rotation_ddeg },
+          }
         : op,
     );
-    s.setDrag({ dx: g.d[0], dy: g.d[1], spin: g.spin || undefined });
+    s.setDrag(drag);
     s.setPreview({ kind: "group", ops, ...movedBy(s.plan, ops) });
   }
 
