@@ -2,6 +2,7 @@
 
 - **Date:** 2026-11-11
 - **Status:** Accepted
+- **Refined by:** [0146](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) (Markdown pages, our own renderer, and GIFs recorded from the demo)
 - **Refines:** [0130](0130-2026-11-08-learning-the-editor.md) (the user guide comes after 1.0.0, in `docs/tutorials/`)
 
 ## Context

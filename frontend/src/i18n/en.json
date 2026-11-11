@@ -79,7 +79,8 @@
     "menu": "Account: {{name}}",
     "admin": "Administrator",
     "viewer": "Viewer",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "guide": "User guide"
   },
   "plan": {
     "breadcrumb": "Location",
@@ -946,5 +947,11 @@
     "deleted": "{{tag}} deleted.",
     "restored": "Device added back.",
     "inUse": "This device is in a floor's history (now or in an earlier version), so it can't be deleted."
+  },
+  "guide": {
+    "title": "User guide",
+    "contents": "Contents",
+    "everyone": "Using HSP",
+    "admins": "For admins"
   }
 }
