@@ -1,11 +1,11 @@
 """FastAPI application factory."""
 
 import time
+import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager, nullcontext
 
 import structlog
-import uuid_utils
 from fastapi import FastAPI, Request, Response
 from opentelemetry.instrumentation.utils import suppress_instrumentation
 
@@ -57,7 +57,7 @@ def create_app() -> FastAPI:
     async def identify_and_log_request(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        rid = request.headers.get("X-Request-ID") or str(uuid_utils.uuid7())
+        rid = request.headers.get("X-Request-ID") or str(uuid.uuid7())
         request.state.request_id = rid
         structlog.contextvars.bind_contextvars(request_id=rid)
         started = time.perf_counter()
