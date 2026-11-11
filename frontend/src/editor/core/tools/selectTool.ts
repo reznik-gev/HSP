@@ -151,6 +151,8 @@ export class SelectTool {
       g.d = gridStep(this.store, [p[0] - g.start[0], p[1] - g.start[1]], e.alt);
       showGroup(this.store, g);
     } else if (g.kind === "junction" && s.plan) {
+      // Alt pressed mid-drag detaches too, and stays detached (docs/0130).
+      if (e.alt) g.walls = [g.grabbed];
       s.setPreview(junctionPreview(s, s.plan, g, this.toPlan(e), e.alt, e.shift));
     } else if (g.kind === "wall" && s.plan) {
       // Alt pressed mid-drag detaches too, and stays detached (docs/0130).

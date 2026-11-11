@@ -77,13 +77,11 @@ export function wallDrag(plan: Plan, w: Wall, p: Vec2, alt?: boolean): WallDrag 
 export function junctionPreview(
   s: EditorState,
   plan: Plan,
-  g: JunctionDrag,
+  g: Readonly<JunctionDrag>,
   p: Vec2,
   alt?: boolean,
   shift?: boolean,
 ): Preview {
-  // Alt pressed mid-drag detaches too, and stays detached (docs/0130).
-  if (alt) g.walls = [g.grabbed];
   const { point, kind } = snapPoint(plan, p, {
     ...snapSettings(s, alt),
     ignore: g.from,
@@ -101,7 +99,13 @@ export function junctionPreview(
  * something (a wall's end, midpoint or side) with the smaller correction, else by its first
  * end to the grid. The wall and the walls stretching with it aren't snapped to.
  */
-export function wallMove(s: EditorState, plan: Plan, g: WallDrag, p: Vec2, alt?: boolean): Preview {
+export function wallMove(
+  s: EditorState,
+  plan: Plan,
+  g: Readonly<WallDrag>,
+  p: Vec2,
+  alt?: boolean,
+): Preview {
   const d: Vec2 = [p[0] - g.start[0], p[1] - g.start[1]];
   const opts = {
     ...snapSettings(s, alt),
