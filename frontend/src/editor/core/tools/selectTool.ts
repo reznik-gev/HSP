@@ -15,7 +15,7 @@ import { type ItemShape, placeItem } from "../furnitureSnap";
 import { type Hit, hitTest, inBox, zoneAt } from "../hitTest";
 import type { PointerInput } from "../interaction";
 import type { Vec2 } from "../plan";
-import { isClick, type PanZoom } from "../panZoom";
+import type { PanZoom } from "../panZoom";
 import { SNAP_PX, snapPoint, snapSettings } from "../snap";
 import type { EditorStore } from "../store";
 import { commitGroup, gridStep, type GroupDrag, mixedSelection, showGroup } from "./groupDrag";
@@ -54,7 +54,6 @@ export type SelectPress =
 
 export class SelectTool {
   private gesture: Gesture = { kind: "none" };
-  private downAt: Vec2 = [0, 0];
 
   constructor(
     private readonly store: EditorStore,
@@ -68,7 +67,6 @@ export class SelectTool {
   /** A primary-button press, on a plan. */
   press(e: PointerInput): SelectPress {
     this.gesture = { kind: "none" };
-    this.downAt = [e.sx, e.sy];
     const s = this.store.getState();
     if (!s.plan) return { result: "none" };
     const p = this.toPlan(e);
@@ -134,10 +132,20 @@ export class SelectTool {
     return { result: "clear", pan: { clickClears: true } };
   }
 
-  move(e: PointerInput): void {
+  /** Whether a press started a gesture that hasn't ended, so pointer events come here. */
+  active(): boolean {
+    return this.gesture.kind !== "none";
+  }
+
+  /** Forgets the gesture, saving and clearing nothing: Interaction took the pointer. */
+  drop(): void {
+    this.gesture = { kind: "none" };
+  }
+
+  /** `still`: the pointer hasn't left the press's click distance yet. */
+  move(e: PointerInput, still: boolean): void {
     const s = this.store.getState();
     const g = this.gesture;
-    const still = isClick(this.downAt, e.sx, e.sy);
     if (g.kind === "drag") {
       if (!g.moved && still) return;
       g.moved = true;
@@ -187,8 +195,9 @@ export class SelectTool {
     }
   }
 
-  /** Ends the gesture: saves what was dragged, or selects what was caught. */
-  release(e: PointerInput): void {
+  /** Ends the gesture: saves what was dragged, or selects what was caught. `clicked`: the
+   *  pointer never left the press's click distance. */
+  release(e: PointerInput, clicked: boolean): void {
     const s = this.store.getState();
     const g = this.gesture;
     this.gesture = { kind: "none" };
@@ -200,7 +209,7 @@ export class SelectTool {
       dropWalls(s, g);
     } else if (g.kind === "box") {
       s.setPreview(null);
-      if (isClick(this.downAt, e.sx, e.sy)) this.addAt(g.from);
+      if (clicked) this.addAt(g.from);
       else if (s.plan) {
         // Adds what's fully inside to the selection (docs/0133).
         const caught = inBox(s.plan, g.from, this.toPlan(e), s.heightFilter);
