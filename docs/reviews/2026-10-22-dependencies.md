@@ -87,7 +87,7 @@ A cheap first step would be a CI job that runs `pip-audit` (backend and backup),
 
 ## 4. Smaller findings
 
-- **`uuid-utils` is no longer needed.** Python 3.14 added `uuid.uuid7()` to the standard library (we checked: it works in our environment). The package is used in two places (`models/base.py`, and `main.py` for request IDs).
+- **`uuid-utils` is no longer needed.** Python 3.14 added `uuid.uuid7()` to the standard library (we checked: it works in our environment). The package is used in two places (`models/base.py`, and `main.py` for request IDs). *Update, 2026-11-11:* dropped. HSP uses `uuid.uuid7()` from the standard library ([#168](https://github.com/reznik-gev/HSP/pull/168)).
 - **Two dependencies no decision names.** psutil and openpyxl. Every other runtime dependency is named in a decision record. These two are small and harmless, but [CLAUDE.md](../../CLAUDE.md) asks for technical choices to be recorded. *Update, 2026-10-23:* psutil was removed on [#102](https://github.com/reznik-gev/HSP/pull/102). The API's CPU and memory now come from the platform ([0111](../decisions/0111-2026-10-23-cpu-and-memory-from-the-platform.md)), so only openpyxl is left to record.
 - **`tzdata` is never imported.** That is expected: it supplies time-zone data to `zoneinfo` on systems without it (slim images and Windows). A one-line comment in `pyproject.toml` would stop someone removing it.
 - **httpx2** is a new successor of httpx that Authlib now prefers. It's young, but it's used in only two files.
