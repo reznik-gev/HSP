@@ -46,12 +46,11 @@ const NUDGES: Record<string, Vec2> = {
   ArrowDown: [0, -1],
 };
 
+/** The router's own gestures; a Select gesture is SelectTool's (`selectTool.active()`). */
 type Gesture =
   | { kind: "none" }
   /** `clickClears`: a click without moving (on empty space) clears the selection. */
   | { kind: "pan"; clickClears?: boolean }
-  /** A Select gesture, which SelectTool follows. */
-  | { kind: "select" }
   /** Numbering seats by clicking or dragging across them. */
   | { kind: "numbering" };
 
@@ -98,6 +97,7 @@ export class Interaction {
   /** Starts dragging the view; a click without moving may do more on release. */
   private pan(e: PointerInput, clickClears = false): void {
     this.view.startPan(e.sx, e.sy);
+    this.selectTool.drop();
     this.gesture = { kind: "pan", clickClears };
   }
 
@@ -118,6 +118,7 @@ export class Interaction {
     }
     if (s.tool === "number") {
       if (e.button !== 0) return "none";
+      this.selectTool.drop();
       this.gesture = { kind: "numbering" };
       this.numberTool.begin(this.toPlan(e));
       return "none";
@@ -131,7 +132,7 @@ export class Interaction {
     if (e.button !== 0) return "none";
     const press = this.selectTool.press(e);
     if (press.pan) this.pan(e, press.pan.clickClears);
-    else this.gesture = { kind: "select" };
+    else this.gesture = { kind: "none" };
     return press.result;
   }
 
@@ -143,11 +144,11 @@ export class Interaction {
     const g = this.gesture;
     if (g.kind === "pan") {
       this.view.movePan(e.sx, e.sy);
-    } else if (g.kind === "select") {
-      this.selectTool.move(e);
     } else if (g.kind === "numbering") {
       this.numberTool.extend(this.toPlan(e));
-    } else if (g.kind === "none" && s.tool !== "select") {
+    } else if (this.selectTool.active()) {
+      this.selectTool.move(e, isClick(this.downAt, e.sx, e.sy));
+    } else if (s.tool !== "select") {
       this.toolAt(this.toPlan(e), false);
     }
   }
@@ -160,13 +161,15 @@ export class Interaction {
     this.gesture = { kind: "none" };
     this.view.endPan();
     const clicked = isClick(this.downAt, e.sx, e.sy);
-    if (g.kind === "select") {
-      this.selectTool.release(e);
-    } else if (g.kind === "numbering") {
+    if (g.kind === "numbering") {
       this.numberTool.end();
-    } else if (g.kind === "pan" && clicked && e.button === 0) {
-      if (s.tool !== "select") this.toolAt(this.toPlan(e), true);
-      else if (g.clickClears) s.clearSelection();
+    } else if (g.kind === "pan") {
+      if (clicked && e.button === 0) {
+        if (s.tool !== "select") this.toolAt(this.toPlan(e), true);
+        else if (g.clickClears) s.clearSelection();
+      }
+    } else if (this.selectTool.active()) {
+      this.selectTool.release(e, clicked);
     }
   }
 
@@ -204,7 +207,7 @@ export class Interaction {
    */
   measureTarget(): "wall" | "move" | null {
     const s = this.store.getState();
-    if (this.gesture.kind === "select" && this.selectTool.moving()) return "move";
+    if (this.selectTool.moving()) return "move";
     if (s.tool === "wall" && this.wallTool.drawing()) return "wall";
     return null;
   }
@@ -223,7 +226,6 @@ export class Interaction {
         Math.round((s.drag.dy / len) * m.lengthMm),
       ];
       this.selectTool.moveBy(d);
-      this.gesture = { kind: "none" };
       return true;
     }
     return false;
@@ -248,10 +250,7 @@ export class Interaction {
       }
       case "Escape":
         // Drops a selection rectangle or a group's move first (docs/0133).
-        if (this.gesture.kind === "select" && this.selectTool.cancel()) {
-          this.gesture = { kind: "none" };
-          return true;
-        }
+        if (this.selectTool.cancel()) return true;
         if (s.tool === "wall" && this.wallTool.finish()) return true;
         if (s.tool === "zone" && this.zoneTool.cancel()) return true;
         if (s.tool !== "select") s.setTool("select");
@@ -278,7 +277,7 @@ export class Interaction {
         const ops = rotateObjects(s.plan, s.selection);
         if (!ops.length) return false;
         // Mid-drag: turned where it's been dragged to, and the drag carries on (docs/0135).
-        if (this.gesture.kind === "select" && this.selectTool.spin()) return true;
+        if (this.selectTool.spin()) return true;
         s.perform(ops);
         return true;
       }
