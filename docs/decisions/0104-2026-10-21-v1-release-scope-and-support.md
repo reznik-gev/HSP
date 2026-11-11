@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-21
 - **Status:** Accepted
+- **Refined by:** [0108](0108-2026-10-21-first-client-demo-feedback.md) (AD sync in 1.1, Kubernetes in 1.2), [0145](0145-2026-11-11-office-moves.md) (the move planner in 1.3)
 - **Refines:** [0025](0025-2026-10-08-v1-scope.md) (v1 scope), [0057](0057-2026-10-08-observability.md) (the monitoring profile), [0064](0064-2026-10-08-branching-workflow.md) (the supported-versions policy), [0055](0055-2026-10-08-deployment-target.md) (Kubernetes later), [0041](0041-2026-10-08-live-updates.md) (ETags), [0063](0063-2026-10-08-release-versioning.md) (the version in the app), [0059](0059-2026-10-08-supply-chain-security.md) (when to sign the bundle)
 
 ## Context

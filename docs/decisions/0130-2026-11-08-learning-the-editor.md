@@ -3,7 +3,7 @@
 - **Date:** 2026-11-08
 - **Status:** Accepted
 - **Refines:** [0044](0044-2026-10-08-wall-joins.md) (when `Alt` detaches a wall), [0108](0108-2026-10-21-first-client-demo-feedback.md) (moving a whole wall)
-- **Refined by:** [0135](0135-2026-11-09-turning-while-dragging.md) (the dragging hint offers R for furniture)
+- **Refined by:** [0135](0135-2026-11-09-turning-while-dragging.md) (the dragging hint offers R for furniture), [0144](0144-2026-11-11-an-in-app-user-guide-in-1-0-0.md) (the user guide ships in 1.0.0, inside the app)
 
 ## Context
 In QA after the first client demo, the owner found that three walls meeting at one corner seemed impossible to separate ([point 7 of the demo notes](../demos/feedback-2026-10-21.md#7-separating-three-walls-at-one-corner-is-hard-to-find)). Holding `Alt` *before* pressing on a selected wall's end does detach just that wall ([0044](0044-2026-10-08-wall-joins.md)). Pressing `Alt` mid-drag does nothing, and nothing on screen says either.
