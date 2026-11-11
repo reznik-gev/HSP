@@ -107,3 +107,4 @@ Only key flows (signing in and finding a seat; drawing and publishing a floor), 
 - Screen tests: queried by role and name? Waits for state, not for time? Both languages where text matters?
 - New database constraint or query: is there a database test?
 - New or changed plan rule: are the shared cases updated?
+- Does the change alter something the user guide (`frontend/src/guide/`) describes? Then the guide is updated in both languages, and its GIFs still match ([0146](../decisions/0146-2026-11-11-how-the-user-guide-is-written-and-shown.md)).
