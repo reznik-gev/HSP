@@ -6,7 +6,6 @@ from datetime import datetime
 
 from sqlalchemy import DateTime, Enum, ForeignKey, MetaData, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from uuid_utils.compat import uuid7
 
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
@@ -23,7 +22,7 @@ class Base(DeclarativeBase):
 
 def new_id() -> uuid.UUID:
     """UUIDv7, generated in the application (docs/0030)."""
-    return uuid7()
+    return uuid.uuid7()
 
 
 def str_enum[E: enum.StrEnum](enum_cls: type[E], name: str) -> Enum:

@@ -10,11 +10,11 @@ Create Date: 2026-10-08 12:00:00.000000
 """
 
 from collections.abc import Sequence
+from uuid import uuid7
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
-from uuid_utils.compat import uuid7
 
 revision: str = "5e1f0a7c2d41"
 down_revision: str | Sequence[str] | None = "c9b2fc969b7d"

@@ -1,12 +1,12 @@
 """DB-enforced invariants that mocks cannot verify (docs/0061 items 1-4)."""
 
 import uuid
+from uuid import uuid7
 
 import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
-from uuid_utils.compat import uuid7
 
 
 async def _floor_with_wall_element(conn: AsyncConnection) -> tuple[uuid.UUID, uuid.UUID]:
