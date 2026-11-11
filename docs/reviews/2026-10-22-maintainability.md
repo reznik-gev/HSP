@@ -256,7 +256,7 @@ CI doesn't measure coverage. The numbers above needed `pytest-cov` and `@vitest/
 ## 5. Other observations
 
 These are small, and noted so they aren't lost:
-- **The READMEs are out of date.** `backend/README.md` says uv installs Python 3.13 (it is 3.14, [0091](../decisions/0091-2026-10-15-python-3-14.md)). Its layout lists 6 of about 20 packages. `frontend/README.md` lists 4 of 16 folders.
+- **The READMEs are out of date.** `backend/README.md` says uv installs Python 3.13 (it is 3.14, [0091](../decisions/0091-2026-10-15-python-3-14.md)). Its layout lists 6 of about 20 packages. `frontend/README.md` lists 4 of 16 folders. *Update, 2026-11-11:* both READMEs are up to date ([#169](https://github.com/reznik-gev/HSP/pull/169)).
 - **The largest backend modules** are `plans/drafts.py` (546 lines), `org/units.py` (513), `plans/changeset.py` (476) and `plans/publishing.py` (430). They are long but each is about one thing. No action needed yet.
 - **Nothing enforces the backend's layers.** The frontend's ESLint rule protects the editor core. The backend has no equivalent, so a domain package could start importing `api/` and no check would notice. A tool such as import-linter could hold the layers in section 1.1 in about 20 lines of config.
 - **`deploy/bin/hsp` is a 694-line Bash script.** shellcheck checks it, and the release workflow tests install, upgrade and restore end to end. At its current size that is enough. If it keeps growing, consider moving it to Python, like the backup program.
