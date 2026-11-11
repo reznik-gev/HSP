@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { LogOut } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { BookOpen, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { initials, meQuery, signOut } from "@/auth/session";
@@ -15,8 +16,8 @@ import {
 
 import { Version } from "./Version";
 
-/** The signed-in person: who they are, their role, and signing out (docs/0087); and the release
- * of HSP they're using (docs/0104). */
+/** The signed-in person: who they are, their role, and signing out (docs/0087); the user guide
+ * (docs/0144); and the release of HSP they're using (docs/0104). */
 export function UserMenu() {
   const { t } = useTranslation();
   const { data: me } = useQuery(meQuery);
@@ -42,6 +43,12 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/guide">
+            <BookOpen aria-hidden />
+            {t("user.guide")}
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void signOut()}>
           <LogOut className="rtl:-scale-x-100" aria-hidden />
           {t("user.signOut")}

@@ -13,6 +13,7 @@ The first release.
 - A Free seats list, under Seats: the seats free to assign or to book, narrowed by site, building, floor, zone and kind, each with Show on plan.
 - English and Hebrew, with the layout mirrored for Hebrew.
 - The user menu and the bottom of the sidebar show which release of HSP you're using.
+- A user guide, from the user menu: how to find people and free seats and read a plan, and for admins, how to set up floors, draw and publish them, and assign seats. In English and Hebrew, with a few short GIFs.
 - A floor's page shows a newly published version within 30 seconds, and that someone started editing within 15, without reloading.
 - Light and dark mode, following the system or chosen per person. In dark mode each seat state stands out against the plan, and zones and furniture are toned down.
 

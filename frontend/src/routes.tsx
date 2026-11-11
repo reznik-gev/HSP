@@ -110,6 +110,11 @@ const seatsRoute = createRoute({
     typeof search.q === "string" && search.q ? { q: search.q } : {},
   component: SeatsPage,
 });
+const guideRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/guide",
+  component: lazyRouteComponent(() => import("@/guide/GuidePage"), "GuidePage"),
+});
 const freeSeatsRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "/seats/free",
@@ -142,6 +147,7 @@ export const routeTree = rootRoute.addChildren([
     devicesRoute,
     seatsRoute,
     freeSeatsRoute,
+    guideRoute,
   ]),
   fullScreenRoute.addChildren([editorRoute]),
   ...benchRoutes,
