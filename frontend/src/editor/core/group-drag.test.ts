@@ -141,6 +141,20 @@ describe("dragging a group (docs/0133)", () => {
     expect(store.getState().selection).toEqual(new Set(["d1", "w2"]));
   });
 
+  it("R mid-drag turns the furniture where it is, saved with the move as one step (docs/0135)", () => {
+    const { store, interaction, at } = withSelected("d1", "w2");
+    interaction.pointerDown(at([2000, 1300]));
+    interaction.pointerMove(at([3000, 1300]));
+    expect(interaction.key("r")).toBe(true);
+    expect(store.getState().drag).toMatchObject({ dx: 1000, dy: 0, spin: 900 });
+    expect(store.getState().undoStack).toHaveLength(0); // nothing saved yet
+    interaction.pointerUp(at([3000, 1300]));
+    const plan = store.getState().plan!;
+    expect(plan.objects.d1).toMatchObject({ position: [3000, 1500, 0], rotation_ddeg: 900 });
+    expect(wall(plan, "w2")[0]).toEqual([5000, 0]);
+    expect(store.getState().undoStack).toHaveLength(1);
+  });
+
   it("a click on one of the group keeps the group selected", () => {
     const { store, click } = withSelected("d1", "w2");
     click([4000, 1500]);

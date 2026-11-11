@@ -80,8 +80,9 @@ type Gesture =
   /**
    * A selection with walls, zones, doors or windows, dragged by one of them (docs/0133).
    * `detach`: Alt was held at some point, so the walls joined to it don't stretch (docs/0130).
+   * `d` is how far it has moved, and `spin` how far R turned its furniture on the way (docs/0135).
    */
-  | { kind: "group"; start: Vec2; moved: boolean; detach: boolean }
+  | { kind: "group"; start: Vec2; moved: boolean; detach: boolean; d: Vec2; spin: number }
   /** A junction dragged by the end of the selected wall `grabbed`; `walls` move with it. */
   | { kind: "junction"; from: Vec2; grabbed: string; walls: string[] }
   /** A selected wall dragged by its body; the walls joined at its ends stretch (docs/0108). */
@@ -194,7 +195,14 @@ export class Interaction {
     const { hit, id: grabbed } = this.pick(p);
     if (grabbed && s.selection.size > 1 && s.selection.has(grabbed) && this.mixedSelection()) {
       // One of a group: they all move, as the arrow keys move them (docs/0133).
-      this.gesture = { kind: "group", start: p, moved: false, detach: Boolean(e.alt) };
+      this.gesture = {
+        kind: "group",
+        start: p,
+        moved: false,
+        detach: Boolean(e.alt),
+        d: [0, 0],
+        spin: 0,
+      };
       return "select";
     }
     if (hit?.kind === "object") {
@@ -263,12 +271,23 @@ export class Interaction {
     return [...s.selection].some((id) => !s.plan?.objects[id] && !columns.has(id));
   }
 
-  /** The group moved by `d`: the drag offset for items and columns, the preview for the rest. */
-  private moveGroup(d: Vec2, detach: boolean): void {
+  /**
+   * The group moved by `g.d`, its furniture turned by `g.spin`: the drag state for items and
+   * columns, and the preview, with the ops that will save it all, for the rest.
+   */
+  private moveGroup(g: Extract<Gesture, { kind: "group" }>): void {
     const s = this.store.getState();
     if (!s.plan) return;
-    const ops = nudgeOps(s.plan, s.selection, d, detach);
-    s.setDrag({ dx: d[0], dy: d[1] });
+    const plan = s.plan;
+    const turned = (id: string) =>
+      (((plan.objects[id]!.rotation_ddeg + g.spin) % 3600) + 3600) % 3600;
+    // R's turns go with the move: each item about its own centre, one step to undo (docs/0135).
+    const ops = nudgeOps(plan, s.selection, g.d, g.detach).map((op) =>
+      g.spin && op.op === "update" && op.kind === "object"
+        ? { ...op, data: { ...op.data, rotation_ddeg: turned(op.id) } }
+        : op,
+    );
+    s.setDrag({ dx: g.d[0], dy: g.d[1], spin: g.spin || undefined });
     s.setPreview({ kind: "group", ops, ...movedBy(s.plan, ops) });
   }
 
@@ -414,7 +433,8 @@ export class Interaction {
       g.moved = true;
       // Grid steps, as several items move; Alt frees it while held (docs/0133).
       const p = this.toPlan(e);
-      this.moveGroup(this.gridStep([p[0] - g.start[0], p[1] - g.start[1]], e.alt), g.detach);
+      g.d = this.gridStep([p[0] - g.start[0], p[1] - g.start[1]], e.alt);
+      this.moveGroup(g);
     } else if (g.kind === "junction" && s.plan) {
       // Alt pressed mid-drag detaches too, and stays detached (docs/0130).
       if (e.alt) g.walls = [g.grabbed];
@@ -583,7 +603,8 @@ export class Interaction {
         Math.round((s.drag.dy / len) * m.lengthMm),
       ];
       if (this.gesture.kind === "group") {
-        this.moveGroup(d, this.gesture.detach);
+        this.gesture.d = d;
+        this.moveGroup(this.gesture);
         this.commitGroup();
       } else {
         s.setDrag({ dx: d[0], dy: d[1], spin: s.drag.spin });
@@ -646,6 +667,12 @@ export class Interaction {
         const ops = rotateObjects(s.plan, s.selection);
         if (!ops.length) return false;
         const g = this.gesture;
+        if (g.kind === "group" && g.moved) {
+          // Mid-drag, as for furniture alone (docs/0135): saved with the move.
+          g.spin = (g.spin + 900) % 3600;
+          this.moveGroup(g);
+          return true;
+        }
         if (g.kind === "drag" && g.moved && g.last) {
           // Mid-drag: turn it where it's been dragged to, and keep dragging.
           g.spin = (g.spin + 900) % 3600;
