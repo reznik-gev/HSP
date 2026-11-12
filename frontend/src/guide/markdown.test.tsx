@@ -51,12 +51,13 @@ describe("the guide", () => {
     expect(shape(read("he", page))).toEqual(shape(read("en", page)));
   });
 
-  it("shows only GIFs that exist", () => {
-    const gifs = new Set(readdirSync(join(DIR, "media")));
-    for (const lang of LANGS)
+  it("shows only GIFs that exist, recorded in the page's own language", () => {
+    for (const lang of LANGS) {
+      const gifs = new Set(readdirSync(join(DIR, "media", lang)));
       for (const page of PAGES)
         for (const b of read(lang, page))
           if (b.kind === "image") expect(gifs, `${lang}/${page}`).toContain(b.src);
+    }
   });
 
   it("uses only the Markdown the renderer knows: no HTML, no outside links", () => {
