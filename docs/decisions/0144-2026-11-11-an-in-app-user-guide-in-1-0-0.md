@@ -18,7 +18,7 @@
   - A PDF in the bundle: easy to send, but nobody opens it from the app.
 - When:
   - **In 1.0.0** ✅: the first customers have it from day one. It's mostly text, so it holds the release up by days, not weeks.
-  - Right after 1.0.0, as 0130 planned.
+  - Right after 1.0.0, as 0130 planned: 1.0.0 ships sooner, but customers rely on the hint line and the keys sheet until then.
 
 ## Decision
 1. **A user guide ships in 1.0.0, inside the app.** *(The owner's choice)*
