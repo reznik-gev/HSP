@@ -11,16 +11,17 @@ React + TypeScript single-page app ([0011](../docs/decisions/0011-2026-10-08-fro
 
 ## Common tasks
 
-| Task                               | Command                                                                                                                                        |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Install                            | `pnpm install`                                                                                                                                 |
-| Dev server (http://localhost:5173) | `pnpm dev`. It proxies `/api` and `/auth`, giving one origin like production ([0038](../docs/decisions/0038-2026-10-08-api-authentication.md)) |
-| Regenerate API types               | `pnpm api:types` (after `backend/openapi.json` changes; commit the result)                                                                     |
-| Lint / format / types              | `pnpm lint` · `pnpm format` · `pnpm typecheck`                                                                                                 |
-| Tests                              | `pnpm test` (`pnpm test:watch` while developing); how to write them: [docs/guides/testing.md](../docs/guides/testing.md)                       |
-| Test coverage                      | `pnpm test:coverage`; the report is `coverage/index.html` ([0114](../docs/decisions/0114-2026-10-23-test-coverage-report.md))                  |
-| Production build                   | `pnpm build`                                                                                                                                   |
-| Browser tests                      | `pnpm e2e`, against the running dev stack; add `PW_CHANNEL=msedge` to use Edge ([docs/guides/testing.md](../docs/guides/testing.md))           |
+| Task                               | Command                                                                                                                                                                                             |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install                            | `pnpm install`                                                                                                                                                                                      |
+| Dev server (http://localhost:5173) | `pnpm dev`. It proxies `/api` and `/auth`, giving one origin like production ([0038](../docs/decisions/0038-2026-10-08-api-authentication.md))                                                      |
+| Regenerate API types               | `pnpm api:types` (after `backend/openapi.json` changes; commit the result)                                                                                                                          |
+| Lint / format / types              | `pnpm lint` · `pnpm format` · `pnpm typecheck`                                                                                                                                                      |
+| Tests                              | `pnpm test` (`pnpm test:watch` while developing); how to write them: [docs/guides/testing.md](../docs/guides/testing.md)                                                                            |
+| Test coverage                      | `pnpm test:coverage`; the report is `coverage/index.html` ([0114](../docs/decisions/0114-2026-10-23-test-coverage-report.md))                                                                       |
+| Production build                   | `pnpm build`                                                                                                                                                                                        |
+| Browser tests                      | `pnpm e2e`, against the running dev stack; add `PW_CHANNEL=msedge` to use Edge ([docs/guides/testing.md](../docs/guides/testing.md))                                                                |
+| Guide GIFs                         | `pnpm guide:gifs`: records the user guide's GIFs again from the Northwind demo. Needs the demo up and ffmpeg ([0146](../docs/decisions/0146-2026-11-11-how-the-user-guide-is-written-and-shown.md)) |
 
 ## Layout
 
@@ -55,9 +56,10 @@ src/
   seats/              seat assignment and the free seats list
   devices/, catalog/  devices, and the furniture, device and zone-type catalog
   imports/            CSV and Excel imports
+  guide/              the user guide: en/ and he/ pages in Markdown, its renderer, media/en/ and media/he/ GIFs (docs/0146)
   bench/              the SVG performance bench page (dev only)
   test/               test helpers: renderApp, the stub backend, editor stubs
-e2e/                  Playwright browser tests, the restore drill and the sizing bench
+e2e/                  Playwright browser tests, the restore drill, the sizing bench, and guide/ to record the guide's GIFs
 bench/                the script that drives the SVG bench
 ```
 
