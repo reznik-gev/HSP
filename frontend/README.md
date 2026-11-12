@@ -44,7 +44,7 @@ src/
   floors/             sites, buildings and floors, and the read-only floor plan page
   editor/             the floor editor (docs/0089)
     core/             HEADLESS: plan model, store, undo, snapping, plan checks, interaction (docs/0052)
-      tools/          one class per tool: select, wall, opening, column, zone, item, number
+      tools/          one class per tool: select, wall, opening, column, zone, item, number; the Select tool's drags
     view-svg/         the SVG plan, its overlay and zoom controls
     session/          the edit lock, autosave and the plan loaded for editing
     properties/, problems/, publish/

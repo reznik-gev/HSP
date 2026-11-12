@@ -24,7 +24,7 @@ All numbers below were measured on that commit. Coverage counts lines and branch
 | 3 | Make the role claim and the session length work with any OIDC provider | 0008 promises customers can use their own identity provider. Today only Keycloak fully works ([2.1](#21-keycloak)) | Small |
 | 4 | ~~Decide whether backend services may query the database directly~~ **Decided:** the queries move into repositories, as their own PR stack after 1.2 ([0110](../decisions/0110-2026-10-22-repositories-after-1-2.md)) | The code does both. The decisions say only one ([1.1](#11-backend)) | Large, scheduled |
 | 5 | Show coverage in CI, without a minimum | So a drop is visible in the PR that caused it ([4.4](#44-coverage-in-ci)) | Small |
-| 6 | Bring the backend and frontend READMEs up to date | They name Python 3.13 and list a third of the packages ([5](#5-other-observations)) | Small |
+| 6 | ~~Bring the backend and frontend READMEs up to date~~ **Done** on [#169](https://github.com/reznik-gev/HSP/pull/169) | They name Python 3.13 and list a third of the packages ([5](#5-other-observations)) | Small |
 
 Each of these is a proposal. If we take one up, it gets a decision record. The owner also wants the dev cycle and CI times improved, alongside the repositories stack ([0112](../decisions/0112-2026-10-23-dev-cycle-and-ci-times.md)). Two deeper reviews follow from this one: [dependencies](2026-10-22-dependencies.md) and [decision records](2026-10-22-decision-records.md). Each has its own recommendations.
 
@@ -163,7 +163,7 @@ Ready-made parts: the shadcn components, the page shell, Problem-Details error d
 
 **Friction:**
 - **The floor editor is where changes get hard.** `PlanView.tsx` (636 lines), `interaction.ts` (434) and `store.ts` (428) carry most of the editor's behaviour, and the demo follow-ups add to all three. A change to a gesture often touches the core, the overlay and the view together.
-- The frontend README's layout lists 4 of 16 folders, so a newcomer has to find the feature-folder pattern on their own.
+- The frontend README's layout lists 4 of 16 folders, so a newcomer has to find the feature-folder pattern on their own. *Update, 2026-11-12:* it now lists every folder and the pattern ([#169](https://github.com/reznik-gev/HSP/pull/169)).
 
 **Verdict:** a list-and-panel screen or a CRUD endpoint is about a day's work with tests. Editor features take noticeably longer.
 
