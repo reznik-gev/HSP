@@ -56,7 +56,7 @@ src/
   seats/              seat assignment and the free seats list
   devices/, catalog/  devices, and the furniture, device and zone-type catalog
   imports/            CSV and Excel imports
-  guide/              the user guide: en/ and he/ pages in Markdown, its renderer, media/ GIFs (docs/0146)
+  guide/              the user guide: en/ and he/ pages in Markdown, its renderer, media/en/ and media/he/ GIFs (docs/0146)
   bench/              the SVG performance bench page (dev only)
   test/               test helpers: renderApp, the stub backend, editor stubs
 e2e/                  Playwright browser tests, the restore drill, the sizing bench, and guide/ to record the guide's GIFs

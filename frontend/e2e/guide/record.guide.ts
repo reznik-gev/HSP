@@ -1,12 +1,17 @@
 /**
- * Records the frames of each guide GIF (docs/0146), against the Northwind demo, with Chrome's
- * screencast: test-results/guide-frames/<name>/, and <name>.ffconcat saying how long each frame
- * shows. to-gif.ts turns them into GIFs with ffmpeg. Run with `pnpm guide:gifs`.
+ * Records the frames of each guide GIF (docs/0146), in English and in Hebrew (docs/0144), against
+ * the Northwind demo, with Chrome's screencast: test-results/guide-frames/<lang>-<name>/, and
+ * <lang>-<name>.ffconcat saying how long each frame shows. to-gif.ts turns them into GIFs with
+ * ffmpeg. Run with `pnpm guide:gifs`.
+ *
+ * Every label comes from the app's own en.json and he.json, so the scenes run in either language.
+ * For each language, the demo user's language is set first, and their saved preferences are put
+ * back afterwards.
  *
  * Playwright's videos show no mouse pointer, so the page gets a drawn one, and the pointer glides
  * to what it clicks, so the viewer can follow.
  */
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -25,9 +30,34 @@ const OUT = "test-results/guide-frames";
 const STATE = "test-results/guide-frames/state.json";
 const API = "/api/v1";
 
-/** Floors and people from the demo's seed (deploy/demo/seed.py). */
+const LANGS = ["en", "he"] as const;
+type Lang = (typeof LANGS)[number];
+
+/** The app's texts in one language: `t(key, vars)` fills {{name}}; `like(key)` is a pattern
+ * where any {{name}} matches anything. */
+function texts(lang: Lang) {
+  const all = JSON.parse(readFileSync(`src/i18n/${lang}.json`, "utf8")) as object;
+  const raw = (key: string) =>
+    key.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown>)[k], all) as string;
+  return {
+    t: (key: string, vars: Record<string, string> = {}) =>
+      raw(key).replace(/{{(\w+)}}/g, (_, v: string) => vars[v] ?? ""),
+    like: (key: string) =>
+      new RegExp(
+        raw(key)
+          .split(/{{\w+}}/)
+          .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join(".*"),
+      ),
+  };
+}
+
+/** Floors, a person and a team from the demo's seed (deploy/demo/seed.py). */
 const FLOOR_3 = "Floor 3";
 const FLOOR_5 = "Floor 5";
+const PERSON = "Amira";
+const TEAM = "Design";
+const NOTE = { en: "First layout of the fifth floor", he: "התוכנית הראשונה של הקומה החמישית" };
 
 /** A drawn pointer that follows the mouse, and shrinks a little while pressed. */
 const POINTER = `
@@ -59,9 +89,13 @@ async function clickAt(page: Page, x: number, y: number) {
   await page.waitForTimeout(350);
 }
 
-async function click(page: Page, target: Locator) {
+async function centre(target: Locator) {
   const box = (await target.boundingBox())!;
-  await clickAt(page, box.x + box.width / 2, box.y + box.height / 2);
+  return [box.x + box.width / 2, box.y + box.height / 2] as const;
+}
+
+async function click(page: Page, target: Locator) {
+  await clickAt(page, ...(await centre(target)));
 }
 
 /** Screen position of a plan point (mm, +y north), read from the plan's viewBox. */
@@ -104,7 +138,7 @@ async function floorId(page: Page, name: string) {
 }
 
 /**
- * Record one GIF's video. `scene` gets the page, a `start` to call once the screen is ready and
+ * Record one GIF's frames. `scene` gets the page, a `start` to call once the screen is ready and
  * a `stop` to call when the GIF should end: what comes before `start` and after `stop` is cut,
  * such as tidying the demo up.
  */
@@ -169,6 +203,22 @@ async function record(
   writeFileSync(join(OUT, `${name}.ffconcat`), list.join("\n") + "\n");
 }
 
+/** The demo user's saved preferences, put back after each language's scenes. */
+let saved: unknown;
+
+/** A page in a context of its own, signed in, for setting preferences. */
+async function withApi<T>(
+  browser: Browser,
+  act: (a: Awaited<ReturnType<typeof api>>) => Promise<T>,
+) {
+  const context = await browser.newContext({ storageState: STATE });
+  try {
+    return await act(await api((await context.newPage()).request));
+  } finally {
+    await context.close();
+  }
+}
+
 test.beforeAll(async ({ browser }) => {
   mkdirSync(OUT, { recursive: true });
   const context = await browser.newContext();
@@ -176,175 +226,195 @@ test.beforeAll(async ({ browser }) => {
   await signIn(page, "dana.levin", "demo");
   await context.storageState({ path: STATE });
   await context.close();
+  saved = await withApi(browser, (a) => a.get("/me/preferences"));
 });
 
-test("find-a-seat", async ({ browser }) => {
-  await record(browser, "find-a-seat", async (page, start) => {
-    await page.goto("/floors");
-    await expect(page.getByRole("link", { name: FLOOR_3 })).toBeVisible();
-    start();
-    await page.waitForTimeout(600);
-    await click(page, page.getByRole("searchbox", { name: "Search seats, people and teams" }));
-    await page.keyboard.type("Amira", { delay: 120 });
-    await page.waitForTimeout(400);
-    await page.keyboard.press("Enter");
-    const show = page.getByRole("link", { name: /Show .* on the floor plan/ }).first();
-    await expect(show).toBeVisible();
-    await page.waitForTimeout(900);
-    await click(page, show);
-    await expect(page.getByText("Amira Haddad").last()).toBeVisible();
-    await page.waitForTimeout(2200);
-  });
-});
+for (const lang of LANGS) {
+  test.describe(lang, () => {
+    const { t, like } = texts(lang);
 
-test("free-seats", async ({ browser }) => {
-  await record(browser, "free-seats", async (page, start) => {
-    await page.goto(`/floors/${await floorId(page, FLOOR_3)}`);
-    const button = page.getByRole("button", { name: /Show free seats/ });
-    await expect(button).toBeVisible();
-    await page.waitForTimeout(800);
-    start();
-    await page.waitForTimeout(700);
-    await click(page, button);
-    await page.waitForTimeout(2500);
-  });
-});
-
-/** The editor on Floor 5, which has no plan in the demo. */
-async function openEditor(page: Page) {
-  await page.goto(`/floors/${await floorId(page, FLOOR_5)}/edit`);
-  await expect(page.getByRole("heading", { name: `Editing ${FLOOR_5}` })).toBeVisible();
-  await page.waitForTimeout(800);
-}
-
-/** Leave the editor, giving up the edit lock, so the next scene can take it. */
-async function exitEditor(page: Page) {
-  await expect(page.getByText(/Saved/).first()).toBeVisible();
-  await page.getByRole("button", { name: "Exit" }).click();
-  await page.waitForURL(/\/floors\/[^/]+$/);
-}
-
-test("draw-walls", async ({ browser }) => {
-  await record(browser, "draw-walls", async (page, start, stop) => {
-    const id = await floorId(page, FLOOR_5);
-    expect(
-      await (await api(page.request)).status(`/floors/${id}/draft`),
-      "Floor 5 already has a draft",
-    ).toBe(404);
-    await openEditor(page);
-    start();
-    await click(page, page.getByRole("button", { name: "Wall", exact: true }));
-    const at = await planPoint(page);
-    for (const [x, y] of [
-      [-5000, -3000],
-      [5000, -3000],
-      [5000, 3000],
-      [-5000, 3000],
-      [-5000, -3000],
-    ] as const) {
-      await clickAt(page, ...at(x, y));
-      await page.waitForTimeout(250);
-    }
-    await page.waitForTimeout(500);
-    // A door in the bottom wall.
-    await click(page, page.getByRole("button", { name: "Door", exact: true }));
-    const door = await planPoint(page);
-    await clickAt(page, ...door(-3500, -3000));
-    await page.waitForTimeout(1800);
-    stop();
-    await page.keyboard.press("Escape");
-    await exitEditor(page);
-  });
-});
-
-test("place-desks", async ({ browser }) => {
-  await record(browser, "place-desks", async (page, start, stop) => {
-    await openEditor(page);
-    start();
-    await click(page, page.getByRole("button", { name: "Place item", exact: true }));
-    await page.waitForTimeout(400);
-    await click(page, page.getByRole("button", { name: /Desk 160 x 80/ }).first());
-    const at = await planPoint(page); // the catalog panel narrowed the plan
-    for (const x of [-2400, -800, 800, 2400]) await clickAt(page, ...at(x, 1000));
-    await page.waitForTimeout(500);
-    await click(page, page.getByRole("button", { name: "Number seats", exact: true }));
-    const n = await planPoint(page);
-    const [x0, y0] = n(-2700, 1000);
-    const [x1, y1] = n(2700, 1000);
-    await glide(page, x0, y0);
-    await page.mouse.down();
-    await glide(page, x1, y1);
-    await page.mouse.up();
-    await page.waitForTimeout(2200);
-    stop();
-    await page.keyboard.press("Escape");
-    await exitEditor(page);
-  });
-});
-
-test("publish", async ({ browser }) => {
-  await record(browser, "publish", async (page, start, stop) => {
-    const id = await floorId(page, FLOOR_5);
-    try {
-      await openEditor(page);
-      start();
-      await click(page, page.getByRole("button", { name: "Publish", exact: true }));
-      const dialog = page.getByRole("alertdialog");
-      await expect(dialog.getByText(/Added:/)).toBeVisible();
-      await page.waitForTimeout(1200);
-      await click(page, dialog.getByLabel(/Note/));
-      await page.keyboard.type("First layout of the fifth floor", { delay: 60 });
-      await page.waitForTimeout(500);
-      await glide(
-        page,
-        ...(await centre(dialog.getByRole("button", { name: "Publish", exact: true }))),
+    test.beforeAll(async ({ browser }) => {
+      await withApi(browser, (a) =>
+        a.send("put", "/me/preferences", { ...(saved as object), language: lang }),
       );
-      await page.waitForTimeout(1500);
-      stop();
-      // Not published: the demo stays as it was.
-      await page.keyboard.press("Escape");
-      await exitEditor(page);
-    } finally {
-      // Throw the drawing away, even when the scene failed partway.
-      const demo = await api(page.request);
-      await demo.send("post", `/floors/${id}/lock`);
-      await demo.send("delete", `/floors/${id}/draft`);
-      await demo.send("delete", `/floors/${id}/lock`);
+    });
+    test.afterAll(async ({ browser }) => {
+      await withApi(browser, (a) => a.send("put", "/me/preferences", saved));
+    });
+
+    /** The editor on Floor 5, which has no plan in the demo. */
+    async function openEditor(page: Page) {
+      await page.goto(`/floors/${await floorId(page, FLOOR_5)}/edit`);
+      await expect(
+        page.getByRole("heading", { name: t("editor.title", { floor: FLOOR_5 }) }),
+      ).toBeVisible();
+      await page.waitForTimeout(800);
     }
-  });
-});
 
-async function centre(target: Locator) {
-  const box = (await target.boundingBox())!;
-  return [box.x + box.width / 2, box.y + box.height / 2] as const;
+    /** Leave the editor, giving up the edit lock, so the next scene can take it. */
+    async function exitEditor(page: Page) {
+      await expect(page.getByText(t("editor.save.saved")).first()).toBeVisible();
+      await page.getByRole("button", { name: t("editor.exit") }).click();
+      await page.waitForURL(/\/floors\/[^/]+$/);
+    }
+
+    const tool = (page: Page, key: string) =>
+      page.getByRole("button", { name: t(`editor.tools.${key}`), exact: true });
+
+    test("find-a-seat", async ({ browser }) => {
+      await record(browser, `${lang}-find-a-seat`, async (page, start) => {
+        await page.goto("/floors");
+        await expect(page.getByRole("link", { name: FLOOR_3 })).toBeVisible();
+        start();
+        await page.waitForTimeout(600);
+        await click(page, page.getByRole("searchbox", { name: t("search.label") }));
+        await page.keyboard.type(PERSON, { delay: 120 });
+        await page.waitForTimeout(400);
+        await page.keyboard.press("Enter");
+        const show = page.getByRole("link", { name: like("search.showOnPlanFor") }).first();
+        await expect(show).toBeVisible();
+        await page.waitForTimeout(900);
+        await click(page, show);
+        await expect(page.getByText(`${PERSON} Haddad`).last()).toBeVisible();
+        await page.waitForTimeout(2200);
+      });
+    });
+
+    test("free-seats", async ({ browser }) => {
+      await record(browser, `${lang}-free-seats`, async (page, start) => {
+        await page.goto(`/floors/${await floorId(page, FLOOR_3)}`);
+        const button = page.getByRole("button", { name: like("plan.showFree") });
+        await expect(button).toBeVisible();
+        await page.waitForTimeout(800);
+        start();
+        await page.waitForTimeout(700);
+        await click(page, button);
+        await page.waitForTimeout(2500);
+      });
+    });
+
+    test("draw-walls", async ({ browser }) => {
+      await record(browser, `${lang}-draw-walls`, async (page, start, stop) => {
+        const id = await floorId(page, FLOOR_5);
+        expect(
+          await (await api(page.request)).status(`/floors/${id}/draft`),
+          "Floor 5 already has a draft",
+        ).toBe(404);
+        await openEditor(page);
+        start();
+        await click(page, tool(page, "wall"));
+        const at = await planPoint(page);
+        for (const [x, y] of [
+          [-5000, -3000],
+          [5000, -3000],
+          [5000, 3000],
+          [-5000, 3000],
+          [-5000, -3000],
+        ] as const) {
+          await clickAt(page, ...at(x, y));
+          await page.waitForTimeout(250);
+        }
+        await page.waitForTimeout(500);
+        // A door in the bottom wall.
+        await click(page, tool(page, "door"));
+        const door = await planPoint(page);
+        await clickAt(page, ...door(-3500, -3000));
+        await page.waitForTimeout(1800);
+        stop();
+        await page.keyboard.press("Escape");
+        await exitEditor(page);
+      });
+    });
+
+    test("place-desks", async ({ browser }) => {
+      await record(browser, `${lang}-place-desks`, async (page, start, stop) => {
+        await openEditor(page);
+        start();
+        await click(page, tool(page, "item"));
+        await page.waitForTimeout(400);
+        await click(page, page.getByRole("button", { name: /Desk 160/ }).first());
+        const at = await planPoint(page); // the catalog panel narrowed the plan
+        for (const x of [-2400, -800, 800, 2400]) await clickAt(page, ...at(x, 1000));
+        await page.waitForTimeout(500);
+        await click(page, tool(page, "number"));
+        const n = await planPoint(page);
+        const [x0, y0] = n(-2700, 1000);
+        const [x1, y1] = n(2700, 1000);
+        await glide(page, x0, y0);
+        await page.mouse.down();
+        await glide(page, x1, y1);
+        await page.mouse.up();
+        await page.waitForTimeout(2200);
+        stop();
+        await page.keyboard.press("Escape");
+        await exitEditor(page);
+      });
+    });
+
+    test("publish", async ({ browser }) => {
+      await record(browser, `${lang}-publish`, async (page, start, stop) => {
+        const id = await floorId(page, FLOOR_5);
+        try {
+          await openEditor(page);
+          start();
+          const publish = t("editor.publish.button");
+          await click(page, page.getByRole("button", { name: publish, exact: true }));
+          const dialog = page.getByRole("alertdialog");
+          await expect(dialog.getByText(t("editor.publish.added"))).toBeVisible();
+          await page.waitForTimeout(1200);
+          await click(page, dialog.getByLabel(t("editor.publish.note")));
+          await page.keyboard.type(NOTE[lang], { delay: 60 });
+          await page.waitForTimeout(500);
+          await glide(page, ...(await centre(dialog.getByRole("button", { name: publish }))));
+          await page.waitForTimeout(1500);
+          stop();
+          // Not published: the demo stays as it was.
+          await page.keyboard.press("Escape");
+          await exitEditor(page);
+        } finally {
+          // Throw the drawing away, even when the scene failed partway.
+          const demo = await api(page.request);
+          await demo.send("post", `/floors/${id}/lock`);
+          await demo.send("delete", `/floors/${id}/draft`);
+          await demo.send("delete", `/floors/${id}/lock`);
+        }
+      });
+    });
+
+    test("assign-seat", async ({ browser }) => {
+      await record(browser, `${lang}-assign-seat`, async (page, start, stop) => {
+        const demo = await api(page.request);
+        const floor = await floorId(page, FLOOR_3);
+        const seat = (
+          await demo.get<{ items: { id: string; label: string }[] }>(
+            `/seats?floor_id=${floor}&status=free`,
+          )
+        ).items[0]!;
+        try {
+          await page.goto(`/floors/${floor}?seat=${seat.id}`);
+          const assign = page.getByRole("button", { name: t("assign.assign"), exact: true });
+          await expect(assign).toBeVisible();
+          await page.waitForTimeout(800);
+          start();
+          await page.waitForTimeout(500);
+          await click(page, assign);
+          // Every person in the demo has a seat, so the seat is reserved for a team.
+          await click(page, page.getByRole("combobox", { name: t("assign.pickLabel") }));
+          await page.keyboard.type(TEAM, { delay: 120 });
+          const option = page.getByRole("option", { name: new RegExp(TEAM) }).first();
+          await expect(option).toBeVisible();
+          await page.waitForTimeout(500);
+          await click(page, option);
+          await expect(
+            page.getByText(t("assign.reserved", { seat: seat.label, name: TEAM })),
+          ).toBeVisible();
+          await page.waitForTimeout(2200);
+          stop();
+        } finally {
+          // Give the seat back, so the demo stays as it was. Unassigning is idempotent.
+          await demo.send("delete", `/seats/${seat.id}/assignment`);
+        }
+      });
+    });
+  });
 }
-
-type Seat = { id: string; label: string };
-
-test("assign-seat", async ({ browser }) => {
-  await record(browser, "assign-seat", async (page, start, stop) => {
-    const demo = await api(page.request);
-    const floor = await floorId(page, FLOOR_3);
-    const seat = (await demo.get<{ items: Seat[] }>(`/seats?floor_id=${floor}&status=free`))
-      .items[0]!;
-    await page.goto(`/floors/${floor}?seat=${seat.id}`);
-    const assign = page.getByRole("button", { name: "Assign", exact: true });
-    await expect(assign).toBeVisible();
-    await page.waitForTimeout(800);
-    start();
-    await page.waitForTimeout(500);
-    await click(page, assign);
-    // Every person in the demo has a seat, so the seat is reserved for a team.
-    await click(page, page.getByRole("combobox", { name: "Person or team" }));
-    await page.keyboard.type("Design", { delay: 120 });
-    const option = page.getByRole("option", { name: /Design/ }).first();
-    await expect(option).toBeVisible();
-    await page.waitForTimeout(500);
-    await click(page, option);
-    await expect(page.getByText(`${seat.label} reserved for Design`)).toBeVisible();
-    await page.waitForTimeout(2200);
-    stop();
-    // Give the seat back, so the demo stays as it was.
-    await demo.send("delete", `/seats/${seat.id}/assignment`);
-  });
-});
