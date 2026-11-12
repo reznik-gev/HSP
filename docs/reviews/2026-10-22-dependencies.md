@@ -12,7 +12,7 @@ Our dependencies are **few, current and free of known vulnerabilities**. The wea
 |---|---|---|
 | 1 | Add the missing Dependabot entries: `backup/` (Python), and the Dockerfiles in `deploy/backup/`, `deploy/keycloak/` and `deploy/web/` | Small |
 | 2 | Decide on vulnerability scanning before 1.0.0, as 0059 asks (for example `pip-audit`, `pnpm audit` and an image scanner such as Trivy, in CI) | Small to medium |
-| 3 | Drop `uuid-utils`: Python 3.14 has `uuid.uuid7()` built in | Small |
+| 3 | Drop `uuid-utils`: Python 3.14 has `uuid.uuid7()` built in. *Done on [#168](https://github.com/reznik-gev/HSP/pull/168).* | Small |
 | 4 | Record the dependency no decision names: openpyxl. (psutil, raised on #102, was removed instead: [0111](../decisions/0111-2026-10-23-cpu-and-memory-from-the-platform.md).) | Small |
 
 ## 1. How many we have
@@ -36,7 +36,7 @@ This is a small set for an app of this size. The frontend's 700 packages are mos
 | cryptography | 1 (`auth/tokens.py`) | Encrypting stored tokens |
 | Authlib, joserfc, httpx2 | 1–2 (`auth/oidc.py`, `readiness.py`) | Sign-in |
 | Shapely | 2 (`plans/`) | Geometry checks |
-| uuid-utils | 2 | UUIDv7 IDs |
+| uuid-utils | 2 | UUIDv7 IDs. Removed on [#168](https://github.com/reznik-gev/HSP/pull/168). |
 | d3-hierarchy | 1 (org chart) | Laying out the tree |
 
 The exceptions are the frameworks, which are used everywhere on purpose: FastAPI, SQLAlchemy and Pydantic in the backend, and React, TanStack Query, Zustand (24 files) and lucide icons (31 files) in the frontend.
