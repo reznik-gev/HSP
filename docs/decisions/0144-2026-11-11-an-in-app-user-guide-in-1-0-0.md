@@ -25,9 +25,10 @@
 2. **For admins and for everyone.** One part covers what everyone does: finding where someone sits, the floor plan, free seats, language and theme. The other covers admins: sites, buildings and floors, drawing in the editor, people and teams, imports, the catalog and devices, assigning seats and publishing. Operators keep `docs/install.md`. *(The owner's choice)*
 3. **As simple and as textual as possible:** short pages of text, a few GIFs where a move is easier shown than told, and links to the screens they describe. *(The owner's choice)*
 4. **In English and Hebrew,** like every text in HSP. The Hebrew pages mirror. *(Required by CLAUDE.md)*
-5. Smaller details, *(Claude's choices, lower confidence)*:
+5. **Each GIF is recorded in both languages.** The Hebrew pages show HSP in Hebrew, right to left, as their readers see it. *(The owner's choice, asked in review: English GIFs on both pages, or none on the Hebrew pages, were the other options.)*
+6. Smaller details, *(Claude's choices, lower confidence)*:
    - **Where it opens:** a **User guide** item in the user menu, beside the release version, opens a Guide page in HSP. Every signed-in user can open it. Admins see both parts; others see only the first.
-   - **How many GIFs:** no more than about six, short and without sound: drawing walls, placing and numbering desks, publishing, assigning a seat, finding someone, and showing free seats. They're recorded once, in English, from the Northwind demo. The Hebrew pages show the same GIFs, since the moves are the same.
+   - **How many GIFs:** no more than about six, short and without sound: drawing walls, placing and numbering desks, publishing, assigning a seat, finding someone, and showing free seats, recorded from the Northwind demo.
    - **The editor's own help stays where it is.** The guide links to the **Keyboard and mouse** sheet for the full list of keys, and doesn't repeat it.
    - **How the pages are written and shown** (for example Markdown files in the frontend, rendered when the app is built) is settled in the PR that builds it. A new dependency for it gets its own line in that PR's records.
 
