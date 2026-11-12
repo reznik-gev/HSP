@@ -40,10 +40,10 @@ src/hsp/
   seats/             assignments, search, occupancy, batch changes and imports (docs/0031, 0085)
   catalog/           zone types, the furniture and device catalog, devices (docs/0083)
   preferences.py     each user's language, theme, units and grid
-  auth/              sign-in sessions for the browser, OIDC, roles and CSRF (docs/0038, 0077)
 
   Shared
   problems.py        RFC 9457 error replies (docs/0037)
+  auth/              sign-in sessions for the browser, OIDC, roles and CSRF (docs/0038, 0077)
   audit.py           audit records, written in the same transaction as the change (docs/0033)
   release.py         what an archive, reassignment or publish freed (docs/0086)
   imports.py         shared CSV and Excel import plumbing (docs/0084)
