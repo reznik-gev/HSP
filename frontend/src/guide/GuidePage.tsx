@@ -20,12 +20,14 @@ const PAGES: Record<Language, { everyone: Block[]; admins: Block[] }> = {
   he: { everyone: parse(everyoneHe, "everyone-"), admins: parse(adminsHe, "admins-") },
 };
 
-/** The GIFs, by file name. Recorded once, in English; both languages show them (docs/0144). */
-const MEDIA: Record<string, string> = Object.fromEntries(
-  Object.entries(
-    import.meta.glob<string>("./media/*.gif", { eager: true, query: "?url", import: "default" }),
-  ).map(([path, url]) => [path.slice("./media/".length), url]),
-);
+/** The GIFs, by language and file name: each recorded in English and in Hebrew (docs/0144). */
+const MEDIA: Record<Language, Record<string, string>> = { en: {}, he: {} };
+for (const [path, url] of Object.entries(
+  import.meta.glob<string>("./media/*/*.gif", { eager: true, query: "?url", import: "default" }),
+)) {
+  const [, lang, file] = path.split("/").slice(1);
+  if (lang === "en" || lang === "he") MEDIA[lang][file!] = url;
+}
 
 const PROSE = [
   "max-w-prose leading-relaxed",
@@ -42,7 +44,8 @@ const PROSE = [
 export function GuidePage() {
   const { t, i18n } = useTranslation();
   const isAdmin = useIsAdmin();
-  const pages = PAGES[i18n.resolvedLanguage === "he" ? "he" : "en"];
+  const lang: Language = i18n.resolvedLanguage === "he" ? "he" : "en";
+  const pages = PAGES[lang];
   const parts = [
     { id: "everyone", title: t("guide.everyone"), blocks: pages.everyone },
     ...(isAdmin ? [{ id: "admins", title: t("guide.admins"), blocks: pages.admins }] : []),
@@ -79,7 +82,7 @@ export function GuidePage() {
           <h2 id={part.id} className="!mt-12 border-b pb-2 !text-xl">
             {part.title}
           </h2>
-          <GuideMarkdown blocks={part.blocks} media={MEDIA} />
+          <GuideMarkdown blocks={part.blocks} media={MEDIA[lang]} />
         </section>
       ))}
     </Page>
