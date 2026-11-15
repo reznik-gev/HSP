@@ -8,7 +8,7 @@
  * For each language, the demo user's language is set first, and their saved preferences are put
  * back afterwards.
  *
- * Playwright's videos show no mouse pointer, so the page gets a drawn one, and the pointer glides
+ * Chrome's screencast shows no mouse pointer, so the page gets a drawn one, and the pointer glides
  * to what it clicks, so the viewer can follow.
  */
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -55,9 +55,11 @@ function texts(lang: Lang) {
 /** Floors, a person and a team from the demo's seed (deploy/demo/seed.py). */
 const FLOOR_3 = "Floor 3";
 const FLOOR_5 = "Floor 5";
-const PERSON = "Amira";
+const PERSON = { first: "Amira", full: "Amira Haddad" };
 const TEAM = "Design";
 const NOTE = { en: "First layout of the fifth floor", he: "התוכנית הראשונה של הקומה החמישית" };
+/** A desk from the built-in catalog (backend/migrations, seed_default_tenant_and_builtins). */
+const DESK = /Desk 160/;
 
 /** A drawn pointer that follows the mouse, and shrinks a little while pressed. */
 const POINTER = `
@@ -268,14 +270,14 @@ for (const lang of LANGS) {
         start();
         await page.waitForTimeout(600);
         await click(page, page.getByRole("searchbox", { name: t("search.label") }));
-        await page.keyboard.type(PERSON, { delay: 120 });
+        await page.keyboard.type(PERSON.first, { delay: 120 });
         await page.waitForTimeout(400);
         await page.keyboard.press("Enter");
         const show = page.getByRole("link", { name: like("search.showOnPlanFor") }).first();
         await expect(show).toBeVisible();
         await page.waitForTimeout(900);
         await click(page, show);
-        await expect(page.getByText(`${PERSON} Haddad`).last()).toBeVisible();
+        await expect(page.getByText(PERSON.full).last()).toBeVisible();
         await page.waitForTimeout(2200);
       });
     });
@@ -332,7 +334,7 @@ for (const lang of LANGS) {
         start();
         await click(page, tool(page, "item"));
         await page.waitForTimeout(400);
-        await click(page, page.getByRole("button", { name: /Desk 160/ }).first());
+        await click(page, page.getByRole("button", { name: DESK }).first());
         const at = await planPoint(page); // the catalog panel narrowed the plan
         for (const x of [-2400, -800, 800, 2400]) await clickAt(page, ...at(x, 1000));
         await page.waitForTimeout(500);
