@@ -6,20 +6,20 @@ import { describe, expect, it } from "vitest";
 
 import { type Block, parse, slug } from "./markdown";
 
+/** A page with every kind of block the guide uses. */
+const EVERY_BLOCK = [
+  "## Find a seat",
+  "Type a name\nand press `Enter`.",
+  "> A tip.",
+  "- one\n- two\n  goes on",
+  "1. first\n2. second",
+  "![Finding a seat](find.gif)",
+  "### Smaller",
+].join("\n\n");
+
 describe("parse", () => {
   it("reads headings, paragraphs, tips, lists and GIFs", () => {
-    const blocks = parse(
-      [
-        "## Find a seat",
-        "Type a name\nand press `Enter`.",
-        "> A tip.",
-        "- one\n- two\n  goes on",
-        "1. first\n2. second",
-        "![Finding a seat](find.gif)",
-        "### Smaller",
-      ].join("\n\n"),
-      "everyone-",
-    );
+    const blocks = parse(EVERY_BLOCK, "everyone-");
     expect(blocks).toEqual<Block[]>([
       { kind: "heading", level: 2, text: "Find a seat", id: "everyone-find-a-seat" },
       { kind: "paragraph", text: "Type a name and press `Enter`." },
