@@ -7,8 +7,9 @@
  *   - item, 1. item                   lists, one level
  *   > text                            a tip
  *   ![What it shows](name.gif)        a GIF, alone on its line, from guide/media/<lang>/
- *   **bold**, `Ctrl+Z`, [text](/floors), [text](#heading-id)
- *                                     inline: bold, a key, a link inside HSP
+ *   **bold**, `Ctrl+Z`, [text](/floors), [text](#admins-3-publish)
+ *                                     inline: bold, a key, a link inside HSP. A heading's id
+ *                                     starts with its page's prefix: everyone- or admins-.
  *
  * Blocks are separated by blank lines. Lines of one paragraph or list item are joined.
  */
