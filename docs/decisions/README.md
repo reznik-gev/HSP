@@ -157,4 +157,5 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0143 | 2026-11-11 | [The owner merges PRs opened from their own account, on GitHub](0143-2026-11-11-the-owner-merges-their-own-prs.md) | Accepted |
 | 0144 | 2026-11-11 | [An in-app user guide ships in 1.0.0](0144-2026-11-11-an-in-app-user-guide-in-1-0-0.md) | Accepted (how it's written and shown in 0146) |
 | 0145 | 2026-11-11 | [Office moves: a move planner in 1.3, then future layouts, and no detection](0145-2026-11-11-office-moves.md) | Accepted |
-| 0146 | 2026-11-11 | [How the user guide is written and shown](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) | Accepted |
+| 0146 | 2026-11-11 | [How the user guide is written and shown](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) | Accepted (the GIFs are recorded again before each release, by 0147) |
+| 0147 | 2026-11-17 | [The guide's GIFs are recorded again before each release](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) | Accepted |
