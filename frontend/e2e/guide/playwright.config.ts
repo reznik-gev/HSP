@@ -3,8 +3,9 @@
  * Kept apart from `pnpm e2e`: *.guide.ts files only run with this config. `pnpm guide:gifs` runs
  * it, then turns each recording's frames into a GIF in src/guide/media/<lang>/.
  *
- * The demo must be up and freshly seeded. The recording leaves it as it found it: the drawing on
- * Floor 5 is discarded, nothing is published, and the seat it assigns is unassigned again.
+ * The demo must be up and freshly seeded. The recording puts back what it changes: the drawing on
+ * Floor 5 is discarded (a discarded draft stays in its history), nothing is published, the seat it
+ * reserves is given back, and the demo user's preferences are restored.
  */
 import { defineConfig } from "@playwright/test";
 
