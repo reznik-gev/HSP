@@ -6,7 +6,7 @@
  *                                     They render as h3 and h4: the page's part titles are h2.
  *   - item, 1. item                   lists, one level
  *   > text                            a tip
- *   ![What it shows](name.gif)        a GIF, alone on its line, from guide/media/
+ *   ![What it shows](name.gif)        a GIF, alone on its line, from guide/media/<lang>/
  *   **bold**, `Ctrl+Z`, [text](/floors), [text](#heading-id)
  *                                     inline: bold, a key, a link inside HSP
  *
