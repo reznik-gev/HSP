@@ -14,21 +14,15 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import {
-  type APIRequestContext,
-  type Browser,
-  expect,
-  type Locator,
-  type Page,
-  test,
-} from "@playwright/test";
+import { type Browser, expect, type Locator, type Page, test } from "@playwright/test";
 
+import { type Api, apiAs } from "../api";
+import { planPoint } from "../plan";
 import { signIn } from "../session";
 
 const SIZE = { width: 1000, height: 620 };
 const OUT = "test-results/guide-frames";
 const STATE = "test-results/guide-frames/state.json";
-const API = "/api/v1";
 
 const LANGS = ["en", "he"] as const;
 type Lang = (typeof LANGS)[number];
@@ -100,42 +94,10 @@ async function click(page: Page, target: Locator) {
   await clickAt(page, ...(await centre(target)));
 }
 
-/** Screen position of a plan point (mm, +y north), read from the plan's viewBox. */
-async function planPoint(page: Page) {
-  const svg = page.locator("svg[data-lod]");
-  const box = (await svg.boundingBox())!;
-  const [vx, vy, vw, vh] = (await svg.getAttribute("viewBox"))!.split(" ").map(Number) as [
-    number,
-    number,
-    number,
-    number,
-  ];
-  return (x: number, y: number) =>
-    [box.x + ((x - vx) / vw) * box.width, box.y + ((-y - vy) / vh) * box.height] as const;
-}
-
-/** The admin's API, with the CSRF token writes need. */
-async function api(request: APIRequestContext) {
-  const me = (await (await request.get(`${API}/auth/me`)).json()) as { csrf_token: string };
-  const headers = { "X-CSRF-Token": me.csrf_token };
-  return {
-    get: async <T>(path: string) => {
-      const r = await request.get(API + path);
-      expect(r.ok(), `GET ${path}`).toBeTruthy();
-      return (await r.json()) as T;
-    },
-    send: async (method: "post" | "put" | "delete", path: string, data?: unknown) => {
-      const r = await request[method](API + path, { data, headers });
-      expect(r.ok(), `${method} ${path}: ${await r.text()}`).toBeTruthy();
-    },
-    status: async (path: string) => (await request.get(API + path)).status(),
-  };
-}
-
 type Floor = { id: string; name: string };
 
 async function floorId(page: Page, name: string) {
-  const floors = await (await api(page.request)).get<{ items: Floor[] }>("/floors?limit=100");
+  const floors = await (await apiAs(page)).get<{ items: Floor[] }>("/floors?limit=100");
   return floors.items.find((f) => f.name === name)!.id;
 }
 
@@ -209,13 +171,10 @@ async function record(
 let saved: unknown;
 
 /** A page in a context of its own, signed in, for setting preferences. */
-async function withApi<T>(
-  browser: Browser,
-  act: (a: Awaited<ReturnType<typeof api>>) => Promise<T>,
-) {
+async function withApi<T>(browser: Browser, act: (a: Api) => Promise<T>) {
   const context = await browser.newContext({ storageState: STATE });
   try {
-    return await act(await api((await context.newPage()).request));
+    return await act(await apiAs(await context.newPage()));
   } finally {
     await context.close();
   }
@@ -237,11 +196,11 @@ for (const lang of LANGS) {
 
     test.beforeAll(async ({ browser }) => {
       await withApi(browser, (a) =>
-        a.send("put", "/me/preferences", { ...(saved as object), language: lang }),
+        a.put("/me/preferences", { ...(saved as object), language: lang }),
       );
     });
     test.afterAll(async ({ browser }) => {
-      await withApi(browser, (a) => a.send("put", "/me/preferences", saved));
+      await withApi(browser, (a) => a.put("/me/preferences", saved));
     });
 
     /** The editor on Floor 5, which has no plan in the demo. */
@@ -299,7 +258,7 @@ for (const lang of LANGS) {
       await record(browser, `${lang}-draw-walls`, async (page, start, stop) => {
         const id = await floorId(page, FLOOR_5);
         expect(
-          await (await api(page.request)).status(`/floors/${id}/draft`),
+          await (await apiAs(page)).status(`/floors/${id}/draft`),
           "Floor 5 already has a draft",
         ).toBe(404);
         await openEditor(page);
@@ -375,17 +334,17 @@ for (const lang of LANGS) {
           await exitEditor(page);
         } finally {
           // Throw the drawing away, even when the scene failed partway.
-          const demo = await api(page.request);
-          await demo.send("post", `/floors/${id}/lock`);
-          await demo.send("delete", `/floors/${id}/draft`);
-          await demo.send("delete", `/floors/${id}/lock`);
+          const demo = await apiAs(page);
+          await demo.post(`/floors/${id}/lock`);
+          await demo.delete(`/floors/${id}/draft`);
+          await demo.delete(`/floors/${id}/lock`);
         }
       });
     });
 
     test("assign-seat", async ({ browser }) => {
       await record(browser, `${lang}-assign-seat`, async (page, start, stop) => {
-        const demo = await api(page.request);
+        const demo = await apiAs(page);
         const floor = await floorId(page, FLOOR_3);
         const seat = (
           await demo.get<{ items: { id: string; label: string }[] }>(
@@ -414,7 +373,7 @@ for (const lang of LANGS) {
           stop();
         } finally {
           // Give the seat back, so the demo stays as it was. Unassigning is idempotent.
-          await demo.send("delete", `/seats/${seat.id}/assignment`);
+          await demo.delete(`/seats/${seat.id}/assignment`);
         }
       });
     });

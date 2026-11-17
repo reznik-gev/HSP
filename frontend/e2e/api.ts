@@ -7,12 +7,19 @@ export interface Created {
   id: string;
 }
 
-/** JSON API calls with the signed-in session and its CSRF token (docs/0038). */
+/** JSON API calls with the signed-in session and its CSRF token (docs/0038). Every call but
+ * `status` fails the test when the API refuses it. */
 export async function apiAs(page: Page) {
   const me = (await (await page.request.get(`${API}/auth/me`)).json()) as { csrf_token: string };
   const headers = { "X-CSRF-Token": me.csrf_token };
   return {
-    get: async <T>(path: string) => (await (await page.request.get(API + path)).json()) as T,
+    get: async <T>(path: string) => {
+      const r = await page.request.get(API + path);
+      expect(r.ok(), `GET ${path}: ${await r.text()}`).toBeTruthy();
+      return (await r.json()) as T;
+    },
+    /** The HTTP status of a GET, for a test that expects a refusal. */
+    status: async (path: string) => (await page.request.get(API + path)).status(),
     post: async <T = Created>(path: string, data?: unknown) => {
       const r = await page.request.post(API + path, { data, headers });
       expect(r.ok(), `POST ${path}: ${await r.text()}`).toBeTruthy();
@@ -22,7 +29,10 @@ export async function apiAs(page: Page) {
       const r = await page.request.put(API + path, { data, headers });
       expect(r.ok(), `PUT ${path}: ${await r.text()}`).toBeTruthy();
     },
-    delete: async (path: string) => page.request.delete(API + path, { headers }),
+    delete: async (path: string) => {
+      const r = await page.request.delete(API + path, { headers });
+      expect(r.ok(), `DELETE ${path}: ${await r.text()}`).toBeTruthy();
+    },
   };
 }
 

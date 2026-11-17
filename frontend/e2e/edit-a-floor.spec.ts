@@ -3,26 +3,13 @@
  * draw a room, place a desk, label it and publish; the floor page then shows the seat. The
  * test creates its own site, building and floor through the API and archives them afterwards.
  */
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
+import { planPoint } from "./plan";
 import { signIn } from "./session";
 
 const tag = Math.random().toString(36).slice(2, 7);
 const API = "/api/v1";
-
-/** Screen position of a plan point (mm, +y north), read from the plan's viewBox. */
-async function planPoint(page: Page) {
-  const svg = page.locator("svg[data-lod]");
-  const box = (await svg.boundingBox())!;
-  const [vx, vy, vw, vh] = (await svg.getAttribute("viewBox"))!.split(" ").map(Number) as [
-    number,
-    number,
-    number,
-    number,
-  ];
-  return (x: number, y: number) =>
-    [box.x + ((x - vx) / vw) * box.width, box.y + ((-y - vy) / vh) * box.height] as const;
-}
 
 test("draw a room, place and label a desk, publish", async ({ page }) => {
   await signIn(page, "admin");
