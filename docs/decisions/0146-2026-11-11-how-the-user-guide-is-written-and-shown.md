@@ -28,3 +28,6 @@
 ## Consequences
 - A change to something the guide describes updates the guide in both languages in the same PR, and makes the GIFs again if one no longer matches. [How a change is made](../guides/making-a-change.md) and the [review checklist](../guides/testing.md#review-checklist) say so.
 - Recording leaves a discarded draft in Floor 5's version history on the demo each time. The next reseed clears it.
+
+## Updates
+- *Update, 2026-11-17:* [0147](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) moved recording the GIFs from the PR that changes a screen to the release PR. A PR now updates only the guide's text, and the [releasing guide](../guides/releasing.md) holds the GIF step.
