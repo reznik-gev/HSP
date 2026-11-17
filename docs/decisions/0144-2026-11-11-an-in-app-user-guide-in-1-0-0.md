@@ -41,3 +41,6 @@
 - 1.0.0 also waits for the guide.
 - A change to something the guide describes updates the guide, in both languages, in the same PR. The review checklist in [testing.md](../guides/testing.md) and the PR template don't say this yet; the PR that builds the guide adds it.
 - The guided tour on first use stays after 1.0.0 ([0130](0130-2026-11-08-learning-the-editor.md)). `docs/tutorials/` isn't needed for now.
+
+## Updates
+- *Update, 2026-11-17:* HSP has no PR template. The rule went into the [review checklist](../guides/testing.md#review-checklist) and [How a change is made](../guides/making-a-change.md) instead. [0147](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) later left the GIFs to the release PR.
