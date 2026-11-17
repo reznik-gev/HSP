@@ -31,8 +31,8 @@ for (const [path, url] of Object.entries(
 
 const PROSE = [
   "max-w-prose leading-relaxed",
-  "[&_h2]:mt-10 [&_h2]:scroll-mt-4 [&_h2]:text-lg [&_h2]:font-semibold",
-  "[&_h3]:mt-6 [&_h3]:font-semibold",
+  "[&_h3]:mt-10 [&_h3]:scroll-mt-4 [&_h3]:text-lg [&_h3]:font-semibold",
+  "[&_h4]:mt-6 [&_h4]:font-semibold",
   "[&_p]:mt-3 [&_ul]:mt-3 [&_ol]:mt-3 [&_ul]:list-disc [&_ol]:list-decimal [&_li]:ms-5 [&_li]:mt-1",
   "[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2",
   "[&_kbd]:rounded [&_kbd]:border [&_kbd]:bg-muted [&_kbd]:px-1.5 [&_kbd]:py-0.5 [&_kbd]:text-xs",
@@ -79,7 +79,7 @@ export function GuidePage() {
       </nav>
       {parts.map((part) => (
         <section key={part.id} aria-labelledby={part.id} className={PROSE}>
-          <h2 id={part.id} className="!mt-12 border-b pb-2 !text-xl">
+          <h2 id={part.id} className="mt-12 scroll-mt-4 border-b pb-2 text-xl font-semibold">
             {part.title}
           </h2>
           <GuideMarkdown blocks={part.blocks} media={MEDIA[lang]} />

@@ -27,8 +27,11 @@ describe("the user guide", () => {
     await renderApp("/guide");
     expect(await screen.findByRole("heading", { level: 2, name: "Using HSP" })).toBeVisible();
     expect(screen.getByRole("heading", { level: 2, name: "For admins" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Find where someone sits" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "3. Publish" })).toBeVisible();
+    // The page's sections sit inside the parts, one level down.
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Find where someone sits" }),
+    ).toBeVisible();
+    expect(screen.getByRole("heading", { level: 3, name: "3. Publish" })).toBeVisible();
 
     const contents = screen.getByRole("navigation", { name: "Contents" });
     expect(contents).toContainElement(screen.getByRole("link", { name: "3. Publish" }));
