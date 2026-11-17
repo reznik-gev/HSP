@@ -17,7 +17,7 @@ Pick a tool on the left, or press its key:
 - **Door** `D` and **Window** `N`: click on a wall.
 - **Column** `C`, and **Zone** `Z` for an area such as an open space or a meeting room.
 - **Place item** `P`: desks, chairs, cabinets and devices from the catalog.
-- **Number seats** `L`: click seats in order, or drag across them, to label them.
+- **Number seats** `L`: click seats in order, or drag across them, to number them.
 
 ![Drawing walls](draw-walls.gif)
 
