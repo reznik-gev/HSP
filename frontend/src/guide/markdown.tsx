@@ -2,7 +2,8 @@
  * The user guide's own small Markdown (docs/0146): just what the guide uses, turned into React
  * elements. No HTML is ever passed through, so a page can't inject anything.
  *
- *   ## Heading, ### Smaller heading   headings; `##` ones get an id and go in the contents
+ *   ## Heading, ### Smaller heading   headings; `##` ones get an id and go in the contents.
+ *                                     They render as h3 and h4: the page's part titles are h2.
  *   - item, 1. item                   lists, one level
  *   > text                            a tip
  *   ![What it shows](name.gif)        a GIF, alone on its line, from guide/media/
@@ -122,13 +123,13 @@ export function GuideMarkdown({
         switch (b.kind) {
           case "heading":
             return b.level === 2 ? (
-              <h2 key={i} id={b.id}>
-                {b.text}
-              </h2>
-            ) : (
               <h3 key={i} id={b.id}>
                 {b.text}
               </h3>
+            ) : (
+              <h4 key={i} id={b.id}>
+                {b.text}
+              </h4>
             );
           case "paragraph":
             return <p key={i}>{inline(b.text)}</p>;
