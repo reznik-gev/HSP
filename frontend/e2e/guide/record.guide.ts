@@ -336,8 +336,11 @@ for (const lang of LANGS) {
           // Throw the drawing away, even when the scene failed partway.
           const demo = await apiAs(page);
           await demo.post(`/floors/${id}/lock`);
-          await demo.delete(`/floors/${id}/draft`);
-          await demo.delete(`/floors/${id}/lock`);
+          try {
+            await demo.delete(`/floors/${id}/draft`);
+          } finally {
+            await demo.delete(`/floors/${id}/lock`);
+          }
         }
       });
     });
