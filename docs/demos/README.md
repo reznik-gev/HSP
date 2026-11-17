@@ -9,3 +9,4 @@ Walkthroughs for showing HSP to prospective clients: how to set up a demo, and a
 ## Feedback from demos
 - [2026-10-21, first client demo](feedback-2026-10-21.md): wall snapping, moving items by 1 cm, AD sync, finding free seats, dark mode, and network ports and power outlets. Found later, in the owner's QA: separating three walls at one corner is hard to find.
 - [2026-10-25, a friend's demo](feedback-2026-10-25.md): office moves, starting from existing building plans, Material UI, and the frontend file layout.
+- [2026-11-15, second client demo](feedback-2026-11-15.md): keeping seating data up to date, importing AutoCAD, Visio and images, big moves, fixing org data after an import, and searching for a person without a seat.
