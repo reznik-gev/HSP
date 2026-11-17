@@ -2,6 +2,7 @@
 
 - **Date:** 2026-11-11
 - **Status:** Accepted
+- **Refined by:** [0147](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) (the GIFs are recorded again before each release, not in each PR)
 - **Refines:** [0144](0144-2026-11-11-an-in-app-user-guide-in-1-0-0.md) (left how the pages are written and shown to the PR that builds the guide)
 
 ## Context
