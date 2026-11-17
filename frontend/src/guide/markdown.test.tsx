@@ -43,7 +43,13 @@ const PAGES = readdirSync(join(DIR, "en")).filter((f) => f.endsWith(".md"));
 const read = (lang: string, page: string) => parse(readFileSync(join(DIR, lang, page), "utf8"));
 const shape = (blocks: Block[]) =>
   blocks.map((b) =>
-    b.kind === "image" ? `image ${b.src}` : b.kind === "list" ? `list ${b.items.length}` : b.kind,
+    b.kind === "image"
+      ? `image ${b.src}`
+      : b.kind === "list"
+        ? `list ${b.items.length}`
+        : b.kind === "heading"
+          ? `heading ${b.level}`
+          : b.kind,
   );
 
 describe("the guide", () => {
