@@ -1,5 +1,5 @@
 # Fast local checks before each commit (docs/0062). CI runs the full set and is the gate.
-#   uv tool install pre-commit && pre-commit install
+#   uv tool install pre-commit, and git config core.hooksPath .githooks (docs/0148)
 repos:
   - repo: local
     hooks:

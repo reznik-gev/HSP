@@ -73,15 +73,15 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0059 | 2026-10-08 | [Supply chain: automated dependency updates](0059-2026-10-08-supply-chain-security.md) | Accepted (signing and SBOM planned for 1.3–1.4 by 0104; vulnerability scanning in 0128) |
 | 0060 | 2026-10-08 | [Reverse proxy & TLS: Nginx](0060-2026-10-08-reverse-proxy.md)            | Accepted (refined by 0098) |
 | 0061 | 2026-10-08 | [Tests: mostly mocked DB + targeted DB integration](0061-2026-10-08-test-strategy.md) | Accepted (in-memory tests for every area after 1.2, by 0110) |
-| 0062 | 2026-10-08 | [Tooling: Ruff + mypy, ESLint + Prettier](0062-2026-10-08-code-quality-tooling.md) | Accepted |
+| 0062 | 2026-10-08 | [Tooling: Ruff + mypy, ESLint + Prettier](0062-2026-10-08-code-quality-tooling.md) | Accepted (refined by 0148) |
 | 0063 | 2026-10-08 | [Release versioning: SemVer](0063-2026-10-08-release-versioning.md)       | Accepted |
 | 0064 | 2026-10-08 | [Branching: trunk-based with PRs](0064-2026-10-08-branching-workflow.md)  | Accepted (merge method superseded by 0069; supported versions in 0104) |
 | 0065 | 2026-10-08 | [Python 3.13 & dev tooling (uv, Node LTS, pnpm)](0065-2026-10-08-python-version-and-dev-tooling.md) | Accepted (Python version superseded by 0091) |
 | 0066 | 2026-10-08 | [Frontend state & UI: Zustand + shadcn/ui](0066-2026-10-08-frontend-state-and-ui-components.md) | Accepted (lower confidence) |
 | 0067 | 2026-10-08 | [Frontend: pnpm + Vite + TanStack Router](0067-2026-10-08-frontend-package-manager-and-router.md) | Accepted |
 | 0068 | 2026-10-08 | [Repository visibility: public](0068-2026-10-08-public-repository.md)       | Accepted |
-| 0069 | 2026-10-08 | [Merge method: rebase only, linear history](0069-2026-10-08-rebase-merges.md) | Accepted (refined by 0141) |
-| 0070 | 2026-10-08 | [CI structure: single workflow with gate job](0070-2026-10-08-ci-gate-job.md) | Accepted (refined by 0141) |
+| 0069 | 2026-10-08 | [Merge method: rebase only, linear history](0069-2026-10-08-rebase-merges.md) | Accepted (refined by 0141 and 0148) |
+| 0070 | 2026-10-08 | [CI structure: single workflow with gate job](0070-2026-10-08-ci-gate-job.md) | Accepted (refined by 0141 and 0148) |
 | 0071 | 2026-10-08 | [License: proprietary (source-visible); no external contributions](0071-2026-10-08-license-and-contributions.md) | Accepted |
 | 0072 | 2026-10-08 | [Rename the product from HSM to HSP (Human-Space Program)](0072-2026-10-08-rename-hsm-to-hsp.md) | Accepted (renames in place refined by 0126) |
 | 0073 | 2026-10-08 | [SVG performance test setup](0073-2026-10-08-svg-performance-test-setup.md) | Accepted |
@@ -159,3 +159,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0145 | 2026-11-11 | [Office moves: a move planner in 1.3, then future layouts, and no detection](0145-2026-11-11-office-moves.md) | Accepted |
 | 0146 | 2026-11-11 | [How the user guide is written and shown](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) | Accepted (the GIFs are recorded again before each release, by 0147) |
 | 0147 | 2026-11-17 | [The guide's GIFs are recorded again before each release](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) | Accepted |
+| 0148 | 2026-11-18 | [Every commit message has a body, checked by a git hook and by CI](0148-2026-11-18-every-commit-message-has-a-body.md) | Accepted |

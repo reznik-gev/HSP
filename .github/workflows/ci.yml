@@ -41,6 +41,36 @@ jobs:
             exit 1
           fi
 
+  commit-messages:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Every commit has a summary line and a body
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          failed=0
+          for sha in $(git rev-list --no-merges --reverse "$BASE..$HEAD_SHA"); do
+            git log -1 --format=%B "$sha" > "$RUNNER_TEMP/msg"
+            subject=$(head -n 1 "$RUNNER_TEMP/msg")
+            case $subject in
+              fixup!* | squash!* | amend!*)
+                echo "::error::$(git log -1 --format='%h %s' "$sha"): fold this commit into the one it fixes before the PR merges."
+                failed=1
+                continue ;;
+            esac
+            if ! sh .githooks/commit-msg "$RUNNER_TEMP/msg"; then
+              echo "::error::$(git log -1 --format='%h %s' "$sha"): the message needs a summary line of at most 100 characters and a body that says why (docs/0148). Rewording it needs a force-push, so ask the owner first."
+              failed=1
+            fi
+          done
+          exit $failed
+
   changes:
     runs-on: ubuntu-latest
     permissions:
@@ -74,6 +104,7 @@ jobs:
             scripts:
               - "deploy/**/*.sh"
               - "deploy/bin/**"
+              - ".githooks/**"
               - ".github/workflows/ci.yml"
             images:
               - "backend/**"
@@ -190,7 +221,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: shellcheck
-        run: shellcheck deploy/*.sh deploy/bin/hsp
+        run: shellcheck deploy/*.sh deploy/bin/hsp .githooks/*
 
   frontend:
     needs: changes
@@ -284,7 +315,7 @@ jobs:
 
   ci-ok:
     if: always()
-    needs: [changes, linear-history, backend, backup, scripts, frontend, images, packages]
+    needs: [changes, linear-history, commit-messages, backend, backup, scripts, frontend, images, packages]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped

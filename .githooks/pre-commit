@@ -1,0 +1,7 @@
+#!/bin/sh
+# With core.hooksPath set to .githooks, `pre-commit install` refuses to run,
+# so this hook stands in for it: it runs the fast checks in
+# .pre-commit-config.yaml (docs/0062) when the pre-commit tool is installed,
+# and does nothing when it isn't.
+command -v pre-commit >/dev/null 2>&1 || exit 0
+exec pre-commit run --hook-stage pre-commit
