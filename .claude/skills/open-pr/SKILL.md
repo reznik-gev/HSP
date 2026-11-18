@@ -10,6 +10,18 @@ Don't ask the owner before opening it. Do these steps in order, and say which on
 ## 1. Is it ready to go up?
 - Every decision it makes is in a record ([`record-decision`](../record-decision/SKILL.md)), and the owner has answered every question that's theirs.
 - The change meets its definition of done: the owner's, or the one you stated.
+- **Every commit has a proper message** ([the git guide](../../../docs/guides/git.md#commit-messages), [0148](../../../docs/decisions/0148-2026-11-18-every-commit-message-has-a-body.md)): a summary line of at most 100 characters, a blank line, a body that says why with the decision records it follows, then the `Co-Authored-By:` lines. For example:
+  ```text
+  A seat's label keeps its Hebrew letters when it's renamed
+
+  Renaming a seat dropped Hebrew letters, because the label was checked
+  against an ASCII-only pattern. Labels may be in either language, so the
+  check now accepts any letter.
+
+  Co-Authored-By: <owner's name> <owner's email>
+  Co-Authored-By: Claude <noreply@anthropic.com>
+  ```
+  Write each message to a file and commit with `git commit -F <file>`: a multi-line `-m` gets mangled in PowerShell. Check `git config core.hooksPath` says `.githooks` (if not, set it), so the hook rejects a bad message before the commit is made. Never commit with `--no-verify`. Check the branch before pushing: `git log --format='%h %s%n%b' origin/main..HEAD`. A commit not pushed yet that lacks a body can still be reworded; once pushed, rewording needs the owner's yes.
 
 ## 2. Run the checks
 - Run the checks for each side the branch changes (CLAUDE.md). DB tests need the dev stack running and `HSP_TEST_DATABASE_URL` set ([backend/README.md](../../../backend/README.md)).

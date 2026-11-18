@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-08
 - **Status:** Accepted
+- **Refined by:** [0148](0148-2026-11-18-every-commit-message-has-a-body.md) (the `pre-commit` checks run from `.githooks`)
 
 ## Options considered
 - **Ruff + mypy / ESLint + Prettier** ✅

@@ -1,12 +1,33 @@
 # Working with Git and pull requests
 
-How changes get from a branch to `main`: branches, commits, reviews and merging. Stacks of PRs have their own guide, [Working with stacked pull requests](stacked-prs.md). The whole path of a change, from the owner's request to the cleanup after merging, is in [How a change is made](making-a-change.md). The decisions behind this are [0064](../decisions/0064-2026-10-08-branching-workflow.md) (trunk-based branches), [0069](../decisions/0069-2026-10-08-rebase-merges.md) (rebase-only merges), [0070](../decisions/0070-2026-10-08-ci-gate-job.md) (the `ci-ok` gate), [0093](../decisions/0093-2026-10-16-github-stacked-prs.md) (GitHub stacks), [0134](../decisions/0134-2026-11-09-from-request-to-main.md) (who asks for re-reviews, and merging) and [0141](../decisions/0141-2026-11-11-no-merge-commits-in-a-pr.md) (no merge commits in a PR).
+How changes get from a branch to `main`: branches, commits, reviews and merging. Stacks of PRs have their own guide, [Working with stacked pull requests](stacked-prs.md). The whole path of a change, from the owner's request to the cleanup after merging, is in [How a change is made](making-a-change.md). The decisions behind this are [0064](../decisions/0064-2026-10-08-branching-workflow.md) (trunk-based branches), [0069](../decisions/0069-2026-10-08-rebase-merges.md) (rebase-only merges), [0070](../decisions/0070-2026-10-08-ci-gate-job.md) (the `ci-ok` gate), [0093](../decisions/0093-2026-10-16-github-stacked-prs.md) (GitHub stacks), [0134](../decisions/0134-2026-11-09-from-request-to-main.md) (who asks for re-reviews, and merging), [0141](../decisions/0141-2026-11-11-no-merge-commits-in-a-pr.md) (no merge commits in a PR) and [0148](../decisions/0148-2026-11-18-every-commit-message-has-a-body.md) (every commit message has a body).
 
 ## Branches and commits
 - Every change is a short-lived branch and a pull request into `main` (or into the PR below it, in a stack). Name branches by area and topic: `editor/height-cues`, `admin/devices`, `docs/testing-guide`.
 - Merges are **rebase-only**, so every commit lands on `main` as it is. Make each one a meaningful step that passes the checks on its own.
-- Commit messages: a short summary line that says what changes for someone using HSP, then a body explaining why, with the decision records it follows.
 - **Who wrote it.** A Claude Code session set up for the owner's GitHub App commits as `reznik-gev-claude[bot]` ([0139](../decisions/0139-2026-11-10-how-sessions-get-the-apps-tokens.md), [github-app-token](https://github.com/reznik-gev/GevTools/blob/main/github-app-token/README.md) in GevTools). Its messages end with two lines: `Co-Authored-By:` for the owner, with the name and email from `git config user.name` and `git config user.email`, and then the one for Claude. A session not set up for the App commits as the owner, with only Claude's line.
+
+## Commit messages
+Every commit message has three parts ([0148](../decisions/0148-2026-11-18-every-commit-message-has-a-body.md)):
+1. **A summary line** of at most 100 characters that says what changes for someone using HSP. A review fix starts with "Review on #N: …".
+2. **A blank line.**
+3. **A body** that says why, with the decision records the commit follows. Review fixes need one too. Then the `Co-Authored-By:` lines, which don't count as the body.
+
+```text
+Review on #180: a seat's label keeps its Hebrew letters when it's renamed
+
+The review bot found that renaming a seat dropped Hebrew letters, because
+the label was checked against an ASCII-only pattern. Labels may be in either
+language, so the check now accepts any letter.
+
+Co-Authored-By: <owner's name> <owner's email>
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+- **Write the message to a file and commit with `git commit -F <file>`.** In PowerShell, a multi-line `-m` gets mangled, and once put a whole body on the summary line.
+- **Apply the review bot's suggestions locally**, in a commit with a proper message. GitHub's "Apply suggestion" button makes a commit with no body.
+- **Turn on the repository's git hooks** once in each clone: `git config core.hooksPath .githooks`. The `commit-msg` hook then rejects a message with no body or a summary line over 100 characters, before the commit is made. It lets `fixup!` and `squash!` commits through. The `pre-commit` hook runs the fast checks in `.pre-commit-config.yaml` if the `pre-commit` tool is installed.
+- **CI checks it too.** The `commit-messages` job fails a PR with a commit that breaks these rules, or a `fixup!` or `squash!` commit, and `ci-ok` needs it. Rewording a pushed commit needs a force-push, so it needs the owner's yes (below). That's why the hook matters: it catches the message before the push.
 
 ## Pull requests
 - The description says what changes for the user, how it's built, what was decided along the way and how it was tested, including what wasn't tested.
@@ -16,7 +37,7 @@ How changes get from a branch to `main`: branches, commits, reviews and merging.
 
 ## Review fixes are new commits
 **Fixes for review comments always go in as new commits on top of the PR.** Never amend, squash, fixup or otherwise rewrite commits that have been reviewed, so the reviewer can see exactly what changed since they looked. This holds when the only reviewer was the review bot, and when the bot itself asks for a commit to be reworded: reply that rewording needs the owner's permission, leave the commit as it is, and tell the owner.
-- One commit per review round, or per comment when they're unrelated. The message says which review it answers ("Review on #80: …").
+- One commit per review round, or per comment when they're unrelated. The message says which review it answers ("Review on #80: …"), and has a body like any other ([above](#commit-messages)).
 - **Reply to every comment**, saying what changed and in which commit (its short hash), or answering the question. A comment that only asks something gets an answer, not necessarily a change.
 - A fix that changes behaviour users notice is the owner's question, not a quiet fix.
 

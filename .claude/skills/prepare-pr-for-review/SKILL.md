@@ -33,6 +33,19 @@ The review bot's login is `github-actions`. A thread is the bot's only if every 
 
 ## 4. Fix
 - Fixes go in **new commits** named "Review on #N: …". Never amend or squash reviewed commits.
+- **A review fix needs a body too**, like every commit ([the git guide](../../../docs/guides/git.md#commit-messages), [0148](../../../docs/decisions/0148-2026-11-18-every-commit-message-has-a-body.md)): a summary line of at most 100 characters, a blank line, a body that says what the comment asked and why this is the fix, then the `Co-Authored-By:` lines. For example:
+  ```text
+  Review on #180: a seat's label keeps its Hebrew letters when it's renamed
+
+  The review bot found that renaming a seat dropped Hebrew letters, because
+  the label was checked against an ASCII-only pattern. Labels may be in either
+  language, so the check now accepts any letter.
+
+  Co-Authored-By: <owner's name> <owner's email>
+  Co-Authored-By: Claude <noreply@anthropic.com>
+  ```
+  Write it to a file and commit with `git commit -F <file>`: a multi-line `-m` gets mangled in PowerShell. Check `git config core.hooksPath` says `.githooks` (if not, set it), so the hook rejects a bad message. Never use `--no-verify`.
+- **Apply the bot's suggestions locally**, in a commit like the one above. Never use GitHub's "Apply suggestion" button: its commit has no body, and CI's `commit-messages` job fails it.
 - A fix that makes or changes a decision needs a new record ([`record-decision`](../record-decision/SKILL.md)).
 - Where a comment says a test is missing, add it, then check it fails when the code it covers is removed.
 - Run the checks for every side the PR touches (CLAUDE.md), then push.

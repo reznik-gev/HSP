@@ -55,5 +55,20 @@ Use `Proposed` instead of `Accepted` while a question is still open.
 - For each record this one **refines**: add or extend its `Refined by:` line. Its index row may name this record. For each record this one **supersedes**: set its status to `Superseded by NNNN`, in the record and the index.
 - Change nothing else in an accepted record ([0126](../../../docs/decisions/0126-2026-11-08-what-may-change-in-an-accepted-record.md)).
 
-## 5. Tell the owner
+## 5. Commit it
+Commit the record with the change it belongs to, or on its own, with a message like any other ([the git guide](../../../docs/guides/git.md#commit-messages), [0148](../../../docs/decisions/0148-2026-11-18-every-commit-message-has-a-body.md)). A summary line of at most 100 characters, a blank line, a body that says why the decision came up and what it refines, then the `Co-Authored-By:` lines. For example:
+```text
+Decision 0148: every commit message has a body, checked by a hook and CI
+
+About 1 commit in 10 on main had no body, and the review bot noticed only
+after the push, when rewording needed a force-push. A commit-msg hook now
+rejects such a message before the commit is made, and a CI job fails the
+PR as a backstop. Refines 0069, 0070 and 0062.
+
+Co-Authored-By: <owner's name> <owner's email>
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+Write it to a file and commit with `git commit -F <file>`: a multi-line `-m` gets mangled in PowerShell. Check `git config core.hooksPath` says `.githooks` (if not, set it). The reservation commit in step 2 is made with `git commit-tree`, which runs no hooks, and never reaches `main`.
+
+## 6. Tell the owner
 List the *(Claude's choice)* points in your reply, so the owner can check them before other work builds on them.

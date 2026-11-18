@@ -1,0 +1,57 @@
+#!/bin/sh
+# Checks a commit message has the shape docs/guides/git.md asks for
+# (decision 0148): a summary line of at most 100 characters, a blank line,
+# then a body that says why. Co-Authored-By and Signed-off-by lines don't
+# count as a body. fixup!, squash! and amend! commits are left alone: they
+# are folded into another commit before they reach main.
+#
+# Turn it on once per clone: git config core.hooksPath .githooks
+
+max_subject=100
+msg_file=$1
+
+# Git runs this hook before it strips comments, so drop them here, and
+# everything below the scissors line that `git commit -v` adds.
+cleaned=$(sed -e 's/\r$//' -e '/^# -* >8 -*$/,$d' -e '/^#/d' "$msg_file")
+
+subject=$(printf '%s\n' "$cleaned" | sed -n '/[^[:space:]]/{p;q;}')
+
+case $subject in
+fixup!* | squash!* | amend!*) exit 0 ;;
+esac
+
+fail() {
+    printf 'commit-msg: %s\n' "$1" >&2
+    printf '%s\n' \
+        'A commit message is a summary line, a blank line, and a body that says why,' \
+        'with the decision records it follows. Write it to a file and commit with' \
+        '"git commit -F <file>". See docs/guides/git.md#commit-messages.' >&2
+    exit 1
+}
+
+if [ -z "$subject" ]; then
+    fail 'the message is empty.'
+fi
+
+length=$(printf '%s' "$subject" | wc -m | tr -d ' ')
+if [ "$length" -gt "$max_subject" ]; then
+    fail "the summary line is $length characters; keep it to $max_subject. Did the body end up on the summary line?"
+fi
+
+# The body: every line after the summary, without blank lines and trailers.
+body=$(printf '%s\n' "$cleaned" |
+    sed -n '/[^[:space:]]/,$p' |
+    sed '1d' |
+    grep -viE '^[[:space:]]*(co-authored-by|signed-off-by):' |
+    grep -v '^[[:space:]]*$')
+
+if [ -z "$body" ]; then
+    fail 'the message has no body.'
+fi
+
+second=$(printf '%s\n' "$cleaned" | sed -n '/[^[:space:]]/,$p' | sed -n '2p')
+if [ -n "$(printf '%s' "$second" | tr -d '[:space:]')" ]; then
+    fail 'put a blank line between the summary line and the body.'
+fi
+
+exit 0
