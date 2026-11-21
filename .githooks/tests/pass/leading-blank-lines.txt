@@ -1,0 +1,5 @@
+
+
+A seat keeps its label when it moves
+
+Moving a seat dropped its label.

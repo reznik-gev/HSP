@@ -1,0 +1,1 @@
+squash! A seat keeps its label when it moves

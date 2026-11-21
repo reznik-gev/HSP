@@ -1,0 +1,3 @@
+Revert "A seat keeps its label when it moves"
+
+This reverts commit 0123456789abcdef0123456789abcdef01234567.

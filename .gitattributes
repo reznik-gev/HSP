@@ -6,6 +6,9 @@
 *.cmd  text eol=crlf
 *.ps1  text eol=crlf
 
+# A commit message sample that must keep its CRLF line endings (docs/0148)
+.githooks/tests/pass/crlf.txt -text
+
 # Binary assets
 *.png  binary
 *.jpg  binary
