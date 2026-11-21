@@ -94,9 +94,7 @@ def in_use(port: int) -> bool:
 
 def compose(*args: str) -> str:
     """The dev stack, always from the main checkout's file, so it's never recreated elsewhere."""
-    return run(
-        "docker", "compose", "-f", str(main_checkout() / "deploy" / "compose.dev.yml"), *args
-    )
+    return run("docker", "compose", "-f", str(main_checkout() / "deploy" / "compose.dev.yml"), *args)
 
 
 # --- Servers ---------------------------------------------------------------------------------
@@ -107,9 +105,7 @@ def start(name: str, args: list[str], cwd: Path, logs: Path, env: dict[str, str]
     exe = shutil.which(args[0]) or fail(f"{args[0]} isn't on the PATH")
     log = (logs / f"{name}.log").open("w")
     # A new process group (Windows) or session (elsewhere), so it can be stopped as a whole.
-    flags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(
-        subprocess, "CREATE_NO_WINDOW", 0
-    )
+    flags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(subprocess, "CREATE_NO_WINDOW", 0)
     process = subprocess.Popen(
         [exe, *args[1:]],
         cwd=cwd,
@@ -147,10 +143,7 @@ def stop(demo: Path) -> None:
             return
         time.sleep(0.5)
     busy = ", ".join(str(p) for p in PORTS.values() if in_use(p))
-    fail(
-        f"port {busy} is in use by something this script didn't start. "
-        "Stop it yourself, then run this again."
-    )
+    fail(f"port {busy} is in use by something this script didn't start. Stop it yourself, then run this again.")
 
 
 # --- Commands --------------------------------------------------------------------------------
@@ -226,9 +219,7 @@ def switch(args: argparse.Namespace) -> None:
     print(f"   up. Logs: {logs}")
 
     step("Reseeding Northwind Robotics")
-    print(
-        run("uv", "run", "python", "../deploy/demo/seed.py", cwd=demo / "backend").splitlines()[-1]
-    )
+    print(run("uv", "run", "python", "../deploy/demo/seed.py", cwd=demo / "backend").splitlines()[-1])
 
 
 def stop_command(_: argparse.Namespace) -> None:
@@ -239,17 +230,13 @@ def stop_command(_: argparse.Namespace) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     commands = parser.add_subparsers(required=True)
-    commands.add_parser("status", help="what the demo shows, and whether it's up").set_defaults(
-        func=status
-    )
+    commands.add_parser("status", help="what the demo shows, and whether it's up").set_defaults(func=status)
     s = commands.add_parser("switch", help="show a PR's code (or main), reseeded")
     which = s.add_mutually_exclusive_group(required=True)
     which.add_argument("--pr", type=int, help="the PR's number")
     which.add_argument("--main", action="store_true", help="origin/main")
     s.set_defaults(func=switch)
-    commands.add_parser("stop", help="stop the servers this script started").set_defaults(
-        func=stop_command
-    )
+    commands.add_parser("stop", help="stop the servers this script started").set_defaults(func=stop_command)
     args = parser.parse_args()
     args.func(args)
 
