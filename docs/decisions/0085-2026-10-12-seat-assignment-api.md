@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-12
 - **Status:** Accepted
+- **Refined by:** [0149](0149-2026-11-21-search-finds-more-than-people-after-1-0-0.md) (after 1.0.0, the search finds more than seats)
 - **Refines:** [0009](0009-2026-10-07-seat-assignment-model.md), [0025](0025-2026-10-08-v1-scope.md), [0031](0031-2026-10-08-seat-assignment-rules.md), [0078](0078-2026-10-08-archive-semantics.md)
 - **Overrides:** part of [0031](0031-2026-10-08-seat-assignment-rules.md). See [What this changes in 0031](#what-this-changes-in-0031).
 

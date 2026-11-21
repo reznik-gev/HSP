@@ -96,7 +96,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0082 | 2026-10-10 | [Publish, discard and restore](0082-2026-10-10-publish-discard-restore.md) | Accepted |
 | 0083 | 2026-10-10 | [Catalog, zone type and device API](0083-2026-10-10-catalog-and-device-api.md) | Accepted |
 | 0084 | 2026-10-10 | [People, org units and the CSV/Excel import](0084-2026-10-10-people-org-api-and-import.md) | Accepted |
-| 0085 | 2026-10-12 | [Seat assignment API, search, occupancy and bulk assignment](0085-2026-10-12-seat-assignment-api.md) | Accepted |
+| 0085 | 2026-10-12 | [Seat assignment API, search, occupancy and bulk assignment](0085-2026-10-12-seat-assignment-api.md) | Accepted (the search finds more after 1.0.0, by 0149) |
 | 0086 | 2026-10-12 | [Free resources automatically instead of asking for confirmation](0086-2026-10-12-automatic-release.md) | Accepted |
 | 0087 | 2026-10-13 | [Frontend delivery plan: viewer first, English and Hebrew, desktop](0087-2026-10-13-frontend-delivery-plan.md) | Accepted |
 | 0088 | 2026-10-14 | [Admin screens (frontend phase 2)](0088-2026-10-14-admin-screens.md) | Accepted |
@@ -160,3 +160,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0146 | 2026-11-11 | [How the user guide is written and shown](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) | Accepted (the GIFs are recorded again before each release, by 0147) |
 | 0147 | 2026-11-17 | [The guide's GIFs are recorded again before each release](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) | Accepted |
 | 0148 | 2026-11-18 | [Every commit message has a body, checked by a git hook and by CI](0148-2026-11-18-every-commit-message-has-a-body.md) | Accepted |
+| 0149 | 2026-11-21 | [Search finds more than people and seats, after 1.0.0](0149-2026-11-21-search-finds-more-than-people-after-1-0-0.md) | Accepted |
