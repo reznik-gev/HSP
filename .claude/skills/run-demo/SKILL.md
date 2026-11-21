@@ -5,7 +5,7 @@ description: Bring up the Northwind demo on a PR's code (or main), reseeded, so 
 
 # Run the demo for a PR
 
-There is one demo, in `.claude/worktrees/demo` under the main checkout, on ports 8000 (API) and 5173 (app), with the `hsp_demo` database ([0136](../../../docs/decisions/0136-2026-11-10-the-demo-for-checking-prs.md)). [`deploy/demo/demo.py`](../../../deploy/demo/demo.py) does the setup in [the demo guide](../../../docs/demos/northwind-robotics.md). Run it from `backend/` of any checkout. Do these steps in order.
+There is one demo, in `.claude/worktrees/demo` under the main checkout, on ports 8000 (API) and 5173 (app), with the `musical_chairs_demo` database ([0136](../../../docs/decisions/0136-2026-11-10-the-demo-for-checking-prs.md)). [`deploy/demo/demo.py`](../../../deploy/demo/demo.py) does the setup in [the demo guide](../../../docs/demos/northwind-robotics.md). Run it from `backend/` of any checkout. Do these steps in order.
 
 **Never** remove the demo worktree or commit in it.
 
@@ -21,7 +21,7 @@ Only after the owner said yes in step 1, or when neither server was up:
 ```bash
 uv run python ../deploy/demo/demo.py switch --pr <N>    # or --main
 ```
-It takes about two minutes and ends with `Ready: open http://localhost:5173 …`. It gets the code, stops the old servers, installs the dependencies, rebuilds `hsp_demo`, starts the servers in the background and reseeds.
+It takes about two minutes and ends with `Ready: open http://localhost:5173 …`. It gets the code, stops the old servers, installs the dependencies, rebuilds `musical_chairs_demo`, starts the servers in the background and reseeds.
 - If it says a port is in use by something it didn't start, find what it is and ask the owner before you stop it.
 - If the API isn't ready, read the log it names.
 

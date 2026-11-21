@@ -5,17 +5,17 @@
 - **Builds on:** [0054](0054-2026-10-08-release-distribution.md) (the bundle), [0063](0063-2026-10-08-release-versioning.md) (versions), [0064](0064-2026-10-08-branching-workflow.md) (tags and `release/X.Y`), [0097](0097-2026-10-18-production-images.md) (images), [0099](0099-2026-10-18-production-compose.md) (the stack, tested only when a release is built)
 
 ## Context
-HSP is installed from one versioned archive, `hsp-<version>.tar.gz`, with no registry ever contacted (0054). The images (0097) and the Compose stack (0099) exist. Nothing builds the archive, tests it or publishes it yet.
+Musical Chairs is installed from one versioned archive, `musical-chairs-<version>.tar.gz`, with no registry ever contacted (0054). The images (0097) and the Compose stack (0099) exist. Nothing builds the archive, tests it or publishes it yet.
 
 ## Options considered
 The owner chose each of these:
 
 | Question | Options | Chosen | Why |
 |---|---|---|---|
-| Where the bundle is published | A private releases repo / **public GitHub Releases on this repo** / cloud storage with expiring links | **Public GitHub Releases** | The simplest, with nothing new to run. The source is public already ([0071](0071-2026-10-08-license-and-contributions.md)), so a private bundle wouldn't keep anything secret. The licence still forbids using HSP without permission. |
+| Where the bundle is published | A private releases repo / **public GitHub Releases on this repo** / cloud storage with expiring links | **Public GitHub Releases** | The simplest, with nothing new to run. The source is public already ([0071](0071-2026-10-08-license-and-contributions.md)), so a private bundle wouldn't keep anything secret. The licence still forbids using Musical Chairs without permission. |
 | What guards publishing | **An approval step** / a tag ruleset only / any tag push | **Approval step**, plus a tag ruleset | A published release can be downloaded at once. A mistaken tag should cost a build, not a public release. |
 | Release notes | **`CHANGELOG.md` kept as we go** / generated from PR titles and edited / generated as is | **`CHANGELOG.md`** | Customers see what changed for them, not internal PRs. The release page and the bundle get the same text. |
-| Upgrade test (0056) | **Add it with `bin/hsp`** / build `bin/hsp` first / a temporary test now | **With `bin/hsp`** | It must test `hsp upgrade`, the path customers use. The first release has nothing to upgrade from. |
+| Upgrade test (0056) | **Add it with `bin/musical-chairs`** / build `bin/musical-chairs` first / a temporary test now | **With `bin/musical-chairs`** | It must test `musical-chairs upgrade`, the path customers use. The first release has nothing to upgrade from. |
 | What the test runs on the installed bundle | Playwright only / a scripted check only / **both, the check first** | **Both** | The check fails fast with a clear reason. Playwright proves the product works as shipped. |
 
 ## Decision
@@ -25,11 +25,11 @@ The owner chose each of these:
    - The tag is a valid version (0063).
    - The tagged commit is on `main` or on a `release/X.Y` branch with the same `X.Y` (0064).
    - `CHANGELOG.md` has a section `## [X.Y.Z]` for this version. A dry run uses `## [Unreleased]`.
-2. **Build** the three HSP images with the version (`deploy/build-images.sh`).
-3. **Assemble** the bundle with `deploy/bundle.sh`. It unpacks into `hsp-<version>/`:
+2. **Build** the three Musical Chairs images with the version (`deploy/build-images.sh`).
+3. **Assemble** the bundle with `deploy/bundle.sh`. It unpacks into `musical-chairs-<version>/`:
    ```
-   images/          one `docker save` tarball per image in compose.yml (HSP's three, plus PostGIS)
-   compose/         compose.yml, postgres-init/, .env.example (with HSP_VERSION set)
+   images/          one `docker save` tarball per image in compose.yml (Musical Chairs' three, plus PostGIS)
+   compose/         compose.yml, postgres-init/, .env.example (with MUSICAL_CHAIRS_VERSION set)
    docs/            install.md, release-notes.md (this version's entry), CHANGELOG.md
    LICENSE
    VERSION
@@ -37,7 +37,7 @@ The owner chose each of these:
    ```
    The image list comes from `compose.yml`, so the bundle can't miss an image the stack needs. Compared with 0054:
    - There's no `config/`, because the nginx and Keycloak configuration is inside their images (0097).
-   - `bin/hsp` comes with its own PR.
+   - `bin/musical-chairs` comes with its own PR.
    - `LICENSE` and the top-level folder are additions (my lower-confidence choice).
 4. **Test the bundle on a clean runner, as a customer gets it** (`deploy/test-bundle.sh`):
    - Check `SHA256SUMS`, `docker load` the images, and install the stack following the steps in `deploy/README.md`, with TLS on (a self-signed certificate for `localhost`).
@@ -56,4 +56,4 @@ The owner chose each of these:
 - The bundle is about 0.7–1 GB. A GitHub Release file may be up to 2 GB, so `bundle.sh` fails above 1.9 GB.
 - Anyone can download a published release. Taking one down is possible, but someone may already have it.
 - A stack wiring mistake is still found only when a release is built (0099). A dry run (Actions → release → Run workflow) finds it earlier, when wanted.
-- The upgrade test is added with `bin/hsp`. Until then, releases are tested as fresh installs only.
+- The upgrade test is added with `bin/musical-chairs`. Until then, releases are tested as fresh installs only.

@@ -6,10 +6,10 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from hsp.api.plans import get_plan_repository
-from hsp.auth.principal import Principal
-from hsp.models import new_id
-from hsp.plans.schema import FloorVersion, PlanContent
+from musical_chairs.api.plans import get_plan_repository
+from musical_chairs.auth.principal import Principal
+from musical_chairs.models import new_id
+from musical_chairs.plans.schema import FloorVersion, PlanContent
 from tests.fakes import InMemoryPlanRepository
 from tests.stubs import STUB_TENANT, stub_placed_object
 from tests.unit.api_helpers import SignedIn

@@ -7,9 +7,9 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import make_url
 
-from hsp.auth.principal import jwt_claims, realm_roles
-from hsp.auth.tokens import TokenCipher, TokenDecryptError
-from hsp.config import DEV_SESSION_ENCRYPTION_KEY, Settings
+from musical_chairs.auth.principal import jwt_claims, realm_roles
+from musical_chairs.auth.tokens import TokenCipher, TokenDecryptError
+from musical_chairs.config import DEV_SESSION_ENCRYPTION_KEY, Settings
 from tests.unit.auth.stubs import stub_jwt
 
 OTHER_KEY = base64.urlsafe_b64encode(b"x" * 32)
@@ -20,18 +20,18 @@ DATABASE_PASSWORD = "p@ss:w/rd"
 @pytest.fixture
 def settings_with_separate_database_password() -> Settings:
     return Settings(
-        database_url="postgresql+asyncpg://hsp@db:5432/hsp",  # type: ignore[arg-type]
+        database_url="postgresql+asyncpg://musical_chairs@db:5432/musical_chairs",  # type: ignore[arg-type]
         database_password=DATABASE_PASSWORD,  # type: ignore[arg-type]
     )
 
 
 @pytest.fixture
 def settings_with_database_password_in_url() -> Settings:
-    return Settings(database_url="postgresql+asyncpg://hsp:pw@db:5432/hsp")  # type: ignore[arg-type]
+    return Settings(database_url="postgresql+asyncpg://musical_chairs:pw@db:5432/musical_chairs")  # type: ignore[arg-type]
 
 
 def test_production_requires_real_secrets() -> None:
-    with pytest.raises(ValidationError, match="HSP_SESSION_ENCRYPTION_KEY"):
+    with pytest.raises(ValidationError, match="MUSICAL_CHAIRS_SESSION_ENCRYPTION_KEY"):
         Settings(environment="production")
 
 
@@ -52,8 +52,8 @@ def test_cipher_round_trip_and_key_rotation() -> None:
 
 
 def test_jwt_claims_and_roles() -> None:
-    claims = jwt_claims(stub_jwt({"realm_access": {"roles": ["hsp-admin", 3]}}))
-    assert realm_roles(claims) == {"hsp-admin"}
+    claims = jwt_claims(stub_jwt({"realm_access": {"roles": ["musical-chairs-admin", 3]}}))
+    assert realm_roles(claims) == {"musical-chairs-admin"}
     assert realm_roles({}) == frozenset()
     with pytest.raises(ValueError):
         jwt_claims("not-a-jwt")
@@ -64,10 +64,10 @@ def test_database_password_can_come_separately_from_the_url(
 ) -> None:
     url = make_url(settings_with_separate_database_password.database_dsn)
     assert (url.username, url.password, url.host, url.database) == (
-        "hsp",
+        "musical_chairs",
         DATABASE_PASSWORD,
         "db",
-        "hsp",
+        "musical_chairs",
     )
 
 
@@ -76,5 +76,5 @@ def test_database_url_keeps_its_own_password_when_none_is_given(
 ) -> None:
     assert (
         settings_with_database_password_in_url.database_dsn
-        == "postgresql+asyncpg://hsp:pw@db:5432/hsp"
+        == "postgresql+asyncpg://musical_chairs:pw@db:5432/musical_chairs"
     )

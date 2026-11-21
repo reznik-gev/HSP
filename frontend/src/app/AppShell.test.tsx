@@ -21,8 +21,8 @@ afterEach(async () => {
   useTheme.setState({ choice: "system" });
 });
 
-/** Tests build without HSP_VERSION, so vite.config.ts sets the version to 0.0.0-dev. */
-const DEV_VERSION_LINE = "HSP 0.0.0-dev";
+/** Tests build without MUSICAL_CHAIRS_VERSION, so vite.config.ts sets the version to 0.0.0-dev. */
+const DEV_VERSION_LINE = "Musical Chairs 0.0.0-dev";
 
 async function renderAt(path: string) {
   const { router } = await render(path);

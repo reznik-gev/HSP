@@ -56,7 +56,7 @@ Two things hold in every one:
 - The test asked **less than 10 s** after Keycloak became ready.
 
 ### Cause
-`/readyz` asks Keycloak for its discovery document through `KeycloakProbe` (`backend/src/hsp/readiness.py`). The probe kept whatever Keycloak answered for 10 s, as [0105](../decisions/0105-2026-10-21-metrics-and-tracing.md) says, so frequent health checks don't load Keycloak. But the API runs 4 worker processes, and each has its own probe with its own memory. So:
+`/readyz` asks Keycloak for its discovery document through `KeycloakProbe` (`backend/src/musical_chairs/readiness.py`). The probe kept whatever Keycloak answered for 10 s, as [0105](../decisions/0105-2026-10-21-metrics-and-tracing.md) says, so frequent health checks don't load Keycloak. But the API runs 4 worker processes, and each has its own probe with its own memory. So:
 
 1. Worker A answers a `/readyz` while Keycloak is still starting, and keeps "not ready" for 10 s.
 2. Keycloak finishes starting.

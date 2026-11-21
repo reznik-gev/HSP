@@ -22,7 +22,7 @@ Coding now happens in long Claude Code sessions with the owner. On GitHub, Claud
 - The setup from 0100 that let it run the checks (uv, pnpm, PostGIS) is removed. CI runs the checks, and the bot reads their results.
 
 **The code review** (`claude-code-review.yml`) checks **guide and decision compliance first, then maintainability**, then any clear bugs it notices. The old `code-review` plugin looked for bugs and `CLAUDE.md` compliance only.
-- A prompt written for HSP tells it to read `CLAUDE.md`, the guides (including the testing guide's review checklist), the relevant decisions, and the whole PR. It skips what linters already enforce, and doesn't repeat points already raised.
+- A prompt written for Musical Chairs tells it to read `CLAUDE.md`, the guides (including the testing guide's review checklist), the relevant decisions, and the whole PR. It skips what linters already enforce, and doesn't repeat points already raised.
 - It reports with inline comments on lines, with suggestions where the fix is small and certain, and one summary comment.
 - It runs on **Opus 5.5** (owner's choice).
 - It runs when a PR is **opened or marked ready** (not drafts), and again when someone with write access comments **`@claude review`** on the PR. Owner's choice: fewer repeated reviews than reviewing every push. `claude.yml` ignores comments that start with `@claude review`, so a request starts only the full review.

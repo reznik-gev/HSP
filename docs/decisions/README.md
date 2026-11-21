@@ -1,6 +1,6 @@
-# HSP Decision Log
+# Musical Chairs Decision Log
 
-HSP (Human-Space Program) design decisions, one document per decision. Part of the [HSP documentation](../README.md).
+Musical Chairs design decisions, one document per decision. Part of the [Musical Chairs documentation](../README.md).
 
 **Naming:** `NNNN-YYYY-MM-DD-short-slug.md` — a sequential number plus the date the decision was made.
 **Status values:** `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
@@ -35,7 +35,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0021 | 2026-10-08 | [Catalog: built-in + parametric items](0021-2026-10-08-object-catalog.md) | Accepted |
 | 0022 | 2026-10-08 | [Device assets: light asset fields](0022-2026-10-08-device-asset-data.md)  | Accepted |
 | 0023 | 2026-10-08 | [Primary unit: deepest unit wins](0023-2026-10-08-primary-unit-rule.md)   | Superseded by 0084 |
-| 0024 | 2026-10-08 | [Unit managers: assigned in HSP only](0024-2026-10-08-unit-managers.md)   | Accepted |
+| 0024 | 2026-10-08 | [Unit managers: assigned in Musical Chairs only](0024-2026-10-08-unit-managers.md)   | Accepted |
 | 0025 | 2026-10-08 | [v1 scope: space modeling + seat assignment](0025-2026-10-08-v1-scope.md) | Accepted (3D view moved past v1 by 0094; 1.0.0 scope in 0104) |
 | 0026 | 2026-10-08 | [Line endings: normalize to LF](0026-2026-10-08-line-endings.md)          | Accepted |
 | 0027 | 2026-10-08 | [v1 interim: CSV import, admin-only editing, Keycloak login](0027-2026-10-08-v1-interim-people-and-access.md) | Accepted |
@@ -65,9 +65,9 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0051 | 2026-10-08 | [Validation: instant client preview, server authoritative](0051-2026-10-08-validation-feedback.md) | Accepted |
 | 0052 | 2026-10-08 | [SVG commitment: renderer-agnostic core + performance gate](0052-2026-10-08-svg-commitment-and-performance-gate.md) | Accepted (v1 bounds lowered by 0074) |
 | 0053 | 2026-10-08 | [Code hosting & CI: GitHub + Actions](0053-2026-10-08-code-hosting-and-ci.md) | Accepted (partially superseded by 0068; refined by 0070) |
-| 0054 | 2026-10-08 | [Release distribution: offline bundle only](0054-2026-10-08-release-distribution.md) | Accepted (`bin/hsp` refined by 0107) |
+| 0054 | 2026-10-08 | [Release distribution: offline bundle only](0054-2026-10-08-release-distribution.md) | Accepted (`bin/musical-chairs` refined by 0107) |
 | 0055 | 2026-10-08 | [Deployment target: Docker Compose, single host](0055-2026-10-08-deployment-target.md) | Accepted (images refined by 0097, the stack by 0099, the sizing by 0120; Kubernetes after 1.0 in 0104) |
-| 0056 | 2026-10-08 | [Upgrades: maintenance window + migrate job](0056-2026-10-08-upgrades-and-migrations.md) | Accepted (`hsp upgrade` refined by 0107, the schema check by 0105 and 0109) |
+| 0056 | 2026-10-08 | [Upgrades: maintenance window + migrate job](0056-2026-10-08-upgrades-and-migrations.md) | Accepted (`musical-chairs upgrade` refined by 0107, the schema check by 0105 and 0109) |
 | 0057 | 2026-10-08 | [Observability: standard outputs + optional stack](0057-2026-10-08-observability.md) | Accepted (refined by 0105; the monitoring profile moved past 1.0 by 0104) |
 | 0058 | 2026-10-08 | [Backups: built-in scheduled dumps](0058-2026-10-08-backups.md)           | Accepted (refined by 0106) |
 | 0059 | 2026-10-08 | [Supply chain: automated dependency updates](0059-2026-10-08-supply-chain-security.md) | Accepted (signing and SBOM planned for 1.3–1.4 by 0104; vulnerability scanning in 0128) |
@@ -118,7 +118,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0104 | 2026-10-21 | [What 1.0.0 includes, which versions get fixes, and what comes right after](0104-2026-10-21-v1-release-scope-and-support.md) | Accepted (AD sync in 1.1 and Kubernetes in 1.2 by 0108; the move planner in 1.3 by 0145) |
 | 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted (the schema check at startup refined by 0109, CPU and memory by 0111, Keycloak's readiness by 0116) |
 | 0106 | 2026-10-21 | [Backups: our own image, with schedules in `backups.yml`](0106-2026-10-21-backups.md) | Accepted (refined by 0115, 0138) |
-| 0107 | 2026-10-21 | [`bin/hsp`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted (a failed restore refined by 0118, recovering on a new host by 0119, disk per release by 0120, restoring one database by 0138) |
+| 0107 | 2026-10-21 | [`bin/musical-chairs`: a thin bash script on the Docker host](0107-2026-10-21-operator-cli.md) | Accepted (a failed restore refined by 0118, recovering on a new host by 0119, disk per release by 0120, restoring one database by 0138) |
 | 0108 | 2026-10-21 | [What we do with the first client demo's feedback](0108-2026-10-21-first-client-demo-feedback.md) | Accepted ("Show free seats" details in 0122, the free seats list in 0123, `Alt` mid-drag in 0130, office moves in 0145) |
 | 0109 | 2026-10-23 | [The schema check at startup runs everywhere; unit tests opt out](0109-2026-10-23-schema-check-everywhere.md) | Accepted |
 | 0110 | 2026-10-22 | [Database queries move into repositories, after 1.2](0110-2026-10-22-repositories-after-1-2.md) | Accepted (with faster dev cycle and CI, 0112) |
@@ -129,13 +129,13 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0115 | 2026-10-23 | [The backup image: Python's slim image with PostgreSQL 18's client, running as uid 999](0115-2026-10-23-backup-image-base-and-user.md) | Accepted |
 | 0116 | 2026-10-24 | [`/readyz` remembers only a ready answer from Keycloak](0116-2026-10-24-readyz-remembers-only-ready.md) | Accepted |
 | 0117 | 2026-10-24 | [Seat labels on the plan are drawn without font hinting](0117-2026-10-24-plan-labels-without-hinting.md) | Accepted |
-| 0118 | 2026-10-24 | [A restore that fails partway leaves HSP stopped](0118-2026-10-24-failed-restore-leaves-hsp-stopped.md) | Accepted |
-| 0119 | 2026-10-24 | [Recovering on a new host: `hsp install --secrets`, then `hsp restore`](0119-2026-10-24-recovering-on-a-new-host.md) | Accepted |
+| 0118 | 2026-10-24 | [A restore that fails partway leaves Musical Chairs stopped](0118-2026-10-24-failed-restore-leaves-musical-chairs-stopped.md) | Accepted |
+| 0119 | 2026-10-24 | [Recovering on a new host: `musical-chairs install --secrets`, then `musical-chairs restore`](0119-2026-10-24-recovering-on-a-new-host.md) | Accepted |
 | 0120 | 2026-10-24 | [Hardware sizes, measured for up to 5,000 people](0120-2026-10-24-hardware-sizes.md) | Accepted |
 | 0121 | 2026-10-31 | [The floor editor stays our own code, for now](0121-2026-10-31-editor-stays-our-own.md) | Accepted |
 | 0122 | 2026-11-01 | ["Show free seats": what counts, and how the plan shows it](0122-2026-11-01-show-free-seats-details.md) | Accepted |
 | 0123 | 2026-11-03 | [The free seats list: where it lives and how it filters](0123-2026-11-03-free-seats-list-details.md) | Accepted |
-| 0124 | 2026-11-08 | [Claude Code plugins in HSP: keep the seven disabled plugins off](0124-2026-11-08-claude-plugins-stay-off.md) | Accepted |
+| 0124 | 2026-11-08 | [Claude Code plugins in Musical Chairs: keep the seven disabled plugins off](0124-2026-11-08-claude-plugins-stay-off.md) | Accepted |
 | 0125 | 2026-11-08 | [Reviews get short dated notes when a finding changes](0125-2026-11-08-dated-notes-on-reviews.md) | Accepted |
 | 0126 | 2026-11-08 | [What may change in an accepted decision record](0126-2026-11-08-what-may-change-in-an-accepted-record.md) | Accepted |
 | 0127 | 2026-11-08 | [Python 3.15 waits until after 1.0.0](0127-2026-11-08-python-3-15-after-1-0.md) | Accepted |
@@ -149,7 +149,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0135 | 2026-11-09 | [Turning furniture while dragging it](0135-2026-11-09-turning-while-dragging.md) | Accepted |
 | 0136 | 2026-11-10 | [The demo for checking PRs runs from one worktree, and switches only after asking](0136-2026-11-10-the-demo-for-checking-prs.md) | Accepted |
 | 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted |
-| 0138 | 2026-11-10 | [A restore can bring back HSP's data alone, or Keycloak's alone](0138-2026-11-10-restoring-one-database.md) | Accepted |
+| 0138 | 2026-11-10 | [A restore can bring back Musical Chairs' data alone, or Keycloak's alone](0138-2026-11-10-restoring-one-database.md) | Accepted |
 | 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted |
 | 0140 | 2026-11-10 | [The token helper moves to GevTools, and renews only before `gh`](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) | Accepted |
 | 0141 | 2026-11-11 | [No merge commits in a PR, and CI checks it](0141-2026-11-11-no-merge-commits-in-a-pr.md) | Accepted |

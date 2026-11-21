@@ -10,7 +10,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-from hsp import tracing
+from musical_chairs import tracing
 from tests.db.conftest import TEST_DB_URL
 
 

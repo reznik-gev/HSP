@@ -5,7 +5,12 @@ from pathlib import Path
 
 import pytest
 
-from hsp_backup.archive import ArchiveError, extract_verified, read_manifest, write_archive
+from musical_chairs_backup.archive import (
+    ArchiveError,
+    extract_verified,
+    read_manifest,
+    write_archive,
+)
 
 CREATED = datetime(2026, 10, 21, 2, 30, tzinfo=UTC)
 
@@ -14,7 +19,11 @@ CREATED = datetime(2026, 10, 21, 2, 30, tzinfo=UTC)
 def members(tmp_path: Path) -> dict[str, Path]:
     src = tmp_path / "src"
     (src / "config").mkdir(parents=True)
-    files = {"hsp.dump": b"hsp data", "keycloak.dump": b"kc data", "config/.env": b"A=1\n"}
+    files = {
+        "musical_chairs.dump": b"musical_chairs data",
+        "keycloak.dump": b"kc data",
+        "config/.env": b"A=1\n",
+    }
     for name, content in files.items():
         (src / name).write_bytes(content)
     return {name: src / name for name in files}
@@ -22,11 +31,11 @@ def members(tmp_path: Path) -> dict[str, Path]:
 
 @pytest.fixture
 def archive(tmp_path: Path, members: dict[str, Path]) -> Path:
-    dest = tmp_path / "hsp-20261021T023000Z-nightly.tar"
+    dest = tmp_path / "musical-chairs-20261021T023000Z-nightly.tar"
     write_archive(
         dest,
         members,
-        hsp_version="1.0.0",
+        musical_chairs_version="1.0.0",
         schema_revision="c9b2fc969b7d",
         created=CREATED,
         schedule="nightly",
@@ -36,16 +45,16 @@ def archive(tmp_path: Path, members: dict[str, Path]) -> Path:
 
 def test_the_manifest_says_what_and_when(archive: Path) -> None:
     manifest = read_manifest(archive)
-    assert (manifest.hsp_version, manifest.schema_revision) == ("1.0.0", "c9b2fc969b7d")
+    assert (manifest.musical_chairs_version, manifest.schema_revision) == ("1.0.0", "c9b2fc969b7d")
     assert (manifest.created_at, manifest.schedule) == (CREATED.isoformat(), "nightly")
-    assert sorted(manifest.files) == ["config/.env", "hsp.dump", "keycloak.dump"]
-    assert len(manifest.files["hsp.dump"]) == 64
+    assert sorted(manifest.files) == ["config/.env", "keycloak.dump", "musical_chairs.dump"]
+    assert len(manifest.files["musical_chairs.dump"]) == 64
 
 
 def test_extracting_checks_every_file(archive: Path, tmp_path: Path) -> None:
     out = tmp_path / "out"
     extract_verified(archive, out)
-    assert (out / "hsp.dump").read_bytes() == b"hsp data"
+    assert (out / "musical_chairs.dump").read_bytes() == b"musical_chairs data"
     assert (out / "config/.env").read_bytes() == b"A=1\n"
 
 
@@ -57,19 +66,19 @@ def damaged_archive(archive: Path, tmp_path: Path) -> Path:
             f = src.extractfile(info)
             assert f is not None
             data = f.read()
-            if info.name == "hsp.dump":
-                data = b"hsp dat!"
+            if info.name == "musical_chairs.dump":
+                data = b"musical_chairs dat!"
             dst.addfile(info, io.BytesIO(data))
     return damaged
 
 
 def test_a_damaged_file_is_found(damaged_archive: Path, tmp_path: Path) -> None:
-    with pytest.raises(ArchiveError, match=r"hsp\.dump doesn't match its checksum"):
+    with pytest.raises(ArchiveError, match=r"musical_chairs\.dump doesn't match its checksum"):
         extract_verified(damaged_archive, tmp_path / "out")
 
 
 def test_something_else_is_not_a_backup(tmp_path: Path) -> None:
     other = tmp_path / "other.tar"
     other.write_bytes(b"not a tar at all")
-    with pytest.raises(ArchiveError, match="isn't a readable HSP backup"):
+    with pytest.raises(ArchiveError, match="isn't a readable Musical Chairs backup"):
         read_manifest(other)

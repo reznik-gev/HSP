@@ -3,9 +3,9 @@ seats and devices, and zone nesting (docs/0081)."""
 
 import pytest
 
-from hsp.models import new_id
-from hsp.plans.changeset import ChangesetRejected, apply_changeset
-from hsp.plans.schema import PlanContent
+from musical_chairs.models import new_id
+from musical_chairs.plans.changeset import ChangesetRejected, apply_changeset
+from musical_chairs.plans.schema import PlanContent
 from tests.stubs import stub_placed_object
 from tests.unit.changeset.stubs import (
     DEVICE,

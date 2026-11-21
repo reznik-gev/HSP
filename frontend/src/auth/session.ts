@@ -41,7 +41,7 @@ export const meQuery = queryOptions({
   retry: 1,
 });
 
-/** End the HSP session, then the Keycloak one, so the next visit asks for a password again. */
+/** End the Musical Chairs session, then the Keycloak one, so the next visit asks for a password again. */
 export async function signOut(): Promise<void> {
   const { data } = await api.POST("/api/v1/auth/logout");
   setCsrfToken(null);

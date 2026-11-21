@@ -1,6 +1,6 @@
 # Writing tests
 
-How HSP is tested, where the shared test data lives, and the conventions a review checks ([0096](../decisions/0096-2026-10-16-test-conventions.md)). The strategy itself, meaning which kinds of tests exist and what each must cover, is in [0061](../decisions/0061-2026-10-08-test-strategy.md) and [0087](../decisions/0087-2026-10-13-frontend-delivery-plan.md) (choice 8).
+How Musical Chairs is tested, where the shared test data lives, and the conventions a review checks ([0096](../decisions/0096-2026-10-16-test-conventions.md)). The strategy itself, meaning which kinds of tests exist and what each must cover, is in [0061](../decisions/0061-2026-10-08-test-strategy.md) and [0087](../decisions/0087-2026-10-13-frontend-delivery-plan.md) (choice 8).
 
 ## The kinds of tests
 
@@ -11,9 +11,9 @@ How HSP is tested, where the shared test data lives, and the conventions a revie
 | Browser tests | `frontend/e2e/*.spec.ts` | Playwright | A few key flows end to end: against the running dev stack, and in the release workflow against the installed bundle ([0102](../decisions/0102-2026-10-19-release-workflow.md)). |
 | Backend unit | `backend/tests/unit/` | pytest | Services and rules against fakes and stubs; no Docker. |
 | Database | `backend/tests/db/` | pytest + PostGIS | What only a real database can check ([0061](../decisions/0061-2026-10-08-test-strategy.md) lists it). |
-| Backup service | `backup/tests/` | pytest + moto | `hsp-backup`'s config, archives, targets, retention and schedules, with PostgreSQL faked and S3 faked by moto. |
+| Backup service | `backup/tests/` | pytest + moto | `musical-chairs-backup`'s config, archives, targets, retention and schedules, with PostgreSQL faked and S3 faked by moto. |
 | Restore test | `deploy/test-restore.sh`, `frontend/e2e/restore-drill/*.drill.ts` | weekly workflow | Seeds an installed bundle, backs it up, restores into a fresh database, and compares every table ([0106](../decisions/0106-2026-10-21-backups.md)). Runs every Monday, by hand (Actions → restore drill), and on PRs that change backups. |
-| Upgrade test | `deploy/test-upgrade.sh` | release workflow | Installs the last release, upgrades it with `hsp upgrade`, checks it, rolls back with `hsp rollback` and checks again ([0107](../decisions/0107-2026-10-21-operator-cli.md)). Skipped until a release exists. |
+| Upgrade test | `deploy/test-upgrade.sh` | release workflow | Installs the last release, upgrades it with `musical-chairs upgrade`, checks it, rolls back with `musical-chairs rollback` and checks again ([0107](../decisions/0107-2026-10-21-operator-cli.md)). Skipped until a release exists. |
 | Shared validation cases | `shared/validation-cases/*.json` | both suites | Plan rules as data, so the editor and the server can't drift apart ([its README](../../shared/validation-cases/README.md)). |
 | SVG bench | `frontend/src/bench/` | a browser | The 2D performance gate ([frontend/README.md](../../frontend/README.md)). |
 | Sizing bench | `deploy/measure-size.sh`, `frontend/e2e/sizing/*.sizing.ts` | workflow, by hand | What a host needs: installs the bundle, seeds offices of 1,000 and 5,000 people, and measures CPU, memory and disk idle and with 4 users at once ([0120](../decisions/0120-2026-10-24-hardware-sizes.md)). Run it from Actions → sizing before changing the sizes in `deploy/install.md`. |
@@ -22,10 +22,10 @@ Running them:
 ```bash
 cd frontend && pnpm test                         # editor core + screen tests
 cd frontend && PW_CHANNEL=msedge pnpm e2e        # browser tests; needs the dev stack running
-cd frontend && HSP_E2E_URL=https://localhost:8443 HSP_E2E_IGNORE_HTTPS_ERRORS=1 pnpm e2e
+cd frontend && MUSICAL_CHAIRS_E2E_URL=https://localhost:8443 MUSICAL_CHAIRS_E2E_IGNORE_HTTPS_ERRORS=1 pnpm e2e
                                                  # against a stack from deploy/test-bundle.sh (releasing.md)
 cd backend && uv run pytest                      # unit tests; database tests are skipped
-cd backend && HSP_TEST_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test uv run pytest
+cd backend && MUSICAL_CHAIRS_TEST_DATABASE_URL=postgresql+asyncpg://musical_chairs:musical_chairs@localhost:5432/musical_chairs_test uv run pytest
 ```
 
 ## Test doubles: what we call them
@@ -97,7 +97,7 @@ Use `editing()` from `editor/core/testPlan.ts`. It loads a small plan (an L of t
 A plan rule (an error or a warning) is changed by **editing the cases** in `shared/validation-cases/` first. Both the TypeScript checker and the server's `validate` must then pass them.
 
 ### 8. Browser tests stay few
-Only key flows (signing in and finding a seat; drawing and publishing a floor), plus one check that the pages break no Content Security Policy rule. That check proves something only against `hsp-web`, as in the release workflow: the dev server sends no policy, so there it always passes. Each test **creates its own data through the API and archives it afterwards**, so it runs against any dev database.
+Only key flows (signing in and finding a seat; drawing and publishing a floor), plus one check that the pages break no Content Security Policy rule. That check proves something only against `musical-chairs-web`, as in the release workflow: the dev server sends no policy, so there it always passes. Each test **creates its own data through the API and archives it afterwards**, so it runs against any dev database.
 
 ## Review checklist
 - Is any test data defined inside a test body? It belongs at the top of the file, or in the shared stubs.

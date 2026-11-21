@@ -5,8 +5,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from hsp.problems import PROBLEM_JSON
-from hsp.readiness import Readiness
+from musical_chairs.problems import PROBLEM_JSON
+from musical_chairs.readiness import Readiness
 
 
 async def fake_passing_check() -> str | None:

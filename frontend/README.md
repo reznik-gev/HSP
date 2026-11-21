@@ -1,4 +1,4 @@
-# HSP frontend
+# Musical Chairs frontend
 
 React + TypeScript single-page app ([0011](../docs/decisions/0011-2026-10-08-frontend-stack.md),
 [0066](../docs/decisions/0066-2026-10-08-frontend-state-and-ui-components.md),

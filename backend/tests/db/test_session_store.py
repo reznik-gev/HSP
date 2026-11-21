@@ -6,9 +6,9 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
-from hsp.auth.sessions import SessionTokens, SqlSessionStore
-from hsp.auth.tokens import TokenCipher, hash_token
-from hsp.config import DEV_SESSION_ENCRYPTION_KEY
+from musical_chairs.auth.sessions import SessionTokens, SqlSessionStore
+from musical_chairs.auth.tokens import TokenCipher, hash_token
+from musical_chairs.config import DEV_SESSION_ENCRYPTION_KEY
 
 
 async def test_round_trip_encrypted_at_rest(

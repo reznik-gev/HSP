@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from hsp.auth.principal import Principal
+from musical_chairs.auth.principal import Principal
 
 
 @dataclass

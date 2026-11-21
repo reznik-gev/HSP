@@ -7,8 +7,8 @@ from datetime import UTC, datetime
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp.locations.repository import SqlLocationsRepository
-from hsp.models import Building, Site, Tenant, new_id
+from musical_chairs.locations.repository import SqlLocationsRepository
+from musical_chairs.models import Building, Site, Tenant, new_id
 
 
 async def _tenant(rolled_back_db_session: AsyncSession, slug: str) -> uuid.UUID:
@@ -119,7 +119,7 @@ async def test_buildings_filter_and_code_lookup(rolled_back_db_session: AsyncSes
 
 
 async def test_floors_filter_and_level_lookup(rolled_back_db_session: AsyncSession) -> None:
-    from hsp.models import Floor
+    from musical_chairs.models import Floor
 
     repo = SqlLocationsRepository(rolled_back_db_session)
     tenant = await _tenant(rolled_back_db_session, "default")

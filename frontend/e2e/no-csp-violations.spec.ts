@@ -1,6 +1,6 @@
 /**
- * The pages work under the Content Security Policy that hsp-web sends (docs/0060, docs/0098).
- * Meaningful only against hsp-web: the dev server sends no policy. The release workflow runs it
+ * The pages work under the Content Security Policy that musical-chairs-web sends (docs/0060, docs/0098).
+ * Meaningful only against musical-chairs-web: the dev server sends no policy. The release workflow runs it
  * against the installed bundle (docs/0102).
  */
 import { expect, test } from "@playwright/test";

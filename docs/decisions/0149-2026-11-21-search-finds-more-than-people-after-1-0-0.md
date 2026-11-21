@@ -5,7 +5,7 @@
 - **Refines:** [0085](0085-2026-10-12-seat-assignment-api.md) (point 5: one search over people, teams and seat labels)
 
 ## Context
-The search box at the top, *Where does… sit?*, answers one question: where someone sits. [0085](0085-2026-10-12-seat-assignment-api.md) point 5 made it one search over a person's name or email, a team's name and a seat's label, and every result is a seat. The owner, checking the demo for [#171](https://github.com/reznik-gev/HSP/pull/171), found that people will expect a search box to find anything in HSP, such as a building or a floor.
+The search box at the top, *Where does… sit?*, answers one question: where someone sits. [0085](0085-2026-10-12-seat-assignment-api.md) point 5 made it one search over a person's name or email, a team's name and a seat's label, and every result is a seat. The owner, checking the demo for [#171](https://github.com/reznik-gev/MusicalChairs/pull/171), found that people will expect a search box to find anything in Musical Chairs, such as a building or a floor.
 
 ## Options considered
 - **Widen the search after 1.0.0** ✅: 1.0.0 keeps its scope ([0104](0104-2026-10-21-v1-release-scope-and-support.md)), and the search that ships answers its question well.

@@ -12,10 +12,10 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from prometheus_client import REGISTRY, CollectorRegistry
 
-from hsp import metrics
-from hsp.main import create_app
-from hsp.problems import ProblemException
-from hsp.serve import reset_metrics_dir
+from musical_chairs import metrics
+from musical_chairs.main import create_app
+from musical_chairs.problems import ProblemException
+from musical_chairs.serve import reset_metrics_dir
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
@@ -54,28 +54,30 @@ def sample(name: str, registry: CollectorRegistry = REGISTRY, **labels: str) -> 
 
 def test_requests_are_counted_and_timed_by_route_template(probe_api: TestClient) -> None:
     labels = {"method": "GET", "route": "/_test/items/{item_id}"}
-    before = sample("hsp_http_requests_total", **labels, status="200")
-    timed_before = sample("hsp_http_request_duration_seconds_count", **labels)
+    before = sample("musical_chairs_http_requests_total", **labels, status="200")
+    timed_before = sample("musical_chairs_http_request_duration_seconds_count", **labels)
 
     probe_api.get("/_test/items/1")
     probe_api.get("/_test/items/2")
 
-    assert sample("hsp_http_requests_total", **labels, status="200") == before + 2
-    assert sample("hsp_http_request_duration_seconds_count", **labels) == timed_before + 2
+    assert sample("musical_chairs_http_requests_total", **labels, status="200") == before + 2
+    assert (
+        sample("musical_chairs_http_request_duration_seconds_count", **labels) == timed_before + 2
+    )
 
 
 def test_unknown_paths_share_one_route_label(probe_api: TestClient) -> None:
     labels = {"method": "GET", "route": "unmatched", "status": "404"}
-    before = sample("hsp_http_requests_total", **labels)
+    before = sample("musical_chairs_http_requests_total", **labels)
     probe_api.get("/no/such/path/1")
     probe_api.get("/no/such/path/2")
-    assert sample("hsp_http_requests_total", **labels) == before + 2
+    assert sample("musical_chairs_http_requests_total", **labels) == before + 2
 
 
 def test_lock_refusals_are_counted(probe_api: TestClient) -> None:
-    before = sample("hsp_lock_refusals_total", type="floor-locked")
+    before = sample("musical_chairs_lock_refusals_total", type="floor-locked")
     assert probe_api.post("/_test/locked").status_code == 423
-    assert sample("hsp_lock_refusals_total", type="floor-locked") == before + 1
+    assert sample("musical_chairs_lock_refusals_total", type="floor-locked") == before + 1
 
 
 def test_metrics_are_served_in_the_prometheus_format(probe_api: TestClient) -> None:
@@ -83,28 +85,33 @@ def test_metrics_are_served_in_the_prometheus_format(probe_api: TestClient) -> N
     r = probe_api.get("/metrics")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/plain")
-    assert "hsp_http_requests_total{" in r.text
+    assert "musical_chairs_http_requests_total{" in r.text
 
 
 def test_metrics_are_not_counted_as_requests(probe_api: TestClient) -> None:
     probe_api.get("/metrics")
-    assert sample("hsp_http_requests_total", method="GET", route="/metrics", status="200") == 0
+    assert (
+        sample("musical_chairs_http_requests_total", method="GET", route="/metrics", status="200")
+        == 0
+    )
 
 
 def test_an_observed_operation_counts_its_outcome_and_time() -> None:
     labels = {"operation": "publish"}
-    ok = sample("hsp_plan_operations_total", **labels, outcome="ok")
-    refused = sample("hsp_plan_operations_total", **labels, outcome="refused")
-    timed = sample("hsp_plan_operation_duration_seconds_count", **labels)
+    ok = sample("musical_chairs_plan_operations_total", **labels, outcome="ok")
+    refused = sample("musical_chairs_plan_operations_total", **labels, outcome="refused")
+    timed = sample("musical_chairs_plan_operation_duration_seconds_count", **labels)
 
     with metrics.observed("publish"):
         pass
     with pytest.raises(ProblemException), metrics.observed("publish"):
         raise PUBLISH_REFUSED
 
-    assert sample("hsp_plan_operations_total", **labels, outcome="ok") == ok + 1
-    assert sample("hsp_plan_operations_total", **labels, outcome="refused") == refused + 1
-    assert sample("hsp_plan_operation_duration_seconds_count", **labels) == timed + 2
+    assert sample("musical_chairs_plan_operations_total", **labels, outcome="ok") == ok + 1
+    assert (
+        sample("musical_chairs_plan_operations_total", **labels, outcome="refused") == refused + 1
+    )
+    assert sample("musical_chairs_plan_operation_duration_seconds_count", **labels) == timed + 2
 
 
 # --- several workers ------------------------------------------------------------------------
@@ -116,7 +123,8 @@ def count_in_a_worker(metrics_dir: Path) -> None:
         [
             sys.executable,
             "-c",
-            f"from hsp import metrics; metrics.HTTP_REQUESTS.labels(**{WORKER_REQUEST!r}).inc()",
+            "from musical_chairs import metrics; "
+            f"metrics.HTTP_REQUESTS.labels(**{WORKER_REQUEST!r}).inc()",
         ],
         cwd=BACKEND_DIR,
         env={**os.environ, "PROMETHEUS_MULTIPROC_DIR": str(metrics_dir)},
@@ -133,7 +141,7 @@ def test_the_metrics_server_adds_up_every_worker(
 
     registry = metrics.registry()
 
-    assert sample("hsp_http_requests_total", registry, **WORKER_REQUEST) == 2
+    assert sample("musical_chairs_http_requests_total", registry, **WORKER_REQUEST) == 2
 
 
 def test_a_restart_starts_counting_from_zero(
@@ -145,4 +153,4 @@ def test_a_restart_starts_counting_from_zero(
 
     registry = metrics.registry()
 
-    assert sample("hsp_http_requests_total", registry, **WORKER_REQUEST) == 0
+    assert sample("musical_chairs_http_requests_total", registry, **WORKER_REQUEST) == 0

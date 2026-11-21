@@ -4,12 +4,12 @@ from pathlib import Path
 import pytest
 from prometheus_client import CollectorRegistry
 
-from hsp_backup.backups import Backups
-from hsp_backup.config import BackupConfig, parse_config
-from hsp_backup.metrics import BackupMetrics
-from hsp_backup.postgres import PostgresError
-from hsp_backup.stores.base import Store
-from hsp_backup.stores.folder import FolderStore
+from musical_chairs_backup.backups import Backups
+from musical_chairs_backup.config import BackupConfig, parse_config
+from musical_chairs_backup.metrics import BackupMetrics
+from musical_chairs_backup.postgres import PostgresError
+from musical_chairs_backup.stores.base import Store
+from musical_chairs_backup.stores.folder import FolderStore
 
 START = datetime(2026, 10, 21, 2, 30, tzinfo=UTC)
 
@@ -27,7 +27,10 @@ class FakeClock:
 
 class SpyPostgres:
     def __init__(self) -> None:
-        self.content = {"hsp": b"hsp rows v1", "keycloak": b"keycloak rows v1"}
+        self.content = {
+            "musical_chairs": b"musical_chairs rows v1",
+            "keycloak": b"keycloak rows v1",
+        }
         self.revision: str | None = "c9b2fc969b7d"
         self.restored: dict[str, bytes] = {}
         self.fail_dump = False
@@ -65,7 +68,7 @@ def nightly_and_weekly_config() -> BackupConfig:
 
 @pytest.fixture
 def never_taken_backup_name() -> str:
-    return "hsp-20200101T000000Z-nightly.tar"
+    return "musical-chairs-20200101T000000Z-nightly.tar"
 
 
 @pytest.fixture
@@ -93,9 +96,9 @@ def folder_stores_by_targets(
 def install_dir(tmp_path: Path) -> Path:
     d = tmp_path / "install"
     (d / "secrets").mkdir(parents=True)
-    (d / ".env").write_text("HSP_VERSION=1.0.0\n")
+    (d / ".env").write_text("MUSICAL_CHAIRS_VERSION=1.0.0\n")
     (d / "backups.yml").write_text(NIGHTLY_TO_LOCAL_WEEKLY_TO_NAS)
-    (d / "compose.yml").write_text("name: hsp\n")
+    (d / "compose.yml").write_text("name: musical_chairs\n")
     (d / "secrets" / "db_superuser_password").write_text("never in a backup")
     return d
 
@@ -121,7 +124,7 @@ def backups(
         config=nightly_and_weekly_config,
         postgres=spy_postgres,
         stores=store,
-        hsp_version="1.0.0",
+        musical_chairs_version="1.0.0",
         install_dir=install_dir,
         metrics=BackupMetrics(registry),
         clock=fake_clock,

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from hsp_backup.postgres import PgTools, PostgresError, run
+from musical_chairs_backup.postgres import PgTools, PostgresError, run
 
 
 class SpyRunner:
@@ -32,10 +32,10 @@ def tools(tmp_path: Path, runner: SpyRunner) -> PgTools:
 
 
 def test_a_dump_is_custom_format_and_compressed(tools: PgTools, runner: SpyRunner) -> None:
-    tools.dump("hsp", Path("/tmp/hsp.dump"))
+    tools.dump("musical_chairs", Path("/tmp/musical_chairs.dump"))
     [args] = runner.calls
     assert args[:3] == ["pg_dump", "--format=custom", "--compress=6"]
-    assert args[-1] == "hsp"
+    assert args[-1] == "musical_chairs"
     assert runner.passwords == ["s3cret"]
 
 

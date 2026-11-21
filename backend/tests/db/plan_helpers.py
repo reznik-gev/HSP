@@ -8,13 +8,13 @@ from pydantic import TypeAdapter
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp import models
-from hsp.auth.principal import Principal
-from hsp.models import new_id
-from hsp.plans.changeset import ChangesetIn
-from hsp.plans.drafts import DraftsService, SqlDraftRepository
-from hsp.plans.locks import SqlLockRepository
-from hsp.plans.repository import SqlPlanRepository
+from musical_chairs import models
+from musical_chairs.auth.principal import Principal
+from musical_chairs.models import new_id
+from musical_chairs.plans.changeset import ChangesetIn
+from musical_chairs.plans.drafts import DraftsService, SqlDraftRepository
+from musical_chairs.plans.locks import SqlLockRepository
+from musical_chairs.plans.repository import SqlPlanRepository
 from tests.stubs import stub_admin
 
 changeset = TypeAdapter(ChangesetIn)

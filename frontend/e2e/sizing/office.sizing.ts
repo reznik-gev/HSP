@@ -1,5 +1,5 @@
 /**
- * Seed the sizing bench's office (deploy/measure-size.sh): HSP_SIZING_PEOPLE people (default
+ * Seed the sizing bench's office (deploy/measure-size.sh): MUSICAL_CHAIRS_SIZING_PEOPLE people (default
  * 1,000), each at their own desk. One building, 500 desks to a floor, made through the API as an
  * admin would.
  */

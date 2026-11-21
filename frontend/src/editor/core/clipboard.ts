@@ -12,7 +12,7 @@ import type { Vec2 } from "./plan";
 type P = ApiPlan;
 
 export interface Fragment {
-  format: "hsp-plan-fragment";
+  format: "musical-chairs-plan-fragment";
   version: 1;
   /** The floor it was copied from; older copies don't say. */
   floor_id?: string;
@@ -32,7 +32,7 @@ export function copyFragment(doc: ApiPlan, selection: ReadonlySet<string>): Frag
     (o) => selection.has(o.id) || (o.attached_to ? selection.has(o.attached_to) : false),
   );
   const fragment: Fragment = {
-    format: "hsp-plan-fragment",
+    format: "musical-chairs-plan-fragment",
     version: 1,
     floor_id: doc.floor_id,
     walls,
@@ -168,7 +168,7 @@ function strip<T extends { id: string }>(element: T): Omit<T, "id"> {
 export function parseFragment(text: string): Fragment | null {
   try {
     const f = JSON.parse(text) as Partial<Fragment>;
-    return f.format === "hsp-plan-fragment" && f.version === 1 ? (f as Fragment) : null;
+    return f.format === "musical-chairs-plan-fragment" && f.version === 1 ? (f as Fragment) : null;
   } catch {
     return null;
   }

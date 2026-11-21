@@ -1,7 +1,7 @@
 [project]
-name = "hsp-backup"
+name = "musical-chairs-backup"
 version = "0.1.0"
-description = "HSP's backup service: scheduled dumps to a folder or S3, and restore (docs/0106)"
+description = "Musical Chairs' backup service: scheduled dumps to a folder or S3, and restore (docs/0106)"
 readme = "README.md"
 authors = [
     { name = "gev", email = "reznikgev@gmail.com" }
@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.scripts]
-hsp-backup = "hsp_backup.cli:app"
+musical-chairs-backup = "musical_chairs_backup.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.13.0,<0.14.0"]
@@ -43,7 +43,7 @@ python_version = "3.14"
 strict = true
 plugins = ["pydantic.mypy"]
 mypy_path = "src"
-packages = ["hsp_backup"]
+packages = ["musical_chairs_backup"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

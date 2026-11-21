@@ -1,4 +1,4 @@
-/** HSP's API, for browser tests that set up their own data. */
+/** Musical Chairs' API, for browser tests that set up their own data. */
 import { expect, type Page } from "@playwright/test";
 
 const API = "/api/v1";

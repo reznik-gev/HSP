@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 
-from hsp.auth.sessions import Session, SessionTokens, with_tokens
+from musical_chairs.auth.sessions import Session, SessionTokens, with_tokens
 
 #: The `sign_in` fixture: stores a session holding the tokens and sets its cookie on the client.
 SignIn = Callable[[SessionTokens], Awaitable[None]]

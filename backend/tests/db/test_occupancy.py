@@ -5,8 +5,8 @@ from typing import Any
 
 from sqlalchemy import select
 
-from hsp import models
-from hsp.seats.occupancy import Counts, OccupancyService
+from musical_chairs import models
+from musical_chairs.seats.occupancy import Counts, OccupancyService
 from tests.db.seat_helpers import seated
 
 

@@ -1,31 +1,31 @@
-# HSP production stack on one host (docs/0055, docs/0099).
+# Musical Chairs production stack on one host (docs/0055, docs/0099).
 #
 # An installation directory holds this file next to:
 #   .env              settings (see .env.example)
 #   secrets/          one file per secret (see .env.example), readable by its container's user
-#   tls/              tls.crt and tls.key, when hsp-web terminates TLS
+#   tls/              tls.crt and tls.key, when musical-chairs-web terminates TLS
 #   postgres-init/    roles and databases, run once on an empty data directory
 #   backups.yml       when and where to back up (see backups.example.yml)
-# and keeps its data under HSP_DATA_DIR. `hsp install` (bin/hsp) prepares all of it.
+# and keeps its data under MUSICAL_CHAIRS_DATA_DIR. `musical-chairs install` (bin/musical-chairs) prepares all of it.
 #
 #   docker compose up -d
-name: hsp
+name: musical_chairs
 
 x-logging: &logging
   driver: json-file
   options: { max-size: "10m", max-file: "5" }
 
-x-hsp-api: &hsp-api
-  image: hsp-api:${HSP_VERSION:?set HSP_VERSION in .env}
+x-musical-chairs-api: &musical-chairs-api
+  image: musical-chairs-api:${MUSICAL_CHAIRS_VERSION:?set MUSICAL_CHAIRS_VERSION in .env}
   pull_policy: never # images are loaded from the release bundle (docs/0054)
   environment:
-    HSP_DATABASE_URL: postgresql+asyncpg://hsp@postgres:5432/hsp
-    HSP_PUBLIC_URL: ${HSP_PUBLIC_URL:?set HSP_PUBLIC_URL in .env}
+    MUSICAL_CHAIRS_DATABASE_URL: postgresql+asyncpg://musical_chairs@postgres:5432/musical_chairs
+    MUSICAL_CHAIRS_PUBLIC_URL: ${MUSICAL_CHAIRS_PUBLIC_URL:?set MUSICAL_CHAIRS_PUBLIC_URL in .env}
     # The API talks to Keycloak inside the stack; Keycloak still names its public URL as the
     # issuer (KC_HOSTNAME_BACKCHANNEL_DYNAMIC below).
-    HSP_OIDC_ISSUER_URL: http://keycloak:8080/auth/realms/hsp
-    HSP_API_WORKERS: ${HSP_API_WORKERS:-4}
-    HSP_LOG_LEVEL: ${HSP_LOG_LEVEL:-INFO}
+    MUSICAL_CHAIRS_OIDC_ISSUER_URL: http://keycloak:8080/auth/realms/musical_chairs
+    MUSICAL_CHAIRS_API_WORKERS: ${MUSICAL_CHAIRS_API_WORKERS:-4}
+    MUSICAL_CHAIRS_LOG_LEVEL: ${MUSICAL_CHAIRS_LOG_LEVEL:-INFO}
     # Tracing (docs/0105): off unless an OTLP endpoint is set. The standard OpenTelemetry settings.
     OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
@@ -33,7 +33,7 @@ x-hsp-api: &hsp-api
     OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-}
     OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-}
     OTEL_RESOURCE_ATTRIBUTES: ${OTEL_RESOURCE_ATTRIBUTES:-}
-  secrets: [hsp_database_password, hsp_session_encryption_key, hsp_oidc_client_secret]
+  secrets: [musical_chairs_database_password, musical_chairs_session_encryption_key, musical_chairs_oidc_client_secret]
   logging: *logging
 
 services:
@@ -42,31 +42,31 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD_FILE: /run/secrets/db_superuser_password
-    secrets: [db_superuser_password, hsp_database_password, keycloak_db_password]
+    secrets: [db_superuser_password, musical_chairs_database_password, keycloak_db_password]
     volumes:
-      - ${HSP_DATA_DIR:-/var/lib/hsp}/postgres:/var/lib/postgresql
+      - ${MUSICAL_CHAIRS_DATA_DIR:-/var/lib/musical_chairs}/postgres:/var/lib/postgresql
       - ./postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d hsp"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d musical_chairs"]
       interval: 5s
       timeout: 3s
       retries: 30
     logging: *logging
 
-  # One-shot: brings the HSP schema up to date, then exits (docs/0056).
+  # One-shot: brings the Musical Chairs schema up to date, then exits (docs/0056).
   migrate:
-    <<: *hsp-api
+    <<: *musical-chairs-api
     command: ["alembic", "upgrade", "head"]
     restart: "no"
     depends_on:
       postgres: { condition: service_healthy }
 
   api:
-    <<: *hsp-api
+    <<: *musical-chairs-api
     restart: unless-stopped
-    # Prometheus metrics (docs/0105): host-only unless HSP_METRICS_ADDRESS names another interface.
+    # Prometheus metrics (docs/0105): host-only unless MUSICAL_CHAIRS_METRICS_ADDRESS names another interface.
     ports:
-      - "${HSP_METRICS_ADDRESS:-127.0.0.1}:${HSP_API_METRICS_PORT:-9464}:9464"
+      - "${MUSICAL_CHAIRS_METRICS_ADDRESS:-127.0.0.1}:${MUSICAL_CHAIRS_API_METRICS_PORT:-9464}:9464"
     depends_on:
       migrate: { condition: service_completed_successfully }
     healthcheck:
@@ -80,23 +80,23 @@ services:
       start_period: 180s
 
   keycloak:
-    image: hsp-keycloak:${HSP_VERSION}
+    image: musical-chairs-keycloak:${MUSICAL_CHAIRS_VERSION}
     pull_policy: never
     restart: unless-stopped
     environment:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD_FILE: /run/secrets/keycloak_db_password
-      KC_HOSTNAME: ${HSP_PUBLIC_URL}/auth
+      KC_HOSTNAME: ${MUSICAL_CHAIRS_PUBLIC_URL}/auth
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       KC_HTTP_ENABLED: "true"
       KC_PROXY_HEADERS: xforwarded
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD_FILE: /run/secrets/keycloak_admin_password
-      # Filled into the hsp realm when it's first imported.
-      HSP_PUBLIC_URL: ${HSP_PUBLIC_URL}
-      HSP_OIDC_CLIENT_SECRET_FILE: /run/secrets/hsp_oidc_client_secret
-    secrets: [keycloak_db_password, keycloak_admin_password, hsp_oidc_client_secret]
+      # Filled into the musical_chairs realm when it's first imported.
+      MUSICAL_CHAIRS_PUBLIC_URL: ${MUSICAL_CHAIRS_PUBLIC_URL}
+      MUSICAL_CHAIRS_OIDC_CLIENT_SECRET_FILE: /run/secrets/musical_chairs_oidc_client_secret
+    secrets: [keycloak_db_password, keycloak_admin_password, musical_chairs_oidc_client_secret]
     depends_on:
       postgres: { condition: service_healthy }
     healthcheck:
@@ -115,26 +115,26 @@ services:
     logging: *logging
 
   # Scheduled backups to a folder or S3, and restore (docs/0058, docs/0106). Runs as uid 999, like
-  # postgres, so it reads the superuser's password and owns HSP_DATA_DIR/backups.
+  # postgres, so it reads the superuser's password and owns MUSICAL_CHAIRS_DATA_DIR/backups.
   backup:
-    image: hsp-backup:${HSP_VERSION}
+    image: musical-chairs-backup:${MUSICAL_CHAIRS_VERSION}
     pull_policy: never
     restart: unless-stopped
     environment:
-      HSP_VERSION: ${HSP_VERSION}
+      MUSICAL_CHAIRS_VERSION: ${MUSICAL_CHAIRS_VERSION}
       PGHOST: postgres
       PGUSER: postgres
       PGPASSWORD_FILE: /run/secrets/db_superuser_password
     secrets: [db_superuser_password, backup_s3_access_key, backup_s3_secret_key]
     volumes:
-      - ./backups.yml:/etc/hsp/backups.yml:ro
-      - ${HSP_DATA_DIR:-/var/lib/hsp}/backups:/backups
+      - ./backups.yml:/etc/musical_chairs/backups.yml:ro
+      - ${MUSICAL_CHAIRS_DATA_DIR:-/var/lib/musical_chairs}/backups:/backups
       # With include_config, a backup holds these; never secrets/.
-      - ./.env:/etc/hsp/install/.env:ro
-      - ./backups.yml:/etc/hsp/install/backups.yml:ro
-      - ./compose.yml:/etc/hsp/install/compose.yml:ro
+      - ./.env:/etc/musical_chairs/install/.env:ro
+      - ./backups.yml:/etc/musical_chairs/install/backups.yml:ro
+      - ./compose.yml:/etc/musical_chairs/install/compose.yml:ro
     ports:
-      - "${HSP_METRICS_ADDRESS:-127.0.0.1}:${HSP_BACKUP_METRICS_PORT:-9465}:9465"
+      - "${MUSICAL_CHAIRS_METRICS_ADDRESS:-127.0.0.1}:${MUSICAL_CHAIRS_BACKUP_METRICS_PORT:-9465}:9465"
     depends_on:
       postgres: { condition: service_healthy }
     healthcheck:
@@ -146,20 +146,20 @@ services:
     logging: *logging
 
   web:
-    image: hsp-web:${HSP_VERSION}
+    image: musical-chairs-web:${MUSICAL_CHAIRS_VERSION}
     pull_policy: never
     restart: unless-stopped
     environment:
-      HSP_PUBLIC_URL: ${HSP_PUBLIC_URL}
-      HSP_WEB_TLS: ${HSP_WEB_TLS:-on}
-      HSP_HSTS: ${HSP_HSTS:-on}
-      HSP_TRUSTED_PROXIES: ${HSP_TRUSTED_PROXIES:-}
-      HSP_KEYCLOAK_ADMIN_FROM: ${HSP_KEYCLOAK_ADMIN_FROM:-}
+      MUSICAL_CHAIRS_PUBLIC_URL: ${MUSICAL_CHAIRS_PUBLIC_URL}
+      MUSICAL_CHAIRS_WEB_TLS: ${MUSICAL_CHAIRS_WEB_TLS:-on}
+      MUSICAL_CHAIRS_HSTS: ${MUSICAL_CHAIRS_HSTS:-on}
+      MUSICAL_CHAIRS_TRUSTED_PROXIES: ${MUSICAL_CHAIRS_TRUSTED_PROXIES:-}
+      MUSICAL_CHAIRS_KEYCLOAK_ADMIN_FROM: ${MUSICAL_CHAIRS_KEYCLOAK_ADMIN_FROM:-}
     ports:
-      - "${HSP_BIND_ADDRESS:-0.0.0.0}:${HSP_HTTP_PORT:-80}:8080"
-      - "${HSP_BIND_ADDRESS:-0.0.0.0}:${HSP_HTTPS_PORT:-443}:8443"
+      - "${MUSICAL_CHAIRS_BIND_ADDRESS:-0.0.0.0}:${MUSICAL_CHAIRS_HTTP_PORT:-80}:8080"
+      - "${MUSICAL_CHAIRS_BIND_ADDRESS:-0.0.0.0}:${MUSICAL_CHAIRS_HTTPS_PORT:-443}:8443"
     volumes:
-      - ./tls:/etc/hsp/tls:ro
+      - ./tls:/etc/musical_chairs/tls:ro
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8081/healthz"]
       interval: 10s
@@ -169,11 +169,11 @@ services:
 
 secrets:
   db_superuser_password: { file: ./secrets/db_superuser_password }
-  hsp_database_password: { file: ./secrets/hsp_database_password }
+  musical_chairs_database_password: { file: ./secrets/musical_chairs_database_password }
   keycloak_db_password: { file: ./secrets/keycloak_db_password }
   keycloak_admin_password: { file: ./secrets/keycloak_admin_password }
-  hsp_session_encryption_key: { file: ./secrets/hsp_session_encryption_key }
-  hsp_oidc_client_secret: { file: ./secrets/hsp_oidc_client_secret }
+  musical_chairs_session_encryption_key: { file: ./secrets/musical_chairs_session_encryption_key }
+  musical_chairs_oidc_client_secret: { file: ./secrets/musical_chairs_oidc_client_secret }
   # Empty unless a backups.yml target is S3 (docs/0106).
   backup_s3_access_key: { file: ./secrets/backup_s3_access_key }
   backup_s3_secret_key: { file: ./secrets/backup_s3_secret_key }

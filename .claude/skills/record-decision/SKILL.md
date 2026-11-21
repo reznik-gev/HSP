@@ -1,6 +1,6 @@
 ---
 name: record-decision
-description: Write an HSP decision record. Claim its number, write it, and update the index and the records it refines. Use whenever a change makes or changes a product or technical decision, or the owner says "record this" or "write a decision".
+description: Write a Musical Chairs decision record. Claim its number, write it, and update the index and the records it refines. Use whenever a change makes or changes a product or technical decision, or the owner says "record this" or "write a decision".
 ---
 
 # Write a decision record

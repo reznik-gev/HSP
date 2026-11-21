@@ -10,10 +10,10 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-from hsp import models
-from hsp.locations.repository import SqlLocationsRepository
-from hsp.models import new_id
-from hsp.plans.locks import SqlLockRepository
+from musical_chairs import models
+from musical_chairs.locations.repository import SqlLocationsRepository
+from musical_chairs.models import new_id
+from musical_chairs.plans.locks import SqlLockRepository
 
 
 async def _floor(rolled_back_db_session: AsyncSession) -> tuple[uuid.UUID, uuid.UUID]:

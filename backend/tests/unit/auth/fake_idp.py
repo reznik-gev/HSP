@@ -21,7 +21,7 @@ from joserfc.jwk import KeySet, RSAKey
 
 from tests.fakes import InMemorySessionStore
 
-ISSUER = "http://idp.test/realms/hsp"
+ISSUER = "http://idp.test/realms/musical_chairs"
 OIDC = f"{ISSUER}/protocol/openid-connect"
 PUBLIC = "http://app.test"
 
@@ -38,7 +38,7 @@ class FakeIdP:
         self.revoked: list[str] = []
         self.issued = 0
         self.id_token_nonce_override: str | None = None
-        self.roles = ["hsp-admin"]
+        self.roles = ["musical-chairs-admin"]
         self.published_keys: list[RSAKey] = [self.key]
 
     def handle(self, request: httpx2.Request) -> httpx2.Response:
@@ -82,7 +82,7 @@ class FakeIdP:
             {
                 "sub": "user-1",
                 "name": "Dev Admin",
-                "email": "admin@hsp.local",
+                "email": "admin@musical-chairs.local",
                 "exp": now + 300,
                 "realm_access": {"roles": self.roles},
             }
@@ -98,7 +98,7 @@ class FakeIdP:
             body["id_token"] = self._jwt(
                 {
                     "iss": ISSUER,
-                    "aud": "hsp-api",
+                    "aud": "musical-chairs-api",
                     "sub": "user-1",
                     "iat": now,
                     "exp": now + 300,

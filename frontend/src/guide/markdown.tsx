@@ -8,7 +8,7 @@
  *   > text                            a tip
  *   ![What it shows](name.gif)        a GIF, alone on its line, from guide/media/<lang>/
  *   **bold**, `Ctrl+Z`, [text](/floors), [text](#admins-3-publish)
- *                                     inline: bold, a key, a link inside HSP. A heading's id
+ *                                     inline: bold, a key, a link inside Musical Chairs. A heading's id
  *                                     starts with its page's prefix: everyone- or admins-.
  *
  * Blocks are separated by blank lines. Lines of one paragraph or list item are joined.
@@ -101,7 +101,7 @@ export function inline(text: string): ReactNode[] {
         </a>,
       );
     } else {
-      // HSP runs offline, so the guide links nowhere outside it: the text stays, the link goes.
+      // Musical Chairs runs offline, so the guide links nowhere outside it: the text stays, the link goes.
       out.push(label);
     }
     at = m.index + m[0].length;

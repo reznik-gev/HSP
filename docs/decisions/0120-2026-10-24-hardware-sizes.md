@@ -15,11 +15,11 @@ The owner chose to measure up to 5,000 before 1.0. The sizing bench ([testing gu
 | Memory, idle | 1.1 GB | 1.1 GB |
 | Memory, at the peak | 1.3 GB | 1.3 GB |
 | Peak CPU (of one vCPU): API / Keycloak / PostgreSQL | 51% / 54% / 20% | 40% / 62% / 52% |
-| HSP's database / Keycloak's | 20 MB / 14 MB | 28 MB / 14 MB |
+| Musical Chairs' database / Keycloak's | 20 MB / 14 MB | 28 MB / 14 MB |
 | PostgreSQL's folder | 90 MB | 113 MB |
 | One backup | 0.8 MB | 2.0 MB |
 
-Keycloak takes most of the memory (670–730 MB), then the API with its 4 workers (325–350 MB), PostgreSQL (80–190 MB), the backup service (50 MB) and the web server (10 MB). Memory doesn't grow with the number of people; PostgreSQL's CPU does, a little. HSP's four images take about 1.2 GB, and PostgreSQL's 0.7 GB more, usually shared between releases.
+Keycloak takes most of the memory (670–730 MB), then the API with its 4 workers (325–350 MB), PostgreSQL (80–190 MB), the backup service (50 MB) and the web server (10 MB). Memory doesn't grow with the number of people; PostgreSQL's CPU does, a little. Musical Chairs' four images take about 1.2 GB, and PostgreSQL's 0.7 GB more, usually shared between releases.
 
 ## Options considered
 | Option | Chosen | Why |
@@ -38,7 +38,7 @@ For an organisation of **up to about 5,000 people**:
 | Disk | 20 GB | 50 GB, plus room for backups kept on the host |
 
 - Both leave wide headroom over the 1.3 GB and the CPU measured. The recommended host is 0055's, now measured.
-- **Beyond about 5,000 people**, or for many people editing at once: not measured yet. Start with the recommended host, watch the metrics, and ask the project's owner. More CPU helps most, and `HSP_API_WORKERS` can then go up with it.
+- **Beyond about 5,000 people**, or for many people editing at once: not measured yet. Start with the recommended host, watch the metrics, and ask the project's owner. More CPU helps most, and `MUSICAL_CHAIRS_API_WORKERS` can then go up with it.
 - **Tested versions:** Ubuntu 24.04 LTS with Docker Engine 28.0 and Compose 2.38. The guide states these instead of minimum versions nobody has checked.
 - **Each kept release** takes about **1.2 GB** of disk (its four images), not 0.7 GB. PostgreSQL's image is usually shared.
 

@@ -5,9 +5,9 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 
-from hsp_backup.config import S3Target
-from hsp_backup.stores.base import StoreError
-from hsp_backup.stores.s3 import S3_ACCESS_KEY, S3Store, s3_client
+from musical_chairs_backup.config import S3Target
+from musical_chairs_backup.stores.base import StoreError
+from musical_chairs_backup.stores.s3 import S3_ACCESS_KEY, S3Store, s3_client
 from tests.stores.conftest import BUCKET, NAME, OFFSITE, OTHER
 
 
@@ -56,7 +56,7 @@ def test_without_a_prefix_names_are_the_top_of_the_bucket(
 def test_names_go_past_the_first_page_of_a_listing(
     fake_s3_store: S3Store, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    many = [f"hsp-20261021T0{i}0000Z-nightly.tar" for i in range(5)]
+    many = [f"musical-chairs-20261021T0{i}0000Z-nightly.tar" for i in range(5)]
     for name in many:
         fake_s3_store.client.put_object(Bucket=BUCKET, Key=f"prod/{name}", Body=b"")
     paginator = fake_s3_store.client.get_paginator("list_objects_v2")
@@ -88,16 +88,22 @@ def test_an_upload_that_fails_partway_is_removed(
         raise ClientError({"Error": {"Code": "RequestTimeout"}}, "UploadPart")
 
     monkeypatch.setattr(fake_s3_store.client, "upload_file", broken_upload)
-    with pytest.raises(StoreError, match=r"can't write to offsite \(s3://hsp-backups/prod/\)"):
+    with pytest.raises(
+        StoreError, match=r"can't write to offsite \(s3://musical-chairs-backups/prod/\)"
+    ):
         fake_s3_store.put(backup_file, NAME)
     assert keys(fake_s3_store) == []
 
 
 def test_a_missing_bucket_is_named(fake_s3: None, secrets: Path, backup_file: Path) -> None:
     store = S3Store("offsite", OFFSITE, s3_client(OFFSITE, secrets))
-    with pytest.raises(StoreError, match=r"can't write to offsite \(s3://hsp-backups/prod/\)"):
+    with pytest.raises(
+        StoreError, match=r"can't write to offsite \(s3://musical-chairs-backups/prod/\)"
+    ):
         store.put(backup_file, NAME)
-    with pytest.raises(StoreError, match=r"can't read offsite \(s3://hsp-backups/prod/\)"):
+    with pytest.raises(
+        StoreError, match=r"can't read offsite \(s3://musical-chairs-backups/prod/\)"
+    ):
         store.names()
 
 

@@ -689,7 +689,7 @@
             "title": "Archived At"
           },
           "builtin": {
-            "description": "Shipped with HSP; read-only (docs/0083)",
+            "description": "Shipped with Musical Chairs; read-only (docs/0083)",
             "title": "Builtin",
             "type": "boolean"
           },
@@ -4307,8 +4307,8 @@
     }
   },
   "info": {
-    "description": "Human-Space Program: spaces, people and seats.",
-    "title": "HSP API",
+    "description": "Musical Chairs: spaces, people and seats.",
+    "title": "Musical Chairs API",
     "version": "0.0.0-dev"
   },
   "openapi": "3.1.0",
@@ -4451,7 +4451,7 @@
     },
     "/api/v1/auth/logout": {
       "post": {
-        "description": "End the HSP session and return the identity provider's logout URL.",
+        "description": "End the Musical Chairs session and return the identity provider's logout URL.",
         "operationId": "logout_api_v1_auth_logout_post",
         "responses": {
           "200": {

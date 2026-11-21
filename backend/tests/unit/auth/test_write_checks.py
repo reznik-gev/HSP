@@ -4,7 +4,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from hsp.auth.sessions import SessionTokens
+from musical_chairs.auth.sessions import SessionTokens
 from tests.stubs import STUB_CSRF_HEADER_NAME, STUB_CSRF_TOKEN
 from tests.unit.auth.session_helpers import SignIn
 

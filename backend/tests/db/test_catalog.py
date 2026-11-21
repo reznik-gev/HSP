@@ -5,9 +5,9 @@ from typing import Any
 import pytest
 from sqlalchemy import text
 
-from hsp.catalog.items import CatalogItemIn, CatalogService, ZoneTypeIn
-from hsp.models import new_id
-from hsp.problems import ProblemException
+from musical_chairs.catalog.items import CatalogItemIn, CatalogService, ZoneTypeIn
+from musical_chairs.models import new_id
+from musical_chairs.problems import ProblemException
 from tests.db.plan_helpers import add, apply
 from tests.stubs import stub_admin
 

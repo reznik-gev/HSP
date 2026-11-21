@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from structlog.testing import capture_logs
 
-from hsp.auth.sessions import SessionTokens
+from musical_chairs.auth.sessions import SessionTokens
 from tests.fakes import InMemorySessionStore
 from tests.unit.auth.session_helpers import SignIn, SpyRefresher
 from tests.unit.auth.stubs import stub_tokens

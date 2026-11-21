@@ -4,9 +4,9 @@ from pathlib import Path
 import pytest
 from prometheus_client import CollectorRegistry
 
-from hsp_backup.archive import read_manifest
-from hsp_backup.backups import Backups, RestoreRefused, refuse_newer
-from hsp_backup.stores.folder import FolderStore
+from musical_chairs_backup.archive import read_manifest
+from musical_chairs_backup.backups import Backups, RestoreRefused, refuse_newer
+from musical_chairs_backup.stores.folder import FolderStore
 from tests.conftest import FakeClock, SpyPostgres
 
 
@@ -20,18 +20,18 @@ def members_of(archive: Path) -> list[str]:
 
 
 def metric(registry: CollectorRegistry, name: str, schedule: str) -> float | None:
-    return registry.get_sample_value(f"hsp_backup_{name}", {"schedule": schedule})
+    return registry.get_sample_value(f"musical_chairs_backup_{name}", {"schedule": schedule})
 
 
 def test_a_backup_holds_both_databases_and_a_manifest(
     backups: Backups, folder_stores_by_targets: dict[str, FolderStore]
 ) -> None:
     name = backups.take("nightly")
-    assert str(name) == "hsp-20261021T023000Z-nightly.tar"
+    assert str(name) == "musical-chairs-20261021T023000Z-nightly.tar"
     archive = folder_stores_by_targets["local"].path / str(name)
-    assert members_of(archive) == ["hsp.dump", "keycloak.dump", "manifest.json"]
+    assert members_of(archive) == ["keycloak.dump", "manifest.json", "musical_chairs.dump"]
     manifest = read_manifest(archive)
-    assert (manifest.hsp_version, manifest.schema_revision) == ("1.0.0", "c9b2fc969b7d")
+    assert (manifest.musical_chairs_version, manifest.schema_revision) == ("1.0.0", "c9b2fc969b7d")
     assert manifest.schedule == "nightly"
 
 
@@ -44,9 +44,9 @@ def test_include_config_adds_the_files_but_never_secrets(
         "config/.env",
         "config/backups.yml",
         "config/compose.yml",
-        "hsp.dump",
         "keycloak.dump",
         "manifest.json",
+        "musical_chairs.dump",
     ]
 
 
@@ -58,10 +58,10 @@ def test_each_schedule_keeps_its_newest(
         fake_clock.advance(days=1)
     backups.take("manual")
     assert files_in(folder_stores_by_targets["local"]) == [
-        "hsp-20261023T023000Z-nightly.tar",
-        "hsp-20261024T023000Z-nightly.tar",
-        "hsp-20261025T023000Z-nightly.tar",
-        "hsp-20261026T023000Z-manual.tar",
+        "musical-chairs-20261023T023000Z-nightly.tar",
+        "musical-chairs-20261024T023000Z-nightly.tar",
+        "musical-chairs-20261025T023000Z-nightly.tar",
+        "musical-chairs-20261026T023000Z-manual.tar",
     ]
 
 
@@ -87,9 +87,9 @@ def test_pre_upgrade_backups_are_never_deleted_automatically(
         fake_clock.advance(days=1)
     assert len(files_in(folder_stores_by_targets["local"])) == 4
     assert backups.prune("pre-upgrade", keep=1) == [
-        "hsp-20261023T023000Z-pre-upgrade.tar",
-        "hsp-20261022T023000Z-pre-upgrade.tar",
-        "hsp-20261021T023000Z-pre-upgrade.tar",
+        "musical-chairs-20261023T023000Z-pre-upgrade.tar",
+        "musical-chairs-20261022T023000Z-pre-upgrade.tar",
+        "musical-chairs-20261021T023000Z-pre-upgrade.tar",
     ]
 
 
@@ -125,17 +125,20 @@ def test_the_list_shows_every_target_newest_first(backups: Backups, fake_clock: 
     fake_clock.advance(hours=1)
     backups.take("nightly")
     assert [(label, str(b)) for label, b in backups.list()] == [
-        ("local", "hsp-20261021T033000Z-nightly.tar"),
-        ("nas", "hsp-20261021T023000Z-weekly.tar"),
+        ("local", "musical-chairs-20261021T033000Z-nightly.tar"),
+        ("nas", "musical-chairs-20261021T023000Z-weekly.tar"),
     ]
 
 
 def test_a_restore_replaces_both_databases(backups: Backups, spy_postgres: SpyPostgres) -> None:
     name = backups.take("weekly")
-    spy_postgres.content = {"hsp": b"later", "keycloak": b"later"}
+    spy_postgres.content = {"musical_chairs": b"later", "keycloak": b"later"}
     manifest = backups.restore(str(name))
     assert manifest.schedule == "weekly"
-    assert spy_postgres.restored == {"hsp": b"hsp rows v1", "keycloak": b"keycloak rows v1"}
+    assert spy_postgres.restored == {
+        "musical_chairs": b"musical_chairs rows v1",
+        "keycloak": b"keycloak rows v1",
+    }
 
 
 @pytest.fixture
@@ -148,7 +151,7 @@ def test_a_restore_skips_a_target_it_cant_read(
 ) -> None:
     name = backups.take("nightly")  # on local, which still works
     backups.restore(str(name))
-    assert spy_postgres.restored["hsp"] == b"hsp rows v1"
+    assert spy_postgres.restored["musical_chairs"] == b"musical_chairs rows v1"
 
 
 @pytest.mark.usefixtures("nas_unreadable")
@@ -168,11 +171,13 @@ def test_a_restore_needs_a_backup_that_exists(
         backups.restore("latest")
 
 
-def test_a_backup_from_a_newer_hsp_is_refused(backups: Backups, spy_postgres: SpyPostgres) -> None:
+def test_a_backup_from_a_newer_musical_chairs_is_refused(
+    backups: Backups, spy_postgres: SpyPostgres
+) -> None:
     name = backups.take("nightly")
-    backups.hsp_version = "0.9.0"
+    backups.musical_chairs_version = "0.9.0"
     with pytest.raises(
-        RestoreRefused, match=r"made by HSP 1\.0\.0, newer than the installed 0\.9\.0"
+        RestoreRefused, match=r"made by Musical Chairs 1\.0\.0, newer than the installed 0\.9\.0"
     ):
         backups.restore(str(name))
     assert spy_postgres.restored == {}

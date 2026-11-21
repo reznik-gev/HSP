@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# List known vulnerabilities in the packages HSP ships (docs/0128): the Python packages of
+# List known vulnerabilities in the packages Musical Chairs ships (docs/0128): the Python packages of
 # backend/ and backup/ (pip-audit), and the frontend's production packages (pnpm audit --prod).
 # Development-only packages (pytest, eslint, vite...) are left out: they never reach a customer.
 #   deploy/audit-packages.sh

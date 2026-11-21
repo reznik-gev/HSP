@@ -1,0 +1,195 @@
+import json
+from collections.abc import Callable
+from functools import cache, wraps
+from typing import Annotated
+
+import structlog
+import typer
+from prometheus_client import REGISTRY, start_http_server
+
+from musical_chairs_backup.archive import ArchiveError
+from musical_chairs_backup.backups import BackupPlan, Backups, RestoreRefused
+from musical_chairs_backup.config import MANUAL, PRE_UPGRADE, ConfigError, load_config
+from musical_chairs_backup.logs import configure_logging
+from musical_chairs_backup.metrics import PORT, BackupMetrics
+from musical_chairs_backup.names import KEEP_FOREVER
+from musical_chairs_backup.postgres import PgTools, PostgresError
+from musical_chairs_backup.scheduler import BackupScheduler
+from musical_chairs_backup.settings import BackupSettings
+from musical_chairs_backup.stores.base import Store, StoreError
+from musical_chairs_backup.stores.factory import open_store
+
+log = structlog.get_logger()
+
+#: Failures an operator can act on: said in one line, without a traceback.
+EXPECTED_ERRORS_TO_OMIT_TRACEBACK = (
+    ConfigError,
+    StoreError,
+    RestoreRefused,
+    ArchiveError,
+    PostgresError,
+)
+
+#: Refused before anything was changed: a bad backups.yml, a target that can't be read, a backup
+#: that isn't there, is damaged or comes from a newer Musical Chairs. musical-chairs restore then
+#: starts Musical Chairs again (docs/0109). A PostgreSQL failure exits 1: a restore may have
+#: stopped halfway.
+UNCHANGED = (ConfigError, StoreError, RestoreRefused, ArchiveError)
+EXIT_FAILED = 1
+EXIT_UNCHANGED = 3
+
+
+def one_line_errors[**P](command: Callable[P, None]) -> Callable[P, None]:
+    @wraps(command)
+    def run(*args: P.args, **kwargs: P.kwargs) -> None:
+        try:
+            command(*args, **kwargs)
+        except EXPECTED_ERRORS_TO_OMIT_TRACEBACK as exc:
+            typer.echo(f"musical-chairs-backup: {exc}", err=True)
+            raise typer.Exit(
+                EXIT_UNCHANGED if isinstance(exc, UNCHANGED) else EXIT_FAILED
+            ) from None
+
+    return run
+
+
+app = typer.Typer(
+    help="Musical Chairs' backups (docs/0106).",
+    no_args_is_help=True,
+    add_completion=False,
+    pretty_exceptions_enable=False,
+)
+
+
+@app.callback()
+def _start() -> None:
+    configure_logging()
+
+
+@cache  # prometheus_client refuses to register the same metrics twice
+def process_metrics() -> BackupMetrics:
+    return BackupMetrics(REGISTRY)
+
+
+def open_backups() -> Backups:
+    settings = BackupSettings()
+    config = load_config(settings.config)
+    opened: dict[str, Store] = {}
+
+    def store(label: str) -> Store:
+        if label not in opened:
+            opened[label] = open_store(label, config.targets[label], settings.secrets_dir)
+        return opened[label]
+
+    return Backups(
+        config=config,
+        postgres=PgTools(settings.pg_host, settings.pg_user, settings.pg_password_file),
+        stores=store,
+        musical_chairs_version=settings.musical_chairs_version,
+        install_dir=settings.install_dir,
+        metrics=process_metrics(),
+    )
+
+
+@app.command()
+@one_line_errors
+def serve() -> None:
+    """Run the schedules, and serve metrics on port 9465."""
+    backups = open_backups()
+    start_http_server(PORT)
+    log.info(
+        "backup service started",
+        schedules=[s.name for s in backups.config.schedules],
+        metrics_port=PORT,
+    )
+    BackupScheduler(backups.config, backups.take, backups.metrics, backups.clock).run_forever()
+
+
+@app.command()
+@one_line_errors
+def check() -> None:
+    """Check backups.yml and that every target can be read, and say what each schedule keeps."""
+    backups = open_backups()
+    config = backups.config
+    for label in config.targets:
+        backups.stores(label).names()  # can it be read?
+    typer.echo(
+        f"backups.yml is fine: {len(config.targets)} target(s), "
+        f"{len(config.schedules)} schedule(s), and every target can be read"
+    )
+    for schedule in [*(s.name for s in config.schedules), MANUAL, PRE_UPGRADE]:
+        typer.echo(f"  {schedule}: {what_is_kept(backups.plan(schedule))}")
+
+
+def what_is_kept(plan: BackupPlan) -> str:
+    if plan.keep == KEEP_FOREVER:
+        return f"every backup until `musical-chairs upgrade` succeeds, on {plan.target}"
+    days = f", and every one from the last {plan.keep_days} days" if plan.keep_days else ""
+    return f"the newest {plan.keep}{days}, on {plan.target}"
+
+
+@app.command()
+@one_line_errors
+def now(
+    schedule: Annotated[
+        str, typer.Option(help="manual, pre-upgrade, or a schedule from backups.yml")
+    ] = MANUAL,
+) -> None:
+    """Take a backup now, and print its name."""
+    typer.echo(open_backups().take(schedule))
+
+
+@app.command("list")
+@one_line_errors
+def list_backups(
+    as_json: Annotated[
+        bool, typer.Option("--json", help="as JSON, for bin/musical-chairs")
+    ] = False,
+) -> None:
+    """List the backups on every target, newest first."""
+    found = open_backups().list()
+    if as_json:
+        rows = [
+            {
+                "name": str(b),
+                "target": label,
+                "schedule": b.schedule,
+                "created": b.created.isoformat(),
+            }
+            for label, b in found
+        ]
+        typer.echo(json.dumps(rows, indent=2))
+    elif not found:
+        typer.echo("No backups yet.")
+    else:
+        for label, b in found:
+            typer.echo(f"{b}  {label}")
+
+
+@app.command()
+@one_line_errors
+def restore(
+    name: str,
+    yes: Annotated[bool, typer.Option("--yes", help="yes, replace the databases")] = False,
+) -> None:
+    """Replace both databases with a backup. Stop the stack first, except postgres."""
+    if not yes:
+        typer.echo(
+            "musical-chairs-backup: restoring replaces Musical Chairs' and Keycloak's databases. "
+            "Stop the stack except postgres, then add --yes.",
+            err=True,
+        )
+        raise typer.Exit(2)
+    manifest = open_backups().restore(name)
+    typer.echo(f"Restored {name} (made by Musical Chairs {manifest.musical_chairs_version}).")
+
+
+@app.command()
+@one_line_errors
+def prune(
+    schedule: Annotated[str, typer.Option()] = PRE_UPGRADE,
+    keep: Annotated[int, typer.Option(min=1)] = 1,
+) -> None:
+    """Delete a schedule's backups beyond the newest --keep."""
+    for gone in open_backups().prune(schedule, keep=keep):
+        typer.echo(f"deleted {gone}")

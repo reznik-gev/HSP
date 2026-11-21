@@ -5,10 +5,10 @@ from typing import Any
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp.models import new_id
-from hsp.org.people import MembershipIn, PeopleService, PersonIn
-from hsp.org.units import PositionIn, UnitIn, UnitsService
-from hsp.problems import ProblemException
+from musical_chairs.models import new_id
+from musical_chairs.org.people import MembershipIn, PeopleService, PersonIn
+from musical_chairs.org.units import PositionIn, UnitIn, UnitsService
+from musical_chairs.problems import ProblemException
 from tests.db.plan_helpers import new_tenant
 from tests.stubs import stub_admin
 

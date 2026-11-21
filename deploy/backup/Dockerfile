@@ -1,6 +1,6 @@
-# HSP backup image (docs/0058, docs/0106): hsp-backup with PostgreSQL 18's client tools.
+# Musical Chairs backup image (docs/0058, docs/0106): musical-chairs-backup with PostgreSQL 18's client tools.
 # Build: deploy/build-images.sh, or
-#   docker build --build-context backup=backup -t hsp-backup deploy/backup
+#   docker build --build-context backup=backup -t musical-chairs-backup deploy/backup
 
 FROM python:3.14-slim AS build
 COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /bin/uv
@@ -12,18 +12,18 @@ COPY --from=backup src ./src
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev
 
 FROM python:3.14-slim
-ARG HSP_VERSION=0.0.0-dev
-ARG HSP_REVISION=unknown
-ARG HSP_CREATED=unknown
-LABEL org.opencontainers.image.title="hsp-backup" \
-      org.opencontainers.image.description="HSP backup service: scheduled dumps to a folder or S3, and restore" \
-      org.opencontainers.image.source="https://github.com/reznik-gev/HSP" \
-      org.opencontainers.image.version="${HSP_VERSION}" \
-      org.opencontainers.image.revision="${HSP_REVISION}" \
-      org.opencontainers.image.created="${HSP_CREATED}"
+ARG MUSICAL_CHAIRS_VERSION=0.0.0-dev
+ARG MUSICAL_CHAIRS_REVISION=unknown
+ARG MUSICAL_CHAIRS_CREATED=unknown
+LABEL org.opencontainers.image.title="musical-chairs-backup" \
+      org.opencontainers.image.description="Musical Chairs backup service: scheduled dumps to a folder or S3, and restore" \
+      org.opencontainers.image.source="https://github.com/reznik-gev/MusicalChairs" \
+      org.opencontainers.image.version="${MUSICAL_CHAIRS_VERSION}" \
+      org.opencontainers.image.revision="${MUSICAL_CHAIRS_REVISION}" \
+      org.opencontainers.image.created="${MUSICAL_CHAIRS_CREATED}"
 # pg_dump and pg_restore must be at least the server's version (postgis/postgis:18), so they
 # come from the PostgreSQL project's own Debian repository. Debian's security fixes are installed
-# too, even those the base image doesn't have yet (docs/0129). HSP never runs pip (the app is in
+# too, even those the base image doesn't have yet (docs/0129). Musical Chairs never runs pip (the app is in
 # /app/.venv, built by uv), and pip's own bundled packages carry known vulnerabilities, so it is
 # removed.
 RUN apt-get update \
@@ -42,10 +42,10 @@ RUN apt-get update \
        /usr/local/lib/python3*/site-packages/pip /usr/local/lib/python3*/site-packages/pip-*.dist-info
 # Runs as uid 999, the postgres container's user, so it can read the superuser's password file
 # (secrets/db_superuser_password belongs to 999) and the backups folder belongs to it too.
-RUN useradd --system --uid 999 --home-dir /app hsp-backup
+RUN useradd --system --uid 999 --home-dir /app musical-chairs-backup
 WORKDIR /app
 COPY --from=build --chown=999:999 /app /app
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 HSP_VERSION="${HSP_VERSION}"
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 MUSICAL_CHAIRS_VERSION="${MUSICAL_CHAIRS_VERSION}"
 USER 999
 EXPOSE 9465
-CMD ["hsp-backup", "serve"]
+CMD ["musical-chairs-backup", "serve"]

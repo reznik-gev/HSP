@@ -7,11 +7,11 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp import models
-from hsp.models import new_id
-from hsp.plans.drafts import SqlDraftRepository
-from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
-from hsp.seats.assignments import AssignmentIn, SeatAssignmentService
+from musical_chairs import models
+from musical_chairs.models import new_id
+from musical_chairs.plans.drafts import SqlDraftRepository
+from musical_chairs.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
+from musical_chairs.seats.assignments import AssignmentIn, SeatAssignmentService
 from tests.db.plan_helpers import add, apply, context, stub_desk
 
 
@@ -47,7 +47,7 @@ async def person(ctx: dict[str, Any], name: str, active: bool = True) -> uuid.UU
         id=new_id(),
         tenant_id=ctx["tenant"],
         display_name=name,
-        email=f"{name.lower()}-{new_id().hex[-8:]}@hsp.local",
+        email=f"{name.lower()}-{new_id().hex[-8:]}@musical-chairs.local",
         source=models.RecordSource.MANUAL,
         active=active,
         created_at=now,

@@ -6,9 +6,9 @@ from typing import Any
 
 import pytest
 
-from hsp import models
-from hsp.models import new_id
-from hsp.problems import ProblemException
+from musical_chairs import models
+from musical_chairs.models import new_id
+from musical_chairs.problems import ProblemException
 from tests.db.plan_helpers import add, apply, stub_desk, stub_door, stub_wall, stub_zone
 
 #: A zone outline moved 2 m east of stub_zone's.

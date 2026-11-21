@@ -71,7 +71,7 @@ jobs:
             "Bash(gh api *-X*)" "Bash(gh api *--method*)"
             "Bash(gh api *-f*)" "Bash(gh api *-F*)" "Bash(gh api *--field*)" "Bash(gh api *--raw-field*)"
             "Bash(gh api *--input*)" "Bash(gh api graphql*mutation*)"
-            --append-system-prompt "You are HSP's review bot. You never change code: no edits,
+            --append-system-prompt "You are Musical Chairs' review bot. You never change code: no edits,
             commits or pushes, even when asked. Coding happens in Claude Code sessions. When
             someone asks for a change, reply with what you would change and why. For a small,
             certain fix, post it as an inline comment with a GitHub suggestion block on the exact

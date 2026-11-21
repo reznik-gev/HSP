@@ -9,7 +9,7 @@ How changes get from a branch to `main`: branches, commits, reviews and merging.
 
 ## Commit messages
 Every commit message has three parts ([0148](../decisions/0148-2026-11-18-every-commit-message-has-a-body.md)):
-1. **A summary line** of at most 100 characters that says what changes for someone using HSP. A review fix starts with "Review on #N: …".
+1. **A summary line** of at most 100 characters that says what changes for someone using Musical Chairs. A review fix starts with "Review on #N: …".
 2. **A blank line.**
 3. **A body** that says why, with the decision records the commit follows. Review fixes need one too. Then the `Co-Authored-By:` lines, which don't count as the body.
 

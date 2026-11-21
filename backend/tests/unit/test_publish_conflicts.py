@@ -2,9 +2,9 @@
 
 from typing import Any
 
-from hsp.models import new_id
-from hsp.plans.publishing import publish_conflicts, seats_losing_assignment
-from hsp.plans.schema import PlacedObject, PlanContent
+from musical_chairs.models import new_id
+from musical_chairs.plans.publishing import publish_conflicts, seats_losing_assignment
+from musical_chairs.plans.schema import PlacedObject, PlanContent
 from tests.stubs import stub_catalog_item, stub_placed_object
 
 DESK = new_id()

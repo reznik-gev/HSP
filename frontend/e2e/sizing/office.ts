@@ -1,6 +1,6 @@
 /** The sizing bench's office: who sits where, shared by its seed and its load. */
 
-export const PEOPLE = Number(process.env.HSP_SIZING_PEOPLE ?? 1000);
+export const PEOPLE = Number(process.env.MUSICAL_CHAIRS_SIZING_PEOPLE ?? 1000);
 export const DESKS_PER_FLOOR = 500;
 export const DESKS_PER_ROW = 25;
 
