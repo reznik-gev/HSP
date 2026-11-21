@@ -313,10 +313,10 @@ set -euo pipefail
 k=/opt/keycloak/bin/kcadm.sh
 $k config credentials --server http://localhost:8080/auth --realm master --user admin \
   --password "$(cat /run/secrets/keycloak_admin_password)"
-$k create users -r musical_chairs -s "username=$1" -s "email=$1" -s "firstName=$2" -s "lastName=$3" \
+$k create users -r musical-chairs -s "username=$1" -s "email=$1" -s "firstName=$2" -s "lastName=$3" \
   -s enabled=true -s emailVerified=true
-$k set-password -r musical_chairs --username "$1" --new-password "$4" --temporary
-$k add-roles -r musical_chairs --uusername "$1" --rolename musical-chairs-admin
+$k set-password -r musical-chairs --username "$1" --new-password "$4" --temporary
+$k add-roles -r musical-chairs --uusername "$1" --rolename musical-chairs-admin
 EOF
   ok "Sign in as $email with the one-time password $password"
   ok "Keycloak asks for a new password at the first sign-in."

@@ -96,11 +96,11 @@ k=/opt/keycloak/bin/kcadm.sh
 \$k config credentials --server http://localhost:8080/auth --realm master --user admin \
   --password "\$(cat /run/secrets/keycloak_admin_password)" >/dev/null
 for u in admin viewer; do
-  \$k create users -r musical_chairs -s username=\$u -s email=\$u@musical-chairs.test -s firstName=Test \
+  \$k create users -r musical-chairs -s username=\$u -s email=\$u@musical-chairs.test -s firstName=Test \
     -s lastName=\$u -s enabled=true -s emailVerified=true >/dev/null
-  \$k set-password -r musical_chairs --username \$u --new-password \$u
+  \$k set-password -r musical-chairs --username \$u --new-password \$u
 done
-\$k add-roles -r musical_chairs --uusername admin --rolename musical-chairs-admin
+\$k add-roles -r musical-chairs --uusername admin --rolename musical-chairs-admin
 EOF
 echo "ok: admin/admin and viewer/viewer can sign in"
 echo "Bundle $version passed."
