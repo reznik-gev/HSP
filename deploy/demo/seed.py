@@ -171,8 +171,7 @@ SEATS = {
         )
     },
     **{
-        f"HT-4-{n:02d}": who
-        for n, who in enumerate(["ruth.klein", "avi.mizrahi", "julia.novak", "oren.tal"], start=17)
+        f"HT-4-{n:02d}": who for n, who in enumerate(["ruth.klein", "avi.mizrahi", "julia.novak", "oren.tal"], start=17)
     },
     "HT-4-21": "dana.levin",
     "HT-4-22": "mia.johnson",
@@ -211,10 +210,7 @@ def fail(message: str) -> NoReturn:
 
 def ok(response: httpx2.Response) -> Any:
     if response.status_code >= 400:
-        fail(
-            f"{response.request.method} {response.request.url} -> {response.status_code}\n"
-            f"{response.text}"
-        )
+        fail(f"{response.request.method} {response.request.url} -> {response.status_code}\n{response.text}")
     return response.json() if response.content else None
 
 
@@ -228,9 +224,7 @@ class MusicalChairs:
         form = re.search(r'action="([^"]+)"', page.text)
         if not form:
             fail(f"no Keycloak sign-in form at {r.headers['location']}")
-        cookies = "; ".join(
-            f"{c.name}={c.value}" for c in self.client.cookies.jar if c.path.startswith("/auth")
-        )
+        cookies = "; ".join(f"{c.name}={c.value}" for c in self.client.cookies.jar if c.path.startswith("/auth"))
         r = self.client.post(
             html.unescape(form.group(1)),
             data={"username": login, "password": PASSWORD, "credentialId": ""},
@@ -292,8 +286,7 @@ class Plan:
             for wall in (south, north):
                 offset = step * n + step // 2 - 1200
                 if wall == south and (
-                    abs(offset + 1200 - width // 2) < 2500
-                    or any(offset - 200 <= x <= offset + 2600 for x in walls_at)
+                    abs(offset + 1200 - width // 2) < 2500 or any(offset - 200 <= x <= offset + 2600 for x in walls_at)
                 ):
                     continue
                 self.add(
@@ -547,9 +540,7 @@ def devices(musical_chairs: MusicalChairs, people: dict[str, str]) -> dict[str, 
     made: dict[str, list[str]] = {"monitor": [], "printer": [], "display": []}
     for n in range(1, 21):
         made["monitor"].append(
-            musical_chairs.post(
-                "/devices", {"asset_tag": f"MON-{n:04d}", "serial_number": f"DL27Q-{48210 + n}"}
-            )["id"]
+            musical_chairs.post("/devices", {"asset_tag": f"MON-{n:04d}", "serial_number": f"DL27Q-{48210 + n}"})["id"]
         )
     for n, floor in enumerate(["Floor 3", "Floor 4", "Haifa lab"], start=1):
         made["printer"].append(
@@ -563,9 +554,9 @@ def devices(musical_chairs: MusicalChairs, people: dict[str, str]) -> dict[str, 
             )["id"]
         )
     made["display"].append(
-        musical_chairs.post(
-            "/devices", {"asset_tag": "TV-0001", "serial_number": "LG65-2291", "notes": "Boardroom"}
-        )["id"]
+        musical_chairs.post("/devices", {"asset_tag": "TV-0001", "serial_number": "LG65-2291", "notes": "Boardroom"})[
+            "id"
+        ]
     )
     for n, login in enumerate(
         ["sam.carter", "maya.shani", "noa.barak", "liat.segal", "yossi.peretz", "dana.levin"],
@@ -628,15 +619,11 @@ def floor_3(musical_chairs: MusicalChairs, plan: Plan, floor_id: str, monitors: 
         door_on=1,
     )
     plan.thing("desk_1400x700", 22000, 2500, label="Focus table", allocation_mode="unavailable")
-    plan.room(
-        "Robotics sync", "Meeting room", 24000, 0, 32000, 5000, [((24000, 5000), (32000, 5000))]
-    )
+    plan.room("Robotics sync", "Meeting room", 24000, 0, 32000, 5000, [((24000, 5000), (32000, 5000))])
     plan.thing("meeting_table_2400x1200", 28000, 2500)
     plan.thing("wall_tv_65", 28000, 4880, 1200, 1800, label="Sync room display")
     plan.zone("Hot desks", "Pod", 20000, 11500, 30500, 16500)
-    plan.desks(
-        21100, 13200, 3, key="sit_stand_desk_1600x800", modes={n: "bookable" for n in range(6)}
-    )
+    plan.desks(21100, 13200, 3, key="sit_stand_desk_1600x800", modes={n: "bookable" for n in range(6)})
     plan.add(
         "column",
         {
@@ -735,9 +722,7 @@ def seats(musical_chairs: MusicalChairs, units: dict[str, str], people: dict[str
     if missing:
         fail(f"no seats labelled {', '.join(missing)} on the published plans")
     for label, who in SEATS.items():
-        holder = (
-            {"unit_id": units[who[5:]]} if who.startswith("team:") else {"person_id": people[who]}
-        )
+        holder = {"unit_id": units[who[5:]]} if who.startswith("team:") else {"person_id": people[who]}
         musical_chairs.put(f"/seats/{found[label]}/assignment", holder)
 
 
@@ -752,9 +737,7 @@ def main() -> None:
     made = devices(musical_chairs, people)
 
     print("== Places and floor plans")
-    catalog = {
-        i["key"]: i["current_revision"]["id"] for i in musical_chairs.get("/catalog-items", limit=200)["items"]
-    }
+    catalog = {i["key"]: i["current_revision"]["id"] for i in musical_chairs.get("/catalog-items", limit=200)["items"]}
     zone_types = {z["name"]: z["id"] for z in musical_chairs.get("/zone-types")["items"]}
     tel_aviv = musical_chairs.post(
         "/sites",
@@ -764,9 +747,7 @@ def main() -> None:
             "address": "12 Harbor Street, Tel Aviv",
         },
     )
-    tower = musical_chairs.post(
-        "/buildings", {"site_id": tel_aviv["id"], "name": "Harbor Tower", "code": "HT"}
-    )
+    tower = musical_chairs.post("/buildings", {"site_id": tel_aviv["id"], "name": "Harbor Tower", "code": "HT"})
     f3 = musical_chairs.post("/floors", {"building_id": tower["id"], "name": "Floor 3", "level_index": 3})
     f4 = musical_chairs.post("/floors", {"building_id": tower["id"], "name": "Floor 4", "level_index": 4})
     musical_chairs.post("/floors", {"building_id": tower["id"], "name": "Floor 5", "level_index": 5})
@@ -774,24 +755,15 @@ def main() -> None:
         "/sites",
         {"name": "Haifa Lab", "time_zone": "Asia/Jerusalem", "address": "4 Technion Road, Haifa"},
     )
-    lab = musical_chairs.post(
-        "/buildings", {"site_id": haifa_site["id"], "name": "Lab Building", "code": "LB"}
-    )
-    ground = musical_chairs.post(
-        "/floors", {"building_id": lab["id"], "name": "Ground floor", "level_index": 0}
-    )
+    lab = musical_chairs.post("/buildings", {"site_id": haifa_site["id"], "name": "Lab Building", "code": "LB"})
+    ground = musical_chairs.post("/floors", {"building_id": lab["id"], "name": "Ground floor", "level_index": 0})
     floor_3(musical_chairs, Plan(catalog, zone_types, "HT-3"), f3["id"], made["monitor"], made["printer"][0])
-    floor_4(
-        musical_chairs, Plan(catalog, zone_types, "HT-4"), f4["id"], made["printer"][1], made["display"][0]
-    )
+    floor_4(musical_chairs, Plan(catalog, zone_types, "HT-4"), f4["id"], made["printer"][1], made["display"][0])
     haifa(musical_chairs, Plan(catalog, zone_types, "LB-0"), ground["id"], made["printer"][2])
 
     seats(musical_chairs, units, people)
     musical_chairs.put("/me/preferences", {"language": "en", "theme": "light"})
-    print(
-        f"\nReady: open {APP} and sign in as dana.levin (admin) or sam.carter, "
-        f"password '{PASSWORD}'."
-    )
+    print(f"\nReady: open {APP} and sign in as dana.levin (admin) or sam.carter, password '{PASSWORD}'.")
 
 
 if __name__ == "__main__":

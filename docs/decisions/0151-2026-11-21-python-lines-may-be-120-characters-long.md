@@ -20,9 +20,10 @@ The owner saw this while reviewing #182 and asked for 120.
 - **Ruff's line length is 120**, in both `backend/pyproject.toml` and `backup/pyproject.toml`. *(The owner's choice)*
 - **The change is its own PR, stacked on #182.** It merges after #182, so the rename PR stays as it is. *(The owner's choice)*
 - **In that PR, `ruff format` runs once over all Python files**, so `ruff format --check` stays green in CI. The lines the rename split only because of the longer names are joined again, so they read as before with only the name changed. Lines the original authors wrapped at 100 stay as they are. *(Claude's choice, lower-confidence)*
+- **The demo scripts in `deploy/demo/` follow the same limit.** CI doesn't run Ruff on them, so they are formatted once with the backend's settings (`uv run ruff format --config pyproject.toml ../deploy/demo`, from `backend/`). The review bot found them over 100 after the rename. *(Claude's choice, lower-confidence)*
 - **Other limits stay as they are:** a commit's summary line is still at most 100 characters ([0148](0148-2026-11-18-every-commit-message-has-a-body.md) and its hook), the frontend's Prettier width stays 100, and `migrations/versions/` stays exempt from Ruff's line-length rule (E501). *(Claude's choice)*
 
 ## Consequences
-- 127 Python files change (108 in `backend/`, 19 in `backup/`). No behaviour changes.
+- 129 Python files change (108 in `backend/`, 19 in `backup/`, 2 in `deploy/demo/`). No behaviour changes.
 - `git blame` on the reformatted lines points to this PR, not to the commit that wrote them. #182 itself stays as it was reviewed.
 - New code may use lines up to 120 characters. Older lines wrapped at 100 are not rewrapped on purpose; they change only when someone edits them.
