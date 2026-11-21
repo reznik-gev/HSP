@@ -3,6 +3,7 @@
 - **Date:** 2026-11-21
 - **Status:** Accepted
 - **Refines:** [0072](0072-2026-10-08-rename-hsm-to-hsp.md) (the product's name)
+- **Refined by:** [0152](0152-2026-11-22-keycloak-realm-name-and-file-names.md) (the realm's name, file names and the browser tab title)
 
 ## Context
 The product is named **HSP, "Human-Space Program"** ([0072](0072-2026-10-08-rename-hsm-to-hsp.md)). The owner prefers **Musical Chairs**. The name fits what the product does: people and teams move between seats.
@@ -74,8 +75,7 @@ There are no releases, tags or installs yet. So no server has to move its paths,
 ## Updates
 - *Update, 2026-11-21:* the rename PR settled the cases the table above leaves open. Each says whose choice it is; Claude's choices are lower-confidence.
   - **"HSP's" becomes "Musical Chairs'"**, and "an HSP" becomes "a Musical Chairs". *(Claude's choice)*
-  - **File names do not mix `-` and `_`.** *(The owner's choice, in review)* So the shell scripts are `10-musical-chairs.sh` and `40-musical-chairs.sh`, and a record's file name is a slug of words (0118's is `0118-2026-10-24-failed-restore-leaves-musical-chairs-stopped.md`). A name with no `-` keeps `musical_chairs`, as in code (`deploy/web/musical_chairs/`, `musical_chairs.conf.template`). *(Claude's choice)*
-  - **The Keycloak realm is `musical-chairs`**, not `musical_chairs` as the table above says. *(The owner's choice, in review)* Keycloak stops with "File name / realm name mismatch" when an import file's name differs from its realm. A realm called `musical_chairs` would force the file name `musical_chairs-realm.json`, which mixes `-` and `_`. So the realm is `musical-chairs`, the two import files are `musical-chairs-realm.json`, the issuer is `…/realms/musical-chairs`, and Keycloak's default role is `default-roles-musical-chairs`. The client and the role stay as the table says.
+  - **The realm's name, file names and the browser tab title** differ from this record's table where [0152](0152-2026-11-22-keycloak-realm-name-and-file-names.md) says so. That record refines this one.
   - **The development session key** in `backend/src/musical_chairs/config.py` is now `musical-chairs-dev-only-sessions`. A Fernet key must be exactly 32 bytes, and the old text was exactly 32. *(Claude's choice)*
-  - **In Hebrew guide text and the maintenance page**, the name is written in Hebrew and takes a feminine singular verb ("כיסאות מוזיקליים מציגה"). *(The owner's choice, in review)* The sidebar shows "MC", as this record says above. The browser tab title is fixed in `index.html`, so it stays "Musical Chairs" in both languages for now. That goes against "in the reader's language" above. *(Claude's choice)*
+  - **In Hebrew guide text and the maintenance page**, the name is written in Hebrew and takes a feminine singular verb ("כיסאות מוזיקליים מציגה"). *(The owner's choice, in review)* The sidebar shows "MC", as this record says above. The browser tab title is in 0152.
   - **The backup archive's two dump files** are `musical_chairs.dump` and `keycloak.dump`. They list in that order now, not the old one. *(Claude's choice)*

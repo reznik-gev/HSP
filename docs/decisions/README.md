@@ -161,4 +161,5 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0147 | 2026-11-17 | [The guide's GIFs are recorded again before each release](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) | Accepted |
 | 0148 | 2026-11-18 | [Every commit message has a body, checked by a git hook and by CI](0148-2026-11-18-every-commit-message-has-a-body.md) | Accepted |
 | 0149 | 2026-11-21 | [Search finds more than people and seats, after 1.0.0](0149-2026-11-21-search-finds-more-than-people-after-1-0-0.md) | Accepted |
-| 0150 | 2026-11-21 | [Rename the product from HSP to Musical Chairs](0150-2026-11-21-rename-hsp-to-musical-chairs.md) | Accepted |
+| 0150 | 2026-11-21 | [Rename the product from HSP to Musical Chairs](0150-2026-11-21-rename-hsp-to-musical-chairs.md) | Accepted (realm name, file names and tab title refined by 0152) |
+| 0152 | 2026-11-22 | [The Keycloak realm is `musical-chairs`, and no file name mixes `-` and `_`](0152-2026-11-22-keycloak-realm-name-and-file-names.md) | Accepted |
