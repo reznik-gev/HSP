@@ -8,7 +8,7 @@ name: musical-chairs-dev
 
 services:
   postgres:
-    image: postgis/postgis:18-3.6
+    image: postgis/postgis:18-3.7
     environment:
       POSTGRES_USER: musical_chairs
       POSTGRES_PASSWORD: musical_chairs
