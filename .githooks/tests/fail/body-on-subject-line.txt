@@ -1,3 +1,5 @@
 A seat keeps its label when it moves Moving a seat dropped its label, because the move copied only the seat's position and not its other fields.
 
+The body is here too, so only the summary line's length makes this fail.
+
 Co-Authored-By: Claude <noreply@anthropic.com>
