@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# List known vulnerabilities in the packages Musical Chairs ships (docs/0128): the Python packages of
-# backend/ and backup/ (pip-audit), and the frontend's production packages (pnpm audit --prod).
+# List known vulnerabilities in the packages Musical Chairs ships (docs/0128): the Python packages
+# of backend/ and backup/ (pip-audit), and the frontend's production packages (pnpm audit --prod).
 # Development-only packages (pytest, eslint, vite...) are left out: they never reach a customer.
 #   deploy/audit-packages.sh
 # Findings only warn: the script prints them, adds them to the GitHub job summary when there is

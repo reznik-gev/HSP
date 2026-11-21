@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Smoke-test the Musical Chairs images built by deploy/build-images.sh (docs/0097). CI runs it on PRs.
+# Smoke-test the Musical Chairs images built by deploy/build-images.sh (docs/0097). CI runs it on
+# PRs.
 #   deploy/smoke-images.sh [version]      # default 0.0.0-dev
 # Checks that each image starts and answers: the API's /healthz, its migrate tooling and its
 # refusal to start on an unmigrated database; the web

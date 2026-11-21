@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # The weekly restore test (docs/0058, docs/0106, docs/0107, docs/0119). On a stack that
-# `KEEP=1 deploy/test-bundle.sh` installed: seed data, back it up with `musical-chairs backup now`, wipe the
-# database for a fresh stack, `musical-chairs restore`, and check that every Musical Chairs table and Keycloak's own
-# data (users, realms, clients) have the same rows, and that signing in and finding the seeded
-# seat still work. Then recover on a new host as install.md says: stop that installation,
-# install again into a new folder with its saved secrets, copy the backup in, restore and check.
+# `KEEP=1 deploy/test-bundle.sh` installed: seed data, back it up with `musical-chairs backup now`,
+# wipe the database for a fresh stack, `musical-chairs restore`, and check that every Musical Chairs
+# table and Keycloak's own data (users, realms, clients) have the same rows, and that signing in and
+# finding the seeded seat still work. Then recover on a new host as install.md says: stop that
+# installation, install again into a new folder with its saved secrets, copy the backup in, restore
+# and check.
 #   MUSICAL_CHAIRS_TEST_DIR=<test-bundle's directory> deploy/test-restore.sh
 # Needs Docker with the Compose plugin, and pnpm with Playwright's Chromium in frontend/.
 set -euo pipefail
