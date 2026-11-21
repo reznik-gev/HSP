@@ -73,7 +73,7 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0059 | 2026-10-08 | [Supply chain: automated dependency updates](0059-2026-10-08-supply-chain-security.md) | Accepted (signing and SBOM planned for 1.3–1.4 by 0104; vulnerability scanning in 0128) |
 | 0060 | 2026-10-08 | [Reverse proxy & TLS: Nginx](0060-2026-10-08-reverse-proxy.md)            | Accepted (refined by 0098) |
 | 0061 | 2026-10-08 | [Tests: mostly mocked DB + targeted DB integration](0061-2026-10-08-test-strategy.md) | Accepted (in-memory tests for every area after 1.2, by 0110) |
-| 0062 | 2026-10-08 | [Tooling: Ruff + mypy, ESLint + Prettier](0062-2026-10-08-code-quality-tooling.md) | Accepted (refined by 0148) |
+| 0062 | 2026-10-08 | [Tooling: Ruff + mypy, ESLint + Prettier](0062-2026-10-08-code-quality-tooling.md) | Accepted (refined by 0148 and 0151) |
 | 0063 | 2026-10-08 | [Release versioning: SemVer](0063-2026-10-08-release-versioning.md)       | Accepted |
 | 0064 | 2026-10-08 | [Branching: trunk-based with PRs](0064-2026-10-08-branching-workflow.md)  | Accepted (merge method superseded by 0069; supported versions in 0104) |
 | 0065 | 2026-10-08 | [Python 3.13 & dev tooling (uv, Node LTS, pnpm)](0065-2026-10-08-python-version-and-dev-tooling.md) | Accepted (Python version superseded by 0091) |
@@ -162,4 +162,5 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0148 | 2026-11-18 | [Every commit message has a body, checked by a git hook and by CI](0148-2026-11-18-every-commit-message-has-a-body.md) | Accepted |
 | 0149 | 2026-11-21 | [Search finds more than people and seats, after 1.0.0](0149-2026-11-21-search-finds-more-than-people-after-1-0-0.md) | Accepted |
 | 0150 | 2026-11-21 | [Rename the product from HSP to Musical Chairs](0150-2026-11-21-rename-hsp-to-musical-chairs.md) | Accepted (realm name, file names and tab title refined by 0152) |
+| 0151 | 2026-11-21 | [Python lines may be 120 characters long](0151-2026-11-21-python-lines-may-be-120-characters-long.md) | Accepted |
 | 0152 | 2026-11-22 | [The Keycloak realm is `musical-chairs`, and no file name mixes `-` and `_`](0152-2026-11-22-keycloak-realm-name-and-file-names.md) | Accepted |
