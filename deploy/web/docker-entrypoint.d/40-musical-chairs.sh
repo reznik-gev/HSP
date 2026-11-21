@@ -55,7 +55,7 @@ case "${MUSICAL_CHAIRS_WEB_TLS:-on}" in
     hsts=""
     [ "${MUSICAL_CHAIRS_HSTS:-on}" = on ] && hsts="max-age=31536000"
     cat > "$servers" <<CONF
-# MUSICAL_CHAIRS_WEB_TLS=on: written by 40-musical_chairs.sh.
+# MUSICAL_CHAIRS_WEB_TLS=on: written by 40-musical-chairs.sh.
 server {
     listen 8080;
     location / {
@@ -78,7 +78,7 @@ CONF
     ;;
   off)
     {
-      echo "# MUSICAL_CHAIRS_WEB_TLS=off: written by 40-musical_chairs.sh."
+      echo "# MUSICAL_CHAIRS_WEB_TLS=off: written by 40-musical-chairs.sh."
       echo "geo \$realip_remote_addr \$musical_chairs_from_trusted_proxy {"
       echo "    default 0;"
       for cidr in $(list "${MUSICAL_CHAIRS_TRUSTED_PROXIES:-}"); do echo "    $cidr 1;"; done
