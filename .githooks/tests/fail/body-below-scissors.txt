@@ -1,0 +1,5 @@
+A seat keeps its label when it moves
+
+# ------------------------ >8 ------------------------
+# Do not modify or remove the line above.
+diff --git a/a b/a

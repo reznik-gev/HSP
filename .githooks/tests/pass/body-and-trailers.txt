@@ -1,0 +1,6 @@
+A seat keeps its label when it moves
+
+Moving a seat dropped its label. It now keeps it.
+
+Co-Authored-By: Someone <someone@example.com>
+Co-Authored-By: Claude <noreply@anthropic.com>

@@ -1,0 +1,4 @@
+A seat keeps its label when it moves
+
+Co-Authored-By: Someone <someone@example.com>
+Signed-off-by: Someone <someone@example.com>

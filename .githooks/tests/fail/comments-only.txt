@@ -1,0 +1,4 @@
+A seat keeps its label when it moves
+
+# Please enter the commit message for your changes.
+# Lines starting with # will be ignored.

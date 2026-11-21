@@ -26,7 +26,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 - **Write the message to a file and commit with `git commit -F <file>`.** In PowerShell, a multi-line `-m` gets mangled, and once put a whole body on the summary line.
 - **Apply the review bot's suggestions locally**, in a commit with a proper message. GitHub's "Apply suggestion" button makes a commit with no body.
-- **Turn on the repository's git hooks** once in each clone: `git config core.hooksPath .githooks`. The `commit-msg` hook then rejects a message with no body or a summary line over 100 characters, before the commit is made. It lets `fixup!`, `squash!` and `amend!` commits through. The `pre-commit` hook runs the fast checks in `.pre-commit-config.yaml` if the `pre-commit` tool is installed.
+- **Turn on the repository's git hooks** once in each clone: `git config core.hooksPath .githooks`. The `commit-msg` hook then rejects a message with no body or a summary line over 100 characters, before the commit is made. It lets `fixup!`, `squash!` and `amend!` commits through. When you change the hook, add a sample message to `.githooks/tests/pass/` or `fail/`; CI runs `.githooks/tests/run.sh`. The `pre-commit` hook runs the fast checks in `.pre-commit-config.yaml` if the `pre-commit` tool is installed.
 - **CI checks it too.** The `commit-messages` job fails a PR with a commit that breaks these rules, or a `fixup!`, `squash!` or `amend!` commit, and `ci-ok` needs it. Rewording a pushed commit needs a force-push, so it needs the owner's yes (below). That's why the hook matters: it catches the message before the push.
 
 ## Pull requests
