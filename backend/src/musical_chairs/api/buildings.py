@@ -1,5 +1,4 @@
-"""/api/v1/buildings (docs/0035, docs/0078). Reading needs a session; changes need musical-chairs-admin +
-CSRF."""
+"""/api/v1/buildings (docs/0035, docs/0078). Reading needs a session; changes need musical-chairs-admin + CSRF."""
 
 import uuid
 from datetime import datetime

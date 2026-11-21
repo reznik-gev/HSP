@@ -31,8 +31,8 @@ EXPECTED_ERRORS_TO_OMIT_TRACEBACK = (
 )
 
 #: Refused before anything was changed: a bad backups.yml, a target that can't be read, a backup
-#: that isn't there, is damaged or comes from a newer Musical Chairs. musical-chairs restore then starts Musical
-#: Chairs again (docs/0109). A PostgreSQL failure exits 1: a restore may have stopped halfway.
+#: that isn't there, is damaged or comes from a newer Musical Chairs. musical-chairs restore then starts
+#: Musical Chairs again (docs/0109). A PostgreSQL failure exits 1: a restore may have stopped halfway.
 UNCHANGED = (ConfigError, StoreError, RestoreRefused, ArchiveError)
 EXIT_FAILED = 1
 EXIT_UNCHANGED = 3
