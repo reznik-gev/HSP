@@ -35,7 +35,7 @@ void i18n
     detection: {
       // First visit: the browser's language. After a switch: the saved choice (docs/0087).
       order: ["localStorage", "navigator"],
-      lookupLocalStorage: "hsp.language",
+      lookupLocalStorage: "musical_chairs.language",
       caches: ["localStorage"],
     },
   });

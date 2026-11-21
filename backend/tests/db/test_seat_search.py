@@ -6,10 +6,10 @@ from typing import Any
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp.models import new_id
-from hsp.plans.drafts import SqlDraftRepository
-from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
-from hsp.seats.search import SeatOut, SeatSearchService
+from musical_chairs.models import new_id
+from musical_chairs.plans.drafts import SqlDraftRepository
+from musical_chairs.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
+from musical_chairs.seats.search import SeatOut, SeatSearchService
 from tests.db.plan_helpers import add, apply, context, lock, make_floor, stub_desk, stub_zone
 from tests.db.seat_helpers import seated
 

@@ -4,11 +4,11 @@ from typing import Any
 
 import pytest
 
-from hsp.catalog.devices import DeviceIn, DevicesService
-from hsp.models import new_id
-from hsp.plans.drafts import SqlDraftRepository
-from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
-from hsp.problems import ProblemException
+from musical_chairs.catalog.devices import DeviceIn, DevicesService
+from musical_chairs.models import new_id
+from musical_chairs.plans.drafts import SqlDraftRepository
+from musical_chairs.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
+from musical_chairs.problems import ProblemException
 from tests.db.plan_helpers import add, apply, stub_desk
 
 

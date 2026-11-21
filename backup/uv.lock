@@ -329,59 +329,6 @@ wheels = [
 ]
 
 [[package]]
-name = "hsp-backup"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "boto3" },
-    { name = "croniter" },
-    { name = "packaging" },
-    { name = "prometheus-client" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "pyyaml" },
-    { name = "structlog" },
-    { name = "typer" },
-    { name = "tzdata" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "boto3-stubs", extra = ["s3"] },
-    { name = "moto", extra = ["s3"] },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "ruff" },
-    { name = "types-croniter" },
-    { name = "types-pyyaml" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "boto3", specifier = ">=1.43.116" },
-    { name = "croniter", specifier = ">=6.2.4" },
-    { name = "packaging", specifier = ">=26.3" },
-    { name = "prometheus-client", specifier = ">=0.26.0" },
-    { name = "pydantic", specifier = ">=2.14.1" },
-    { name = "pydantic-settings", specifier = ">=2.16.1" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "structlog", specifier = ">=26.1.0" },
-    { name = "typer", specifier = ">=0.27.3" },
-    { name = "tzdata", specifier = ">=2026.5" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "boto3-stubs", extras = ["s3"], specifier = ">=1.43.116" },
-    { name = "moto", extras = ["s3"], specifier = ">=5.2.4" },
-    { name = "mypy", specifier = ">=2.4.0" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "ruff", specifier = ">=0.17.1" },
-    { name = "types-croniter", specifier = ">=6.2.4.20261006" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20260906" },
-]
-
-[[package]]
 name = "idna"
 version = "3.20"
 source = { registry = "https://pypi.org/simple" }
@@ -533,6 +480,59 @@ wheels = [
 s3 = [
     { name = "py-partiql-parser" },
     { name = "pyyaml" },
+]
+
+[[package]]
+name = "musical-chairs-backup"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "boto3" },
+    { name = "croniter" },
+    { name = "packaging" },
+    { name = "prometheus-client" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "pyyaml" },
+    { name = "structlog" },
+    { name = "typer" },
+    { name = "tzdata" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "boto3-stubs", extra = ["s3"] },
+    { name = "moto", extra = ["s3"] },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "ruff" },
+    { name = "types-croniter" },
+    { name = "types-pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "boto3", specifier = ">=1.43.116" },
+    { name = "croniter", specifier = ">=6.2.4" },
+    { name = "packaging", specifier = ">=26.3" },
+    { name = "prometheus-client", specifier = ">=0.26.0" },
+    { name = "pydantic", specifier = ">=2.14.1" },
+    { name = "pydantic-settings", specifier = ">=2.16.1" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "structlog", specifier = ">=26.1.0" },
+    { name = "typer", specifier = ">=0.27.3" },
+    { name = "tzdata", specifier = ">=2026.5" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "boto3-stubs", extras = ["s3"], specifier = ">=1.43.116" },
+    { name = "moto", extras = ["s3"], specifier = ">=5.2.4" },
+    { name = "mypy", specifier = ">=2.4.0" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "ruff", specifier = ">=0.17.1" },
+    { name = "types-croniter", specifier = ">=6.2.4.20261006" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20260906" },
 ]
 
 [[package]]

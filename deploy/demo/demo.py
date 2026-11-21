@@ -1,14 +1,14 @@
 """Run the Northwind demo on a PR's code, for checking it by hand (0136).
 
 There is one demo: the worktree `.claude/worktrees/demo` under the main checkout, the API on port
-8000, the app on 5173 and the `hsp_demo` database. Run it from backend/, like the seed:
+8000, the app on 5173 and the `musical_chairs_demo` database. Run it from backend/, like the seed:
 
     uv run python ../deploy/demo/demo.py status
     uv run python ../deploy/demo/demo.py switch --pr 157     # or --main
     uv run python ../deploy/demo/demo.py stop
 
 `switch` checks out the commit (detached), stops the servers this script started, installs the
-dependencies, rebuilds `hsp_demo`, starts both servers in the background, waits for the API and
+dependencies, rebuilds `musical_chairs_demo`, starts both servers in the background, waits for the API and
 reseeds (deploy/demo/seed.py). Nothing here asks for confirmation: the run-demo skill asks the
 owner before a switch. Only the standard library is used, so it runs on Windows, macOS and Linux.
 """
@@ -80,7 +80,7 @@ def demo_worktree() -> Path:
 
 def state_dir(demo: Path) -> Path:
     """The demo worktree's own git folder: it keeps the servers' ids and logs out of the tree."""
-    return Path(run("git", "-C", str(demo), "rev-parse", "--absolute-git-dir")) / "hsp-demo"
+    return Path(run("git", "-C", str(demo), "rev-parse", "--absolute-git-dir")) / "musical-chairs-demo"
 
 
 def in_use(port: int) -> bool:
@@ -193,11 +193,11 @@ def switch(args: argparse.Namespace) -> None:
     run("uv", "sync", cwd=demo / "backend")
     run("corepack", "pnpm", "install", "--frozen-lockfile", cwd=demo / "frontend")
 
-    step("A fresh hsp_demo database")
+    step("A fresh musical_chairs_demo database")
     compose("up", "-d", "--wait")
     # The API won't start on another PR's schema, so the seed's own rebuild runs first, here.
     run("uv", "run", "python", "../deploy/demo/seed.py", "--reset-only", cwd=demo / "backend")
-    db = {"HSP_DATABASE_URL": DATABASE_URL}
+    db = {"MUSICAL_CHAIRS_DATABASE_URL": DATABASE_URL}
 
     step("Starting the servers")
     logs = state_dir(demo)
@@ -205,7 +205,7 @@ def switch(args: argparse.Namespace) -> None:
     servers = {
         "api": start(
             "api",
-            ["uv", "run", "uvicorn", "hsp.main:create_app", "--factory", "--port", str(API_PORT)],
+            ["uv", "run", "uvicorn", "musical_chairs.main:create_app", "--factory", "--port", str(API_PORT)],
             demo / "backend",
             logs,
             db,

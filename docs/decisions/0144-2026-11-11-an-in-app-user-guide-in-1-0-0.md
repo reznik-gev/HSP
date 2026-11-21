@@ -6,7 +6,7 @@
 - **Refines:** [0130](0130-2026-11-08-learning-the-editor.md) (the user guide comes after 1.0.0, in `docs/tutorials/`)
 
 ## Context
-[0130](0130-2026-11-08-learning-the-editor.md) gave the editor a hint line and a **Keyboard and mouse** sheet for 1.0.0, and left a guided tour and a user guide in `docs/tutorials/` for after it. Going over what's left before 1.0.0, the owner asked for a guide that onboards people to HSP. HSP is installed offline ([0054](0054-2026-10-08-release-distribution.md)), so a guide on a website or in the repository wouldn't reach every customer.
+[0130](0130-2026-11-08-learning-the-editor.md) gave the editor a hint line and a **Keyboard and mouse** sheet for 1.0.0, and left a guided tour and a user guide in `docs/tutorials/` for after it. Going over what's left before 1.0.0, the owner asked for a guide that onboards people to Musical Chairs. Musical Chairs is installed offline ([0054](0054-2026-10-08-release-distribution.md)), so a guide on a website or in the repository wouldn't reach every customer.
 
 ## Options considered
 - Who it's for:
@@ -15,7 +15,7 @@
   - Admins, everyone and operators: duplicates `docs/install.md`, which already ships in the bundle.
 - Where it's read:
   - **Inside the app** ✅: it ships with every release and works offline.
-  - Markdown pages in `docs/tutorials/`, linked from the app: they don't reach an offline install unless HSP serves them.
+  - Markdown pages in `docs/tutorials/`, linked from the app: they don't reach an offline install unless Musical Chairs serves them.
   - A PDF in the bundle: easy to send, but nobody opens it from the app.
 - When:
   - **In 1.0.0** ✅: the first customers have it from day one. It's mostly text, so it holds the release up by days, not weeks.
@@ -29,10 +29,10 @@
 1. **A user guide ships in 1.0.0, inside the app.** *(The owner's choice)*
 2. **For admins and for everyone.** One part covers what everyone does: finding where someone sits, the floor plan, free seats, language and theme. The other covers admins: sites, buildings and floors, drawing in the editor, people and teams, imports, the catalog and devices, assigning seats and publishing. Operators keep `docs/install.md`. *(The owner's choice)*
 3. **As simple and as textual as possible:** short pages of text, a few GIFs where a move is easier shown than told, and links to the screens they describe. *(The owner's choice)*
-4. **In English and Hebrew,** like every text in HSP. The Hebrew pages mirror. *(Required by CLAUDE.md)*
-5. **Each GIF is recorded in both languages.** The Hebrew pages show HSP in Hebrew, right to left, as their readers see it. *(The owner's choice)*
+4. **In English and Hebrew,** like every text in Musical Chairs. The Hebrew pages mirror. *(Required by CLAUDE.md)*
+5. **Each GIF is recorded in both languages.** The Hebrew pages show Musical Chairs in Hebrew, right to left, as their readers see it. *(The owner's choice)*
 6. Smaller details, *(Claude's choices, lower confidence)*:
-   - **Where it opens:** a **User guide** item in the user menu, beside the release version, opens a Guide page in HSP. Every signed-in user can open it. Admins see both parts; others see only the first.
+   - **Where it opens:** a **User guide** item in the user menu, beside the release version, opens a Guide page in Musical Chairs. Every signed-in user can open it. Admins see both parts; others see only the first.
    - **How many GIFs:** no more than about six, short and without sound: drawing walls, placing and numbering desks, publishing, assigning a seat, finding someone, and showing free seats, recorded from the Northwind demo.
    - **The editor's own help stays where it is.** The guide links to the **Keyboard and mouse** sheet for the full list of keys, and doesn't repeat it.
    - **How the pages are written and shown** (for example Markdown files in the frontend, rendered when the app is built) is settled in the PR that builds it. A new dependency for it gets its own line in that PR's records.
@@ -43,4 +43,4 @@
 - The guided tour on first use stays after 1.0.0 ([0130](0130-2026-11-08-learning-the-editor.md)). `docs/tutorials/` isn't needed for now.
 
 ## Updates
-- *Update, 2026-11-17:* HSP has no PR template. The rule went into the [review checklist](../guides/testing.md#review-checklist) and [How a change is made](../guides/making-a-change.md) instead. [0147](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) later left the GIFs to the release PR.
+- *Update, 2026-11-17:* Musical Chairs has no PR template. The rule went into the [review checklist](../guides/testing.md#review-checklist) and [How a change is made](../guides/making-a-change.md) instead. [0147](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) later left the GIFs to the release PR.

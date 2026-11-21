@@ -1,0 +1,43 @@
+# Musical Chairs web: settings for every server (docs/0060, docs/0097, docs/0098). nginx's entrypoint
+# renders this file with envsubst into /etc/nginx/conf.d/ at start, so ${MUSICAL_CHAIRS_*} come from the
+# environment. The servers themselves are written by /docker-entrypoint.d/40-musical_chairs.sh, because
+# which ones exist depends on MUSICAL_CHAIRS_WEB_TLS.
+
+# Upstreams are resolved per request, so musical-chairs-web starts (and serves the app and its maintenance
+# answers) even while the API or Keycloak is down.
+resolver ${MUSICAL_CHAIRS_RESOLVER} valid=10s ipv6=off;
+
+# Keep the client's request id, or make one, and pass it on: nginx, API and audit logs share it.
+map $http_x_request_id $musical_chairs_request_id {
+    default $http_x_request_id;
+    ""      $request_id;
+}
+
+log_format musical_chairs_json escape=json
+    '{"time":"$time_iso8601","request_id":"$musical_chairs_request_id","client":"$remote_addr",'
+    '"method":"$request_method","uri":"$request_uri","status":$status,'
+    '"bytes":$body_bytes_sent,"duration_s":$request_time,"upstream_s":"$upstream_response_time",'
+    '"user_agent":"$http_user_agent"}';
+access_log /dev/stdout musical_chairs_json;
+
+server_tokens off;
+# Imports are limited to 10 MB by the API; leave room for the multipart envelope.
+client_max_body_size 12m;
+
+gzip on;
+gzip_proxied any;
+gzip_min_length 1024;
+gzip_vary on;
+gzip_types application/json application/problem+json application/javascript text/css
+           text/plain image/svg+xml;
+
+# Health for Docker and Kubernetes probes. Port 8081 is never published.
+server {
+    listen 8081;
+    access_log off;
+
+    location = /healthz {
+        default_type application/json;
+        return 200 '{"status":"ok","version":"${MUSICAL_CHAIRS_VERSION}"}';
+    }
+}

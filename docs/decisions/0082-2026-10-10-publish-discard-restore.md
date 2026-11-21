@@ -23,7 +23,7 @@
 | `DELETE /floors/{id}/draft` | **Discards** the draft ([0028](0028-2026-10-08-floor-version-storage.md)): its revisions are deleted, revisions it closed are reopened, elements it created disappear, and the version row is deleted so numbering has no gaps ([0081](0081-2026-10-10-drafts-and-changesets.md)). Audited as `floor.draft_discarded`. |
 | `POST /floors/{id}/draft/restore/{n}` | Creates a draft (`published + 1`) whose content is **exactly version *n***. Elements keep their stable ids ([0028](0028-2026-10-08-floor-version-storage.md)). Audited as `floor.draft_restored`. |
 
-All three need hsp-admin, CSRF and the caller's edit lock (`409 lock-required` / `423 floor-locked`).
+All three need musical-chairs-admin, CSRF and the caller's edit lock (`409 lock-required` / `423 floor-locked`).
 
 ## Publish checks
 They return `409 publish-conflicts`, listing every problem ([0037](0037-2026-10-08-api-errors.md)):

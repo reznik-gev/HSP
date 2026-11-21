@@ -5,8 +5,8 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from hsp.auth.principal import Principal
-from hsp.models import new_id
+from musical_chairs.auth.principal import Principal
+from musical_chairs.models import new_id
 from tests.fakes import InMemoryLocationsRepository
 from tests.stubs import stub_admin
 from tests.unit.api_helpers import SignedIn, create_building, create_site

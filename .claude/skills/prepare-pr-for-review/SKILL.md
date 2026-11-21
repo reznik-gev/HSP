@@ -1,6 +1,6 @@
 ---
 name: prepare-pr-for-review
-description: Get an HSP pull request ready for the owner's review. Restack it, fix the review bot's and the owner's comments, reply and resolve, ask the bot to look again, bring the owner what needs their choice, then say it's ready and stop. Each round starts on the owner's word. Use when the owner says the bot or they left comments on #N, "prepare #N for review", or "#N merged, get #M ready".
+description: Get a Musical Chairs pull request ready for the owner's review. Restack it, fix the review bot's and the owner's comments, reply and resolve, ask the bot to look again, bring the owner what needs their choice, then say it's ready and stop. Each round starts on the owner's word. Use when the owner says the bot or they left comments on #N, "prepare #N for review", or "#N merged, get #M ready".
 ---
 
 # Prepare a PR for the owner's review
@@ -20,7 +20,7 @@ Bring the PR up to date with `main`. Usually the PR below it just merged.
 ## 2. Read the review comments
 Read every unresolved review thread and every PR comment, with the author of each:
 ```bash
-gh api graphql -f query='query{repository(owner:"reznik-gev",name:"HSP"){pullRequest(number:N){reviewThreads(first:50){nodes{id isResolved path line comments(first:20){nodes{author{login} body}}}}}}}'
+gh api graphql -f query='query{repository(owner:"reznik-gev",name:"MusicalChairs"){pullRequest(number:N){reviewThreads(first:50){nodes{id isResolved path line comments(first:20){nodes{author{login} body}}}}}}}'
 ```
 The review bot's login is `github-actions`. A thread is the bot's only if every comment in it is the bot's.
 

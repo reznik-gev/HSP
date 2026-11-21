@@ -1,14 +1,14 @@
-"""Fill the demo database with Northwind Robotics, a made-up company, for showing HSP (0103).
+"""Fill the demo database with Northwind Robotics, a made-up company, for showing Musical Chairs (0103).
 
-Builds everything through HSP's own API, signed in as a real user, so every rule applies:
+Builds everything through Musical Chairs' own API, signed in as a real user, so every rule applies:
 - the org chart, from a CSV and an Excel import;
 - two sites, two buildings with four floors, three floor plans (one with history, one
   with an open draft);
 - devices, some on the plans and some issued to people;
 - seats assigned to people and reserved for teams.
 
-It first rebuilds the `hsp_demo` database from scratch, so every run gives the same demo. Run it
-from backend/, with the dev stack, the API on hsp_demo and the frontend dev server running
+It first rebuilds the `musical_chairs_demo` database from scratch, so every run gives the same demo. Run it
+from backend/, with the dev stack, the API on musical_chairs_demo and the frontend dev server running
 (docs/demos/northwind-robotics.md):
 
     uv run python ../deploy/demo/seed.py
@@ -202,7 +202,7 @@ SEATS = {
 }
 
 
-# --- Talking to HSP ------------------------------------------------------------------------
+# --- Talking to Musical Chairs ------------------------------------------------------------------------
 
 
 def fail(message: str) -> NoReturn:
@@ -218,8 +218,8 @@ def ok(response: httpx2.Response) -> Any:
     return response.json() if response.content else None
 
 
-class Hsp:
-    """HSP's API, signed in through Keycloak's own sign-in form, as a browser would."""
+class MusicalChairs:
+    """Musical Chairs' API, signed in through Keycloak's own sign-in form, as a browser would."""
 
     def __init__(self, login: str) -> None:
         self.client = httpx2.Client(follow_redirects=False, timeout=60)
@@ -413,9 +413,9 @@ class Plan:
 
 
 def psql(database: str, sql: str) -> str:
-    """Run one SQL command in the dev stack's PostgreSQL, as the hsp user; return its output."""
+    """Run one SQL command in the dev stack's PostgreSQL, as the musical_chairs user; return its output."""
     result = subprocess.run(
-        [*COMPOSE, "exec", "-T", "postgres", "psql", "-U", "hsp", "-d", database, "-qtAc", sql],
+        [*COMPOSE, "exec", "-T", "postgres", "psql", "-U", "musical_chairs", "-d", database, "-qtAc", sql],
         capture_output=True,
         text=True,
         check=False,
@@ -427,13 +427,13 @@ def psql(database: str, sql: str) -> str:
 
 def reset_database() -> None:
     print(f"== A fresh {DATABASE} database")
-    psql("hsp", f"DROP DATABASE IF EXISTS {DATABASE} WITH (FORCE)")
-    psql("hsp", f"CREATE DATABASE {DATABASE}")
+    psql("musical_chairs", f"DROP DATABASE IF EXISTS {DATABASE} WITH (FORCE)")
+    psql("musical_chairs", f"CREATE DATABASE {DATABASE}")
     subprocess.run(
         [sys.executable, "-m", "alembic", "upgrade", "head"],
         check=True,
         cwd=ROOT / "backend",
-        env={**os.environ, "HSP_DATABASE_URL": DATABASE_URL},
+        env={**os.environ, "MUSICAL_CHAIRS_DATABASE_URL": DATABASE_URL},
     )
 
 
@@ -452,11 +452,11 @@ def demo_users() -> None:
         )
     )["access_token"]
     kc = httpx2.Client(
-        base_url=f"{KEYCLOAK}/admin/realms/hsp",
+        base_url=f"{KEYCLOAK}/admin/realms/musical_chairs",
         headers={"Authorization": f"Bearer {token}"},
         timeout=30,
     )
-    admin_role = ok(kc.get("/roles/hsp-admin"))
+    admin_role = ok(kc.get("/roles/musical-chairs-admin"))
     names = {login: name for login, name, *_ in PEOPLE}
     for login, is_admin in DEMO_USERS:
         first, last = names[login].split(" ", 1)
@@ -488,25 +488,25 @@ def demo_users() -> None:
             ok(kc.post(f"/users/{user_id}/role-mappings/realm", json=[admin_role]))
 
 
-def check_api_uses_demo_database(hsp: Hsp) -> None:
-    """Refuse to go on if the API isn't on hsp_demo, so a dev database is never filled."""
-    probe = hsp.post("/sites", {"name": "demo database check", "time_zone": "UTC"})
+def check_api_uses_demo_database(musical_chairs: MusicalChairs) -> None:
+    """Refuse to go on if the API isn't on musical_chairs_demo, so a dev database is never filled."""
+    probe = musical_chairs.post("/sites", {"name": "demo database check", "time_zone": "UTC"})
     found = psql(DATABASE, f"SELECT count(*) FROM site WHERE id = '{probe['id']}'")
-    hsp.delete(f"/sites/{probe['id']}")
+    musical_chairs.delete(f"/sites/{probe['id']}")
     if found != "1":
         fail(
             f"the API at {API} isn't using the {DATABASE} database. Start it with "
-            f"HSP_DATABASE_URL={DATABASE_URL} (docs/demos/northwind-robotics.md, step 2)."
+            f"MUSICAL_CHAIRS_DATABASE_URL={DATABASE_URL} (docs/demos/northwind-robotics.md, step 2)."
         )
 
 
-def org(hsp: Hsp) -> tuple[dict[str, str], dict[str, str]]:
+def org(musical_chairs: MusicalChairs) -> tuple[dict[str, str], dict[str, str]]:
     print("== The org chart, imported from CSV and Excel")
     units_csv = io.StringIO()
     writer = csv.writer(units_csv)
     writer.writerow(["external_id", "name", "parent_external_id", "level_label"])
     writer.writerows(row[:4] for row in UNITS)
-    hsp.post(
+    musical_chairs.post(
         "/imports/units?apply=true",
         files={"file": ("units.csv", units_csv.getvalue().encode(), "text/csv")},
     )
@@ -528,32 +528,32 @@ def org(hsp: Hsp) -> tuple[dict[str, str], dict[str, str]]:
         sheet.append([EMAIL.format(login), name, f"E{n}", title, unit, "", position])
     workbook = io.BytesIO()
     book.save(workbook)
-    hsp.post(
+    musical_chairs.post(
         "/imports/people?apply=true",
         files={"file": ("people.xlsx", workbook.getvalue(), "application/octet-stream")},
     )
 
-    units = {u["external_id"]: u["id"] for u in hsp.get("/org-units", limit=200)["items"]}
+    units = {u["external_id"]: u["id"] for u in musical_chairs.get("/org-units", limit=200)["items"]}
     for external_id, *_, color in UNITS:
-        hsp.patch(f"/org-units/{units[external_id]}", {"color": color})
-    by_email = {p["email"]: p["id"] for p in hsp.get("/people", limit=200)["items"]}
+        musical_chairs.patch(f"/org-units/{units[external_id]}", {"color": color})
+    by_email = {p["email"]: p["id"] for p in musical_chairs.get("/people", limit=200)["items"]}
     people = {login: by_email[EMAIL.format(login)] for login, *_ in PEOPLE}
     return units, people
 
 
-def devices(hsp: Hsp, people: dict[str, str]) -> dict[str, list[str]]:
+def devices(musical_chairs: MusicalChairs, people: dict[str, str]) -> dict[str, list[str]]:
     """Monitors for the desks, printers and displays, and laptops issued to people."""
     print("== Devices")
     made: dict[str, list[str]] = {"monitor": [], "printer": [], "display": []}
     for n in range(1, 21):
         made["monitor"].append(
-            hsp.post(
+            musical_chairs.post(
                 "/devices", {"asset_tag": f"MON-{n:04d}", "serial_number": f"DL27Q-{48210 + n}"}
             )["id"]
         )
     for n, floor in enumerate(["Floor 3", "Floor 4", "Haifa lab"], start=1):
         made["printer"].append(
-            hsp.post(
+            musical_chairs.post(
                 "/devices",
                 {
                     "asset_tag": f"PRN-{n:04d}",
@@ -563,7 +563,7 @@ def devices(hsp: Hsp, people: dict[str, str]) -> dict[str, list[str]]:
             )["id"]
         )
     made["display"].append(
-        hsp.post(
+        musical_chairs.post(
             "/devices", {"asset_tag": "TV-0001", "serial_number": "LG65-2291", "notes": "Boardroom"}
         )["id"]
     )
@@ -571,7 +571,7 @@ def devices(hsp: Hsp, people: dict[str, str]) -> dict[str, list[str]]:
         ["sam.carter", "maya.shani", "noa.barak", "liat.segal", "yossi.peretz", "dana.levin"],
         start=1,
     ):
-        hsp.post(
+        musical_chairs.post(
             "/devices",
             {
                 "asset_tag": f"LAP-{n:04d}",
@@ -581,7 +581,7 @@ def devices(hsp: Hsp, people: dict[str, str]) -> dict[str, list[str]]:
             },
         )
     for n in range(21, 25):
-        hsp.post(
+        musical_chairs.post(
             "/devices",
             {
                 "asset_tag": f"MON-{n:04d}",
@@ -593,23 +593,23 @@ def devices(hsp: Hsp, people: dict[str, str]) -> dict[str, list[str]]:
 
 
 def publish(
-    hsp: Hsp,
+    musical_chairs: MusicalChairs,
     floor_id: str,
     plans: list[tuple[list[dict[str, Any]], str]],
     draft: list[dict[str, Any]] | None = None,
 ) -> None:
     """Publish each (ops, note) in turn, then leave `draft` open, if given."""
     path = f"/floors/{floor_id}"
-    hsp.post(f"{path}/lock")
+    musical_chairs.post(f"{path}/lock")
     for ops, note in plans:
-        changeset = hsp.post(f"{path}/draft/changesets", {"base_revision": 0, "ops": ops})
-        hsp.post(f"{path}/draft/publish", {"base_revision": changeset["revision"], "note": note})
+        changeset = musical_chairs.post(f"{path}/draft/changesets", {"base_revision": 0, "ops": ops})
+        musical_chairs.post(f"{path}/draft/publish", {"base_revision": changeset["revision"], "note": note})
     if draft:
-        hsp.post(f"{path}/draft/changesets", {"base_revision": 0, "ops": draft})
-    hsp.delete(f"{path}/lock")
+        musical_chairs.post(f"{path}/draft/changesets", {"base_revision": 0, "ops": draft})
+    musical_chairs.delete(f"{path}/lock")
 
 
-def floor_3(hsp: Hsp, plan: Plan, floor_id: str, monitors: list[str], printer: str) -> None:
+def floor_3(musical_chairs: MusicalChairs, plan: Plan, floor_id: str, monitors: list[str], printer: str) -> None:
     """R&D: the Platform and Vision pods, two meeting rooms and hot desks. Two versions."""
     plan.outline(32000, 18000, windows=6, walls_at=(20000, 24000))
     plan.core()
@@ -652,13 +652,13 @@ def floor_3(hsp: Hsp, plan: Plan, floor_id: str, monitors: list[str], printer: s
     for x, y in ((800, 800), (31200, 17200), (13000, 17200), (19200, 8000)):
         plan.thing("plant_large", x, y)
     publish(
-        hsp,
+        musical_chairs,
         floor_id,
         [(first, "First layout of the R&D floor"), (plan.ops, "Add the printer and plants")],
     )
 
 
-def floor_4(hsp: Hsp, plan: Plan, floor_id: str, printer: str, display: str) -> None:
+def floor_4(musical_chairs: MusicalChairs, plan: Plan, floor_id: str, printer: str, display: str) -> None:
     """Product, Operations and Sales, with the boardroom; a draft is left open."""
     plan.outline(32000, 18000, windows=6, walls_at=(7000,))
     plan.core()
@@ -703,10 +703,10 @@ def floor_4(hsp: Hsp, plan: Plan, floor_id: str, printer: str, display: str) -> 
     first = plan.ops
     plan.ops = [{"op": "update", "kind": "zone", "id": sales, "data": {"name": "Sales & Partners"}}]
     plan.thing("plant_large", 18800, 6000)
-    publish(hsp, floor_id, [(first, "First layout")], plan.ops)
+    publish(musical_chairs, floor_id, [(first, "First layout")], plan.ops)
 
 
-def haifa(hsp: Hsp, plan: Plan, floor_id: str, printer: str) -> None:
+def haifa(musical_chairs: MusicalChairs, plan: Plan, floor_id: str, printer: str) -> None:
     """The hardware lab: workbenches reserved for the team, and desks."""
     plan.outline(24000, 14000, windows=4, walls_at=(13000,))
     plan.room("Hardware lab", "Room", 0, 0, 13000, 14000, [((13000, 0), (13000, 14000))])
@@ -725,12 +725,12 @@ def haifa(hsp: Hsp, plan: Plan, floor_id: str, printer: str) -> None:
     plan.thing("printer_mfp", 22800, 1200, label="Lab printer", device_id=printer)
     for y in (11000, 11450, 11900):
         plan.thing("locker_tall", 13400, y, rotation=900)
-    publish(hsp, floor_id, [(plan.ops, "Lab layout")])
+    publish(musical_chairs, floor_id, [(plan.ops, "Lab layout")])
 
 
-def seats(hsp: Hsp, units: dict[str, str], people: dict[str, str]) -> None:
+def seats(musical_chairs: MusicalChairs, units: dict[str, str], people: dict[str, str]) -> None:
     print("== Seat assignments")
-    found = {s["label"]: s["id"] for s in hsp.get("/seats", limit=200)["items"]}
+    found = {s["label"]: s["id"] for s in musical_chairs.get("/seats", limit=200)["items"]}
     missing = sorted(set(SEATS) - set(found))
     if missing:
         fail(f"no seats labelled {', '.join(missing)} on the published plans")
@@ -738,7 +738,7 @@ def seats(hsp: Hsp, units: dict[str, str], people: dict[str, str]) -> None:
         holder = (
             {"unit_id": units[who[5:]]} if who.startswith("team:") else {"person_id": people[who]}
         )
-        hsp.put(f"/seats/{found[label]}/assignment", holder)
+        musical_chairs.put(f"/seats/{found[label]}/assignment", holder)
 
 
 def main() -> None:
@@ -746,17 +746,17 @@ def main() -> None:
     if sys.argv[1:] == ["--reset-only"]:  # demo.py: the API needs the schema before it starts
         return
     demo_users()
-    hsp = Hsp("dana.levin")
-    check_api_uses_demo_database(hsp)
-    units, people = org(hsp)
-    made = devices(hsp, people)
+    musical_chairs = MusicalChairs("dana.levin")
+    check_api_uses_demo_database(musical_chairs)
+    units, people = org(musical_chairs)
+    made = devices(musical_chairs, people)
 
     print("== Places and floor plans")
     catalog = {
-        i["key"]: i["current_revision"]["id"] for i in hsp.get("/catalog-items", limit=200)["items"]
+        i["key"]: i["current_revision"]["id"] for i in musical_chairs.get("/catalog-items", limit=200)["items"]
     }
-    zone_types = {z["name"]: z["id"] for z in hsp.get("/zone-types")["items"]}
-    tel_aviv = hsp.post(
+    zone_types = {z["name"]: z["id"] for z in musical_chairs.get("/zone-types")["items"]}
+    tel_aviv = musical_chairs.post(
         "/sites",
         {
             "name": "Tel Aviv HQ",
@@ -764,30 +764,30 @@ def main() -> None:
             "address": "12 Harbor Street, Tel Aviv",
         },
     )
-    tower = hsp.post(
+    tower = musical_chairs.post(
         "/buildings", {"site_id": tel_aviv["id"], "name": "Harbor Tower", "code": "HT"}
     )
-    f3 = hsp.post("/floors", {"building_id": tower["id"], "name": "Floor 3", "level_index": 3})
-    f4 = hsp.post("/floors", {"building_id": tower["id"], "name": "Floor 4", "level_index": 4})
-    hsp.post("/floors", {"building_id": tower["id"], "name": "Floor 5", "level_index": 5})
-    haifa_site = hsp.post(
+    f3 = musical_chairs.post("/floors", {"building_id": tower["id"], "name": "Floor 3", "level_index": 3})
+    f4 = musical_chairs.post("/floors", {"building_id": tower["id"], "name": "Floor 4", "level_index": 4})
+    musical_chairs.post("/floors", {"building_id": tower["id"], "name": "Floor 5", "level_index": 5})
+    haifa_site = musical_chairs.post(
         "/sites",
         {"name": "Haifa Lab", "time_zone": "Asia/Jerusalem", "address": "4 Technion Road, Haifa"},
     )
-    lab = hsp.post(
+    lab = musical_chairs.post(
         "/buildings", {"site_id": haifa_site["id"], "name": "Lab Building", "code": "LB"}
     )
-    ground = hsp.post(
+    ground = musical_chairs.post(
         "/floors", {"building_id": lab["id"], "name": "Ground floor", "level_index": 0}
     )
-    floor_3(hsp, Plan(catalog, zone_types, "HT-3"), f3["id"], made["monitor"], made["printer"][0])
+    floor_3(musical_chairs, Plan(catalog, zone_types, "HT-3"), f3["id"], made["monitor"], made["printer"][0])
     floor_4(
-        hsp, Plan(catalog, zone_types, "HT-4"), f4["id"], made["printer"][1], made["display"][0]
+        musical_chairs, Plan(catalog, zone_types, "HT-4"), f4["id"], made["printer"][1], made["display"][0]
     )
-    haifa(hsp, Plan(catalog, zone_types, "LB-0"), ground["id"], made["printer"][2])
+    haifa(musical_chairs, Plan(catalog, zone_types, "LB-0"), ground["id"], made["printer"][2])
 
-    seats(hsp, units, people)
-    hsp.put("/me/preferences", {"language": "en", "theme": "light"})
+    seats(musical_chairs, units, people)
+    musical_chairs.put("/me/preferences", {"language": "en", "theme": "light"})
     print(
         f"\nReady: open {APP} and sign in as dana.levin (admin) or sam.carter, "
         f"password '{PASSWORD}'."

@@ -1,5 +1,5 @@
 /**
- * The user guide (docs/0144, docs/0146): short pages of text with a few GIFs, inside HSP so it
+ * The user guide (docs/0144, docs/0146): short pages of text with a few GIFs, inside Musical Chairs so it
  * works offline. One part for everyone, one for admins; viewers see only the first. Opened from
  * the user menu.
  */

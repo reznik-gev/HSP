@@ -30,4 +30,4 @@
 ## Endpoints
 `/org-units` (list as a flat page with `parent_id`, CRUD, `restore`), `/org-units/{id}/positions`, `/people` (search by `q` over name and email, filter by unit, CRUD, `reactivate`), `/people/{id}/memberships`, `/imports/units`, `/imports/people`.
 
-Writes need hsp-admin and CSRF, and every write is audited. Each import is recorded as one audit event with its counts ([0033](0033-2026-10-08-audit-logging.md)).
+Writes need musical-chairs-admin and CSRF, and every write is audited. Each import is recorded as one audit event with its counts ([0033](0033-2026-10-08-audit-logging.md)).

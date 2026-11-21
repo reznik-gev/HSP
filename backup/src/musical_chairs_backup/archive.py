@@ -1,0 +1,95 @@
+import hashlib
+import json
+import tarfile
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
+
+MANIFEST = "manifest.json"
+FORMAT = 1
+
+
+class ArchiveError(Exception):
+    pass
+
+
+@dataclass(frozen=True)
+class Manifest:
+    musical_chairs_version: str
+    schema_revision: str | None
+    created_at: str  # ISO 8601, UTC
+    schedule: str
+    files: dict[str, str]  # name in the archive -> SHA-256
+    format: int = FORMAT
+
+
+def sha256(path: Path) -> str:
+    with path.open("rb") as f:
+        return hashlib.file_digest(f, "sha256").hexdigest()
+
+
+def write_archive(
+    dest: Path,
+    members: dict[str, Path],
+    *,
+    musical_chairs_version: str,
+    schema_revision: str | None,
+    created: datetime,
+    schedule: str,
+) -> Manifest:
+    manifest = Manifest(
+        musical_chairs_version=musical_chairs_version,
+        schema_revision=schema_revision,
+        created_at=created.isoformat(),
+        schedule=schedule,
+        files={name: sha256(path) for name, path in members.items()},
+    )
+    manifest_file = dest.with_name(dest.name + ".manifest")
+    manifest_file.write_text(json.dumps(asdict(manifest), indent=2), encoding="utf-8")
+    try:
+        with tarfile.open(dest, "w") as tar:
+            tar.add(manifest_file, arcname=MANIFEST)
+            for name, path in members.items():
+                tar.add(path, arcname=name)
+    finally:
+        manifest_file.unlink()
+    return manifest
+
+
+def read_manifest(archive: Path) -> Manifest:
+    try:
+        with tarfile.open(archive, "r") as tar:
+            f = tar.extractfile(MANIFEST)
+            if f is None:
+                raise ArchiveError(f"{archive.name} has no {MANIFEST}")
+            data = json.load(f)
+    except (tarfile.TarError, KeyError, json.JSONDecodeError) as exc:
+        raise ArchiveError(
+            f"{archive.name} isn't a readable Musical Chairs backup ({exc})"
+        ) from None
+    try:
+        return Manifest(**data)
+    except TypeError:
+        raise ArchiveError(f"{archive.name} has a manifest this version can't read") from None
+
+
+def extract_verified(archive: Path, into: Path) -> Manifest:
+    manifest = read_manifest(archive)
+    extract_listed_files(archive, manifest, into)
+    verify_checksums(archive, manifest, into)
+    return manifest
+
+
+def extract_listed_files(archive: Path, manifest: Manifest, into: Path) -> None:
+    with tarfile.open(archive, "r") as tar:
+        for name in manifest.files:
+            try:
+                tar.extract(name, into, filter="data")
+            except KeyError:
+                raise ArchiveError(f"{archive.name} is missing {name}") from None
+
+
+def verify_checksums(archive: Path, manifest: Manifest, extracted: Path) -> None:
+    for name, expected in manifest.files.items():
+        if sha256(extracted / name) != expected:
+            raise ArchiveError(f"{archive.name} is damaged: {name} doesn't match its checksum")

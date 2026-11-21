@@ -1,10 +1,10 @@
-# Releasing HSP
+# Releasing Musical Chairs
 
-How a version of HSP becomes a published release that customers install. The decision behind it is [0102](../decisions/0102-2026-10-19-release-workflow.md). Versions are MAJOR.MINOR.PATCH ([0063](../decisions/0063-2026-10-08-release-versioning.md)), tagged on `main`, or on `release/X.Y` for hotfixes ([0064](../decisions/0064-2026-10-08-branching-workflow.md)).
+How a version of Musical Chairs becomes a published release that customers install. The decision behind it is [0102](../decisions/0102-2026-10-19-release-workflow.md). Versions are MAJOR.MINOR.PATCH ([0063](../decisions/0063-2026-10-08-release-versioning.md)), tagged on `main`, or on `release/X.Y` for hotfixes ([0064](../decisions/0064-2026-10-08-branching-workflow.md)).
 
 ## Between releases: keep the changelog
 A PR that changes something users or operators notice adds a line under `## [Unreleased]` in [`CHANGELOG.md`](../../CHANGELOG.md), in the same PR.
-- Write it for the person using or running HSP: what they can do now, or what changed for them. "Find where someone sits from the top bar", not "Add the search endpoint".
+- Write it for the person using or running Musical Chairs: what they can do now, or what changed for them. "Find where someone sits from the top bar", not "Add the search endpoint".
 - Group lines under **For everyone**, **For admins** and **For operators**. Leave out internal changes: tests, refactors, CI.
 - English only. These notes are for operators, not text in the app.
 
@@ -15,11 +15,11 @@ A PR that changes something users or operators notice adds a line under `## [Unr
 3. **Tag the merged commit and push the tag:**
    ```bash
    git switch main && git pull
-   git tag -a vX.Y.Z -m "HSP X.Y.Z"
+   git tag -a vX.Y.Z -m "Musical Chairs X.Y.Z"
    git push origin vX.Y.Z
    ```
    Only admins can create `v*` tags (a tag ruleset).
-4. **Watch the release workflow** (Actions → release). It checks the tag and the changelog, builds the images, assembles `hsp-X.Y.Z.tar.gz`, and lists the known vulnerabilities in its images and packages ([0128](../decisions/0128-2026-11-08-vulnerability-scanning.md)). Then it installs it on a clean runner. There it runs the scripted check and the Playwright browser tests. In parallel, the **upgrade test** installs the last published release (not a pre-release), upgrades it to this one with `hsp upgrade`, checks it, rolls back with `hsp rollback` and checks again ([0107](../decisions/0107-2026-10-21-operator-cli.md)). Until a release exists, it's skipped with a notice. This takes about 20–30 minutes.
+4. **Watch the release workflow** (Actions → release). It checks the tag and the changelog, builds the images, assembles `musical-chairs-X.Y.Z.tar.gz`, and lists the known vulnerabilities in its images and packages ([0128](../decisions/0128-2026-11-08-vulnerability-scanning.md)). Then it installs it on a clean runner. There it runs the scripted check and the Playwright browser tests. In parallel, the **upgrade test** installs the last published release (not a pre-release), upgrades it to this one with `musical-chairs upgrade`, checks it, rolls back with `musical-chairs rollback` and checks again ([0107](../decisions/0107-2026-10-21-operator-cli.md)). Until a release exists, it's skipped with a notice. This takes about 20–30 minutes.
 5. **Approve the publish step.** The workflow then waits at the `release` environment. Open the run and read the summary. Read the vulnerability findings too: they only warn, so nothing stops a release that has them. Then choose **Review deployments → Approve**. Only then does the GitHub Release appear, with the bundle, its `.sha256` file and the changelog entry as its notes.
 
 ### Release candidates
@@ -40,5 +40,5 @@ Create `release/X.Y` from the `vX.Y.Z` tag, if it doesn't exist yet. Cherry-pick
 deploy/build-images.sh 1.2.0-rc.0
 deploy/release-notes.sh Unreleased > /tmp/notes.md
 deploy/bundle.sh 1.2.0-rc.0 /tmp/notes.md dist
-deploy/test-bundle.sh dist/hsp-1.2.0-rc.0.tar.gz     # Linux only; KEEP=1 leaves it running
+deploy/test-bundle.sh dist/musical-chairs-1.2.0-rc.0.tar.gz     # Linux only; KEEP=1 leaves it running
 ```

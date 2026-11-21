@@ -17,7 +17,7 @@ import {
 import { Version } from "./Version";
 
 /** The signed-in person: who they are, their role, and signing out (docs/0087); the user guide
- * (docs/0144); and the release of HSP they're using (docs/0104). */
+ * (docs/0144); and the release of Musical Chairs they're using (docs/0104). */
 export function UserMenu() {
   const { t } = useTranslation();
   const { data: me } = useQuery(meQuery);

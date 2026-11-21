@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke-test the HSP images built by deploy/build-images.sh (docs/0097). CI runs it on PRs.
+# Smoke-test the Musical Chairs images built by deploy/build-images.sh (docs/0097). CI runs it on PRs.
 #   deploy/smoke-images.sh [version]      # default 0.0.0-dev
 # Checks that each image starts and answers: the API's /healthz, its migrate tooling and its
 # refusal to start on an unmigrated database; the web
@@ -10,7 +10,7 @@
 set -euo pipefail
 
 version="${1:-0.0.0-dev}"
-run="hsp-smoke-$$"
+run="musical-chairs-smoke-$$"
 net="$run-net"
 tmp="$(mktemp -d)"
 tls="$tmp/tls"
@@ -56,43 +56,43 @@ docker run -d --name "$run-db" --network "$net" \
 # The image's init scripts run a temporary server on a socket only, then restart it listening on
 # TCP: wait until TCP answers, and retry in case the restart is still settling.
 for _ in $(seq 60); do
-  docker exec -e PGPASSWORD=keycloak "$run-db" createdb -h localhost -U keycloak hsp     >/dev/null 2>&1 && break
+  docker exec -e PGPASSWORD=keycloak "$run-db" createdb -h localhost -U keycloak musical_chairs     >/dev/null 2>&1 && break
   sleep 1
 done
-docker exec -e PGPASSWORD=keycloak "$run-db" psql -h localhost -U keycloak -d hsp -c 'SELECT 1'   >/dev/null
+docker exec -e PGPASSWORD=keycloak "$run-db" psql -h localhost -U keycloak -d musical_chairs -c 'SELECT 1'   >/dev/null
 
-echo "== hsp-api"
+echo "== musical-chairs-api"
 api_env=(
-  -e HSP_DATABASE_URL="postgresql+asyncpg://keycloak:keycloak@$run-db:5432/hsp"
-  -e HSP_SESSION_ENCRYPTION_KEY="$(head -c 32 /dev/urandom | base64 | tr '+/' '-_')"
-  -e HSP_OIDC_CLIENT_SECRET=smoke-secret
-  -e HSP_API_WORKERS=2
+  -e MUSICAL_CHAIRS_DATABASE_URL="postgresql+asyncpg://keycloak:keycloak@$run-db:5432/musical_chairs"
+  -e MUSICAL_CHAIRS_SESSION_ENCRYPTION_KEY="$(head -c 32 /dev/urandom | base64 | tr '+/' '-_')"
+  -e MUSICAL_CHAIRS_OIDC_CLIENT_SECRET=smoke-secret
+  -e MUSICAL_CHAIRS_API_WORKERS=2
 )
 # It must also stop, not keep restarting its workers: `timeout` would end that with 124. (uvicorn's
 # supervisor exits 0 when a worker fails to start, so 0 is what stopping looks like.)
-refused="$(timeout 60 docker run --rm --network "$net" "${api_env[@]}" "hsp-api:$version" 2>&1; echo "exit $?")"
+refused="$(timeout 60 docker run --rm --network "$net" "${api_env[@]}" "musical-chairs-api:$version" 2>&1; echo "exit $?")"
 expect "api refuses to start before migrations ran (docs/0056)" "$refused" "run the migrate job"
 if [[ "$refused" == *"exit 124" ]]; then
   echo "FAIL: the api kept running instead of stopping on an unmigrated database" >&2
   exit 1
 fi
 echo "ok: and it stops instead of restarting"
-docker run --rm --network "$net" "${api_env[@]}" "hsp-api:$version" alembic upgrade head >/dev/null
+docker run --rm --network "$net" "${api_env[@]}" "musical-chairs-api:$version" alembic upgrade head >/dev/null
 docker run -d --name "$run-api" --network "$net" --network-alias api -p 18000:8000 \
-  -p 19464:9464 "${api_env[@]}" "hsp-api:$version" >/dev/null
+  -p 19464:9464 "${api_env[@]}" "musical-chairs-api:$version" >/dev/null
 wait_for http://localhost:18000/healthz 60 || { docker logs "$run-api"; exit 1; }
 # Requests no route matches are counted under one label; with 2 workers, the metrics port must
 # add up both (docs/0105), so 6 requests show as 6 wherever they landed.
 for _ in 1 2 3 4 5 6; do curl -s -o /dev/null http://localhost:18000/no-such-path; done
 expect "api metrics add up every worker" "$(curl -fsS http://localhost:19464/metrics)" \
-  'hsp_http_requests_total{method="GET",route="unmatched",status="404"} 6.0'
+  'musical_chairs_http_requests_total{method="GET",route="unmatched",status="404"} 6.0'
 expect "api /healthz reports the version" "$(curl -fsS http://localhost:18000/healthz)" "\"version\":\"$version\""
 expect "api runs as non-root" "$(docker exec "$run-api" id -u)" "10001"
-expect "migrate job has the migrations" "$(docker run --rm "hsp-api:$version" alembic heads)" "(head)"
+expect "migrate job has the migrations" "$(docker run --rm "musical-chairs-api:$version" alembic heads)" "(head)"
 
-echo "== hsp-web, HSP_WEB_TLS=off (behind a trusted proxy)"
+echo "== musical-chairs-web, MUSICAL_CHAIRS_WEB_TLS=off (behind a trusted proxy)"
 docker run -d --name "$run-web" --network "$net" -p 18080:8080 -p 18081:8081 \
-  -e HSP_WEB_TLS=off -e HSP_TRUSTED_PROXIES=0.0.0.0/0 "hsp-web:$version" >/dev/null
+  -e MUSICAL_CHAIRS_WEB_TLS=off -e MUSICAL_CHAIRS_TRUSTED_PROXIES=0.0.0.0/0 "musical-chairs-web:$version" >/dev/null
 wait_for http://localhost:18081/healthz 30 || { docker logs "$run-web"; exit 1; }
 expect "web /healthz reports the version" "$(curl -fsS http://localhost:18081/healthz)" "\"version\":\"$version\""
 expect "web serves the app" "$(curl -fsS http://localhost:18080/)" '<div id="root">'
@@ -110,21 +110,21 @@ expect "web proxies /api to the API" \
 expect "web closes Keycloak's admin console" \
   "$(status http://localhost:18080/auth/admin/)" "404"
 expect "web shows the maintenance page while Keycloak is down" \
-  "$(curl -sS -w ' status=%{http_code}' http://localhost:18080/auth/realms/hsp/account)" "status=503"
+  "$(curl -sS -w ' status=%{http_code}' http://localhost:18080/auth/realms/musical_chairs/account)" "status=503"
 docker stop -t 2 "$run-api" >/dev/null
 expect "web answers a Problem Details 503 while the API is down" \
   "$(curl -sS -w ' status=%{http_code}' http://localhost:18080/api/v1/floors)" "problems/maintenance"
 docker start "$run-api" >/dev/null
 expect "web runs as non-root" "$(docker exec "$run-web" id -u)" "101"
 
-echo "== hsp-web, HSP_WEB_TLS=on"
+echo "== musical-chairs-web, MUSICAL_CHAIRS_WEB_TLS=on"
 # Relative paths: Git for Windows' openssl doesn't understand /tmp.
 (cd "$tls" && openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=localhost" \
   -keyout tls.key -out tls.crt 2>/dev/null)
 chmod 644 "$tls/tls.key"  # test key only: readable by nginx's user after docker cp
 docker create --name "$run-web-tls" --network "$net" -p 18088:8080 -p 18443:8443 \
-  -e HSP_PUBLIC_URL=https://localhost:18443 -e HSP_KEYCLOAK_ADMIN_FROM=10.99.0.0/16 \
-  -e HSP_TLS_CERT=/tmp/tls/tls.crt -e HSP_TLS_KEY=/tmp/tls/tls.key "hsp-web:$version" >/dev/null
+  -e MUSICAL_CHAIRS_PUBLIC_URL=https://localhost:18443 -e MUSICAL_CHAIRS_KEYCLOAK_ADMIN_FROM=10.99.0.0/16 \
+  -e MUSICAL_CHAIRS_TLS_CERT=/tmp/tls/tls.crt -e MUSICAL_CHAIRS_TLS_KEY=/tmp/tls/tls.key "musical-chairs-web:$version" >/dev/null
 # Streamed as a tar, so it works the same from Git Bash on Windows.
 tar -C "$tmp" -cf - tls | docker cp - "$run-web-tls:/tmp"
 docker start "$run-web-tls" >/dev/null
@@ -138,19 +138,19 @@ expect "web sends HSTS for this host only" "$headers" "strict-transport-security
 # Older protocols are off in tls.conf; current curl builds can't even offer them, so only
 # check that TLS 1.2 clients still get in.
 expect "web accepts TLS 1.2" "$(status -k --tlsv1.2 --tls-max 1.2 https://localhost:18443/)" "200"
-expect "web limits Keycloak's admin console to HSP_KEYCLOAK_ADMIN_FROM" \
+expect "web limits Keycloak's admin console to MUSICAL_CHAIRS_KEYCLOAK_ADMIN_FROM" \
   "$(status -k https://localhost:18443/auth/admin/)" "403"
 expect "web refuses to start with TLS on and no certificate" \
-  "$(docker run --rm -e HSP_PUBLIC_URL=https://x "hsp-web:$version" 2>&1 || true)" "no certificate"
+  "$(docker run --rm -e MUSICAL_CHAIRS_PUBLIC_URL=https://x "musical-chairs-web:$version" 2>&1 || true)" "no certificate"
 
-echo "== hsp-keycloak"
+echo "== musical-chairs-keycloak"
 docker run -d --name "$run-kc" --network "$net" -p 18082:8080 -p 19000:9000 \
   -e KC_DB_URL="jdbc:postgresql://$run-db:5432/keycloak" \
   -e KC_DB_USERNAME=keycloak -e KC_DB_PASSWORD=keycloak \
   -e KC_HOSTNAME=http://localhost:18082/auth -e KC_HTTP_ENABLED=true \
   -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
-  -e HSP_PUBLIC_URL=https://hsp.example -e HSP_OIDC_CLIENT_SECRET=smoke-secret \
-  "hsp-keycloak:$version" >/dev/null
+  -e MUSICAL_CHAIRS_PUBLIC_URL=https://musical-chairs.example -e MUSICAL_CHAIRS_OIDC_CLIENT_SECRET=smoke-secret \
+  "musical-chairs-keycloak:$version" >/dev/null
 wait_for http://localhost:19000/auth/health/ready 180 || { docker logs "$run-kc"; exit 1; }
 echo "ok: keycloak is ready"
 # Without --optimized (or with build options changed at start) Keycloak rebuilds itself first.
@@ -159,9 +159,9 @@ if docker logs "$run-kc" 2>&1 | grep -q "Updating the configuration"; then
   exit 1
 fi
 echo "ok: keycloak started optimized"
-expect "keycloak imported the hsp realm" \
-  "$(curl -fsS http://localhost:18082/auth/realms/hsp/.well-known/openid-configuration)" \
-  '"issuer":"http://localhost:18082/auth/realms/hsp"'
+expect "keycloak imported the musical_chairs realm" \
+  "$(curl -fsS http://localhost:18082/auth/realms/musical_chairs/.well-known/openid-configuration)" \
+  '"issuer":"http://localhost:18082/auth/realms/musical_chairs"'
 # The bootstrap admin can sign in a moment after Keycloak reports ready.
 token=""
 for _ in $(seq 30); do
@@ -172,15 +172,15 @@ for _ in $(seq 30); do
 done
 expect "keycloak filled the realm's placeholders from the environment" \
   "$(curl -fsS -H "Authorization: Bearer $token" \
-    'http://localhost:18082/auth/admin/realms/hsp/clients?clientId=hsp-api')" \
-  '"redirectUris":["https://hsp.example/api/v1/auth/callback"]'
+    'http://localhost:18082/auth/admin/realms/musical_chairs/clients?clientId=musical-chairs-api')" \
+  '"redirectUris":["https://musical-chairs.example/api/v1/auth/callback"]'
 
-echo "== hsp-backup"
+echo "== musical-chairs-backup"
 expect "backup has PostgreSQL 18's tools" \
-  "$(docker run --rm "hsp-backup:$version" pg_dump --version)" "pg_dump (PostgreSQL) 18"
-expect "backup runs as postgres's uid" "$(docker run --rm "hsp-backup:$version" id -u)" "999"
+  "$(docker run --rm "musical-chairs-backup:$version" pg_dump --version)" "pg_dump (PostgreSQL) 18"
+expect "backup runs as postgres's uid" "$(docker run --rm "musical-chairs-backup:$version" id -u)" "999"
 expect "backup refuses a missing backups.yml" \
-  "$(docker run --rm "hsp-backup:$version" hsp-backup check 2>&1 || true)" \
-  "can't read /etc/hsp/backups.yml"
+  "$(docker run --rm "musical-chairs-backup:$version" musical-chairs-backup check 2>&1 || true)" \
+  "can't read /etc/musical_chairs/backups.yml"
 
 echo "All image smoke checks passed."

@@ -7,8 +7,8 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp import models
-from hsp.preferences import Preferences, PreferencesService
+from musical_chairs import models
+from musical_chairs.preferences import Preferences, PreferencesService
 from tests.db.plan_helpers import new_tenant
 from tests.stubs import stub_viewer
 

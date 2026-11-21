@@ -1,6 +1,6 @@
 # Demos
 
-Walkthroughs for showing HSP to prospective clients: how to set up a demo, and a script to follow ([0103](../decisions/0103-2026-10-19-demo.md)). Part of the [HSP documentation](../README.md).
+Walkthroughs for showing Musical Chairs to prospective clients: how to set up a demo, and a script to follow ([0103](../decisions/0103-2026-10-19-demo.md)). Part of the [Musical Chairs documentation](../README.md).
 
 | Demo | What it shows |
 |---|---|

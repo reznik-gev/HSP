@@ -7,7 +7,7 @@
 ## Context
 Merges are rebase-only ([0069](0069-2026-10-08-rebase-merges.md)), and a branch catches up with `main` by rebasing and pushing with `--force-with-lease` ([git guide](../guides/git.md#catching-up-and-restacking)). Still, PR #157 got merge commit `eee288a`, which merged `main` into the branch.
 
-The cause was Auto-fix ([0134](0134-2026-11-09-from-request-to-main.md)). When a PR has a merge conflict, the app wakes the session and tells it to merge `main` into the branch, and never to rebase or force-push. The session did what that message said. HSP's rule was in the git guide, which the session didn't reread at that moment. Nothing it had in front of it said the rule wins over Auto-fix's message.
+The cause was Auto-fix ([0134](0134-2026-11-09-from-request-to-main.md)). When a PR has a merge conflict, the app wakes the session and tells it to merge `main` into the branch, and never to rebase or force-push. The session did what that message said. Musical Chairs' rule was in the git guide, which the session didn't reread at that moment. Nothing it had in front of it said the rule wins over Auto-fix's message.
 
 The owner asked for the merge commit to be rebased out and for this not to happen again.
 

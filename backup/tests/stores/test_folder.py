@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from hsp_backup.stores.base import StoreError
-from hsp_backup.stores.folder import FolderStore
+from musical_chairs_backup.stores.base import StoreError
+from musical_chairs_backup.stores.folder import FolderStore
 from tests.stores.conftest import NAME, OTHER
 
 

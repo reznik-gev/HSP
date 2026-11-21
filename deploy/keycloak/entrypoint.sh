@@ -6,7 +6,7 @@ set -euo pipefail
 
 while IFS='=' read -r name path; do
   target="${name%_FILE}"
-  [ -r "$path" ] || { echo "hsp-keycloak: can't read $name=$path" >&2; exit 1; }
+  [ -r "$path" ] || { echo "musical-chairs-keycloak: can't read $name=$path" >&2; exit 1; }
   export "$target=$(cat "$path")"
 done < <(env | grep -E '^[A-Z0-9_]+_FILE=' || true)
 

@@ -11,7 +11,7 @@ export const useSidebar = create<SidebarState>()(
   persist(
     (set) => ({ collapsed: false, toggle: () => set((s) => ({ collapsed: !s.collapsed })) }),
     {
-      name: "hsp.sidebar",
+      name: "musical_chairs.sidebar",
     },
   ),
 );

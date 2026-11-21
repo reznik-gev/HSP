@@ -4,7 +4,7 @@
  *
  * Play with it: pan (drag empty space or middle-drag), zoom (wheel), click a desk to select it
  * (its monitors come along), shift-click to add, drag to move. The overlay shows live FPS.
- * The Playwright runner (`pnpm bench:svg`) drives the same page through `window.__hspBench`.
+ * The Playwright runner (`pnpm bench:svg`) drives the same page through `window.__musicalChairsBench`.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -37,7 +37,7 @@ interface BenchApi {
 
 declare global {
   interface Window {
-    __hspBench?: BenchApi;
+    __musicalChairsBench?: BenchApi;
   }
 }
 
@@ -168,9 +168,9 @@ export function SvgBench() {
       },
     };
     api.current = bench;
-    window.__hspBench = bench;
+    window.__musicalChairsBench = bench;
     return () => {
-      delete window.__hspBench;
+      delete window.__musicalChairsBench;
     };
   }, [meter, store]);
 

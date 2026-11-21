@@ -7,10 +7,10 @@ repositories in tests/fakes.py are fakes with working behaviour.
 import uuid
 from typing import Any
 
-from hsp.auth.principal import ADMIN_ROLE, Principal
-from hsp.models import new_id
-from hsp.plans.changeset import References
-from hsp.plans.schema import CatalogItem, PlacedObject
+from musical_chairs.auth.principal import ADMIN_ROLE, Principal
+from musical_chairs.models import new_id
+from musical_chairs.plans.changeset import References
+from musical_chairs.plans.schema import CatalogItem, PlacedObject
 
 #: The tenant of the unit tests' signed-in users. Database tests use the database's tenants.
 STUB_TENANT = new_id()

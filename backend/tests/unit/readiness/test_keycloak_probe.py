@@ -4,9 +4,9 @@ every 10 s (docs/0105)."""
 import httpx2
 import pytest
 
-from hsp.readiness import KeycloakProbe
+from musical_chairs.readiness import KeycloakProbe
 
-ISSUER = "http://keycloak.test/auth/realms/hsp"
+ISSUER = "http://keycloak.test/auth/realms/musical_chairs"
 DISCOVERY = f"{ISSUER}/.well-known/openid-configuration"
 
 

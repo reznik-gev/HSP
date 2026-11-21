@@ -11,7 +11,7 @@ All numbers below were measured on that commit. Coverage counts lines and branch
 | Question | Short answer |
 |---|---|
 | [Coupling](#1-coupling) | **Low to medium.** The layers are clear and depend one way. Two spots are tighter than they need to be: some backend services write their own SQL, and the floor pages and the editor import each other. |
-| [Vendor lock-in](#2-vendor-lock-in) | **Keycloak: low in the code, medium in operations.** HSP speaks plain OIDC, but it makes three assumptions only Keycloak meets. **PostgreSQL: high, by design.** Another PostgreSQL host is easy. Another database engine would take weeks. |
+| [Vendor lock-in](#2-vendor-lock-in) | **Keycloak: low in the code, medium in operations.** Musical Chairs speaks plain OIDC, but it makes three assumptions only Keycloak meets. **PostgreSQL: high, by design.** Another PostgreSQL host is easy. Another database engine would take weeks. |
 | [Adding features](#3-adding-features) | **Easy for screens and endpoints.** CI catches most forgotten steps. The floor editor is the hard part. |
 | [Tests](#4-tests) | **Good unit coverage, thin end-to-end coverage.** Backend 93%, frontend 87%, backup 94%. But nine routers' handlers never run in a backend test, and the browser tests only run when a release is made. |
 
@@ -24,7 +24,7 @@ All numbers below were measured on that commit. Coverage counts lines and branch
 | 3 | Make the role claim and the session length work with any OIDC provider | 0008 promises customers can use their own identity provider. Today only Keycloak fully works ([2.1](#21-keycloak)) | Small |
 | 4 | ~~Decide whether backend services may query the database directly~~ **Decided:** the queries move into repositories, as their own PR stack after 1.2 ([0110](../decisions/0110-2026-10-22-repositories-after-1-2.md)) | The code does both. The decisions say only one ([1.1](#11-backend)) | Large, scheduled |
 | 5 | Show coverage in CI, without a minimum | So a drop is visible in the PR that caused it ([4.4](#44-coverage-in-ci)) | Small |
-| 6 | ~~Bring the backend and frontend READMEs up to date~~ **Done** on [#169](https://github.com/reznik-gev/HSP/pull/169) | They name Python 3.13 and list a third of the packages ([5](#5-other-observations)) | Small |
+| 6 | ~~Bring the backend and frontend READMEs up to date~~ **Done** on [#169](https://github.com/reznik-gev/MusicalChairs/pull/169) | They name Python 3.13 and list a third of the packages ([5](#5-other-observations)) | Small |
 
 Each of these is a proposal. If we take one up, it gets a decision record. The owner also wants the dev cycle and CI times improved, alongside the repositories stack ([0112](../decisions/0112-2026-10-23-dev-cycle-and-ci-times.md)). Two deeper reviews follow from this one: [dependencies](2026-10-22-dependencies.md) and [decision records](2026-10-22-decision-records.md). Each has its own recommendations.
 
@@ -85,22 +85,22 @@ The API contract is the only thing the two sides share, and both sides check it.
 
 ### 2.1 Keycloak
 
-[0008](../decisions/0008-2026-10-07-identity-provider.md) chose to bundle Keycloak, but said HSP "only speaks OIDC", so customers could point it at their own identity provider (Entra ID, Okta and others). The code mostly keeps that promise. Login uses Authlib with standard OIDC discovery, and logout uses the standard revocation and end-session endpoints. The frontend never talks to Keycloak.
+[0008](../decisions/0008-2026-10-07-identity-provider.md) chose to bundle Keycloak, but said Musical Chairs "only speaks OIDC", so customers could point it at their own identity provider (Entra ID, Okta and others). The code mostly keeps that promise. Login uses Authlib with standard OIDC discovery, and logout uses the standard revocation and end-session endpoints. The frontend never talks to Keycloak.
 
 **Three assumptions only Keycloak meets:**
 
 | Assumption | Where | What happens with another provider |
 |---|---|---|
-| Roles are in the `realm_access.roles` claim | `auth/principal.py:45` | Nobody gets `hsp-admin`. Entra ID puts app roles in `roles`, and Okta usually in `groups`. |
+| Roles are in the `realm_access.roles` claim | `auth/principal.py:45` | Nobody gets `musical-chairs-admin`. Entra ID puts app roles in `roles`, and Okta usually in `groups`. |
 | The session lasts as long as `refresh_expires_in` says | `auth/oidc.py:64` | Only Keycloak sends this field. Without it, a session ends when the access token does, often 5–60 minutes, so users are sent back through sign-in that often. |
-| The access token is a JWT that HSP can read | `auth/principal.py:28` | Providers whose access tokens are opaque (Google, for example) can't sign anyone in. |
+| The access token is a JWT that Musical Chairs can read | `auth/principal.py:28` | Providers whose access tokens are opaque (Google, for example) can't sign anyone in. |
 
 **Identity is keyed on the provider's user ID** (the `sub` claim) in five places: sessions, user preferences (`user_profile`), the audit log's `actor_subject`, the floor edit lock's holder, and `person.idp_subject`. A new identity provider gives every user a new ID. Their preferences and their link to a person record would be lost, and old audit entries would point to IDs nobody has. Moving would need a one-off mapping, for example by email.
 
-**In operations, Keycloak is built in:** a service in the production compose file, its own image and realm export in `deploy/keycloak/`, `hsp install` creating the first admin with Keycloak's `kcadm.sh`, every backup holding Keycloak's database, and the smoke, restore and upgrade tests starting it.
+**In operations, Keycloak is built in:** a service in the production compose file, its own image and realm export in `deploy/keycloak/`, `musical-chairs install` creating the first admin with Keycloak's `kcadm.sh`, every backup holding Keycloak's database, and the smoke, restore and upgrade tests starting it.
 
 **Estimate:**
-- *Letting a customer use their own provider* (what 0008 promises): about a day in the backend to make the role claim and the session length configurable. Then a few days to make the Keycloak service optional in the compose file, `hsp install`, backups and `install.md`.
+- *Letting a customer use their own provider* (what 0008 promises): about a day in the backend to make the role claim and the session length configurable. Then a few days to make the Keycloak service optional in the compose file, `musical-chairs install`, backups and `install.md`.
 - *Replacing the bundled Keycloak with another product:* mostly operations work, about one to two weeks. Existing installations would also need the user-ID mapping above.
 
 ### 2.2 PostgreSQL and PostGIS
@@ -116,7 +116,7 @@ The API contract is the only thing the two sides share, and both sides check it.
 | `INSERT … ON CONFLICT`, `SELECT … FOR UPDATE` | Edit locks and drafts |
 | asyncpg, `pg_dump` / `pg_restore` | The driver, and the whole backup program ([0106](../decisions/0106-2026-10-21-backups.md)) |
 
-One thing helps portability. **Geometry calculations run in Python** (Shapely, in `plans/geometry_checks.py`), not in SQL. No query calls a PostGIS function. PostGIS stores the shapes and enforces the rules, but HSP doesn't depend on its spatial queries.
+One thing helps portability. **Geometry calculations run in Python** (Shapely, in `plans/geometry_checks.py`), not in SQL. No query calls a PostGIS function. PostGIS stores the shapes and enforces the rules, but Musical Chairs doesn't depend on its spatial queries.
 
 **Estimate:**
 - *Another PostgreSQL* (a managed service such as Amazon RDS, Azure or Cloud SQL, with PostGIS): change the connection settings. The backup program needs `pg_dump` access, which these services allow. **Easy.**
@@ -142,7 +142,7 @@ The 85 endpoints follow one shape (`api/sites.py` is a good example to copy):
 2. The logic in a service in the area's package (and a repository method, if the area has a repository).
 3. A new router is added to `api/v1.py`.
 4. A table change: a model in `models/`, then `alembic revision --autogenerate`, reviewed by hand, plus a DB test ([0061](../decisions/0061-2026-10-08-test-strategy.md)).
-5. `uv run hsp-export-openapi openapi.json`, then `pnpm api:types`. CI fails if either is forgotten.
+5. `uv run musical-chairs-export-openapi openapi.json`, then `pnpm api:types`. CI fails if either is forgotten.
 6. Tests: unit tests with fakes, or DB tests.
 
 Much comes for free: sign-in (`CurrentPrincipal`), admin and CSRF checks (`dependencies=WRITE`), error replies in one format ([0037](../decisions/0037-2026-10-08-api-errors.md)), cursor pagination, audit records, and request logs, metrics and traces.
@@ -163,7 +163,7 @@ Ready-made parts: the shadcn components, the page shell, Problem-Details error d
 
 **Friction:**
 - **The floor editor is where changes get hard.** `PlanView.tsx` (636 lines), `interaction.ts` (434) and `store.ts` (428) carry most of the editor's behaviour, and the demo follow-ups add to all three. A change to a gesture often touches the core, the overlay and the view together.
-- The frontend README's layout lists 4 of 16 folders, so a newcomer has to find the feature-folder pattern on their own. *Update, 2026-11-12:* it now lists every folder and the pattern ([#169](https://github.com/reznik-gev/HSP/pull/169)).
+- The frontend README's layout lists 4 of 16 folders, so a newcomer has to find the feature-folder pattern on their own. *Update, 2026-11-12:* it now lists every folder and the pattern ([#169](https://github.com/reznik-gev/MusicalChairs/pull/169)).
 
 **Verdict:** a list-and-panel screen or a CRUD endpoint is about a day's work with tests. Editor features take noticeably longer.
 
@@ -235,7 +235,7 @@ PR CI takes 3 to 7 minutes today. Its slowest job is usually `images`, which alr
 | Option | Extra time per PR | What it tests | Trade-off |
 |---|---|---|---|
 | **A. Add the browser tests to the `images` job.** After the smoke test, start the stack from the images it just built, then run Playwright. | About 2–2.5 minutes, on the job that already finishes last. PR CI goes to roughly 5–9 minutes. | The images we ship: nginx, the security headers, the production Keycloak realm | Slower PRs. It runs on every PR that changes code. |
-| **B. A separate job against the dev stack** (`compose.dev.yml`, the API under uvicorn, the frontend under Vite) | Little: it runs beside the other jobs and takes 3–4 minutes | The app's behaviour, but not the shipped images, nginx or the security headers | A second way of starting HSP to keep working. |
+| **B. A separate job against the dev stack** (`compose.dev.yml`, the API under uvicorn, the frontend under Vite) | Little: it runs beside the other jobs and takes 3–4 minutes | The app's behaviour, but not the shipped images, nginx or the security headers | A second way of starting Musical Chairs to keep working. |
 | **C. Every night on `main`**, the release workflow's build and test jobs on a schedule | None | The shipped bundle, as now | A break is found the next morning, after the PR has merged. |
 | **D. As now**, on release tags and release-script PRs only | None | The shipped bundle | A break is found at release time. |
 
@@ -243,7 +243,7 @@ PR CI takes 3 to 7 minutes today. Its slowest job is usually `images`, which alr
 
 **First, the tests have to stop failing at random.** The release runs from the last push failed on three PRs in this stack (#107, #108, #112). Two failed because a script called Keycloak while it was still starting, which got a 503. The third failed an assertion in `find-a-seat`. If such a test blocks merges, it will block them at random. So the waits should be fixed first, and the test run a few times in a row to show it's stable. Only then should it become a required check.
 
-*Update, 2026-11-08:* both causes are found and fixed, in [#126](https://github.com/reznik-gev/HSP/pull/126). The 503 came from `/readyz` keeping Keycloak's "still starting" answer ([0116](../decisions/0116-2026-10-24-readyz-remembers-only-ready.md)). The `find-a-seat` failure came from Chrome's font hinting ([0117](../decisions/0117-2026-10-24-plan-labels-without-hinting.md)). The [investigation](../investigations/2026-10-24-flaky-release-tests.md) has the details. Running the test a few times in a row, before it becomes required, is still worth doing.
+*Update, 2026-11-08:* both causes are found and fixed, in [#126](https://github.com/reznik-gev/MusicalChairs/pull/126). The 503 came from `/readyz` keeping Keycloak's "still starting" answer ([0116](../decisions/0116-2026-10-24-readyz-remembers-only-ready.md)). The `find-a-seat` failure came from Chrome's font hinting ([0117](../decisions/0117-2026-10-24-plan-labels-without-hinting.md)). The [investigation](../investigations/2026-10-24-flaky-release-tests.md) has the details. Running the test a few times in a row, before it becomes required, is still worth doing.
 
 After that, add flows a few at a time, starting with assigning a seat and the edit lock.
 
@@ -251,15 +251,15 @@ After that, add flows a few at a time, starting with assigning a seat and the ed
 
 CI doesn't measure coverage. The numbers above needed `pytest-cov` and `@vitest/coverage-v8`, which aren't project dependencies. We recommend adding both and printing coverage in the CI summary, with no minimum, so that a drop shows up in the PR that caused it. A minimum tends to produce tests written for the number.
 
-*Update, 2026-11-08:* done in [#125](https://github.com/reznik-gev/HSP/pull/125). Every CI run shows coverage in its summary, with no minimum, and a merge to `main` keeps the full report ([0114](../decisions/0114-2026-10-23-test-coverage-report.md)).
+*Update, 2026-11-08:* done in [#125](https://github.com/reznik-gev/MusicalChairs/pull/125). Every CI run shows coverage in its summary, with no minimum, and a merge to `main` keeps the full report ([0114](../decisions/0114-2026-10-23-test-coverage-report.md)).
 
 ## 5. Other observations
 
 These are small, and noted so they aren't lost:
-- **The READMEs are out of date.** `backend/README.md` says uv installs Python 3.13 (it is 3.14, [0091](../decisions/0091-2026-10-15-python-3-14.md)). Its layout lists 6 of about 20 packages. `frontend/README.md` lists 4 of 16 folders. *Update, 2026-11-11:* both READMEs are up to date ([#169](https://github.com/reznik-gev/HSP/pull/169)).
+- **The READMEs are out of date.** `backend/README.md` says uv installs Python 3.13 (it is 3.14, [0091](../decisions/0091-2026-10-15-python-3-14.md)). Its layout lists 6 of about 20 packages. `frontend/README.md` lists 4 of 16 folders. *Update, 2026-11-11:* both READMEs are up to date ([#169](https://github.com/reznik-gev/MusicalChairs/pull/169)).
 - **The largest backend modules** are `plans/drafts.py` (546 lines), `org/units.py` (513), `plans/changeset.py` (476) and `plans/publishing.py` (430). They are long but each is about one thing. No action needed yet.
 - **Nothing enforces the backend's layers.** The frontend's ESLint rule protects the editor core. The backend has no equivalent, so a domain package could start importing `api/` and no check would notice. A tool such as import-linter could hold the layers in section 1.1 in about 20 lines of config.
-- **`deploy/bin/hsp` is a 694-line Bash script.** shellcheck checks it, and the release workflow tests install, upgrade and restore end to end. At its current size that is enough. If it keeps growing, consider moving it to Python, like the backup program.
+- **`deploy/bin/musical-chairs` is a 694-line Bash script.** shellcheck checks it, and the release workflow tests install, upgrade and restore end to end. At its current size that is enough. If it keeps growing, consider moving it to Python, like the backup program.
 
 ## 6. Deeper looks
 

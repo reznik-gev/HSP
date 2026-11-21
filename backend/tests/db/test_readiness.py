@@ -3,7 +3,7 @@
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from hsp.readiness import code_head, database_revision, schema_problem
+from musical_chairs.readiness import code_head, database_revision, schema_problem
 
 
 async def test_a_migrated_database_is_at_the_code_head(conn: AsyncConnection) -> None:
@@ -15,7 +15,7 @@ async def test_an_old_schema_says_to_run_the_migrate_job(conn: AsyncConnection) 
     await conn.execute(text("UPDATE alembic_version SET version_num = 'old'"))
     problem = await schema_problem(conn)
     assert problem == (
-        f"the database schema is at old, but this version of HSP needs {code_head()}: "
+        f"the database schema is at old, but this version of Musical Chairs needs {code_head()}: "
         "run the migrate job (docker compose run --rm migrate)"
     )
 

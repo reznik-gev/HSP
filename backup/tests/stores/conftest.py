@@ -5,14 +5,14 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from hsp_backup.config import S3Target
-from hsp_backup.stores.factory import open_store
-from hsp_backup.stores.folder import FolderStore
-from hsp_backup.stores.s3 import S3_ACCESS_KEY, S3_SECRET_KEY, S3Store
+from musical_chairs_backup.config import S3Target
+from musical_chairs_backup.stores.factory import open_store
+from musical_chairs_backup.stores.folder import FolderStore
+from musical_chairs_backup.stores.s3 import S3_ACCESS_KEY, S3_SECRET_KEY, S3Store
 
-NAME = "hsp-20261021T023000Z-nightly.tar"
-OTHER = "hsp-20261022T023000Z-nightly.tar"
-BUCKET = "hsp-backups"
+NAME = "musical-chairs-20261021T023000Z-nightly.tar"
+OTHER = "musical-chairs-20261022T023000Z-nightly.tar"
+BUCKET = "musical-chairs-backups"
 OFFSITE = S3Target(type="s3", bucket=BUCKET, prefix="prod/", path_style=True)
 
 

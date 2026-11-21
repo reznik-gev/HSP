@@ -7,9 +7,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from hsp.api.locks import get_lock_repository
-from hsp.auth.principal import Principal
-from hsp.models import new_id
+from musical_chairs.api.locks import get_lock_repository
+from musical_chairs.auth.principal import Principal
+from musical_chairs.models import new_id
 from tests.fakes import InMemoryLockRepository
 from tests.stubs import STUB_TENANT
 from tests.unit.api_helpers import SignedIn

@@ -3,9 +3,9 @@ from datetime import UTC, datetime
 from prometheus_client import CollectorRegistry
 from structlog.testing import capture_logs
 
-from hsp_backup.config import parse_config
-from hsp_backup.metrics import BackupMetrics
-from hsp_backup.scheduler import BackupScheduler
+from musical_chairs_backup.config import parse_config
+from musical_chairs_backup.metrics import BackupMetrics
+from musical_chairs_backup.scheduler import BackupScheduler
 from tests.conftest import FakeClock
 
 #: 02:30 UTC on 2026-10-21 is 05:30 in Jerusalem.
@@ -75,7 +75,7 @@ def test_a_schedule_due_during_a_long_backup_is_skipped(
     # hourly then ran 04:30-06:00, so 04:00, 05:00 and 06:00 passed during backups: skipped
     assert s.due["hourly"] == utc(7)
     skipped = registry.get_sample_value(
-        "hsp_backup_last_skipped_timestamp_seconds", {"schedule": "hourly"}
+        "musical_chairs_backup_last_skipped_timestamp_seconds", {"schedule": "hourly"}
     )
     assert skipped == utc(6).timestamp()
     assert s.due["nightly"] == datetime(2026, 10, 22, 3, tzinfo=UTC)  # not skipped

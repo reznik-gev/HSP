@@ -14,7 +14,7 @@ The review offered two ways out: accept both patterns and record when to use eac
 ## Decision
 1. **Every backend area that writes its own SQL gets a repository** for its database queries. Its service keeps the rules and is unit-tested against an `InMemory*` fake, as 0014 and 0061 say. These five areas, and the modules in each:
 
-   | Area | Modules (`backend/src/hsp/`) |
+   | Area | Modules (`backend/src/musical_chairs/`) |
    |---|---|
    | Org | `org/units.py`, `org/people.py`, `org/imports.py` |
    | Seats | `seats/assignments.py`, `seats/occupancy.py`, `seats/search.py`, `seats/batch.py`, `seats/imports.py` |

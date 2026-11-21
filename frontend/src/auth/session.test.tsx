@@ -22,12 +22,12 @@ afterEach(() => {
   useSessionExpired.setState({ expired: false });
 });
 
-/** Signing out of HSP sends the browser on to Keycloak's logout. */
-const SIGNED_OUT = { logout_url: "/auth/realms/hsp/logout" };
+/** Signing out of Musical Chairs sends the browser on to Keycloak's logout. */
+const SIGNED_OUT = { logout_url: "/auth/realms/musical_chairs/logout" };
 /** The account menu's button is named after the signed-in user, ADMIN. */
 const ACCOUNT_MENU = { name: `Account: ${ADMIN.name}` };
-/** Tests build without HSP_VERSION, so vite.config.ts sets the version to 0.0.0-dev. */
-const DEV_VERSION_LINE = "HSP 0.0.0-dev";
+/** Tests build without MUSICAL_CHAIRS_VERSION, so vite.config.ts sets the version to 0.0.0-dev. */
+const DEV_VERSION_LINE = "Musical Chairs 0.0.0-dev";
 
 describe("session (docs/0038, docs/0087)", () => {
   it("sends a signed-out visitor to sign in, coming back to the same page", async () => {
@@ -37,7 +37,7 @@ describe("session (docs/0038, docs/0087)", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Taking you to sign in");
   });
 
-  it("shows who is signed in, and signs out of HSP and Keycloak", async () => {
+  it("shows who is signed in, and signs out of Musical Chairs and Keycloak", async () => {
     const { calls } = await renderApp("/floors", {
       "POST /api/v1/auth/logout": { status: 200, body: SIGNED_OUT },
     });
@@ -45,7 +45,7 @@ describe("session (docs/0038, docs/0087)", () => {
     expect(screen.getByText(ADMIN.email)).toBeInTheDocument();
     expect(screen.getByText("Administrator")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
-    await waitFor(() => expect(assigned).toEqual(["/auth/realms/hsp/logout"]));
+    await waitFor(() => expect(assigned).toEqual(["/auth/realms/musical_chairs/logout"]));
     const logout = calls.find((r) => r.method === "POST");
     expect(logout?.headers.get("X-CSRF-Token")).toBe(ADMIN.csrf_token);
   });
@@ -60,7 +60,7 @@ describe("session (docs/0038, docs/0087)", () => {
     await renderApp("/floors", { "GET /api/v1/auth/me": { status: 502 } });
     // /auth/me retries once (about a second) before giving up.
     const alert = await screen.findByRole("alert", {}, { timeout: 4000 });
-    expect(alert).toHaveTextContent("Can't reach the HSP server");
+    expect(alert).toHaveTextContent("Can't reach the Musical Chairs server");
   });
 
   it("a session that ends mid-use asks to sign in again instead of failing silently", async () => {

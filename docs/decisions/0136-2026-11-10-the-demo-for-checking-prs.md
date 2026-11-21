@@ -7,7 +7,7 @@
 ## Context
 The owner checks a PR's UI by hand in the Northwind demo (0103), and has kept it running between PRs since 2026-11-10. Each time, a session set it up from scratch, and the same problems came back. `pnpm` isn't on the PATH, so `pnpm dev` fails. A new worktree has no `node_modules`. `.claude/launch.json` isn't in Git. The API doesn't reload, so it shows old code until restarted. The demo also ran from the PR's own worktree. When #151 merged, its worktree couldn't be removed until another session moved the demo to #152's worktree.
 
-Only one demo can run at a time: ports 8000 and 5173, the Keycloak redirect and the `hsp_demo` database are all fixed. So bringing up one PR's demo replaces whatever was showing. Reseeding resets the data too.
+Only one demo can run at a time: ports 8000 and 5173, the Keycloak redirect and the `musical_chairs_demo` database are all fixed. So bringing up one PR's demo replaces whatever was showing. Reseeding resets the data too.
 
 ## Options considered
 Where the demo's code lives:

@@ -7,8 +7,8 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter
 
-from hsp.models import new_id
-from hsp.plans.changeset import AddOp, ChangesetRejected, DeleteOp, Op, UpdateOp
+from musical_chairs.models import new_id
+from musical_chairs.plans.changeset import AddOp, ChangesetRejected, DeleteOp, Op, UpdateOp
 from tests.stubs import stub_catalog_item, stub_references
 
 DESK, CHAIR, MONITOR = new_id(), new_id(), new_id()

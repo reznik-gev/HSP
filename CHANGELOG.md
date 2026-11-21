@@ -1,6 +1,6 @@
 # Changelog
 
-What changes for people using and running HSP, release by release ([0102](docs/decisions/0102-2026-10-19-release-workflow.md)). Each pull request that changes something users or operators notice adds a line under **Unreleased**. To release, rename that section to the version and date, and start a new empty one ([how to release](docs/guides/releasing.md)).
+What changes for people using and running Musical Chairs, release by release ([0102](docs/decisions/0102-2026-10-19-release-workflow.md)). Each pull request that changes something users or operators notice adds a line under **Unreleased**. To release, rename that section to the version and date, and start a new empty one ([how to release](docs/guides/releasing.md)).
 
 Versions follow MAJOR.MINOR.PATCH ([0063](docs/decisions/0063-2026-10-08-release-versioning.md)).
 
@@ -12,7 +12,7 @@ The first release.
 - "Show free seats" on a floor's plan makes the free and bookable seats stand out.
 - A Free seats list, under Seats: the seats free to assign or to book, narrowed by site, building, floor, zone and kind, each with Show on plan.
 - English and Hebrew, with the layout mirrored for Hebrew.
-- The user menu and the bottom of the sidebar show which release of HSP you're using.
+- The user menu and the bottom of the sidebar show which release of Musical Chairs you're using.
 - A user guide, from the user menu: how to find people and free seats and read a plan, and for admins, how to set up floors, draw and publish them, and assign seats. In English and Hebrew, with a few short GIFs.
 - A floor's page shows a newly published version within 30 seconds, and that someone started editing within 15, without reloading.
 - Light and dark mode, following the system or chosen per person. In dark mode each seat state stands out against the plan, and zones and furniture are toned down.
@@ -33,14 +33,14 @@ The first release.
 - Assign seats to people and teams. Archiving a person or deleting a floor frees their seats on its own.
 
 ### For operators
-- Install from one offline bundle: the images, the Compose stack and its documentation. No registry is contacted. `sudo bin/hsp install` checks it, sets it up and starts it, and `hsp status` shows how it's doing.
-- `hsp backup now` takes a backup, `hsp backup list` lists them, and `hsp restore` brings one back. On a new host, `hsp install --secrets` installs with the old host's saved secrets, so its backups can be restored.
-- `hsp upgrade` moves to a new release with a backup first, and `hsp rollback` undoes it.
+- Install from one offline bundle: the images, the Compose stack and its documentation. No registry is contacted. `sudo bin/musical-chairs install` checks it, sets it up and starts it, and `musical-chairs status` shows how it's doing.
+- `musical-chairs backup now` takes a backup, `musical-chairs backup list` lists them, and `musical-chairs restore` brings one back. On a new host, `musical-chairs install --secrets` installs with the old host's saved secrets, so its backups can be restored.
+- `musical-chairs upgrade` moves to a new release with a backup first, and `musical-chairs rollback` undoes it.
 - An installation guide, `docs/install.md` in the bundle: what the host needs (with hardware sizes measured for up to 5,000 people), installing, Active Directory sign-in, monitoring, backups, upgrades, every setting, and which versions get fixes.
-- Sign-in through the bundled Keycloak. HSP serves HTTPS itself, or runs behind your own proxy.
-- The API logs one JSON line per request: the route, status, time taken, request ID and who made it. Set `HSP_LOG_LEVEL=DEBUG` to add the full path.
+- Sign-in through the bundled Keycloak. Musical Chairs serves HTTPS itself, or runs behind your own proxy.
+- The API logs one JSON line per request: the route, status, time taken, request ID and who made it. Set `MUSICAL_CHAIRS_LOG_LEVEL=DEBUG` to add the full path.
 - `/readyz` checks the database, its schema version and Keycloak, and names what isn't ready. The API refuses to start on a database that wasn't migrated for its version.
-- Prometheus metrics from the API: requests by route, changesets and publishes, edit-lock refusals and database connections. Only the host itself can reach them, unless you set `HSP_METRICS_ADDRESS`.
+- Prometheus metrics from the API: requests by route, changesets and publishes, edit-lock refusals and database connections. Only the host itself can reach them, unless you set `MUSICAL_CHAIRS_METRICS_ADDRESS`.
 - OpenTelemetry tracing of requests and database queries, off until you set `OTEL_EXPORTER_OTLP_ENDPOINT`.
-- Scheduled backups of HSP's and Keycloak's databases, to a folder or to S3, on the schedules you set in `backups.yml`. Each schedule keeps its own number of backups. Restoring refuses a backup from a newer version.
+- Scheduled backups of Musical Chairs' and Keycloak's databases, to a folder or to S3, on the schedules you set in `backups.yml`. Each schedule keeps its own number of backups. Restoring refuses a backup from a newer version.
 - The images include Debian's security fixes up to the day they were built. The API and backup images don't contain pip.

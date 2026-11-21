@@ -20,7 +20,7 @@ type Reply = { status: number; body?: unknown };
 const URL_ = "POST /api/v1/floors/f3/draft/changesets";
 const problem = (status: number, slug: string): Reply => ({
   status,
-  body: { type: `https://hsp.example/problems/${slug}`, title: slug },
+  body: { type: `https://musical-chairs.example/problems/${slug}`, title: slug },
 });
 
 function setup(replies: (Reply | "network")[], base = { revision: 0, version: null }) {

@@ -10,19 +10,19 @@ import pytest
 from fastapi import Depends
 from fastapi.testclient import TestClient
 
-from hsp.auth.dependencies import (
+from musical_chairs.auth.dependencies import (
     CurrentPrincipal,
     get_session_store,
     get_token_refresher,
     require_admin,
     require_csrf,
 )
-from hsp.auth.oidc import OidcClient
-from hsp.auth.sessions import SessionTokens
-from hsp.auth.tokens import hash_token, new_session_token
-from hsp.config import Settings, get_settings
-from hsp.main import create_app
-from hsp.tenancy import get_tenant_id
+from musical_chairs.auth.oidc import OidcClient
+from musical_chairs.auth.sessions import SessionTokens
+from musical_chairs.auth.tokens import hash_token, new_session_token
+from musical_chairs.config import Settings, get_settings
+from musical_chairs.main import create_app
+from musical_chairs.tenancy import get_tenant_id
 from tests.fakes import InMemorySessionStore
 from tests.stubs import STUB_CSRF_TOKEN, STUB_TENANT
 from tests.unit.auth.fake_idp import ISSUER, PUBLIC, FakeIdP
@@ -57,12 +57,12 @@ def signed_in_subject() -> str:
 
 @pytest.fixture
 def admin_tokens(signed_in_subject: str) -> SessionTokens:
-    return stub_tokens(subject=signed_in_subject, roles=["hsp-admin"])
+    return stub_tokens(subject=signed_in_subject, roles=["musical-chairs-admin"])
 
 
 @pytest.fixture
 def viewer_tokens(signed_in_subject: str) -> SessionTokens:
-    return stub_tokens(subject=signed_in_subject, roles=["default-roles-hsp"])
+    return stub_tokens(subject=signed_in_subject, roles=["default-roles-musical_chairs"])
 
 
 @pytest.fixture
@@ -105,6 +105,6 @@ def sign_in(
             csrf_token=STUB_CSRF_TOKEN,
             tokens=tokens,
         )
-        probe_api.cookies.set("hsp_session", cookie)
+        probe_api.cookies.set("musical_chairs_session", cookie)
 
     return sign_in

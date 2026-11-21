@@ -4,7 +4,7 @@
 - **Status:** Accepted
 
 ## Summary
-HSP (Human-Space Program) is a service that lets managers model their physical workspaces and the people who use them, and control who manages which part of each.
+Musical Chairs is a service that lets managers model their physical workspaces and the people who use them, and control who manages which part of each.
 
 ## Core capabilities
 1. **Workspace modeling**

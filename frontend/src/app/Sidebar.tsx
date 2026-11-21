@@ -114,7 +114,7 @@ export function Sidebar() {
   );
 }
 
-/** The HSP mark: the corner of a floor plan with a seat in it, drawn in the accent. */
+/** The Musical Chairs mark: the corner of a floor plan with a seat in it, drawn in the accent. */
 function Mark() {
   return (
     <svg viewBox="0 0 20 20" className="size-5 shrink-0 text-primary" aria-hidden>

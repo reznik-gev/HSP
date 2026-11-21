@@ -1,7 +1,7 @@
 [project]
-name = "hsp"
+name = "musical_chairs"
 version = "0.1.0"
-description = "HSP (Human-Space Program) API service"
+description = "Musical Chairs API service"
 readme = "README.md"
 authors = [
     { name = "gev", email = "reznikgev@gmail.com" }
@@ -34,8 +34,8 @@ dependencies = [
 ]
 
 [project.scripts]
-hsp-api = "hsp.serve:main"
-hsp-export-openapi = "hsp.openapi_export:main"
+musical-chairs-api = "musical_chairs.serve:main"
+musical-chairs-export-openapi = "musical_chairs.openapi_export:main"
 
 [build-system]
 requires = ["uv_build>=0.13.5,<0.14.0"]
@@ -79,7 +79,7 @@ python_version = "3.14"
 strict = true
 plugins = ["pydantic.mypy"]
 mypy_path = "src"
-packages = ["hsp"]
+packages = ["musical_chairs"]
 
 [[tool.mypy.overrides]]
 module = ["geoalchemy2.*", "shapely.*", "authlib.*"]
@@ -91,13 +91,13 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 markers = [
-    "db: integration test against a real PostGIS database (docs/0061); requires HSP_TEST_DATABASE_URL",
+    "db: integration test against a real PostGIS database (docs/0061); requires MUSICAL_CHAIRS_TEST_DATABASE_URL",
 ]
 
 # Coverage: `uv run pytest --cov --cov-report=html` (docs/0114). CI measures on every run and keeps
 # the report from each push to main. It's a report, not a gate, so there's no fail_under.
 [tool.coverage.run]
-source = ["hsp"]
+source = ["musical_chairs"]
 branch = true
 
 [tool.coverage.report]

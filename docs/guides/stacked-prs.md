@@ -57,7 +57,7 @@ CI checks every pushed branch; there's no local test run during a sync.
 ## When there is a real conflict
 Sometimes `main` and a stacked PR **changed the same lines**. `gh stack sync` then puts every branch back as it was and asks you to run `gh stack rebase`, which stops at the conflict:
 ```
-CONFLICT (content): Merge conflict in backend/src/hsp/config.py
+CONFLICT (content): Merge conflict in backend/src/musical_chairs/config.py
 ```
 1. Open each listed file. Git marks the clash like this:
    ```

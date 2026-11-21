@@ -3,13 +3,13 @@
 (function () {
   var root = document.documentElement;
   try {
-    var saved = JSON.parse(localStorage.getItem("hsp.theme") || "{}");
+    var saved = JSON.parse(localStorage.getItem("musical_chairs.theme") || "{}");
     var choice = (saved.state && saved.state.choice) || "system";
     var dark =
       choice === "dark" ||
       (choice === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
     root.classList.toggle("dark", dark);
-    var lang = localStorage.getItem("hsp.language") || navigator.language || "en";
+    var lang = localStorage.getItem("musical_chairs.language") || navigator.language || "en";
     var he = lang.indexOf("he") === 0;
     root.lang = he ? "he" : "en";
     root.dir = he ? "rtl" : "ltr";

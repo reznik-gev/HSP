@@ -4,7 +4,7 @@ import { asProblem, fieldErrors, problemMessage, problemSlug } from "./problems"
 
 describe("server refusals in forms (docs/0037)", () => {
   const problem = asProblem({
-    type: "https://hsp.example/problems/request-invalid",
+    type: "https://musical-chairs.example/problems/request-invalid",
     title: "Request validation failed",
     detail: null,
     errors: [

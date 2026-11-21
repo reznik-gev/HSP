@@ -1,7 +1,7 @@
 """Fixtures for DB integration tests (docs/0061).
 
-Requires HSP_TEST_DATABASE_URL, e.g.
-    postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test
+Requires MUSICAL_CHAIRS_TEST_DATABASE_URL, e.g.
+    postgresql+asyncpg://musical_chairs:musical_chairs@localhost:5432/musical_chairs_test
 The schema is dropped and rebuilt with Alembic once per session, so every run also tests that the
 migrations apply to an empty database. Each test runs inside a transaction that is rolled back.
 """
@@ -22,7 +22,7 @@ from tests.db.plan_helpers import context
 from tests.db.seat_helpers import published_seats
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
-TEST_DB_URL = os.environ.get("HSP_TEST_DATABASE_URL")
+TEST_DB_URL = os.environ.get("MUSICAL_CHAIRS_TEST_DATABASE_URL")
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -30,7 +30,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         if "tests/db/" in item.nodeid.replace("\\", "/"):
             item.add_marker(pytest.mark.db)
             if not TEST_DB_URL:
-                item.add_marker(pytest.mark.skip(reason="HSP_TEST_DATABASE_URL not set"))
+                item.add_marker(pytest.mark.skip(reason="MUSICAL_CHAIRS_TEST_DATABASE_URL not set"))
 
 
 @pytest.fixture(scope="session")
@@ -45,7 +45,7 @@ async def engine() -> AsyncIterator[AsyncEngine]:
         subprocess.run,
         [sys.executable, "-m", "alembic", "upgrade", "head"],
         cwd=BACKEND_DIR,
-        env={**os.environ, "HSP_DATABASE_URL": TEST_DB_URL},
+        env={**os.environ, "MUSICAL_CHAIRS_DATABASE_URL": TEST_DB_URL},
         check=True,
     )
     yield eng

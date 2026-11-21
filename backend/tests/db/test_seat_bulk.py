@@ -4,13 +4,13 @@ from typing import Any
 
 import pytest
 
-from hsp import models
-from hsp.imports import read_table
-from hsp.models import new_id
-from hsp.problems import ProblemException
-from hsp.seats.assignments import AssignmentIn, SeatAssignmentService
-from hsp.seats.batch import BatchIn, SeatBatchService
-from hsp.seats.imports import SeatImportService
+from musical_chairs import models
+from musical_chairs.imports import read_table
+from musical_chairs.models import new_id
+from musical_chairs.problems import ProblemException
+from musical_chairs.seats.assignments import AssignmentIn, SeatAssignmentService
+from musical_chairs.seats.batch import BatchIn, SeatBatchService
+from musical_chairs.seats.imports import SeatImportService
 from tests.db.seat_helpers import person, unit
 
 
@@ -212,7 +212,7 @@ async def test_import_reports_every_bad_row(seats_for_bulk_assignment: dict[str,
         f"{seat['bookable']},,{maya},,\n"
         f"{seat['a']},,{maya},X,\n"
         f"{seat['a']},,{gone},,\n"
-        f"{seat['b']},,nobody@hsp.local,,\n"
+        f"{seat['b']},,nobody@musical-chairs.local,,\n"
         f"{seat['b']},WRONG,{maya},,\n"
         f"{seat['a']},,{maya},,\n"
         f"{seat['a']},,{maya},,\n"

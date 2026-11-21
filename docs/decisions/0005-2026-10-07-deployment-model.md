@@ -4,7 +4,7 @@
 - **Status:** Accepted
 
 ## Context
-HSP could run in a managed cloud, on-premise, or both.
+Musical Chairs could run in a managed cloud, on-premise, or both.
 
 ## Options considered
 - Cloud (managed services)
@@ -12,7 +12,7 @@ HSP could run in a managed cloud, on-premise, or both.
 - Both (containerized, cloud-agnostic)
 
 ## Decision
-HSP is deployed **on-premise in the organization's own infrastructure**.
+Musical Chairs is deployed **on-premise in the organization's own infrastructure**.
 
 ## Consequences
 - Every component must be self-hostable and redistributable. No dependency on proprietary cloud services (managed queues, cloud-only databases, SaaS auth).

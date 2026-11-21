@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from hsp.auth.principal import Principal
+from musical_chairs.auth.principal import Principal
 from tests.stubs import stub_admin
 
 

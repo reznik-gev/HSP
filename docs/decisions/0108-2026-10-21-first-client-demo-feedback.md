@@ -6,7 +6,7 @@
 - **Refines:** [0047](0047-2026-10-08-snapping.md) (snapping), [0044](0044-2026-10-08-wall-joins.md) (moving joined walls), [0104](0104-2026-10-21-v1-release-scope-and-support.md) (what comes after 1.0.0)
 
 ## Context
-The owner showed HSP to a prospective client on 2026-10-21. The [notes from that meeting](../demos/feedback-2026-10-21.md) list six points. The owner went through them one by one, and added one more about walls: shortening a wall moved its joined end, not its free end.
+The owner showed Musical Chairs to a prospective client on 2026-10-21. The [notes from that meeting](../demos/feedback-2026-10-21.md) list six points. The owner went through them one by one, and added one more about walls: shortening a wall moved its joined end, not its free end.
 
 ## Decision
 The owner decided each point:

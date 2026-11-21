@@ -1,8 +1,8 @@
 {
   "app": {
-    "name": "HSP",
-    "fullName": "Human-Space Program",
-    "version": "HSP {{version}}"
+    "name": "MC",
+    "fullName": "Musical Chairs",
+    "version": "Musical Chairs {{version}}"
   },
   "nav": {
     "main": "Main",
@@ -69,7 +69,7 @@
   },
   "session": {
     "signingIn": "Taking you to sign in…",
-    "unreachable": "Can't reach the HSP server. Check your connection, then reload the page.",
+    "unreachable": "Can't reach the Musical Chairs server. Check your connection, then reload the page.",
     "reload": "Reload",
     "expiredTitle": "You've been signed out",
     "expiredBody": "Your session ended. Sign in again to continue; you'll come back to this page.",
@@ -849,7 +849,7 @@
       "l_shape": "L-shape",
       "model": "Model"
     },
-    "builtinNote": "Built-in items come with HSP and can't be changed. Make a copy to change one.",
+    "builtinNote": "Built-in items come with Musical Chairs and can't be changed. Make a copy to change one.",
     "archivedNote": "This item is archived: it isn't offered in the editor, but items already placed keep working.",
     "makeCopy": "Make a copy",
     "copyName": "{{name}} (copy)",
@@ -951,7 +951,7 @@
   "guide": {
     "title": "User guide",
     "contents": "Contents",
-    "everyone": "Using HSP",
+    "everyone": "Using Musical Chairs",
     "admins": "For admins"
   }
 }

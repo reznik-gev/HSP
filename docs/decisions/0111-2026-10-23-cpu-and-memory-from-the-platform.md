@@ -11,7 +11,7 @@
 - **The names misled.** `process_cpu_seconds_total` and `process_resident_memory_bytes` are the standard names for one process, and ready-made dashboards read them that way.
 - **`process_count` wasn't the number of workers.** With 2 workers it reported 4, because Python adds a helper process.
 
-HSP will also run on Kubernetes in 1.1 or 1.2 ([0104](0104-2026-10-21-v1-release-scope-and-support.md)), where the cluster already measures every container.
+Musical Chairs will also run on Kubernetes in 1.1 or 1.2 ([0104](0104-2026-10-21-v1-release-scope-and-support.md)), where the cluster already measures every container.
 
 ## Options considered
 The owner chose:
@@ -25,9 +25,9 @@ The owner chose:
 ## Decision
 - The API's metrics no longer include CPU, memory or a process count. Every other metric in [0105](0105-2026-10-21-metrics-and-tracing.md) item 3 stays.
 - psutil is not a dependency.
-- The operator guide (`deploy/install.md`) says where CPU and memory come from: `docker stats` on the host, and cAdvisor for an operator who wants them in Prometheus. HSP doesn't ship cAdvisor: it needs broad access to the host, which is the operator's call.
+- The operator guide (`deploy/install.md`) says where CPU and memory come from: `docker stats` on the host, and cAdvisor for an operator who wants them in Prometheus. Musical Chairs doesn't ship cAdvisor: it needs broad access to the host, which is the operator's call.
 
 ## Consequences
-- An operator on 1.0 who collects only HSP's metrics must add cAdvisor, or use their usual host monitoring, to graph CPU and memory.
+- An operator on 1.0 who collects only Musical Chairs' metrics must add cAdvisor, or use their usual host monitoring, to graph CPU and memory.
 - On Kubernetes, nothing extra is needed.
 - The backup service is a single process, so its metrics keep the Prometheus client's standard process metrics.

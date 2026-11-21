@@ -3,7 +3,7 @@
 Language-neutral test cases for floor-plan invariants
 ([0051](../../docs/decisions/0051-2026-10-08-validation-feedback.md), [0092](../../docs/decisions/0092-2026-10-15-editor-speed-tools.md)).
 Both the TypeScript checker in the editor core (`frontend/src/editor/core/checks.ts`) and the
-Python backend (`hsp.plans.changeset.validate`) run every case in CI, so the two can't drift
+Python backend (`musical_chairs.plans.changeset.validate`) run every case in CI, so the two can't drift
 apart. A rule change updates the cases first; both implementations must then pass them.
 
 ## Format

@@ -4,7 +4,7 @@ from collections.abc import Iterator
 import pytest
 import structlog
 
-from hsp_backup.logs import configure_logging
+from musical_chairs_backup.logs import configure_logging
 
 
 @pytest.fixture

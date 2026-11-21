@@ -24,4 +24,4 @@
 | `GET/PATCH/DELETE /catalog-items/{id}`, `GET /catalog-items/{id}/revisions` | `PATCH` with shape, dimension or flag fields adds a revision. `DELETE` archives. |
 | `GET/POST /devices`, `GET/PATCH/DELETE /devices/{id}` | Asset tags are unique per tenant ([0022](0022-2026-10-08-device-asset-data.md)) |
 
-Writes need hsp-admin and CSRF. Reads are open to any logged-in user ([0027](0027-2026-10-08-v1-interim-people-and-access.md)). Every write is audited ([0033](0033-2026-10-08-audit-logging.md)).
+Writes need musical-chairs-admin and CSRF. Reads are open to any logged-in user ([0027](0027-2026-10-08-v1-interim-people-and-access.md)). Every write is audited ([0033](0033-2026-10-08-audit-logging.md)).

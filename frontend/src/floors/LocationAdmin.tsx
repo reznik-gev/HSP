@@ -268,11 +268,11 @@ export function LocationSheet({ edit, onClose }: { edit: LocationEdit; onClose: 
                         {...c}
                         required
                         dir="ltr"
-                        list="hsp-time-zones"
+                        list="musical-chairs-time-zones"
                         value={values.time_zone}
                         onChange={set("time_zone")}
                       />
-                      <datalist id="hsp-time-zones">
+                      <datalist id="musical-chairs-time-zones">
                         {TIME_ZONES.map((z) => (
                           <option key={z} value={z} />
                         ))}

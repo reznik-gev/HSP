@@ -3,9 +3,9 @@
 import pytest
 from fastapi.testclient import TestClient
 
-import hsp.main
-from hsp.main import create_app
-from hsp.readiness import SchemaMismatchError
+import musical_chairs.main
+from musical_chairs.main import create_app
+from musical_chairs.readiness import SchemaMismatchError
 
 
 async def fake_wrong_schema_check() -> None:
@@ -15,7 +15,7 @@ async def fake_wrong_schema_check() -> None:
 @pytest.fixture
 def wrong_schema(monkeypatch: pytest.MonkeyPatch) -> None:
     """The startup check finds a schema this code wasn't written for."""
-    monkeypatch.setattr(hsp.main, "check_schema_at_startup", fake_wrong_schema_check)
+    monkeypatch.setattr(musical_chairs.main, "check_schema_at_startup", fake_wrong_schema_check)
 
 
 @pytest.mark.usefixtures("wrong_schema")

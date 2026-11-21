@@ -7,10 +7,10 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp import models
-from hsp.locations.buildings import BuildingsService
-from hsp.locations.repository import SqlLocationsRepository
-from hsp.models import new_id
+from musical_chairs import models
+from musical_chairs.locations.buildings import BuildingsService
+from musical_chairs.locations.repository import SqlLocationsRepository
+from musical_chairs.models import new_id
 from tests.db.plan_helpers import make_floor, new_tenant
 from tests.stubs import stub_admin
 
@@ -78,7 +78,7 @@ async def person(rolled_back_db_session: AsyncSession, tenant: Any) -> Any:
         id=new_id(),
         tenant_id=tenant,
         display_name="P",
-        email=f"p-{new_id().hex[-8:]}@hsp.local",
+        email=f"p-{new_id().hex[-8:]}@musical-chairs.local",
         source=models.RecordSource.MANUAL,
         active=True,
         created_at=datetime.now(UTC),

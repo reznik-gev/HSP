@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# List known vulnerabilities in every image the stack runs (docs/0128), with Trivy: hsp-api,
-# hsp-web, hsp-keycloak and hsp-backup as built by deploy/build-images.sh, and PostGIS as
+# List known vulnerabilities in every image the stack runs (docs/0128), with Trivy: musical-chairs-api,
+# musical-chairs-web, musical-chairs-keycloak and musical-chairs-backup as built by deploy/build-images.sh, and PostGIS as
 # published (pulled if missing). Covers the system libraries and the packages inside them.
 #   deploy/scan-images.sh [version]      # default 0.0.0-dev
 # Findings only warn: the script prints a count per image and the High and Critical ones, adds
@@ -14,7 +14,7 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # so that Dependabot keeps it current.
 trivy="$(sed -n 's/^FROM //p' "$root/deploy/trivy/Dockerfile")"
 work="$(mktemp -d)"
-cache="hsp-trivy-cache"
+cache="musical-chairs-trivy-cache"
 trap 'rm -rf "$work"' EXIT
 report="$work/report.md"
 found=0
@@ -25,7 +25,7 @@ warn() {
 
 # Every image the stack runs, read from compose.yml as deploy/bundle.sh does. Read into a
 # variable first, so that a compose error stops the script instead of scanning nothing.
-listed="$(HSP_VERSION="$version" HSP_PUBLIC_URL=https://hsp.invalid \
+listed="$(MUSICAL_CHAIRS_VERSION="$version" MUSICAL_CHAIRS_PUBLIC_URL=https://musical-chairs.invalid \
   docker compose -f "$root/deploy/compose/compose.yml" config --images)"
 mapfile -t images < <(sort -u <<<"$listed")
 ((${#images[@]} > 0)) || { echo "FAIL: compose.yml lists no images" >&2; exit 1; }
@@ -38,7 +38,7 @@ mapfile -t images < <(sort -u <<<"$listed")
 
 for image in "${images[@]}"; do
   if ! docker image inspect "$image" >/dev/null 2>&1; then
-    [[ "$image" == hsp-* ]] && { echo "FAIL: $image is missing; run deploy/build-images.sh $version first" >&2; exit 1; }
+    [[ "$image" == musical-chairs-* ]] && { echo "FAIL: $image is missing; run deploy/build-images.sh $version first" >&2; exit 1; }
     docker pull --quiet --platform linux/amd64 "$image" >/dev/null
   fi
   json="$work/${image//[\/:]/_}.json"

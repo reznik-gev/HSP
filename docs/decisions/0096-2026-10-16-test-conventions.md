@@ -5,7 +5,7 @@
 - **Refines:** [0061](0061-2026-10-08-test-strategy.md) (how its tests are written), [0087](0087-2026-10-13-frontend-delivery-plan.md) (choice 8)
 
 ## Context
-[0061](0061-2026-10-08-test-strategy.md) and [0087](0087-2026-10-13-frontend-delivery-plan.md) decided *which* tests HSP has, not how they're written. In review, the product owner repeatedly asked for the same changes:
+[0061](0061-2026-10-08-test-strategy.md) and [0087](0087-2026-10-13-frontend-delivery-plan.md) decided *which* tests Musical Chairs has, not how they're written. In review, the product owner repeatedly asked for the same changes:
 - test data built inside test files should be shared stubs or fixtures (#59, #68, #73, #74, #77);
 - names should follow the usual test-double vocabulary (#60);
 - backend setup should be fixtures, with test files split by area (#68, #69).

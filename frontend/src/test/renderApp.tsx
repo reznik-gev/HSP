@@ -14,7 +14,7 @@ export const ADMIN = {
   subject: "u-1",
   name: "Noa Barak",
   email: "noa@acme.example",
-  roles: ["hsp-admin"],
+  roles: ["musical-chairs-admin"],
   is_admin: true,
   csrf_token: "csrf-123",
 } satisfies Me;

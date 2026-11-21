@@ -3,9 +3,14 @@ all-or-nothing application (docs/0081)."""
 
 import pytest
 
-from hsp.models import new_id
-from hsp.plans.changeset import ChangesetRejected, DeleteOp, apply_changeset, needed_references
-from hsp.plans.schema import PlanContent, Wall, Zone
+from musical_chairs.models import new_id
+from musical_chairs.plans.changeset import (
+    ChangesetRejected,
+    DeleteOp,
+    apply_changeset,
+    needed_references,
+)
+from musical_chairs.plans.schema import PlanContent, Wall, Zone
 from tests.unit.changeset.stubs import (
     DESK,
     DEVICE,
