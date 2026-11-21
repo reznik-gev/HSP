@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-08
 - **Status:** Accepted
-- **Refined by:** [0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md) (renames in place)
+- **Refined by:** [0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md) (renames in place), [0150](0150-2026-11-21-rename-hsp-to-musical-chairs.md) (the product's name)
 
 ## Context
 The product was named **HSM, "Human-Space Management"**. The product owner prefers **HSP, "Human-Space Program"**, a play on words that matches the repository name (`reznik-gev/HSP`). There are no releases, customers or production data yet, so renaming now is as cheap as it will ever be.
@@ -50,3 +50,4 @@ Accepted records are still never edited in substance. **Pure renames** (the prod
 
 ## Updates
 - *Update, 2026-11-08:* a rename needs the owner's explicit yes. A big one, like this, still gets a record of its own; a small one, such as a UI term, gets the owner's approval in the PR and a dated note in each renamed record ([0126](0126-2026-11-08-what-may-change-in-an-accepted-record.md)).
+- *Update, 2026-11-21:* the product is being renamed again, from HSP to Musical Chairs ([0150](0150-2026-11-21-rename-hsp-to-musical-chairs.md)). This record keeps the name HSP, because the rename to HSP is its subject.

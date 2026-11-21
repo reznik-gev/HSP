@@ -83,7 +83,7 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0069 | 2026-10-08 | [Merge method: rebase only, linear history](0069-2026-10-08-rebase-merges.md) | Accepted (refined by 0141 and 0148) |
 | 0070 | 2026-10-08 | [CI structure: single workflow with gate job](0070-2026-10-08-ci-gate-job.md) | Accepted (refined by 0141 and 0148) |
 | 0071 | 2026-10-08 | [License: proprietary (source-visible); no external contributions](0071-2026-10-08-license-and-contributions.md) | Accepted |
-| 0072 | 2026-10-08 | [Rename the product from HSM to HSP (Human-Space Program)](0072-2026-10-08-rename-hsm-to-hsp.md) | Accepted (renames in place refined by 0126) |
+| 0072 | 2026-10-08 | [Rename the product from HSM to HSP (Human-Space Program)](0072-2026-10-08-rename-hsm-to-hsp.md) | Accepted (renames in place refined by 0126; renamed to Musical Chairs in 0150) |
 | 0073 | 2026-10-08 | [SVG performance test setup](0073-2026-10-08-svg-performance-test-setup.md) | Accepted |
 | 0074 | 2026-10-08 | [SVG gate results; lowered performance bounds for v1](0074-2026-10-08-svg-gate-results-and-v1-bounds.md) | Accepted (temporary) |
 | 0075 | 2026-10-08 | [Documentation structure: decisions move to docs/decisions/](0075-2026-10-08-docs-directory-structure.md) | Accepted |
@@ -161,3 +161,4 @@ HSP (Human-Space Program) design decisions, one document per decision. Part of t
 | 0147 | 2026-11-17 | [The guide's GIFs are recorded again before each release](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) | Accepted |
 | 0148 | 2026-11-18 | [Every commit message has a body, checked by a git hook and by CI](0148-2026-11-18-every-commit-message-has-a-body.md) | Accepted |
 | 0149 | 2026-11-21 | [Search finds more than people and seats, after 1.0.0](0149-2026-11-21-search-finds-more-than-people-after-1-0-0.md) | Accepted |
+| 0150 | 2026-11-21 | [Rename the product from HSP to Musical Chairs](0150-2026-11-21-rename-hsp-to-musical-chairs.md) | Accepted |
