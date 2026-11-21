@@ -23,7 +23,7 @@ afterEach(() => {
 });
 
 /** Signing out of Musical Chairs sends the browser on to Keycloak's logout. */
-const SIGNED_OUT = { logout_url: "/auth/realms/musical_chairs/logout" };
+const SIGNED_OUT = { logout_url: "/auth/realms/musical-chairs/logout" };
 /** The account menu's button is named after the signed-in user, ADMIN. */
 const ACCOUNT_MENU = { name: `Account: ${ADMIN.name}` };
 /** Tests build without MUSICAL_CHAIRS_VERSION, so vite.config.ts sets the version to 0.0.0-dev. */
@@ -45,7 +45,7 @@ describe("session (docs/0038, docs/0087)", () => {
     expect(screen.getByText(ADMIN.email)).toBeInTheDocument();
     expect(screen.getByText("Administrator")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
-    await waitFor(() => expect(assigned).toEqual(["/auth/realms/musical_chairs/logout"]));
+    await waitFor(() => expect(assigned).toEqual(["/auth/realms/musical-chairs/logout"]));
     const logout = calls.find((r) => r.method === "POST");
     expect(logout?.headers.get("X-CSRF-Token")).toBe(ADMIN.csrf_token);
   });

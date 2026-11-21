@@ -42,7 +42,7 @@ Misconfiguration that Musical Chairs ships, such as an insecure default in a bun
 **Out of scope**:
 
 - Vulnerabilities in third-party components themselves (Keycloak, PostgreSQL/PostGIS, nginx, Python or npm dependencies). Please report those upstream. If Musical Chairs needs to update or reconfigure a component in response, we'll still want to hear about it.
-- The **development-only credentials** in [`deploy/dev/`](deploy/dev/), such as `admin/admin`, `viewer/viewer` and the client secret `dev-secret-change-me` in [`musical_chairs-realm.json`](deploy/dev/keycloak/musical_chairs-realm.json). They are intentionally public throwaway values for local development and are never used in production. Production secrets live only in the `.env` file on the host and are never committed ([0054](docs/decisions/0054-2026-10-08-release-distribution.md), [0068](docs/decisions/0068-2026-10-08-public-repository.md)).
+- The **development-only credentials** in [`deploy/dev/`](deploy/dev/), such as `admin/admin`, `viewer/viewer` and the client secret `dev-secret-change-me` in [`musical-chairs-realm.json`](deploy/dev/keycloak/musical-chairs-realm.json). They are intentionally public throwaway values for local development and are never used in production. Production secrets live only in the `.env` file on the host and are never committed ([0054](docs/decisions/0054-2026-10-08-release-distribution.md), [0068](docs/decisions/0068-2026-10-08-public-repository.md)).
 - Issues that require an already compromised host or administrator access to it.
 
 ## Notes for operators

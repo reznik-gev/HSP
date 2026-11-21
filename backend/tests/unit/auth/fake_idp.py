@@ -21,7 +21,7 @@ from joserfc.jwk import KeySet, RSAKey
 
 from tests.fakes import InMemorySessionStore
 
-ISSUER = "http://idp.test/realms/musical_chairs"
+ISSUER = "http://idp.test/realms/musical-chairs"
 OIDC = f"{ISSUER}/protocol/openid-connect"
 PUBLIC = "http://app.test"
 

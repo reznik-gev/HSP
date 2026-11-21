@@ -6,7 +6,7 @@ import pytest
 
 from musical_chairs.readiness import KeycloakProbe
 
-ISSUER = "http://keycloak.test/auth/realms/musical_chairs"
+ISSUER = "http://keycloak.test/auth/realms/musical-chairs"
 DISCOVERY = f"{ISSUER}/.well-known/openid-configuration"
 
 

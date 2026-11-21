@@ -9,7 +9,7 @@ Musical Chairs ships four images, all amd64, all running as non-root and configu
 |---|---|---|
 | `musical-chairs-api` | [`backend/Dockerfile`](../backend/Dockerfile) | The API on port 8000 (`MUSICAL_CHAIRS_API_WORKERS` uvicorn workers, default 4). Also runs the one-shot migrate job: `alembic upgrade head`. |
 | `musical-chairs-web` | [`web/Dockerfile`](web/Dockerfile) + the frontend | Musical Chairs' single entry point: nginx with the built frontend, routing `/api/` to the API and `/auth/` to Keycloak ([0098](../docs/decisions/0098-2026-10-18-web-entry-point.md)). HTTP on 8080, HTTPS on 8443, health on 8081 (`/healthz`, never published). |
-| `musical-chairs-keycloak` | [`keycloak/Dockerfile`](keycloak/Dockerfile) | Keycloak, pre-built for PostgreSQL and the `/auth` path, started with `start --optimized --import-realm`. Imports the `musical_chairs` realm on first start, filling `${MUSICAL_CHAIRS_PUBLIC_URL}` and `${MUSICAL_CHAIRS_OIDC_CLIENT_SECRET}` from the environment. |
+| `musical-chairs-keycloak` | [`keycloak/Dockerfile`](keycloak/Dockerfile) | Keycloak, pre-built for PostgreSQL and the `/auth` path, started with `start --optimized --import-realm`. Imports the `musical-chairs` realm on first start, filling `${MUSICAL_CHAIRS_PUBLIC_URL}` and `${MUSICAL_CHAIRS_OIDC_CLIENT_SECRET}` from the environment. |
 | `musical-chairs-backup` | [`backup/Dockerfile`](backup/Dockerfile) | The backup service ([`backup/`](../backup/README.md)) with PostgreSQL 18's client tools, as uid 999 like `postgres`. Runs `musical-chairs-backup serve`. |
 
 PostgreSQL is the published `postgis/postgis` image.

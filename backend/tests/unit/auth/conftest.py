@@ -62,7 +62,7 @@ def admin_tokens(signed_in_subject: str) -> SessionTokens:
 
 @pytest.fixture
 def viewer_tokens(signed_in_subject: str) -> SessionTokens:
-    return stub_tokens(subject=signed_in_subject, roles=["default-roles-musical_chairs"])
+    return stub_tokens(subject=signed_in_subject, roles=["default-roles-musical-chairs"])
 
 
 @pytest.fixture

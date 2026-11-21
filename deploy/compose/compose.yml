@@ -23,7 +23,7 @@ x-musical-chairs-api: &musical-chairs-api
     MUSICAL_CHAIRS_PUBLIC_URL: ${MUSICAL_CHAIRS_PUBLIC_URL:?set MUSICAL_CHAIRS_PUBLIC_URL in .env}
     # The API talks to Keycloak inside the stack; Keycloak still names its public URL as the
     # issuer (KC_HOSTNAME_BACKCHANNEL_DYNAMIC below).
-    MUSICAL_CHAIRS_OIDC_ISSUER_URL: http://keycloak:8080/auth/realms/musical_chairs
+    MUSICAL_CHAIRS_OIDC_ISSUER_URL: http://keycloak:8080/auth/realms/musical-chairs
     MUSICAL_CHAIRS_API_WORKERS: ${MUSICAL_CHAIRS_API_WORKERS:-4}
     MUSICAL_CHAIRS_LOG_LEVEL: ${MUSICAL_CHAIRS_LOG_LEVEL:-INFO}
     # Tracing (docs/0105): off unless an OTLP endpoint is set. The standard OpenTelemetry settings.
@@ -93,7 +93,7 @@ services:
       KC_PROXY_HEADERS: xforwarded
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD_FILE: /run/secrets/keycloak_admin_password
-      # Filled into the musical_chairs realm when it's first imported.
+      # Filled into the musical-chairs realm when it's first imported.
       MUSICAL_CHAIRS_PUBLIC_URL: ${MUSICAL_CHAIRS_PUBLIC_URL}
       MUSICAL_CHAIRS_OIDC_CLIENT_SECRET_FILE: /run/secrets/musical_chairs_oidc_client_secret
     secrets: [keycloak_db_password, keycloak_admin_password, musical_chairs_oidc_client_secret]

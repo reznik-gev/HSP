@@ -81,8 +81,8 @@ expect "the API is ready" "$readyz" '"status":"ready"'
 expect "the API runs this release" "$readyz" "\"version\":\"$version\""
 expect "the API refuses requests without sign-in" "$(status -k "$url/api/v1/auth/me")" "401"
 expect "Keycloak names the public URL as its issuer" \
-  "$(curl -fsSk "$url/auth/realms/musical_chairs/.well-known/openid-configuration")" \
-  "\"issuer\":\"$url/auth/realms/musical_chairs\""
+  "$(curl -fsSk "$url/auth/realms/musical-chairs/.well-known/openid-configuration")" \
+  "\"issuer\":\"$url/auth/realms/musical-chairs\""
 expect "Keycloak's admin console is closed" "$(status -k "$url/auth/admin/")" "404"
 expect "backups.yml is fine" "$(compose exec -T backup musical-chairs-backup check)" "every target can be read"
 backup="$(compose exec -T backup musical-chairs-backup now)"

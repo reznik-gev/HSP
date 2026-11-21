@@ -1,5 +1,5 @@
 {
-  "realm": "musical_chairs",
+  "realm": "musical-chairs",
   "enabled": true,
   "displayName": "Musical Chairs (development)",
   "sslRequired": "none",
@@ -36,7 +36,7 @@
       "enabled": true,
       "emailVerified": true,
       "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
-      "realmRoles": ["musical-chairs-admin", "default-roles-musical_chairs"]
+      "realmRoles": ["musical-chairs-admin", "default-roles-musical-chairs"]
     },
     {
       "username": "viewer",
@@ -46,7 +46,7 @@
       "enabled": true,
       "emailVerified": true,
       "credentials": [{ "type": "password", "value": "viewer", "temporary": false }],
-      "realmRoles": ["default-roles-musical_chairs"]
+      "realmRoles": ["default-roles-musical-chairs"]
     }
   ]
 }
