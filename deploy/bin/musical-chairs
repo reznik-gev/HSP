@@ -667,8 +667,10 @@ musical-chairs: install and run Musical Chairs on this Docker host (docs/0107).
   musical-chairs status                       version, services, last backups and free disk
   musical-chairs backup now                   take a backup now (to where backups.yml's manual says)
   musical-chairs backup list                  every backup on every target, newest first
-  musical-chairs restore <backup> [--yes]     replace both databases with a backup; down meanwhile
-  musical-chairs upgrade [bundle]             upgrade to a release; run the new copy (--help)
+  musical-chairs restore <backup> [--yes]     replace both databases with a backup; Musical
+                                              Chairs is down meanwhile
+  musical-chairs upgrade [bundle]             upgrade to a release; run the new release's
+                                              musical-chairs (--help)
   musical-chairs rollback                     undo the last upgrade: previous release and its data
   musical-chairs help                         this
 EOF
