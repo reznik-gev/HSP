@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     public_url: str = "http://localhost:5173"
 
     # OIDC / Keycloak (docs/0008, docs/0038, docs/0077)
-    oidc_issuer_url: str = "http://localhost:8080/auth/realms/musical_chairs"
+    oidc_issuer_url: str = "http://localhost:8080/auth/realms/musical-chairs"
     oidc_client_id: str = "musical-chairs-api"
     oidc_client_secret: SecretStr = SecretStr("dev-secret-change-me")
     oidc_scopes: str = "openid profile email"

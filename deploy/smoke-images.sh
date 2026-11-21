@@ -111,7 +111,7 @@ expect "web proxies /api to the API" \
 expect "web closes Keycloak's admin console" \
   "$(status http://localhost:18080/auth/admin/)" "404"
 expect "web shows the maintenance page while Keycloak is down" \
-  "$(curl -sS -w ' status=%{http_code}' http://localhost:18080/auth/realms/musical_chairs/account)" "status=503"
+  "$(curl -sS -w ' status=%{http_code}' http://localhost:18080/auth/realms/musical-chairs/account)" "status=503"
 docker stop -t 2 "$run-api" >/dev/null
 expect "web answers a Problem Details 503 while the API is down" \
   "$(curl -sS -w ' status=%{http_code}' http://localhost:18080/api/v1/floors)" "problems/maintenance"
@@ -160,9 +160,9 @@ if docker logs "$run-kc" 2>&1 | grep -q "Updating the configuration"; then
   exit 1
 fi
 echo "ok: keycloak started optimized"
-expect "keycloak imported the musical_chairs realm" \
-  "$(curl -fsS http://localhost:18082/auth/realms/musical_chairs/.well-known/openid-configuration)" \
-  '"issuer":"http://localhost:18082/auth/realms/musical_chairs"'
+expect "keycloak imported the musical-chairs realm" \
+  "$(curl -fsS http://localhost:18082/auth/realms/musical-chairs/.well-known/openid-configuration)" \
+  '"issuer":"http://localhost:18082/auth/realms/musical-chairs"'
 # The bootstrap admin can sign in a moment after Keycloak reports ready.
 token=""
 for _ in $(seq 30); do
@@ -173,7 +173,7 @@ for _ in $(seq 30); do
 done
 expect "keycloak filled the realm's placeholders from the environment" \
   "$(curl -fsS -H "Authorization: Bearer $token" \
-    'http://localhost:18082/auth/admin/realms/musical_chairs/clients?clientId=musical-chairs-api')" \
+    'http://localhost:18082/auth/admin/realms/musical-chairs/clients?clientId=musical-chairs-api')" \
   '"redirectUris":["https://musical-chairs.example/api/v1/auth/callback"]'
 
 echo "== musical-chairs-backup"

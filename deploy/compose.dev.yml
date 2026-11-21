@@ -39,7 +39,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./dev/keycloak/musical_chairs-realm.json:/opt/keycloak/data/import/musical_chairs-realm.json:ro
+      - ./dev/keycloak/musical-chairs-realm.json:/opt/keycloak/data/import/musical-chairs-realm.json:ro
     depends_on:
       postgres:
         condition: service_healthy

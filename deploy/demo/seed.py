@@ -452,7 +452,7 @@ def demo_users() -> None:
         )
     )["access_token"]
     kc = httpx2.Client(
-        base_url=f"{KEYCLOAK}/admin/realms/musical_chairs",
+        base_url=f"{KEYCLOAK}/admin/realms/musical-chairs",
         headers={"Authorization": f"Bearer {token}"},
         timeout=30,
     )
