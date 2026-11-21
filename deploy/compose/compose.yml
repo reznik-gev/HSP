@@ -38,7 +38,7 @@ x-musical-chairs-api: &musical-chairs-api
 
 services:
   postgres:
-    image: postgis/postgis:18-3.6
+    image: postgis/postgis:18-3.7
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD_FILE: /run/secrets/db_superuser_password
