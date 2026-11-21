@@ -37,7 +37,7 @@ There are no releases, tags or installs yet. So no server has to move its paths,
   - **In code:** `musical_chairs`. *(The owner's choice)*
 - **Everything is renamed:** code, configuration, file and folder names, docs, guides, skills, the CHANGELOG, and the user-guide images. *(The owner's choice)*
 - **How each old name changes:** *(Claude's choice)*
-  - `hsp_x` and `HSP_X` become `musical_chairs_x` and `MUSICAL_CHAIRS_X`, and `Hsp` in a class name becomes `MusicalChairs`.
+  - `hsp_x` and `HSP_X` become `musical_chairs_x` and `MUSICAL_CHAIRS_X`. `Hsp` in a class name becomes `MusicalChairs`, and `hspX` in camelCase becomes `musicalChairsX` (so `__hspBench` becomes `__musicalChairsBench`).
   - `hsp-x` becomes `musical-chairs-x`.
   - Plain `hsp` becomes `musical_chairs`, except in a host name and in a command people type, which become `musical-chairs`. Host names can't contain `_`. Commands follow the scripts, which already use `-`.
 
@@ -60,7 +60,7 @@ There are no releases, tags or installs yet. So no server has to move its paths,
   | Frontend package `hsp-frontend` | `musical-chairs-frontend` |
   | GitHub `reznik-gev/HSP` | `reznik-gev/MusicalChairs` |
 
-- **Decision records are rewritten in place** to say Musical Chairs, with no change to what any record decided. *(The owner's choice)* File names that contain `hsp` are renamed too, and links to them are updated. *(Claude's choice)* Two records keep the old name, because the old name is their subject: [0072](0072-2026-10-08-rename-hsm-to-hsp.md) and this one. *(Claude's choice)*
+- **Decision records are rewritten in place** to say Musical Chairs, with no change to what any record decided. *(The owner's choice)* File names that contain `hsp` are renamed too, and links to them are updated. *(Claude's choice)* Two records keep the old name, in their text and in their file names, because the old name is their subject: [0072](0072-2026-10-08-rename-hsm-to-hsp.md) and this one. *(Claude's choice)*
 - **The rename is its own PR**, separate from this record's. It starts once every PR that was open on 2026-11-21 has merged. *(The owner's choice)*
 
 ## Consequences
