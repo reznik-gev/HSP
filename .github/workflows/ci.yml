@@ -37,7 +37,7 @@ jobs:
           merges=$(git rev-list --merges "$BASE..$HEAD_SHA")
           if [ -n "$merges" ]; then
             git log --oneline --no-walk $merges
-            echo "::error::This PR has merge commits. HSP merges by rebase only (docs/0141): rebase onto the base branch (git rebase origin/main) and push with --force-with-lease. Never merge main in, even when Auto-fix says to."
+            echo "::error::This PR has merge commits. Musical Chairs merges by rebase only (docs/0141): rebase onto the base branch (git rebase origin/main) and push with --force-with-lease. Never merge main in, even when Auto-fix says to."
             exit 1
           fi
 
@@ -141,16 +141,16 @@ jobs:
       postgres:
         image: postgis/postgis:18-3.6
         env:
-          POSTGRES_USER: hsp
-          POSTGRES_PASSWORD: hsp
-          POSTGRES_DB: hsp_test
+          POSTGRES_USER: musical_chairs
+          POSTGRES_PASSWORD: musical_chairs
+          POSTGRES_DB: musical_chairs_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U hsp -d hsp_test"
+          --health-cmd "pg_isready -U musical_chairs -d musical_chairs_test"
           --health-interval 5s --health-timeout 3s --health-retries 20
     env:
-      HSP_TEST_DATABASE_URL: postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test
-      HSP_DATABASE_URL: postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test
+      MUSICAL_CHAIRS_TEST_DATABASE_URL: postgresql+asyncpg://musical_chairs:musical_chairs@localhost:5432/musical_chairs_test
+      MUSICAL_CHAIRS_DATABASE_URL: postgresql+asyncpg://musical_chairs:musical_chairs@localhost:5432/musical_chairs_test
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
@@ -186,9 +186,9 @@ jobs:
         run: uv run alembic check
       - name: OpenAPI schema is up to date
         run: |
-          uv run hsp-export-openapi openapi.json
+          uv run musical-chairs-export-openapi openapi.json
           git diff --exit-code -- openapi.json || {
-            echo "::error::backend/openapi.json is stale. Run 'uv run hsp-export-openapi openapi.json' and commit."
+            echo "::error::backend/openapi.json is stale. Run 'uv run musical-chairs-export-openapi openapi.json' and commit."
             exit 1
           }
 
@@ -224,7 +224,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: shellcheck
-        run: shellcheck deploy/*.sh deploy/bin/hsp .githooks/commit-msg .githooks/pre-commit .githooks/tests/run.sh
+        run: shellcheck deploy/*.sh deploy/bin/musical-chairs .githooks/commit-msg .githooks/pre-commit .githooks/tests/run.sh
       - name: The commit-msg hook accepts and rejects its sample messages
         run: sh .githooks/tests/run.sh
 
@@ -291,14 +291,14 @@ jobs:
       - uses: docker/setup-buildx-action@v4
       # Exposes the Actions cache token to `docker buildx` for the gha build cache.
       - uses: crazy-max/ghaction-github-runtime@v4
-      - name: Build hsp-api, hsp-web, hsp-keycloak and hsp-backup
-        run: HSP_BUILD_CACHE=gha deploy/build-images.sh
+      - name: Build musical-chairs-api, musical-chairs-web, musical-chairs-keycloak and musical-chairs-backup
+        run: MUSICAL_CHAIRS_BUILD_CACHE=gha deploy/build-images.sh
       - name: Smoke test
         run: deploy/smoke-images.sh
       - name: Vulnerability scan (warns only, docs/0128)
         run: deploy/scan-images.sh
 
-  # Known vulnerabilities in the packages HSP ships (docs/0128). Warns only; fails only when a
+  # Known vulnerabilities in the packages Musical Chairs ships (docs/0128). Warns only; fails only when a
   # scanner can't run. Reads the lock files; only backend/'s environment, for pip-audit, is set up.
   packages:
     needs: changes

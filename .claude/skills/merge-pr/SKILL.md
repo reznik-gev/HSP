@@ -1,6 +1,6 @@
 ---
 name: merge-pr
-description: Merge an HSP pull request and clean up after it. Check for new comments, rebase-merge, restack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner says #N is approved and ready to merge, or "merge #N", or says #N merged or closed, or the app reports that the session's PR merged or closed.
+description: Merge a Musical Chairs pull request and clean up after it. Check for new comments, rebase-merge, restack, update main, delete reservation branches and worktrees, name the follow-ups, then archive the session. Use when the owner says #N is approved and ready to merge, or "merge #N", or says #N merged or closed, or the app reports that the session's PR merged or closed.
 ---
 
 # Merge a pull request, and clean up

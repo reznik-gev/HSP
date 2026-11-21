@@ -25,7 +25,9 @@ describe("the user guide", () => {
 
   it("shows admins both parts, with contents and links to the screens", async () => {
     await renderApp("/guide");
-    expect(await screen.findByRole("heading", { level: 2, name: "Using HSP" })).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Using Musical Chairs" }),
+    ).toBeVisible();
     expect(screen.getByRole("heading", { level: 2, name: "For admins" })).toBeVisible();
     // The page's sections sit inside the parts, one level down.
     expect(
@@ -49,7 +51,9 @@ describe("the user guide", () => {
 
   it("shows viewers only the part for everyone", async () => {
     await renderApp("/guide", AS_VIEWER);
-    expect(await screen.findByRole("heading", { level: 2, name: "Using HSP" })).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Using Musical Chairs" }),
+    ).toBeVisible();
     expect(screen.queryByRole("heading", { level: 2, name: "For admins" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "3. Publish" })).toBeNull();
   });

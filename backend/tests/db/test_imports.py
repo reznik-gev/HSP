@@ -9,10 +9,10 @@ from openpyxl import Workbook
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp import models
-from hsp.imports import read_table
-from hsp.org.imports import ImportService
-from hsp.problems import ProblemException
+from musical_chairs import models
+from musical_chairs.imports import read_table
+from musical_chairs.org.imports import ImportService
+from musical_chairs.problems import ProblemException
 from tests.db.plan_helpers import new_tenant
 from tests.stubs import stub_admin
 

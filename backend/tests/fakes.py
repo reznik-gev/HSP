@@ -3,8 +3,8 @@
 import uuid
 from typing import Any
 
-from hsp.auth.sessions import Session, SessionTokens, with_tokens
-from hsp.models import AuditEvent, Building, Floor, SeatAssignment, Site, new_id
+from musical_chairs.auth.sessions import Session, SessionTokens, with_tokens
+from musical_chairs.models import AuditEvent, Building, Floor, SeatAssignment, Site, new_id
 
 
 class InMemorySessionStore:
@@ -176,7 +176,7 @@ class InMemoryPlanRepository:
     """Fake PlanRepository: versions and per-version content keyed by floor (docs/0061)."""
 
     def __init__(self, tenant_id: uuid.UUID) -> None:
-        from hsp.plans.schema import FloorVersion, PlanContent
+        from musical_chairs.plans.schema import FloorVersion, PlanContent
 
         self.tenant_id = tenant_id
         self.versions: dict[uuid.UUID, list[FloorVersion]] = {}
@@ -189,7 +189,7 @@ class InMemoryPlanRepository:
         return list(self.versions.get(floor_id, [])) if tenant_id == self.tenant_id else []
 
     async def load_content(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int) -> Any:
-        from hsp.plans.schema import PlanContent
+        from musical_chairs.plans.schema import PlanContent
 
         return self.content.get((floor_id, version), PlanContent())
 
@@ -198,7 +198,7 @@ class InMemoryLockRepository:
     """Fake LockRepository with the same acquire semantics as the SQL upsert."""
 
     def __init__(self, tenant_id: uuid.UUID) -> None:
-        from hsp.plans.locks import Lock
+        from musical_chairs.plans.locks import Lock
 
         self.tenant_id = tenant_id
         self.floors: dict[uuid.UUID, str] = {}  # floor id -> "active" | "archived"
@@ -222,7 +222,7 @@ class InMemoryLockRepository:
         now: Any,
         expires_at: Any,
     ) -> Any:
-        from hsp.plans.locks import Lock
+        from musical_chairs.plans.locks import Lock
 
         current = self.locks.get(floor_id)
         if current and current.expires_at > now and current.holder_subject != subject:

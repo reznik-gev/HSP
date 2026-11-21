@@ -1,4 +1,4 @@
-HSP shows your organisation's offices: every site, building and floor, drawn as a plan, and who sits where. This part is for everyone. Administrators also see a second part, **For admins**, further down.
+Musical Chairs shows your organisation's offices: every site, building and floor, drawn as a plan, and who sits where. This part is for everyone. Administrators also see a second part, **For admins**, further down.
 
 ## Find where someone sits
 
@@ -32,8 +32,8 @@ To look across every floor, open [Free seats](/seats/free), under Seats. Narrow 
 
 ## Language and appearance
 
-The two buttons at the top, beside your initials, change the **Language** (English or Hebrew) and the **Appearance** (light, dark, or the same as your computer). HSP remembers your choice.
+The two buttons at the top, beside your initials, change the **Language** (English or Hebrew) and the **Appearance** (light, dark, or the same as your computer). Musical Chairs remembers your choice.
 
 ## Your account
 
-Click your initials at the top for your name and role, this guide, and **Sign out**. The release of HSP you're using is shown at the bottom of the menu, and of the sidebar.
+Click your initials at the top for your name and role, this guide, and **Sign out**. The release of Musical Chairs you're using is shown at the bottom of the menu, and of the sidebar.

@@ -8,10 +8,10 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 from structlog.testing import capture_logs
 
-from hsp.auth.dependencies import get_session_store
-from hsp.config import get_settings
-from hsp.main import create_app
-from hsp.tenancy import get_tenant_id
+from musical_chairs.auth.dependencies import get_session_store
+from musical_chairs.config import get_settings
+from musical_chairs.main import create_app
+from musical_chairs.tenancy import get_tenant_id
 from tests.fakes import InMemorySessionStore
 from tests.stubs import STUB_TENANT
 
@@ -59,9 +59,9 @@ def api_that_survives_crashes(probe_app: FastAPI) -> Iterator[TestClient]:
 def debug_api(
     monkeypatch: pytest.MonkeyPatch, session_store: InMemorySessionStore
 ) -> Iterator[TestClient]:
-    """A client of the app with HSP_LOG_LEVEL=DEBUG. Sign-in finds its tenant and sessions
-    without a database."""
-    monkeypatch.setenv("HSP_LOG_LEVEL", "DEBUG")
+    """A client of the app with MUSICAL_CHAIRS_LOG_LEVEL=DEBUG. Sign-in finds its tenant and
+    sessions without a database."""
+    monkeypatch.setenv("MUSICAL_CHAIRS_LOG_LEVEL", "DEBUG")
     get_settings.cache_clear()
     app = create_app()
     app.dependency_overrides[get_session_store] = lambda: session_store

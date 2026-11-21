@@ -4,7 +4,7 @@
  * sent. The server still checks every changeset and has the last word. The two stay in step
  * through the shared cases in /shared/validation-cases, which both run in CI.
  *
- * Geometry (docs/0092 step 9, backend hsp.plans.geometry_checks): zones overlapping partly, and
+ * Geometry (docs/0092 step 9, backend musical_chairs.plans.geometry_checks): zones overlapping partly, and
  * a nested zone sticking out of its parent (docs/0034 invariant 1), are errors; an item standing in a door's swing or over a column, and a seat without a label, are
  * warnings. "Overlap" means sharing more than 1 mm², and "inside" all but 1 mm², so rooms that
  * only share a wall line don't overlap.

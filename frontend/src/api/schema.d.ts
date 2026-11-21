@@ -55,7 +55,7 @@ export interface paths {
         put?: never;
         /**
          * Logout
-         * @description End the HSP session and return the identity provider's logout URL.
+         * @description End the Musical Chairs session and return the identity provider's logout URL.
          */
         post: operations["logout_api_v1_auth_logout_post"];
         delete?: never;
@@ -1380,7 +1380,7 @@ export interface components {
             archived_at: string | null;
             /**
              * Builtin
-             * @description Shipped with HSP; read-only (docs/0083)
+             * @description Shipped with Musical Chairs; read-only (docs/0083)
              */
             builtin: boolean;
             /** Category */

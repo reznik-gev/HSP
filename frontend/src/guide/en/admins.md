@@ -1,4 +1,4 @@
-Administrators set HSP up and keep it current: the buildings and their plans, the people and teams, and who sits where. A good order for a new installation is the one below.
+Administrators set Musical Chairs up and keep it current: the buildings and their plans, the people and teams, and who sits where. A good order for a new installation is the one below.
 
 ## 1. Sites, buildings and floors
 
@@ -38,7 +38,7 @@ Some things that save time:
 
 ## 3. Publish
 
-When the floor is ready, click **Publish**. HSP shows what changed since the published version, and any assigned seats your changes would free. Add a note if you like, then publish. Everyone sees the new plan within 30 seconds.
+When the floor is ready, click **Publish**. Musical Chairs shows what changed since the published version, and any assigned seats your changes would free. Add a note if you like, then publish. Everyone sees the new plan within 30 seconds.
 
 ![Publishing a floor](publish.gif)
 
@@ -48,7 +48,7 @@ When the floor is ready, click **Publish**. HSP shows what changed since the pub
 
 Add teams on [Teams](/org) with **New team**. See them as a tree or as an org chart. Add people on [People](/people) with **New person**. Each person has one main team, and may belong to others.
 
-For many people at once, use [Imports](/imports): pick **Teams**, **People** or **Seat assignments**, click **Download template**, fill it in, and choose the file. HSP shows a preview first. Nothing changes until you click **Apply import**. Import teams before people, and people before seats.
+For many people at once, use [Imports](/imports): pick **Teams**, **People** or **Seat assignments**, click **Download template**, fill it in, and choose the file. Musical Chairs shows a preview first. Nothing changes until you click **Apply import**. Import teams before people, and people before seats.
 
 ## 5. Assign seats
 

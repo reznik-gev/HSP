@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from hsp_backup.names import KEEP_FOREVER, BackupName, expired
+from musical_chairs_backup.names import KEEP_FOREVER, BackupName, expired
 
 NOW = datetime(2026, 10, 21, 12, 0, tzinfo=UTC)
 
@@ -11,12 +11,16 @@ def taken(days_ago: float, schedule: str) -> BackupName:
 
 def test_a_name_says_when_and_by_which_schedule() -> None:
     name = BackupName(datetime(2026, 10, 21, 2, 30, 5, tzinfo=UTC), "nightly")
-    assert str(name) == "hsp-20261021T023005Z-nightly.tar"
+    assert str(name) == "musical-chairs-20261021T023005Z-nightly.tar"
     assert BackupName.parse(str(name)) == name
 
 
 def test_other_files_are_not_backups() -> None:
-    for other in ("notes.txt", "hsp-20261021T023005Z-nightly.tar.partial", "hsp-latest.tar"):
+    for other in (
+        "notes.txt",
+        "musical-chairs-20261021T023005Z-nightly.tar.partial",
+        "musical-chairs-latest.tar",
+    ):
         assert BackupName.parse(other) is None
 
 

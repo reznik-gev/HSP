@@ -4,20 +4,20 @@
 # load it, sampling every container's CPU and memory: the browser tests 5 times each, then 80
 # people looked up in the seeded office and their seats opened, by 4 users at once. Then measure the
 # databases, PostgreSQL's folder, a backup and the images. Prints a Markdown summary.
-#   HSP_TEST_DIR=<test-bundle's directory> deploy/measure-size.sh 5000
+#   MUSICAL_CHAIRS_TEST_DIR=<test-bundle's directory> deploy/measure-size.sh 5000
 # Needs Docker with the Compose plugin, and pnpm with Playwright's Chromium in frontend/.
 set -euo pipefail
 
 people="${1:?usage: deploy/measure-size.sh <people>}"
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-tmp="$(realpath "${HSP_TEST_DIR:?set HSP_TEST_DIR to the directory test-bundle.sh used}")"
+tmp="$(realpath "${MUSICAL_CHAIRS_TEST_DIR:?set MUSICAL_CHAIRS_TEST_DIR to the directory test-bundle.sh used}")"
 install="$tmp/install"
 as_root() { if [[ $EUID -eq 0 ]]; then "$@"; else sudo "$@"; fi; }
 compose() { as_root docker compose --project-directory "$install" "$@"; }
 sql() { compose exec -T postgres psql -U postgres -tA "$@"; }
 e2e() {
   (cd "$root/frontend" &&
-    HSP_E2E_URL=https://localhost:8443 HSP_E2E_IGNORE_HTTPS_ERRORS=1 pnpm exec playwright test "$@")
+    MUSICAL_CHAIRS_E2E_URL=https://localhost:8443 MUSICAL_CHAIRS_E2E_IGNORE_HTTPS_ERRORS=1 pnpm exec playwright test "$@")
 }
 # stats: one "container cpu% memory" line per container of the stack (not, say, buildx's).
 stats() {
@@ -36,7 +36,7 @@ peaks() {
       if (c + 0 > cpu[n]) cpu[n] = c + 0; if (m > mem[n]) mem[n] = m }
     END { if (total > top) top = total
       for (n in cpu) printf "| %s | %.0f%% | %.0f MiB |\n", n, cpu[n], mem[n] | "sort"
-      close("sort"); printf "| **all of HSP, at its peak** | | **%.0f MiB** |\n", top }
+      close("sort"); printf "| **all of Musical Chairs, at its peak** | | **%.0f MiB** |\n", top }
   ' "$1"
 }
 
@@ -59,7 +59,7 @@ echo
 
 echo "### Seed $people people" >&2
 start=$SECONDS
-export HSP_SIZING_PEOPLE="$people"
+export MUSICAL_CHAIRS_SIZING_PEOPLE="$people"
 e2e -c e2e/sizing/playwright.config.ts office >&2
 seeded=$((SECONDS - start))
 
@@ -90,13 +90,13 @@ fi
 echo "### Disk"
 echo
 echo "- Seeding took ${seeded} s."
-sql -d hsp -c "SELECT '- ' || count(*) || ' people, ' || (SELECT count(*) FROM seat_assignment) ||
+sql -d musical_chairs -c "SELECT '- ' || count(*) || ' people, ' || (SELECT count(*) FROM seat_assignment) ||
   ' assigned seats' FROM person"
 sql -c "SELECT '- Database ' || datname || ': ' || pg_size_pretty(pg_database_size(datname))
-  FROM pg_database WHERE datname IN ('hsp', 'keycloak') ORDER BY datname"
+  FROM pg_database WHERE datname IN ('musical_chairs', 'keycloak') ORDER BY datname"
 echo "- PostgreSQL's folder: $(as_root du -sh "$tmp/data/postgres" | cut -f1)"
-backup="$(as_root "$install/bin/hsp" backup now)"
+backup="$(as_root "$install/bin/musical-chairs" backup now)"
 echo "- One backup: $(as_root du -h "$tmp/data/backups/$backup" | cut -f1)"
 as_root docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' |
-  grep -E 'hsp-|postgis' | sed 's/^/- Image /'
+  grep -E 'musical-chairs-|postgis' | sed 's/^/- Image /'
 exit "$status"

@@ -1,0 +1,103 @@
+"""/api/v1/people and memberships (docs/0006, 0017, 0023, 0084)."""
+
+import uuid
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from musical_chairs.api.common import WRITE
+from musical_chairs.api.pagination import (
+    DEFAULT_LIMIT,
+    CursorParam,
+    LimitParam,
+    Page,
+    decode_cursor,
+    page_of,
+)
+from musical_chairs.auth.dependencies import CurrentPrincipal
+from musical_chairs.db import get_session
+from musical_chairs.org.people import (
+    DeactivationOut,
+    MembershipIn,
+    PeopleService,
+    PersonIn,
+    PersonOut,
+    PersonPatch,
+)
+
+router = APIRouter(prefix="/people", tags=["organization"])
+
+
+def get_service(
+    request: Request, principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]
+) -> PeopleService:
+    return PeopleService(db, principal, getattr(request.state, "request_id", None))
+
+
+Service = Annotated[PeopleService, Depends(get_service)]
+
+
+@router.get("")
+async def list_people(
+    service: Service,
+    q: Annotated[str | None, Query(description="Search name or email")] = None,
+    unit_id: Annotated[uuid.UUID | None, Query(description="Members of this unit")] = None,
+    include_inactive: Annotated[bool, Query()] = False,
+    seated: Annotated[
+        bool | None, Query(description="true: holds a seat; false: holds none (docs/0088)")
+    ] = None,
+    limit: LimitParam = DEFAULT_LIMIT,
+    cursor: CursorParam = None,
+) -> Page[PersonOut]:
+    filters = {
+        "q": q,
+        "unit_id": unit_id,
+        "include_inactive": include_inactive,
+        "seated": seated,
+    }
+    rows = await service.list_people(
+        q=q,
+        unit_id=unit_id,
+        include_inactive=include_inactive,
+        seated=seated,
+        after=decode_cursor(cursor, filters),
+        limit=limit + 1,
+    )
+    return page_of(rows, limit, filters, lambda r: r)
+
+
+@router.post("", status_code=201, dependencies=WRITE)
+async def create_person(body: PersonIn, service: Service) -> PersonOut:
+    return await service.create(body)
+
+
+@router.get("/{person_id}")
+async def get_person(person_id: uuid.UUID, service: Service) -> PersonOut:
+    return await service.get(person_id)
+
+
+@router.patch("/{person_id}", dependencies=WRITE)
+async def update_person(person_id: uuid.UUID, body: PersonPatch, service: Service) -> PersonOut:
+    return await service.update(person_id, body.model_dump(exclude_unset=True))
+
+
+@router.delete("/{person_id}", dependencies=WRITE)
+async def deactivate_person(person_id: uuid.UUID, service: Service) -> DeactivationOut:
+    """Deactivate (people are never deleted, docs/0017). Their seats are freed and listed in the
+    response; reactivating doesn't give them back (docs/0085)."""
+    return await service.deactivate(person_id)
+
+
+@router.post("/{person_id}/reactivate", dependencies=WRITE)
+async def reactivate_person(person_id: uuid.UUID, service: Service) -> PersonOut:
+    return await service.set_active(person_id, True)
+
+
+@router.put("/{person_id}/memberships", dependencies=WRITE)
+async def set_memberships(
+    person_id: uuid.UUID, body: list[MembershipIn], service: Service
+) -> PersonOut:
+    """Replace all memberships at once. With several units, exactly one must be marked primary
+    (422 primary_required otherwise); a single membership is primary by itself (docs/0084)."""
+    return await service.set_memberships(person_id, body)

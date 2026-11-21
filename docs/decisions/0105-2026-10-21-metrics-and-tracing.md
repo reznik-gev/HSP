@@ -14,8 +14,8 @@ The owner chose each of these:
 |---|---|---|---|
 | How a Prometheus outside the stack reaches `/metrics` | **A metrics port published by Compose** / through nginx, limited by IP / not published | **A metrics port** | Nothing goes through nginx and users never see it. |
 | Is Keycloak part of "ready"? | **Yes** / reported only | **Yes** | As 0057 said. Without Keycloak nobody can sign in. |
-| How tracing is set up | **The standard `OTEL_*` variables** / our own `HSP_*` settings / both HTTP and gRPC exporters | **Standard `OTEL_*`, HTTP only** | Familiar to anyone who runs OpenTelemetry. HTTP needs fewer dependencies than gRPC. |
-| Raw paths in logs | Never / **only at debug level** | **Only with `HSP_LOG_LEVEL=DEBUG`** | Paths hold IDs and search text, which shouldn't be in normal logs. They help when debugging. |
+| How tracing is set up | **The standard `OTEL_*` variables** / our own `MUSICAL_CHAIRS_*` settings / both HTTP and gRPC exporters | **Standard `OTEL_*`, HTTP only** | Familiar to anyone who runs OpenTelemetry. HTTP needs fewer dependencies than gRPC. |
+| Raw paths in logs | Never / **only at debug level** | **Only with `MUSICAL_CHAIRS_LOG_LEVEL=DEBUG`** | Paths hold IDs and search text, which shouldn't be in normal logs. They help when debugging. |
 
 ## Decision
 1. **A log line per request:** the event `request` with the method, the **route template** (`/api/v1/floors/{floor_id}`), the status, `duration_ms`, `request_id` and `actor_subject` (the Keycloak `sub` only). The raw path is added only at debug level. `/healthz`, `/readyz` and `/metrics` aren't logged. Uvicorn's own access log is off, so each request is logged once.
@@ -31,8 +31,8 @@ The owner chose each of these:
    - changesets and publishes: count and duration
    - edit-lock refusals (`409` and `423`)
    - process CPU and memory
-4. **Publishing the metrics port:** Compose publishes it on `HSP_METRICS_ADDRESS`, **`127.0.0.1` by default**, so only the host itself can reach it. To let a Prometheus on another machine in, set it to an internal interface's address. The API's port is `HSP_API_METRICS_PORT` (9464). The backup service gets the next one ([0106](0106-2026-10-21-backups.md)). Host-only by default is the usual practice: Compose can't leave a port unpublished when a variable is empty, so some address has to be the default, and the safest one is the host itself. The owner asked for the usual practice, then approved it. Opening it wider is safe, because metrics hold no personal data.
-5. **Tracing** is off unless `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Compose passes the standard `OTEL_*` variables through. It exports over OTLP/HTTP. The service is `hsp-api` with the release version. Sampling defaults to parent-based at 10%. It instruments FastAPI and SQLAlchemy. It also covers calls to Keycloak if OpenTelemetry's httpx instrumentation works with `httpx2` ([0077](0077-2026-10-08-login-implementation.md)); otherwise that's a known gap.
+4. **Publishing the metrics port:** Compose publishes it on `MUSICAL_CHAIRS_METRICS_ADDRESS`, **`127.0.0.1` by default**, so only the host itself can reach it. To let a Prometheus on another machine in, set it to an internal interface's address. The API's port is `MUSICAL_CHAIRS_API_METRICS_PORT` (9464). The backup service gets the next one ([0106](0106-2026-10-21-backups.md)). Host-only by default is the usual practice: Compose can't leave a port unpublished when a variable is empty, so some address has to be the default, and the safest one is the host itself. The owner asked for the usual practice, then approved it. Opening it wider is safe, because metrics hold no personal data.
+5. **Tracing** is off unless `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Compose passes the standard `OTEL_*` variables through. It exports over OTLP/HTTP. The service is `musical-chairs-api` with the release version. Sampling defaults to parent-based at 10%. It instruments FastAPI and SQLAlchemy. It also covers calls to Keycloak if OpenTelemetry's httpx instrumentation works with `httpx2` ([0077](0077-2026-10-08-login-implementation.md)); otherwise that's a known gap.
 
 ## Consequences
 - The API container needs a writable folder for the multiprocess metrics, emptied at each start.

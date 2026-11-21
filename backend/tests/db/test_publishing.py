@@ -6,11 +6,11 @@ from uuid import UUID
 import pytest
 from sqlalchemy import select, text
 
-from hsp import models
-from hsp.models import new_id
-from hsp.plans.drafts import SqlDraftRepository
-from hsp.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
-from hsp.problems import ProblemException
+from musical_chairs import models
+from musical_chairs.models import new_id
+from musical_chairs.plans.drafts import SqlDraftRepository
+from musical_chairs.plans.publishing import PublishIn, PublishingService, SqlPublishRepository
+from musical_chairs.problems import ProblemException
 from tests.db.plan_helpers import (
     add,
     apply,
@@ -252,7 +252,7 @@ async def test_publishing_frees_assigned_seats_it_removes(
             {
                 "id": new_id(),
                 "t": admin_editing_new_floor["tenant"],
-                "e": f"dana-{new_id().hex[:6]}@hsp.local",
+                "e": f"dana-{new_id().hex[:6]}@musical-chairs.local",
             },
         )
     ).scalar_one()

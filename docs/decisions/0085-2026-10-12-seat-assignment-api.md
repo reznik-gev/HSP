@@ -29,7 +29,7 @@ This record decides how the API behaves.
 | 7 | Bulk assignment | **A batch endpoint and a CSV/XLSX import** / batch only / single seat only | **`POST /seat-assignments/batch`** applies assign, unassign and swap steps, all or nothing (team moves and swaps). **`POST /imports/seat-assignments`** takes columns `seat_label`*, plus `building_code` and either `holder_email` or `holder_unit_external_id`. It has the same dry-run-first, all-or-nothing flow as the people import ([0084](0084-2026-10-10-people-org-api-and-import.md)). |
 | 8 | Archiving a floor that has assigned seats | Refuse / warn and confirm / **free them** | **Its seats are freed in the same transaction**, each one audited. The floor is out of use, so its seats are too. Restoring the floor doesn't bring the assignments back. |
 
-Writes need hsp-admin and CSRF ([0027](0027-2026-10-08-v1-interim-people-and-access.md)).
+Writes need musical-chairs-admin and CSRF ([0027](0027-2026-10-08-v1-interim-people-and-access.md)).
 
 ## What this changes in 0031
 [0031](0031-2026-10-08-seat-assignment-rules.md) said:

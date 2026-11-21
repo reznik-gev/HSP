@@ -2,7 +2,7 @@
  * Server refusals (RFC 9457 Problem Details, docs/0037) turned into what a form shows: one
  * message per field (from each error's JSON pointer, e.g. "/email") and an overall message.
  */
-/** Mirrors backend/src/hsp/problems.py (error bodies aren't in the OpenAPI schema). */
+/** Mirrors backend/src/musical_chairs/problems.py (error bodies aren't in the OpenAPI schema). */
 interface ProblemError {
   code: string;
   message: string;

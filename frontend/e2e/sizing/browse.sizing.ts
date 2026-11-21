@@ -1,6 +1,6 @@
 /**
  * The sizing bench's load (deploy/measure-size.sh): someone looking people up in the seeded
- * office, as the busiest use of HSP. Each round searches for a random person from the top bar and
+ * office, as the busiest use of Musical Chairs. Each round searches for a random person from the top bar and
  * opens their seat on its 500-desk floor. Run several at once, with --workers and --repeat-each.
  */
 import { expect, test } from "@playwright/test";

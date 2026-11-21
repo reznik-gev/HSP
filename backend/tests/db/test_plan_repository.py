@@ -8,9 +8,9 @@ from geoalchemy2.elements import WKTElement
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp import models
-from hsp.models import new_id
-from hsp.plans.repository import SqlPlanRepository
+from musical_chairs import models
+from musical_chairs.models import new_id
+from musical_chairs.plans.repository import SqlPlanRepository
 
 
 async def _setup(rolled_back_db_session: AsyncSession) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:

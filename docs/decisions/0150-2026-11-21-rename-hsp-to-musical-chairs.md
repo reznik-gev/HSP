@@ -70,3 +70,12 @@ There are no releases, tags or installs yet. So no server has to move its paths,
 - **The migration revision IDs are unchanged**, so no database migration is needed for the rename itself.
 - **After the rename merges, the owner** renames the GitHub repository (GitHub redirects the old links) and may rename the local checkout folder. Claude's memory for this project lives in a folder named after the checkout, so it is copied across at the same time.
 - Git history, earlier commit messages and closed PR titles still say HSP. That's expected.
+
+## Updates
+- *Update, 2026-11-21:* the rename PR settled the cases the table above leaves open. All are *(Claude's choice)* and lower-confidence.
+  - **"HSP's" becomes "Musical Chairs'"**, and "an HSP" becomes "a Musical Chairs".
+  - **Keycloak's import file** must be named after its realm, so the two realm files are `musical_chairs-realm.json` (not `musical-chairs-realm.json`).
+  - **Other file names** follow the same rules as names in code: `musical_chairs` for a plain name (`10-musical_chairs.sh`, `40-musical_chairs.sh`, `deploy/web/musical_chairs/`, `musical_chairs.conf.template`), and `musical-chairs` in a record's file name (0118's is `0118-2026-10-24-failed-restore-leaves-musical-chairs-stopped.md`), which is a slug of words.
+  - **The development session key** in `backend/src/musical_chairs/config.py` is now `musical-chairs-dev-only-sessions`. A Fernet key must be exactly 32 bytes, and the old text was exactly 32.
+  - **In Hebrew guide text and the maintenance page**, the name is written in Hebrew and takes a plural verb ("כיסאות מוזיקליים מציגים"). The sidebar and the browser tab title follow this record above ("MC", and "Musical Chairs").
+  - **The backup archive's two dump files** are `musical_chairs.dump` and `keycloak.dump`. They list in that order now, not the old one.

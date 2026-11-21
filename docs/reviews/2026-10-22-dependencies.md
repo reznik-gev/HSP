@@ -12,7 +12,7 @@ Our dependencies are **few, current and free of known vulnerabilities**. The wea
 |---|---|---|
 | 1 | Add the missing Dependabot entries: `backup/` (Python), and the Dockerfiles in `deploy/backup/`, `deploy/keycloak/` and `deploy/web/` | Small |
 | 2 | Decide on vulnerability scanning before 1.0.0, as 0059 asks (for example `pip-audit`, `pnpm audit` and an image scanner such as Trivy, in CI) | Small to medium |
-| 3 | Drop `uuid-utils`: Python 3.14 has `uuid.uuid7()` built in. *Done on [#168](https://github.com/reznik-gev/HSP/pull/168).* | Small |
+| 3 | Drop `uuid-utils`: Python 3.14 has `uuid.uuid7()` built in. *Done on [#168](https://github.com/reznik-gev/MusicalChairs/pull/168).* | Small |
 | 4 | Record the dependency no decision names: openpyxl. (psutil, raised on #102, was removed instead: [0111](../decisions/0111-2026-10-23-cpu-and-memory-from-the-platform.md).) | Small |
 
 ## 1. How many we have
@@ -36,7 +36,7 @@ This is a small set for an app of this size. The frontend's 700 packages are mos
 | cryptography | 1 (`auth/tokens.py`) | Encrypting stored tokens |
 | Authlib, joserfc, httpx2 | 1–2 (`auth/oidc.py`, `readiness.py`) | Sign-in |
 | Shapely | 2 (`plans/`) | Geometry checks |
-| uuid-utils | 2 | UUIDv7 IDs. Removed on [#168](https://github.com/reznik-gev/HSP/pull/168). |
+| uuid-utils | 2 | UUIDv7 IDs. Removed on [#168](https://github.com/reznik-gev/MusicalChairs/pull/168). |
 | d3-hierarchy | 1 (org chart) | Laying out the tree |
 
 The exceptions are the frameworks, which are used everywhere on purpose: FastAPI, SQLAlchemy and Pydantic in the backend, and React, TanStack Query, Zustand (24 files) and lucide icons (31 files) in the frontend.
@@ -71,7 +71,7 @@ Measured with `uv pip list --outdated` and `pnpm outdated` on 2026-10-22:
 
 So the production Keycloak, nginx and PostGIS images could fall behind with no PR to tell us.
 
-*Update, 2026-11-08:* Dependabot now watches all of these ([#142](https://github.com/reznik-gev/HSP/pull/142)).
+*Update, 2026-11-08:* Dependabot now watches all of these ([#142](https://github.com/reznik-gev/MusicalChairs/pull/142)).
 
 ### 3.2 Images follow moving tags
 
@@ -87,7 +87,7 @@ A cheap first step would be a CI job that runs `pip-audit` (backend and backup),
 
 ## 4. Smaller findings
 
-- **`uuid-utils` is no longer needed.** Python 3.14 added `uuid.uuid7()` to the standard library (we checked: it works in our environment). The package is used in two places (`models/base.py`, and `main.py` for request IDs). *Update, 2026-11-11:* dropped. HSP uses `uuid.uuid7()` from the standard library ([#168](https://github.com/reznik-gev/HSP/pull/168)).
-- **Two dependencies no decision names.** psutil and openpyxl. Every other runtime dependency is named in a decision record. These two are small and harmless, but [CLAUDE.md](../../CLAUDE.md) asks for technical choices to be recorded. *Update, 2026-10-23:* psutil was removed on [#102](https://github.com/reznik-gev/HSP/pull/102). The API's CPU and memory now come from the platform ([0111](../decisions/0111-2026-10-23-cpu-and-memory-from-the-platform.md)), so only openpyxl is left to record.
+- **`uuid-utils` is no longer needed.** Python 3.14 added `uuid.uuid7()` to the standard library (we checked: it works in our environment). The package is used in two places (`models/base.py`, and `main.py` for request IDs). *Update, 2026-11-11:* dropped. Musical Chairs uses `uuid.uuid7()` from the standard library ([#168](https://github.com/reznik-gev/MusicalChairs/pull/168)).
+- **Two dependencies no decision names.** psutil and openpyxl. Every other runtime dependency is named in a decision record. These two are small and harmless, but [CLAUDE.md](../../CLAUDE.md) asks for technical choices to be recorded. *Update, 2026-10-23:* psutil was removed on [#102](https://github.com/reznik-gev/MusicalChairs/pull/102). The API's CPU and memory now come from the platform ([0111](../decisions/0111-2026-10-23-cpu-and-memory-from-the-platform.md)), so only openpyxl is left to record.
 - **`tzdata` is never imported.** That is expected: it supplies time-zone data to `zoneinfo` on systems without it (slim images and Windows). A one-line comment in `pyproject.toml` would stop someone removing it.
 - **httpx2** is a new successor of httpx that Authlib now prefers. It's young, but it's used in only two files.

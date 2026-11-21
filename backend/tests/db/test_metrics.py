@@ -7,12 +7,12 @@ from prometheus_client import REGISTRY
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-from hsp import metrics
+from musical_chairs import metrics
 from tests.db.conftest import TEST_DB_URL
 
 
 def in_use() -> float:
-    return REGISTRY.get_sample_value("hsp_db_connections_in_use") or 0.0
+    return REGISTRY.get_sample_value("musical_chairs_db_connections_in_use") or 0.0
 
 
 @pytest.fixture

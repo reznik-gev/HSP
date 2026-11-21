@@ -6,11 +6,11 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from hsp import models
-from hsp.models import new_id
-from hsp.org.people import PeopleService
-from hsp.problems import ProblemException
-from hsp.seats.assignments import AssignmentIn, SeatAssignmentService
+from musical_chairs import models
+from musical_chairs.models import new_id
+from musical_chairs.org.people import PeopleService
+from musical_chairs.problems import ProblemException
+from musical_chairs.seats.assignments import AssignmentIn, SeatAssignmentService
 from tests.db.seat_helpers import person, unit
 
 

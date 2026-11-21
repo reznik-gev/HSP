@@ -8,10 +8,10 @@ import pytest
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from hsp import models
-from hsp.models import new_id
-from hsp.org.units import PositionIn, UnitIn, UnitsService
-from hsp.problems import ProblemException
+from musical_chairs import models
+from musical_chairs.models import new_id
+from musical_chairs.org.units import PositionIn, UnitIn, UnitsService
+from musical_chairs.problems import ProblemException
 from tests.db.plan_helpers import make_floor, new_tenant
 from tests.stubs import stub_admin
 
@@ -74,7 +74,7 @@ async def person(
         id=new_id(),
         tenant_id=units_service_in_own_tenant.principal.tenant_id,
         display_name=name,
-        email=f"{name.lower()}-{new_id().hex[-8:]}@hsp.local",
+        email=f"{name.lower()}-{new_id().hex[-8:]}@musical-chairs.local",
         source=models.RecordSource.MANUAL,
         active=True,
         created_at=now,
@@ -193,7 +193,7 @@ async def test_positions(units_service_in_own_tenant: UnitsService) -> None:
         {
             "id": person,
             "t": units_service_in_own_tenant.principal.tenant_id,
-            "e": f"dana-{person.hex[:6]}@hsp.local",
+            "e": f"dana-{person.hex[:6]}@musical-chairs.local",
         },
     )
     await units_service_in_own_tenant.db.execute(

@@ -14,9 +14,9 @@ from typing import Any
 
 import pytest
 
-from hsp.plans.changeset import References, validate
-from hsp.plans.geometry_checks import warnings
-from hsp.plans.schema import CatalogItem, PlanContent
+from musical_chairs.plans.changeset import References, validate
+from musical_chairs.plans.geometry_checks import warnings
+from musical_chairs.plans.schema import CatalogItem, PlanContent
 from tests.stubs import stub_references
 
 CASES_DIR = Path(__file__).resolve().parents[3] / "shared" / "validation-cases"

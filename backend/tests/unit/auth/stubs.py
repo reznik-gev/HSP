@@ -5,7 +5,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from hsp.auth.sessions import SessionTokens
+from musical_chairs.auth.sessions import SessionTokens
 
 
 def stub_jwt(claims: dict[str, Any]) -> str:
@@ -32,7 +32,7 @@ def stub_tokens(
             {
                 "sub": subject,
                 "name": "Dev Admin",
-                "email": "a@hsp.local",
+                "email": "a@musical-chairs.local",
                 "realm_access": {"roles": roles},
             }
         ),

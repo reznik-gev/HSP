@@ -1,6 +1,6 @@
-# HSP backend
+# Musical Chairs backend
 
-The FastAPI service for HSP. Architecture decisions live in [`../docs`](../docs/README.md).
+The FastAPI service for Musical Chairs. Architecture decisions live in [`../docs`](../docs/README.md).
 
 ## Prerequisites
 - [uv](https://docs.astral.sh/uv/). It installs Python 3.14 automatically ([0065](../docs/decisions/0065-2026-10-08-python-version-and-dev-tooling.md), [0091](../docs/decisions/0091-2026-10-15-python-3-14.md)). Python 3.15 waits until after 1.0.0 ([0127](../docs/decisions/0127-2026-11-08-python-3-15-after-1-0.md)).
@@ -13,21 +13,21 @@ The FastAPI service for HSP. Architecture decisions live in [`../docs`](../docs/
 | Apply migrations | `uv run alembic upgrade head` |
 | Create a migration | `uv run alembic revision --autogenerate -m "..."`, then **review it** |
 | Check models vs DB drift | `uv run alembic check` |
-| Run the API (reload) | `uv run uvicorn hsp.main:create_app --factory --reload` |
+| Run the API (reload) | `uv run uvicorn musical_chairs.main:create_app --factory --reload` |
 | Unit tests | `uv run pytest` (DB tests are skipped) |
-| All tests incl. DB | `HSP_TEST_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_test uv run pytest` |
+| All tests incl. DB | `MUSICAL_CHAIRS_TEST_DATABASE_URL=postgresql+asyncpg://musical_chairs:musical_chairs@localhost:5432/musical_chairs_test uv run pytest` |
 | Test coverage | `uv run pytest --cov --cov-report=html`; the report is `coverage/html/index.html` ([0114](../docs/decisions/0114-2026-10-23-test-coverage-report.md)) |
 | Lint / format / types | `uv run ruff check .` · `uv run ruff format .` · `uv run mypy` |
-| Export OpenAPI | `uv run hsp-export-openapi openapi.json` (commit the result, [0039](../docs/decisions/0039-2026-10-08-frontend-api-client.md)) |
+| Export OpenAPI | `uv run musical-chairs-export-openapi openapi.json` (commit the result, [0039](../docs/decisions/0039-2026-10-08-frontend-api-client.md)) |
 
 ## Layout
 The packages depend one way: `api` uses the area packages, and they use the shared modules, `models`, `db` and `config`. The area packages don't import FastAPI.
 
 ```
-src/hsp/
+src/musical_chairs/
   main.py            app factory; request IDs and request logs
-  serve.py           `hsp-api`, the image's entry point: the metrics port, then the uvicorn workers
-  config.py          settings from HSP_* environment variables
+  serve.py           `musical-chairs-api`, the image's entry point: the metrics port, then the uvicorn workers
+  config.py          settings from MUSICAL_CHAIRS_* environment variables
   db.py              async engine and sessions (docs/0014)
   models/            SQLAlchemy models of the v1 data model (docs/0034)
   api/               HTTP: routers and Pydantic models, all under /api/v1 (docs/0035)
@@ -50,10 +50,10 @@ src/hsp/
   tenancy.py         the one default tenant (docs/0003)
   logging.py, metrics.py, tracing.py, readiness.py
                      JSON logs, /metrics, OpenTelemetry and /readyz (docs/0057, 0105)
-  openapi_export.py  `hsp-export-openapi`, writes openapi.json
+  openapi_export.py  `musical-chairs-export-openapi`, writes openapi.json
 migrations/          Alembic; never run from the API process (docs/0056)
 tests/unit/          fast tests, no Docker; API tests send real requests with fakes behind them
-tests/db/            DB integration tests (docs/0061), need HSP_TEST_DATABASE_URL
+tests/db/            DB integration tests (docs/0061), need MUSICAL_CHAIRS_TEST_DATABASE_URL
 tests/fakes.py, stubs.py
                      in-memory repositories and stub services for unit tests
 ```

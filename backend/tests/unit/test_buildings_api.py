@@ -5,7 +5,7 @@ import uuid
 import pytest
 from fastapi.testclient import TestClient
 
-from hsp.models import SeatAssignment, new_id
+from musical_chairs.models import SeatAssignment, new_id
 from tests.fakes import InMemoryLocationsRepository
 from tests.stubs import STUB_TENANT
 from tests.unit.api_helpers import create_building, create_floor, create_site

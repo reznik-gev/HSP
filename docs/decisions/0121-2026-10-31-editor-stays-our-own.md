@@ -8,7 +8,7 @@
 While reviewing #115, the owner asked why we build the editor's screens and interactions ourselves, and whether a ready-made editor could do it instead.
 
 Building it ourselves was decided, but only part of the question was weighed:
-- [0002](0002-2026-10-07-build-approach.md) chose to build HSP from scratch. The only ready-made editor it weighed was embedding draw.io.
+- [0002](0002-2026-10-07-build-approach.md) chose to build Musical Chairs from scratch. The only ready-made editor it weighed was embedding draw.io.
 - [0042](0042-2026-10-08-2d-renderer.md) compared drawing libraries (Konva, SVG, Three.js, PixiJS), not editors. It said: "Editor interactions are custom code."
 - [0052](0052-2026-10-08-svg-commitment-and-performance-gate.md) recorded the owner's preference for SVG, and that the hard editor logic is the same whatever draws it.
 
@@ -28,7 +28,7 @@ Checked on 2026-10-31. These projects and their licences change, so check again 
 | Smplrspace, Archilogic, Floorplanner | Commercial floor-plan SDKs | Hosted services, which [0005](0005-2026-10-07-deployment-model.md)'s on-premise, offline installs rule out |
 
 ## Decision
-**We keep our own editor.** None of the options fits HSP as well as it needs to, especially for drafts and edit locks ([0016](0016-2026-10-08-edit-concurrency.md), [0081](0081-2026-10-10-drafts-and-changesets.md)). At most, one would replace the drawing and the basic editing. We'd still own the parts that make it HSP's:
+**We keep our own editor.** None of the options fits Musical Chairs as well as it needs to, especially for drafts and edit locks ([0016](0016-2026-10-08-edit-concurrency.md), [0081](0081-2026-10-10-drafts-and-changesets.md)). At most, one would replace the drawing and the basic editing. We'd still own the parts that make it Musical Chairs':
 - drafts, autosave, the edit lock and publishing
 - the plan rules shared with the server
 - seat labels and seat numbering
@@ -42,4 +42,4 @@ Checked on 2026-10-31. These projects and their licences change, so check again 
 ## Consequences
 - Editor work goes on in our own code, starting with the rest of [0108](0108-2026-10-21-first-client-demo-feedback.md)'s wall behaviours.
 - The editor core stays independent of what draws it ([0052](0052-2026-10-08-svg-commitment-and-performance-gate.md)). That keeps it easier to swap in parts later.
-- No change to HSP itself, so there's no changelog entry.
+- No change to Musical Chairs itself, so there's no changelog entry.

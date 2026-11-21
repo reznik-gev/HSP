@@ -3,8 +3,8 @@ it (docs/0081)."""
 
 import pytest
 
-from hsp.plans.changeset import References
-from hsp.plans.schema import PlanContent
+from musical_chairs.plans.changeset import References
+from musical_chairs.plans.schema import PlanContent
 from tests.unit.changeset.stubs import REFS
 
 

@@ -2,9 +2,9 @@
 
 from typing import Any
 
-from hsp.models import new_id
-from hsp.plans.diff import diff_plans
-from hsp.plans.schema import PlacedObject, PlanContent, Wall
+from musical_chairs.models import new_id
+from musical_chairs.plans.diff import diff_plans
+from musical_chairs.plans.schema import PlacedObject, PlanContent, Wall
 from tests.stubs import stub_placed_object
 
 DESK_REV = new_id()

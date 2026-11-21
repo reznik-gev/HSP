@@ -75,7 +75,7 @@ function powerSource(): string {
 }
 
 async function bench<T>(page: Page, fn: string): Promise<T> {
-  return page.evaluate<T>(`window.__hspBench.${fn}`);
+  return page.evaluate<T>(`window.__musicalChairsBench.${fn}`);
 }
 
 async function measure(page: Page, interact: () => Promise<void>): Promise<FrameStats> {
@@ -104,9 +104,13 @@ async function dragFrom(
 
 async function loadBench(page: Page): Promise<number> {
   await page.goto(`http://localhost:${PORT}/bench/svg?seats=${seats}`);
-  await page.waitForFunction("window.__hspBench && window.__hspBench.ready", undefined, {
-    timeout: 60_000,
-  });
+  await page.waitForFunction(
+    "window.__musicalChairsBench && window.__musicalChairsBench.ready",
+    undefined,
+    {
+      timeout: 60_000,
+    },
+  );
   await sleep(500); // let the first frames settle
   return bench<number>(page, "initialRenderMs");
 }
@@ -142,7 +146,7 @@ async function scenarios(page: Page, zoom: "fit" | "working") {
 async function selectLatencies(page: Page): Promise<number[]> {
   await bench(page, 'setZoom("fit")');
   await sleep(300);
-  await page.evaluate("window.__hspBench.selectLatenciesMs.length = 0");
+  await page.evaluate("window.__musicalChairsBench.selectLatenciesMs.length = 0");
   const desks = await bench<Vec2[]>(page, "deskPoints(12)");
   for (const p of desks.slice(0, 12)) {
     await page.mouse.click(p[0], p[1]);

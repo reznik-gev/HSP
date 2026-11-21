@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from fastapi.testclient import TestClient
 
-from hsp.main import create_app
+from musical_chairs.main import create_app
 from tests.fakes import InMemorySessionStore
 from tests.unit.auth.fake_idp import (
     OIDC,
@@ -28,13 +28,13 @@ def test_login_redirects_with_pkce_state_and_nonce(api_with_fake_idp: TestClient
     url = urlparse(start_login(api_with_fake_idp))
     q = {k: v[0] for k, v in parse_qs(url.query).items()}
     assert f"{url.scheme}://{url.netloc}{url.path}" == f"{OIDC}/auth"
-    assert q["client_id"] == "hsp-api"
+    assert q["client_id"] == "musical-chairs-api"
     assert q["response_type"] == "code"
     assert q["redirect_uri"] == f"{PUBLIC}/api/v1/auth/callback"
     assert q["code_challenge_method"] == "S256"
     assert q["scope"] == "openid profile email"
     assert q["state"] and q["nonce"] and q["code_challenge"]
-    assert api_with_fake_idp.cookies.get("hsp_login")  # encrypted state/nonce/verifier
+    assert api_with_fake_idp.cookies.get("musical_chairs_login")  # encrypted state/nonce/verifier
 
 
 def test_full_login_creates_session_and_me_works(

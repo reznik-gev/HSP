@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# Assemble the offline release bundle hsp-<version>.tar.gz (docs/0054, docs/0102) from images
-# already built by deploy/build-images.sh <version>. Third-party images (PostGIS) are pulled.
+# Assemble the offline release bundle musical-chairs-<version>.tar.gz (docs/0054, docs/0102) from
+# images already built by deploy/build-images.sh <version>. Third-party images (PostGIS) are pulled.
 #   deploy/bundle.sh <version> <notes-file> [out-dir]     # out-dir defaults to ./dist
-# Writes <out-dir>/hsp-<version>.tar.gz and <out-dir>/hsp-<version>.tar.gz.sha256.
+# Writes <out-dir>/musical-chairs-<version>.tar.gz and
+# <out-dir>/musical-chairs-<version>.tar.gz.sha256.
 set -euo pipefail
 
 version="${1:?usage: deploy/bundle.sh <version> <notes-file> [out-dir]}"
 notes="${2:?usage: deploy/bundle.sh <version> <notes-file> [out-dir]}"
 out="${3:-dist}"
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-name="hsp-$version"
+name="musical-chairs-$version"
 # A GitHub Release file may be up to 2 GiB; stay clear of it.
 max_bytes=$((1900 * 1024 * 1024))
 
@@ -22,12 +23,12 @@ mkdir -p "$dir/images" "$dir/compose" "$dir/docs"
 
 # Every image the stack runs, read from compose.yml so none can be missed.
 mapfile -t images < <(
-  HSP_VERSION="$version" HSP_PUBLIC_URL=https://hsp.invalid \
+  MUSICAL_CHAIRS_VERSION="$version" MUSICAL_CHAIRS_PUBLIC_URL=https://musical-chairs.invalid \
     docker compose -f "$root/deploy/compose/compose.yml" config --images | sort -u
 )
 echo "Images: ${images[*]}"
 for image in "${images[@]}"; do
-  if [[ "$image" == hsp-* ]]; then
+  if [[ "$image" == musical-chairs-* ]]; then
     docker image inspect "$image" >/dev/null || {
       echo "FAIL: $image is missing; run deploy/build-images.sh $version first" >&2
       exit 1
@@ -42,13 +43,13 @@ done
 cp "$root/deploy/compose/compose.yml" "$dir/compose/"
 cp -r "$root/deploy/compose/postgres-init" "$dir/compose/"
 cp "$root/deploy/compose/backups.example.yml" "$dir/compose/"
-sed "s/^HSP_VERSION=.*/HSP_VERSION=$version/" "$root/deploy/compose/.env.example" \
+sed "s/^MUSICAL_CHAIRS_VERSION=.*/MUSICAL_CHAIRS_VERSION=$version/" "$root/deploy/compose/.env.example" \
   > "$dir/compose/.env.example"
 cp "$root/deploy/install.md" "$dir/docs/install.md"
 cp "$notes" "$dir/docs/release-notes.md"
 cp "$root/CHANGELOG.md" "$dir/docs/CHANGELOG.md"
 cp "$root/LICENSE" "$dir/"
-install -D -m 755 "$root/deploy/bin/hsp" "$dir/bin/hsp"
+install -D -m 755 "$root/deploy/bin/musical-chairs" "$dir/bin/musical-chairs"
 echo "$version" > "$dir/VERSION"
 
 sums="$(cd "$dir" && find . -type f -printf '%P\n' | sort | xargs sha256sum)"

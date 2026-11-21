@@ -2,7 +2,13 @@ from pathlib import Path
 
 import pytest
 
-from hsp_backup.config import ConfigError, FolderTarget, S3Target, load_config, parse_config
+from musical_chairs_backup.config import (
+    ConfigError,
+    FolderTarget,
+    S3Target,
+    load_config,
+    parse_config,
+)
 
 FULL = """
 timezone: Asia/Jerusalem
@@ -11,10 +17,10 @@ targets:
   offsite:
     type: s3
     endpoint: https://minio.corp:9000
-    bucket: hsp-backups
+    bucket: musical-chairs-backups
     prefix: prod/
     path_style: true
-    ca_file: /etc/hsp/backup-ca.pem
+    ca_file: /etc/musical_chairs/backup-ca.pem
 schedules:
   - { name: nightly, cron: "30 2 * * *", target: local, keep: 7 }
   - { name: weekly, cron: "0 4 * * 0", target: offsite, keep: 8, keep_days: 90,
@@ -89,7 +95,11 @@ def test_a_full_file_is_read() -> None:
     assert config.targets["local"] == FolderTarget(type="folder", path=Path("/backups"))
     offsite = config.targets["offsite"]
     assert isinstance(offsite, S3Target)
-    assert (offsite.bucket, offsite.prefix, offsite.path_style) == ("hsp-backups", "prod/", True)
+    assert (offsite.bucket, offsite.prefix, offsite.path_style) == (
+        "musical-chairs-backups",
+        "prod/",
+        True,
+    )
     assert offsite.region == "us-east-1"
     assert [s.name for s in config.schedules] == ["nightly", "weekly"]
     weekly = config.schedule("weekly")

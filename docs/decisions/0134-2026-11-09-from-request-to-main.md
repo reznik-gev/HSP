@@ -6,7 +6,7 @@
 - **Refined by:** [0136](0136-2026-11-10-the-demo-for-checking-prs.md) (the demo for checking PRs), [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (sessions push as a GitHub App, and the owner's approval is the go-ahead to merge), [0142](0142-2026-11-11-no-auto-fix.md) (no Auto-fix: the owner starts each review round, with no limit on rounds, and says when to merge)
 
 ## Context
-Most HSP work follows the same path. The owner asks for a change. A Claude Code session works out what's needed, asks the owner what's theirs to decide, builds it and tests it. Then it opens a PR, the review bot reviews it, the session fixes the review, and the owner reviews and merges.
+Most Musical Chairs work follows the same path. The owner asks for a change. A Claude Code session works out what's needed, asks the owner what's theirs to decide, builds it and tests it. Then it opens a PR, the review bot reviews it, the session fixes the review, and the owner reviews and merges.
 
 On 2026-11-09 the owner and Claude went over this path. Some steps were written down only in Claude's memory on one machine, not in the guides. Others weren't written down anywhere, so each session guessed:
 - **Re-reviews.** The [git guide](../guides/git.md) said to comment `@claude review` after review fixes. The owner meant that as a step for the owner, but sessions began doing it unasked.
@@ -58,7 +58,7 @@ The owner's choices are the four marked above. Together with the rules already i
 - After the PR merges or closes, the `reserve/` branches for its records are deleted.
 
 ### Where the rules live
-Rules for working on HSP go in the guides and skills, not in one machine's Claude memory. *(The owner's choice)* The guides are read by every session, on any machine or in the cloud, and by the review bot. A change to them goes through a PR, so the owner sees it. Claude's memory keeps only:
+Rules for working on Musical Chairs go in the guides and skills, not in one machine's Claude memory. *(The owner's choice)* The guides are read by every session, on any machine or in the cloud, and by the review bot. A change to them goes through a PR, so the owner sees it. Claude's memory keeps only:
 - what isn't a rule about the repository, such as the state of the work on a given day;
 - a new rule, until the PR that writes it into a guide merges.
 
@@ -66,5 +66,5 @@ Rules for working on HSP go in the guides and skills, not in one machine's Claud
 - New skills: [`record-decision`](../../.claude/skills/record-decision/SKILL.md), [`open-pr`](../../.claude/skills/open-pr/SKILL.md) and [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md). [`prepare-pr-for-review`](../../.claude/skills/prepare-pr-for-review/SKILL.md) gets the bot-round limit.
 - A new guide, [How a change is made](../guides/making-a-change.md), gets the whole path. *(The owner's choice: it's a path of work, and only partly about Git)* The [git guide](../guides/git.md) takes over three rules that until now were only in Claude's memory: force-push only to rebase, which review threads a session may resolve, and reading back what it posted on GitHub.
 - Open PRs from before this record (0131–0133) have no reservation branches. Checking the open PRs covers them.
-- **To consider later:** a separate GitHub account or app for Claude Code sessions, in HSP and in future projects. Then the owner could approve PRs for real, and the `main` ruleset could require it. *(The owner's request)*
-- The owner's review stays the only review from outside Claude, since the review bot is Claude too. The owner accepted this for now: HSP's users can ask for changes later.
+- **To consider later:** a separate GitHub account or app for Claude Code sessions, in Musical Chairs and in future projects. Then the owner could approve PRs for real, and the `main` ruleset could require it. *(The owner's request)*
+- The owner's review stays the only review from outside Claude, since the review bot is Claude too. The owner accepted this for now: Musical Chairs' users can ask for changes later.

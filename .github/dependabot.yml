@@ -19,8 +19,8 @@ updates:
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
 
-  # The base image of every image HSP builds (docs/0097): hsp-api, hsp-backup, hsp-keycloak,
-  # hsp-web.
+  # The base image of every image Musical Chairs builds (docs/0097): musical-chairs-api, musical-chairs-backup, musical-chairs-keycloak,
+  # musical-chairs-web.
   - package-ecosystem: docker
     # deploy/trivy pins the scanner deploy/scan-images.sh runs (docs/0128).
     directories: [/backend, /deploy/backup, /deploy/keycloak, /deploy/web, /deploy/trivy]

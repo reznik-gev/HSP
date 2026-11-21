@@ -1,8 +1,8 @@
 # Demo: Northwind Robotics
 
-A live walkthrough of HSP for a prospective client, about 20 minutes ([0103](../decisions/0103-2026-10-19-demo.md)). You run HSP on your own machine, with a made-up company already in it. This page has the setup and a script: what to click, and what to say, feature by feature.
+A live walkthrough of Musical Chairs for a prospective client, about 20 minutes ([0103](../decisions/0103-2026-10-19-demo.md)). You run Musical Chairs on your own machine, with a made-up company already in it. This page has the setup and a script: what to click, and what to say, feature by feature.
 
-**The story:** Northwind Robotics has 44 people in 12 teams, an office in Tel Aviv (Harbor Tower, floors 3–5) and a hardware lab in Haifa. **Dana Levin**, the office manager, runs HSP. **Sam Carter**, a frontend engineer, only looks things up.
+**The story:** Northwind Robotics has 44 people in 12 teams, an office in Tel Aviv (Harbor Tower, floors 3–5) and a hardware lab in Haifa. **Dana Levin**, the office manager, runs Musical Chairs. **Sam Carter**, a frontend engineer, only looks things up.
 
 ## Before the demo (once, about 10 minutes)
 You need Docker Desktop running, and the repo set up for development (the [main README](../../README.md)'s quick start). Use three terminals, all from the repo root, in Git Bash.
@@ -11,17 +11,17 @@ You need Docker Desktop running, and the repo set up for development (the [main 
    ```bash
    docker compose -f deploy/compose.dev.yml up -d
    ```
-2. **The demo database.** The API checks the database's schema when it starts, and stops unless it's up to date ([0109](../decisions/0109-2026-10-23-schema-check-everywhere.md)). So before you start the API, create `hsp_demo` and bring it up to date:
+2. **The demo database.** The API checks the database's schema when it starts, and stops unless it's up to date ([0109](../decisions/0109-2026-10-23-schema-check-everywhere.md)). So before you start the API, create `musical_chairs_demo` and bring it up to date:
    ```bash
-   docker compose -f deploy/compose.dev.yml exec postgres psql -U hsp -d hsp -c "CREATE DATABASE hsp_demo"
-   (cd backend && HSP_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo uv run alembic upgrade head)
+   docker compose -f deploy/compose.dev.yml exec postgres psql -U musical_chairs -d musical_chairs -c "CREATE DATABASE musical_chairs_demo"
+   (cd backend && MUSICAL_CHAIRS_DATABASE_URL=postgresql+asyncpg://musical_chairs:musical_chairs@localhost:5432/musical_chairs_demo uv run alembic upgrade head)
    ```
-   If `CREATE DATABASE` says `hsp_demo` already exists, that's fine: still run the `alembic` line, so a demo database from before your last pull catches up.
+   If `CREATE DATABASE` says `musical_chairs_demo` already exists, that's fine: still run the `alembic` line, so a demo database from before your last pull catches up.
 3. **The API, on the demo database** (terminal 1; leave it running):
    ```bash
    cd backend
-   HSP_DATABASE_URL=postgresql+asyncpg://hsp:hsp@localhost:5432/hsp_demo \
-     uv run uvicorn hsp.main:create_app --factory --port 8000
+   MUSICAL_CHAIRS_DATABASE_URL=postgresql+asyncpg://musical_chairs:musical_chairs@localhost:5432/musical_chairs_demo \
+     uv run uvicorn musical_chairs.main:create_app --factory --port 8000
    ```
    If it stops at once with `the database schema is at …`, run step 2.
 4. **The app** (terminal 2; leave it running):
@@ -29,16 +29,16 @@ You need Docker Desktop running, and the repo set up for development (the [main 
    cd frontend && pnpm dev
    ```
    If `pnpm` isn't found, use `corepack pnpm dev`.
-5. **Fill in Northwind Robotics** (terminal 3). It rebuilds the `hsp_demo` database from scratch, so it's safe to run again before each demo, with the API still running:
+5. **Fill in Northwind Robotics** (terminal 3). It rebuilds the `musical_chairs_demo` database from scratch, so it's safe to run again before each demo, with the API still running:
    ```bash
    cd backend && uv run python ../deploy/demo/seed.py
    ```
-   It ends with `Ready: open http://localhost:5173 ...`. If it says the API isn't using the demo database, step 3 is missing its `HSP_DATABASE_URL`.
+   It ends with `Ready: open http://localhost:5173 ...`. If it says the API isn't using the demo database, step 3 is missing its `MUSICAL_CHAIRS_DATABASE_URL`.
 6. **Check it:** open <http://localhost:5173>, sign in as `dana.levin` / `demo`, and open Floors. Then use the browser in full screen, at 100% zoom.
 
 To check a PR's change by hand, Claude Code sessions use the [`run-demo`](../../.claude/skills/run-demo/SKILL.md) skill instead. It runs the same demo from its own worktree with [`deploy/demo/demo.py`](../../deploy/demo/demo.py), which you can also run yourself, from `backend/`: `uv run python ../deploy/demo/demo.py switch --pr 157` (or `--main`, `status`, `stop`).
 
-Your development database is never touched: the demo lives in its own `hsp_demo` database, and the seed refuses to run if the API is on any other.
+Your development database is never touched: the demo lives in its own `musical_chairs_demo` database, and the seed refuses to run if the API is on any other.
 
 | Sign in as | Password | Who |
 |---|---|---|
@@ -69,7 +69,7 @@ Your development database is never touched: the demo lives in its own `hsp_demo`
 
 ![The same floor in Hebrew](images/hebrew.png)
 
-- "HSP is fully in Hebrew, right to left." The menus and panels move to the other side.
+- "Musical Chairs is fully in Hebrew, right to left." The menus and panels move to the other side.
 - "The plan itself doesn't flip. North stays up, so the drawing still matches the building."
 - Switch back to English. Optionally show the theme button next to it, for dark mode.
 
@@ -90,7 +90,7 @@ Your development database is never touched: the demo lives in its own `hsp_demo`
 
 - "Floor 4 has a draft in progress." Someone renamed the Sales pod and added a plant, and nobody else sees it until it's published. "Only one person edits a floor at a time. Others see who's editing."
 - Choose **Place item** in the tools on the left. The catalog opens on the right: pick **Desk 160 × 80**, then click the empty space right of the core to place it (R turns it). Its measurements are exact, to the centimetre.
-- The **Problems** tab now shows **1**: "This seat has no label yet." "HSP checks the plan as you draw." Select the desk, type a **Seat label**, `HT-4-33`, in **Properties**, and the problem goes away.
+- The **Problems** tab now shows **1**: "This seat has no label yet." "Musical Chairs checks the plan as you draw." Select the desk, type a **Seat label**, `HT-4-33`, in **Properties**, and the problem goes away.
 - **Moving a group:** hold Shift and drag a rectangle around a row of desks, then drag one of them. They all move together, in grid steps. Ask, and note the answers for the feedback notes ([0133](../decisions/0133-2026-11-09-selecting-with-a-rectangle.md)): *When you drag a group, should the desk you're holding line up with walls and other desks, as a single desk does, with the rest following? Or are grid steps enough?*
 - **Undo** and **Redo** are at the top. **Number seats** (in the tools) labels a whole row of desks in one go.
 - **Turning while dragging:** drag a desk that has a monitor on it, and press R before letting go. The desk turns where it is, and so does the monitor, each on its own spot. Ask, and note the answers for the feedback notes ([0135](../decisions/0135-2026-11-09-turning-while-dragging.md)): *Should a monitor on a desk swing round with the desk when it turns, staying where it was on the desk? Or is turning on its own spot fine?*
@@ -107,7 +107,7 @@ Your development database is never touched: the demo lives in its own `hsp_demo`
 - Sam can browse floors and search, but there's no **Edit floor** and nothing to change. "Admins change things; everyone else looks things up."
 
 ### 8. Running it (talk, 2 min)
-- "HSP runs on your own server, even with no internet: one download with everything in it."
+- "Musical Chairs runs on your own server, even with no internet: one download with everything in it."
 - "Sign-in is Keycloak, which can use your company's existing logins (LDAP or Active Directory)."
 - "It serves HTTPS itself, or runs behind your own proxy."
 

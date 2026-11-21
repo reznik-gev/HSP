@@ -1,6 +1,6 @@
 ---
 name: open-pr
-description: Take finished HSP work to an open pull request. Run the checks, add the CHANGELOG line, push and open the PR without asking (a draft when the owner must check something first). Use when a change is built and tested, or the owner says "open a PR" or "push it".
+description: Take finished Musical Chairs work to an open pull request. Run the checks, add the CHANGELOG line, push and open the PR without asking (a draft when the owner must check something first). Use when a change is built and tested, or the owner says "open a PR" or "push it".
 ---
 
 # Open a pull request
@@ -24,7 +24,7 @@ Don't ask the owner before opening it. Do these steps in order, and say which on
   Write each message to a file and commit with `git commit -F <file>`: a multi-line `-m` gets mangled in PowerShell. Check `git config core.hooksPath` says `.githooks` (if not, set it), so the hook rejects a bad message before the commit is made. Never commit with `--no-verify`. Check the branch before pushing: `git log --format='%h %s%n%b' origin/main..HEAD`. A commit not pushed yet that lacks a body can still be reworded; once pushed, rewording needs the owner's yes.
 
 ## 2. Run the checks
-- Run the checks for each side the branch changes (CLAUDE.md). DB tests need the dev stack running and `HSP_TEST_DATABASE_URL` set ([backend/README.md](../../../backend/README.md)).
+- Run the checks for each side the branch changes (CLAUDE.md). DB tests need the dev stack running and `MUSICAL_CHAIRS_TEST_DATABASE_URL` set ([backend/README.md](../../../backend/README.md)).
 - If a check fails for a reason that isn't this branch's, check whether it also fails on `main`, and say so in the PR.
 - If the change shows on screen, look at it in the browser pane: both languages, and a narrow width if layout changed. Keep screenshots of what the owner will want to see. For a draft the owner will check by hand, do it in the demo with [`run-demo`](../run-demo/SKILL.md) once the PR is open.
 

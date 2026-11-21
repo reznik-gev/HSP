@@ -5,8 +5,8 @@ from typing import Any
 
 import pytest
 
-from hsp.models import new_id
-from hsp.plans.changeset import (
+from musical_chairs.models import new_id
+from musical_chairs.plans.changeset import (
     AddOp,
     ChangesetRejected,
     DeleteOp,
@@ -14,7 +14,7 @@ from hsp.plans.changeset import (
     UpdateOp,
     apply_changeset,
 )
-from hsp.plans.schema import PlanContent
+from musical_chairs.plans.schema import PlanContent
 from tests.unit.changeset.stubs import BOWTIE, add, codes, desk, ops, wall, zone
 
 

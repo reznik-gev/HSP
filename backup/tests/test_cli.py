@@ -6,12 +6,12 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner, Result
 
-from hsp_backup import cli
-from hsp_backup.backups import BackupPlan
+from musical_chairs_backup import cli
+from musical_chairs_backup.backups import BackupPlan
 from tests.conftest import SpyPostgres
 
-#: Runs one hsp-backup command, with the given environment.
-HspBackup = Callable[..., Result]
+#: Runs one musical-chairs-backup command, with the given environment.
+MusicalChairsBackup = Callable[..., Result]
 
 #: Colours typer adds to its own messages on a terminal, and in GitHub Actions.
 COLOURS = re.compile(r"\x1b\[[0-9;]*m")
@@ -32,9 +32,9 @@ def one_folder_installation_env(
     (tmp_path / "pg_password").write_text("pw")
     monkeypatch.setattr(cli, "PgTools", lambda *_: spy_postgres)
     return {
-        "HSP_BACKUP_CONFIG": str(tmp_path / "backups.yml"),
-        "HSP_BACKUP_INSTALL_DIR": str(tmp_path),
-        "HSP_VERSION": "1.0.0",
+        "MUSICAL_CHAIRS_BACKUP_CONFIG": str(tmp_path / "backups.yml"),
+        "MUSICAL_CHAIRS_BACKUP_INSTALL_DIR": str(tmp_path),
+        "MUSICAL_CHAIRS_VERSION": "1.0.0",
         "PGPASSWORD_FILE": str(tmp_path / "pg_password"),
     }
 
@@ -54,7 +54,7 @@ def no_targets(one_folder_installation_env: dict[str, str], tmp_path: Path) -> d
 
 
 @pytest.fixture
-def hsp_backup() -> HspBackup:
+def musical_chairs_backup() -> MusicalChairsBackup:
     runner = CliRunner()
 
     def run(env: dict[str, str], *args: str) -> Result:
@@ -64,21 +64,21 @@ def hsp_backup() -> HspBackup:
 
 
 def test_check_says_the_file_is_fine(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+    musical_chairs_backup: MusicalChairsBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    done = hsp_backup(one_folder_installation_env, "check")
+    done = musical_chairs_backup(one_folder_installation_env, "check")
     assert done.exit_code == 0
     assert "backups.yml is fine: 1 target(s), 1 schedule(s)" in done.stdout
 
 
 def test_check_says_what_each_schedule_keeps(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+    musical_chairs_backup: MusicalChairsBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    done = hsp_backup(one_folder_installation_env, "check")
+    done = musical_chairs_backup(one_folder_installation_env, "check")
     assert done.stdout.splitlines()[1:] == [
         "  nightly: the newest 7, on local",
         "  manual: the newest 5, on local",
-        "  pre-upgrade: every backup until `hsp upgrade` succeeds, on local",
+        "  pre-upgrade: every backup until `musical-chairs upgrade` succeeds, on local",
     ]
 
 
@@ -88,69 +88,79 @@ def test_a_schedule_with_keep_days_keeps_those_days_too() -> None:
 
 
 def test_check_names_a_target_it_cant_read(
-    hsp_backup: HspBackup, target_folder_gone: dict[str, str]
+    musical_chairs_backup: MusicalChairsBackup, target_folder_gone: dict[str, str]
 ) -> None:
-    done = hsp_backup(target_folder_gone, "check")
+    done = musical_chairs_backup(target_folder_gone, "check")
     assert done.exit_code == cli.EXIT_UNCHANGED
-    assert "hsp-backup: can't read local" in done.stderr
+    assert "musical-chairs-backup: can't read local" in done.stderr
 
 
 def test_a_bad_config_is_one_line_not_a_traceback(
-    hsp_backup: HspBackup, no_targets: dict[str, str]
+    musical_chairs_backup: MusicalChairsBackup, no_targets: dict[str, str]
 ) -> None:
-    done = hsp_backup(no_targets, "list")
+    done = musical_chairs_backup(no_targets, "list")
     assert done.exit_code == cli.EXIT_UNCHANGED
-    assert done.stderr.startswith("hsp-backup: backups.yml has problems")
+    assert done.stderr.startswith("musical-chairs-backup: backups.yml has problems")
     assert "Traceback" not in done.stderr
 
 
 def test_now_list_and_list_json(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+    musical_chairs_backup: MusicalChairsBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    name = hsp_backup(one_folder_installation_env, "now").stdout.strip()
+    name = musical_chairs_backup(one_folder_installation_env, "now").stdout.strip()
     assert name.endswith("-manual.tar")
-    assert hsp_backup(one_folder_installation_env, "list").stdout == f"{name}  local\n"
-    [row] = json.loads(hsp_backup(one_folder_installation_env, "list", "--json").stdout)
+    assert musical_chairs_backup(one_folder_installation_env, "list").stdout == f"{name}  local\n"
+    [row] = json.loads(musical_chairs_backup(one_folder_installation_env, "list", "--json").stdout)
     assert (row["name"], row["target"], row["schedule"]) == (name, "local", "manual")
 
 
 def test_restore_asks_for_yes(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+    musical_chairs_backup: MusicalChairsBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    done = hsp_backup(one_folder_installation_env, "restore", "hsp-20261021T023000Z-nightly.tar")
+    done = musical_chairs_backup(
+        one_folder_installation_env, "restore", "musical-chairs-20261021T023000Z-nightly.tar"
+    )
     assert done.exit_code == 2
     assert "add --yes" in done.stderr
 
 
 def test_a_refused_restore_says_nothing_changed(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str], never_taken_backup_name: str
+    musical_chairs_backup: MusicalChairsBackup,
+    one_folder_installation_env: dict[str, str],
+    never_taken_backup_name: str,
 ) -> None:
-    # hsp restore starts HSP again after this exit code (docs/0109).
-    done = hsp_backup(one_folder_installation_env, "restore", never_taken_backup_name, "--yes")
+    # musical-chairs restore starts Musical Chairs again after this exit code (docs/0109).
+    done = musical_chairs_backup(
+        one_folder_installation_env, "restore", never_taken_backup_name, "--yes"
+    )
     assert done.exit_code == 3
     assert "no target holds" in done.stderr
 
 
 def test_a_restore_that_fails_partway_exits_1(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str], spy_postgres: SpyPostgres
+    musical_chairs_backup: MusicalChairsBackup,
+    one_folder_installation_env: dict[str, str],
+    spy_postgres: SpyPostgres,
 ) -> None:
-    name = hsp_backup(one_folder_installation_env, "now").stdout.strip()
+    name = musical_chairs_backup(one_folder_installation_env, "now").stdout.strip()
     spy_postgres.fail_restore = True
-    assert hsp_backup(one_folder_installation_env, "restore", name, "--yes").exit_code == 1
+    assert (
+        musical_chairs_backup(one_folder_installation_env, "restore", name, "--yes").exit_code == 1
+    )
 
 
 def test_a_restore_says_what_it_restored(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+    musical_chairs_backup: MusicalChairsBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    name = hsp_backup(one_folder_installation_env, "now").stdout.strip()
-    done = hsp_backup(one_folder_installation_env, "restore", name, "--yes")
+    name = musical_chairs_backup(one_folder_installation_env, "now").stdout.strip()
+    done = musical_chairs_backup(one_folder_installation_env, "restore", name, "--yes")
     assert done.exit_code == 0
-    assert done.stdout == f"Restored {name} (made by HSP 1.0.0).\n"
+    assert done.stdout == f"Restored {name} (made by Musical Chairs 1.0.0).\n"
 
 
 def test_prune_keeps_at_least_one(
-    hsp_backup: HspBackup, one_folder_installation_env: dict[str, str]
+    musical_chairs_backup: MusicalChairsBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    done = hsp_backup(one_folder_installation_env, "prune", "--keep", "0")
+    done = musical_chairs_backup(one_folder_installation_env, "prune", "--keep", "0")
     assert done.exit_code == 2
     assert "--keep" in COLOURS.sub("", done.stderr)

@@ -3,8 +3,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from hsp.auth.principal import Principal
-from hsp.models import new_id
+from musical_chairs.auth.principal import Principal
+from musical_chairs.models import new_id
 from tests.unit.api_helpers import SignedIn
 
 ID = new_id()

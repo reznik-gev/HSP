@@ -23,7 +23,7 @@ import { notify, notifyError } from "@/lib/notify";
 let copied: Fragment | null = null;
 /** How many times Ctrl+Shift+V has pasted this copy (as JSON), so the next lands further on. */
 let shifted = { copy: "", count: 0 };
-const STORAGE_KEY = "hsp.editor.clipboard";
+const STORAGE_KEY = "musical_chairs.editor.clipboard";
 
 /** This browser's copy, from another tab or before a reload. Storage can be unavailable. */
 function fromStorage(): Fragment | null {

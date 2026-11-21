@@ -1,6 +1,6 @@
 """OpenTelemetry tracing: off unless an OTLP endpoint is set; then each request is a span named
-by its route, from hsp-api at this version, sampled at 10% unless OTEL_TRACES_SAMPLER says
-otherwise (docs/0105)."""
+by its route, from musical-chairs-api at this version, sampled at 10% unless
+OTEL_TRACES_SAMPLER says otherwise (docs/0105)."""
 
 from collections.abc import Iterator
 
@@ -10,13 +10,13 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON, ParentBased, TraceIdRatioBased
 
-from hsp import __version__
-from hsp.main import create_app
-from hsp.tracing import tracer_provider
+from musical_chairs import __version__
+from musical_chairs.main import create_app
+from musical_chairs.tracing import tracer_provider
 
 ENDPOINT = "http://collector.test:4318"
 TRACES_ENDPOINT = f"{ENDPOINT}/v1/traces"
-STAGING_SERVICE_NAME = "hsp-api-staging"
+STAGING_SERVICE_NAME = "musical-chairs-api-staging"
 
 
 @pytest.fixture
@@ -54,7 +54,9 @@ def staging_service_name(otlp_endpoint_set: None, monkeypatch: pytest.MonkeyPatc
 def spans(monkeypatch: pytest.MonkeyPatch) -> InMemorySpanExporter:
     """Where spans go, instead of an OTLP endpoint."""
     exporter = InMemorySpanExporter()
-    monkeypatch.setattr("hsp.tracing.span_processor", lambda: SimpleSpanProcessor(exporter))
+    monkeypatch.setattr(
+        "musical_chairs.tracing.span_processor", lambda: SimpleSpanProcessor(exporter)
+    )
     return exporter
 
 
@@ -97,7 +99,7 @@ def test_a_request_is_a_span_named_by_its_route(
     traced_api.get("/_test/items/42")
 
     [server] = [s for s in spans.get_finished_spans() if s.name == "GET /_test/items/{item_id}"]
-    assert server.resource.attributes["service.name"] == "hsp-api"
+    assert server.resource.attributes["service.name"] == "musical-chairs-api"
     assert server.resource.attributes["service.version"] == __version__
 
 

@@ -14,7 +14,7 @@ interface ThemeState {
 
 export const useTheme = create<ThemeState>()(
   persist((set) => ({ choice: "system", setChoice: (choice) => set({ choice }) }), {
-    name: "hsp.theme",
+    name: "musical_chairs.theme",
   }),
 );
 

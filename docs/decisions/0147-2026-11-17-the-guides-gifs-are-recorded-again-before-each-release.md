@@ -5,7 +5,7 @@
 - **Refines:** [0146](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) (a PR that changes a screen makes the GIFs again)
 
 ## Context
-[0146](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) said a PR that changes something the guide describes makes the GIFs again if one no longer matches. In the review of [#171](https://github.com/reznik-gev/HSP/pull/171), the owner found that too costly. Recording needs the demo up and ffmpeg, and many PRs change a screen a little. Changing the guide's words never needed new GIFs.
+[0146](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) said a PR that changes something the guide describes makes the GIFs again if one no longer matches. In the review of [#171](https://github.com/reznik-gev/MusicalChairs/pull/171), the owner found that too costly. Recording needs the demo up and ffmpeg, and many PRs change a screen a little. Changing the guide's words never needed new GIFs.
 
 ## Options considered
 - When the GIFs are recorded:
@@ -24,6 +24,6 @@
 3. **Nothing checks this yet.** We want a check later, in a test or in the release workflow, so a release can't go out with old GIFs. For now we chose not to build one, for velocity. *(The owner's choice)*
 
 ## Consequences
-- [Releasing HSP](../guides/releasing.md) gains the step. [How a change is made](../guides/making-a-change.md) and the [review checklist](../guides/testing.md#review-checklist) ask only for the guide's text to be updated.
+- [Releasing Musical Chairs](../guides/releasing.md) gains the step. [How a change is made](../guides/making-a-change.md) and the [review checklist](../guides/testing.md#review-checklist) ask only for the guide's text to be updated.
 - Between releases, a GIF on `main` may show an older screen than the app.
 - A check that the GIFs are newer than the last UI change is left for later.
