@@ -41,6 +41,9 @@ jobs:
             exit 1
           fi
 
+  # Every commit message has a summary line and a body (docs/0148). Runs the same hook as a local
+  # commit, on the PR's own commits. Unlike the hook, it also fails fixup!/squash!/amend! commits:
+  # a rebase merge would land them on main as they are.
   commit-messages:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
