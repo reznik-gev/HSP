@@ -5,7 +5,7 @@
 - **Refines:** [0069](0069-2026-10-08-rebase-merges.md) (each commit lands on `main` as it is, so its message must stand on its own), [0070](0070-2026-10-08-ci-gate-job.md) (`ci-ok` requires the new `commit-messages` job), [0062](0062-2026-10-08-code-quality-tooling.md) (the optional `pre-commit` checks run from `.githooks`)
 
 ## Context
-The [git guide](../guides/git.md#branches-and-commits) asks for a short summary line and then a body that says why, with the decision records the commit follows. Merges are rebase-only ([0069](0069-2026-10-08-rebase-merges.md)), so every message lands on `main` as written.
+The [git guide](../guides/git.md#commit-messages) asks for a short summary line and then a body that says why, with the decision records the commit follows. Merges are rebase-only ([0069](0069-2026-10-08-rebase-merges.md)), so every message lands on `main` as written.
 
 In practice about 1 commit in 10 on `main` has no body. Most are review fixes ("Review on #N: …"), commits made with GitHub's "Apply suggestion" or "Update file" buttons, and early decision commits. Once, PowerShell quoting put a whole body on the summary line, making it 560 characters long.
 
