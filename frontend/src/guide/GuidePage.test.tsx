@@ -58,7 +58,7 @@ describe("the user guide", () => {
     await renderApp("/guide");
     await act(() => i18n.changeLanguage("he"));
     expect(await screen.findByRole("heading", { level: 1, name: "מדריך למשתמש" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "איפה מישהו יושב" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "חיפוש מיקום ישיבה" })).toBeVisible();
     expect(screen.getByRole("heading", { level: 2, name: "למנהלים" })).toBeVisible();
   });
 });
