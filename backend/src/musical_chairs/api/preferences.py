@@ -15,9 +15,7 @@ from musical_chairs.preferences import Preferences, PreferencesService
 router = APIRouter(prefix="/me/preferences", tags=["auth"])
 
 
-def get_service(
-    principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]
-) -> PreferencesService:
+def get_service(principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]) -> PreferencesService:
     return PreferencesService(db, principal)
 
 

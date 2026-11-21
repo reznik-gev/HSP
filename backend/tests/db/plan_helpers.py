@@ -24,10 +24,7 @@ async def new_tenant(db: AsyncSession) -> uuid.UUID:
     """A fresh tenant, for tests whose rules are per tenant (e.g. the single root unit)."""
     tenant = new_id()
     await db.execute(
-        text(
-            "INSERT INTO tenant (id, name, slug, created_at, updated_at) "
-            "VALUES (:id, 'T', :s, now(), now())"
-        ),
+        text("INSERT INTO tenant (id, name, slug, created_at, updated_at) VALUES (:id, 'T', :s, now(), now())"),
         {"id": tenant, "s": f"t-{tenant.hex[:8]}"},
     )
     # Release the savepoint: services that roll back (e.g. an import dry run) must not take the
@@ -82,9 +79,7 @@ async def make_floor(
     return floor.id, building_id
 
 
-async def lock(
-    db: AsyncSession, tenant: uuid.UUID, floor_id: uuid.UUID, subject: str = "alice"
-) -> None:
+async def lock(db: AsyncSession, tenant: uuid.UUID, floor_id: uuid.UUID, subject: str = "alice") -> None:
     now = datetime.now(UTC)
     await SqlLockRepository(db).try_acquire(
         tenant,
@@ -101,14 +96,10 @@ async def context(db: AsyncSession) -> dict[str, Any]:
     floor, building = await make_floor(db, tenant)
     await lock(db, tenant, floor)
     desk_rev = await db.scalar(
-        select(models.CatalogItemRev.id)
-        .join(models.CatalogItem)
-        .where(models.CatalogItem.key == "desk_1600x800")
+        select(models.CatalogItemRev.id).join(models.CatalogItem).where(models.CatalogItem.key == "desk_1600x800")
     )
     zone_type = (
-        await db.execute(
-            text("SELECT id FROM zone_type WHERE tenant_id = :t LIMIT 1"), {"t": tenant}
-        )
+        await db.execute(text("SELECT id FROM zone_type WHERE tenant_id = :t LIMIT 1"), {"t": tenant})
     ).scalar_one()
     admin = stub_admin(tenant)
     return {
@@ -136,18 +127,14 @@ async def apply(
 
 
 async def plan(ctx: dict[str, Any], version: int, floor: uuid.UUID | None = None) -> Any:
-    return await SqlPlanRepository(ctx["db"]).load_content(
-        ctx["tenant"], floor or ctx["floor"], version
-    )
+    return await SqlPlanRepository(ctx["db"]).load_content(ctx["tenant"], floor or ctx["floor"], version)
 
 
 async def publish_by_hand(ctx: dict[str, Any]) -> None:
     """Mark the floor's draft published without the publish service, to set up a published
     version quickly."""
     params = {"f": ctx["floor"]}
-    await ctx["db"].execute(
-        text("UPDATE floor_version SET state = 'published' WHERE floor_id = :f"), params
-    )
+    await ctx["db"].execute(text("UPDATE floor_version SET state = 'published' WHERE floor_id = :f"), params)
     await ctx["db"].execute(text("UPDATE floor SET published_version = 1 WHERE id = :f"), params)
 
 
@@ -160,9 +147,7 @@ def stub_wall() -> dict[str, Any]:
     return {"a": [0, 0], "b": [6000, 0], "thickness_mm": 150, "height_mm": 2800}
 
 
-def stub_door(
-    wall: uuid.UUID, offset_mm: int = 1000, swing: str = "none", **extra: Any
-) -> dict[str, Any]:
+def stub_door(wall: uuid.UUID, offset_mm: int = 1000, swing: str = "none", **extra: Any) -> dict[str, Any]:
     """A 900 mm door in `wall`."""
     return {
         "wall_id": str(wall),
@@ -185,9 +170,7 @@ def stub_zone(ctx: dict[str, Any], x: int = 0, name: str = "Room", **extra: Any)
     }
 
 
-def stub_desk(
-    ctx: dict[str, Any], x: int = 1000, label: str | None = "D1", **extra: Any
-) -> dict[str, Any]:
+def stub_desk(ctx: dict[str, Any], x: int = 1000, label: str | None = "D1", **extra: Any) -> dict[str, Any]:
     """A labelled, assigned 1600 x 800 desk centred at (x, 1000)."""
     return {
         "catalog_item_rev_id": str(ctx["desk_rev"]),

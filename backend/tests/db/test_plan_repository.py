@@ -14,13 +14,9 @@ from musical_chairs.plans.repository import SqlPlanRepository
 
 
 async def _setup(rolled_back_db_session: AsyncSession) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
-    tenant = (
-        await rolled_back_db_session.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))
-    ).scalar_one()
+    tenant = (await rolled_back_db_session.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))).scalar_one()
     now = datetime.now(UTC)
-    site = models.Site(
-        id=new_id(), tenant_id=tenant, name="HQ", time_zone="UTC", created_at=now, updated_at=now
-    )
+    site = models.Site(id=new_id(), tenant_id=tenant, name="HQ", time_zone="UTC", created_at=now, updated_at=now)
     building = models.Building(
         id=new_id(),
         tenant_id=tenant,
@@ -65,9 +61,7 @@ async def _setup(rolled_back_db_session: AsyncSession) -> tuple[uuid.UUID, uuid.
             )
         )
     desk_rev = await rolled_back_db_session.scalar(
-        select(models.CatalogItemRev.id)
-        .join(models.CatalogItem)
-        .where(models.CatalogItem.key == "desk_1600x800")
+        select(models.CatalogItemRev.id).join(models.CatalogItem).where(models.CatalogItem.key == "desk_1600x800")
     )
     assert desk_rev is not None
     return tenant, floor.id, desk_rev

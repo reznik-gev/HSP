@@ -180,25 +180,16 @@ class CatalogService:
 
     async def list_zone_types(self) -> list[ZoneTypeOut]:
         rows = await self.db.scalars(
-            select(models.ZoneType)
-            .where(models.ZoneType.tenant_id == self._tenant)
-            .order_by(models.ZoneType.name)
+            select(models.ZoneType).where(models.ZoneType.tenant_id == self._tenant).order_by(models.ZoneType.name)
         )
-        return [
-            ZoneTypeOut(id=z.id, name=z.name, is_enclosed=z.is_enclosed, color=z.color)
-            for z in rows
-        ]
+        return [ZoneTypeOut(id=z.id, name=z.name, is_enclosed=z.is_enclosed, color=z.color) for z in rows]
 
     async def _zone_type(self, zone_type_id: uuid.UUID) -> models.ZoneType:
         z = await self.db.scalar(
-            select(models.ZoneType).where(
-                models.ZoneType.tenant_id == self._tenant, models.ZoneType.id == zone_type_id
-            )
+            select(models.ZoneType).where(models.ZoneType.tenant_id == self._tenant, models.ZoneType.id == zone_type_id)
         )
         if z is None:
-            raise ProblemException(
-                404, "not-found", "Not found", f"Zone type {zone_type_id} does not exist."
-            )
+            raise ProblemException(404, "not-found", "Not found", f"Zone type {zone_type_id} does not exist.")
         return z
 
     async def _ensure_zone_type_name_free(self, name: str, own: uuid.UUID | None) -> None:
@@ -209,9 +200,7 @@ class CatalogService:
             )
         )
         if clash is not None and clash != own:
-            raise ProblemException(
-                409, "name-taken", "Name already used", f"A zone type called {name!r} exists."
-            )
+            raise ProblemException(409, "name-taken", "Name already used", f"A zone type called {name!r} exists.")
 
     async def create_zone_type(self, body: ZoneTypeIn) -> ZoneTypeOut:
         await self._ensure_zone_type_name_free(body.name, None)
@@ -228,18 +217,14 @@ class CatalogService:
         await self.db.commit()
         return ZoneTypeOut(id=z.id, name=z.name, is_enclosed=z.is_enclosed, color=z.color)
 
-    async def update_zone_type(
-        self, zone_type_id: uuid.UUID, changes: dict[str, Any]
-    ) -> ZoneTypeOut:
+    async def update_zone_type(self, zone_type_id: uuid.UUID, changes: dict[str, Any]) -> ZoneTypeOut:
         z = await self._zone_type(zone_type_id)
         if "name" in changes:
             await self._ensure_zone_type_name_free(changes["name"], z.id)
         before = {"name": z.name, "is_enclosed": z.is_enclosed, "color": z.color}
         for k, v in changes.items():
             setattr(z, k, v)
-        b, a = changed_fields(
-            before, {"name": z.name, "is_enclosed": z.is_enclosed, "color": z.color}
-        )
+        b, a = changed_fields(before, {"name": z.name, "is_enclosed": z.is_enclosed, "color": z.color})
         if a:
             z.updated_at = datetime.now(UTC)
             self._audit("zone_type.updated", "zone_type", z.id, b, a)
@@ -248,9 +233,7 @@ class CatalogService:
 
     async def delete_zone_type(self, zone_type_id: uuid.UUID) -> None:
         z = await self._zone_type(zone_type_id)
-        used = await self.db.scalar(
-            select(models.ZoneRev.id).where(models.ZoneRev.zone_type_id == z.id).limit(1)
-        )
+        used = await self.db.scalar(select(models.ZoneRev.id).where(models.ZoneRev.zone_type_id == z.id).limit(1))
         if used is not None:
             raise ProblemException(
                 409,
@@ -265,9 +248,7 @@ class CatalogService:
     # Catalog items ---------------------------------------------------------------------------
 
     def _visible(self) -> Any:
-        return or_(
-            models.CatalogItem.tenant_id.is_(None), models.CatalogItem.tenant_id == self._tenant
-        )
+        return or_(models.CatalogItem.tenant_id.is_(None), models.CatalogItem.tenant_id == self._tenant)
 
     async def _latest(self, item_id: uuid.UUID) -> models.CatalogItemRev:
         rev = await self.db.scalar(
@@ -280,13 +261,9 @@ class CatalogService:
         return rev
 
     async def _item(self, item_id: uuid.UUID) -> models.CatalogItem:
-        item = await self.db.scalar(
-            select(models.CatalogItem).where(models.CatalogItem.id == item_id, self._visible())
-        )
+        item = await self.db.scalar(select(models.CatalogItem).where(models.CatalogItem.id == item_id, self._visible()))
         if item is None:
-            raise ProblemException(
-                404, "not-found", "Not found", f"Catalog item {item_id} does not exist."
-            )
+            raise ProblemException(404, "not-found", "Not found", f"Catalog item {item_id} does not exist.")
         return item
 
     async def _custom(self, item_id: uuid.UUID) -> models.CatalogItem:
@@ -316,8 +293,7 @@ class CatalogService:
             .join(latest, latest.c.item_id == models.CatalogItem.id)
             .join(
                 models.CatalogItemRev,
-                (models.CatalogItemRev.item_id == latest.c.item_id)
-                & (models.CatalogItemRev.rev_no == latest.c.rev_no),
+                (models.CatalogItemRev.item_id == latest.c.item_id) & (models.CatalogItemRev.rev_no == latest.c.rev_no),
             )
             .where(self._visible())
         )
@@ -383,9 +359,7 @@ class CatalogService:
     async def update_item(self, item_id: uuid.UUID, changes: dict[str, Any]) -> CatalogItemOut:
         item = await self._custom(item_id)
         if item.archived_at is not None:
-            raise ProblemException(
-                409, "archived", "Archived", "Restore the item before editing it (docs/0078)."
-            )
+            raise ProblemException(409, "archived", "Archived", "Restore the item before editing it (docs/0078).")
         rev = await self._latest(item.id)
         before_item = {"category": item.category, "name": item.name}
         for k in ("category", "name"):

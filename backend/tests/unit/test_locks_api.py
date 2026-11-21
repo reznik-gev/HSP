@@ -31,9 +31,7 @@ def lock_repo(app: FastAPI) -> InMemoryLockRepository:
 
 def expire_lock(repo: InMemoryLockRepository, in_seconds: int = -1) -> None:
     """Move FLOOR's lock expiry to `in_seconds` from now; by default, just past."""
-    repo.locks[FLOOR] = replace(
-        repo.locks[FLOOR], expires_at=datetime.now(UTC) + timedelta(seconds=in_seconds)
-    )
+    repo.locks[FLOOR] = replace(repo.locks[FLOOR], expires_at=datetime.now(UTC) + timedelta(seconds=in_seconds))
 
 
 def test_acquire_and_status(
@@ -55,22 +53,16 @@ def test_the_polled_lock_status_has_an_etag(api: TestClient) -> None:
     assert api.get(URL, headers={"If-None-Match": etag}).status_code == 200
 
 
-def test_heartbeat_extends_without_audit(
-    api: TestClient, lock_repo: InMemoryLockRepository
-) -> None:
+def test_heartbeat_extends_without_audit(api: TestClient, lock_repo: InMemoryLockRepository) -> None:
     first = api.post(URL).json()
     expire_lock(lock_repo, in_seconds=5)
     second = api.post(URL).json()
     assert second["acquired_at"] == first["acquired_at"]  # same editing session
     assert second["expires_at"] > first["acquired_at"]
-    assert [e.action for e in lock_repo.events] == [
-        "floor.lock_acquired"
-    ]  # heartbeats aren't audited
+    assert [e.action for e in lock_repo.events] == ["floor.lock_acquired"]  # heartbeats aren't audited
 
 
-def test_someone_else_editing_is_423(
-    api: TestClient, signed_in: SignedIn, other_admin: Principal
-) -> None:
+def test_someone_else_editing_is_423(api: TestClient, signed_in: SignedIn, other_admin: Principal) -> None:
     api.post(URL)
     signed_in.principal = other_admin
     r = api.post(URL)

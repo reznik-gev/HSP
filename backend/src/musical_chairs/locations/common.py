@@ -10,15 +10,11 @@ from musical_chairs.problems import ProblemError, ProblemException
 
 
 def not_found(kind: str, entity_id: uuid.UUID) -> ProblemException:
-    return ProblemException(
-        404, "not-found", "Not found", f"{kind.capitalize()} {entity_id} does not exist."
-    )
+    return ProblemException(404, "not-found", "Not found", f"{kind.capitalize()} {entity_id} does not exist.")
 
 
 def archived_read_only(kind: str) -> ProblemException:
-    return ProblemException(
-        409, "archived", "Archived", f"Restore the {kind} before editing it (docs/0078)."
-    )
+    return ProblemException(409, "archived", "Archived", f"Restore the {kind} before editing it (docs/0078).")
 
 
 def parent_archived(kind: str, parent_kind: str) -> ProblemException:

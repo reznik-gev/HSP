@@ -56,11 +56,9 @@ def api_that_survives_crashes(probe_app: FastAPI) -> Iterator[TestClient]:
 
 
 @pytest.fixture
-def debug_api(
-    monkeypatch: pytest.MonkeyPatch, session_store: InMemorySessionStore
-) -> Iterator[TestClient]:
-    """A client of the app with MUSICAL_CHAIRS_LOG_LEVEL=DEBUG. Sign-in finds its tenant and
-    sessions without a database."""
+def debug_api(monkeypatch: pytest.MonkeyPatch, session_store: InMemorySessionStore) -> Iterator[TestClient]:
+    """A client of the app with MUSICAL_CHAIRS_LOG_LEVEL=DEBUG. Sign-in finds its tenant and sessions
+    without a database."""
     monkeypatch.setenv("MUSICAL_CHAIRS_LOG_LEVEL", "DEBUG")
     get_settings.cache_clear()
     app = create_app()
@@ -75,9 +73,7 @@ def request_lines(logs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [line for line in logs if line["event"] == "request"]
 
 
-def test_a_request_is_logged_once_with_its_route_template(
-    probe_api: TestClient, actor_subject: str
-) -> None:
+def test_a_request_is_logged_once_with_its_route_template(probe_api: TestClient, actor_subject: str) -> None:
     with capture_logs() as logs:
         r = probe_api.get("/_test/items/42?q=secret", headers={"X-Request-ID": "rid-1"})
 

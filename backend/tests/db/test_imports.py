@@ -79,9 +79,7 @@ async def test_units_dry_run_then_apply_then_idempotent(
 
     done = await import_service_in_own_tenant.import_units(rows, apply=True)
     assert (done.applied, done.created) == (True, 3)
-    again = await import_service_in_own_tenant.import_units(
-        read_table("units.csv", UNITS_CSV), apply=True
-    )
+    again = await import_service_in_own_tenant.import_units(read_table("units.csv", UNITS_CSV), apply=True)
     assert (again.created, again.updated, again.unchanged) == (0, 0, 3)  # idempotent re-import
 
 
@@ -108,17 +106,13 @@ async def test_people_from_excel_with_memberships_and_positions(
     import_service_in_own_tenant: ImportService,
 ) -> None:
     await import_service_in_own_tenant.import_units(read_table("units.csv", UNITS_CSV), apply=True)
-    report = await import_service_in_own_tenant.import_people(
-        read_table("people.xlsx", xlsx(PEOPLE)), apply=True
-    )
+    report = await import_service_in_own_tenant.import_people(read_table("people.xlsx", xlsx(PEOPLE)), apply=True)
     assert (report.created, report.positions_created, report.errors) == (2, 1, [])
 
     dana = await import_service_in_own_tenant.db.scalar(
         select(models.Person).where(models.Person.email == "dana@example.com")
     )
-    assert (
-        dana is not None and dana.external_id == "E1" and dana.source == models.RecordSource.IMPORT
-    )
+    assert dana is not None and dana.external_id == "E1" and dana.source == models.RecordSource.IMPORT
     memberships = list(
         await import_service_in_own_tenant.db.scalars(
             select(models.UnitMembership).where(models.UnitMembership.person_id == dana.id)
@@ -128,9 +122,7 @@ async def test_people_from_excel_with_memberships_and_positions(
     assert sum(m.position_id is not None for m in memberships) == 1
 
     # Re-import: matched by external id (E1) and by email (eli); nothing changes.
-    again = await import_service_in_own_tenant.import_people(
-        read_table("people.xlsx", xlsx(PEOPLE)), apply=True
-    )
+    again = await import_service_in_own_tenant.import_people(read_table("people.xlsx", xlsx(PEOPLE)), apply=True)
     assert (again.created, again.updated, again.unchanged, again.positions_created) == (0, 0, 2, 0)
 
 
@@ -144,9 +136,7 @@ async def test_people_errors_and_reactivation(import_service_in_own_tenant: Impo
     eli.active = False
     await import_service_in_own_tenant.db.commit()
 
-    report = await import_service_in_own_tenant.import_people(
-        read_table("p.xlsx", xlsx(PEOPLE)), apply=True
-    )
+    report = await import_service_in_own_tenant.import_people(read_table("p.xlsx", xlsx(PEOPLE)), apply=True)
     assert report.reactivated == 1  # being in the HR export means active again
 
     bad = xlsx(
@@ -158,9 +148,7 @@ async def test_people_errors_and_reactivation(import_service_in_own_tenant: Impo
             ["y@example.com", "Y", "", "", "ENG", ""],
         ]
     )
-    report = await import_service_in_own_tenant.import_people(
-        read_table("bad.xlsx", bad), apply=True
-    )
+    report = await import_service_in_own_tenant.import_people(read_table("bad.xlsx", bad), apply=True)
     # Dana already has external id E1: a row re-keying her to E2 is an identity conflict.
     assert sorted(e.code for e in report.errors) == [
         "identity_conflict",

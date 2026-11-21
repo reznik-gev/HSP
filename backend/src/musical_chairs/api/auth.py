@@ -114,13 +114,9 @@ async def callback(
     """Finish the login: exchange the code, create the session, set the cookie."""
     raw = request.cookies.get(settings.login_cookie_name)
     if not raw:
-        raise _login_failed(
-            "login-expired", "Login took too long or cookies are blocked. Try again."
-        )
+        raise _login_failed("login-expired", "Login took too long or cookies are blocked. Try again.")
     try:
-        saved = json.loads(
-            TokenCipher(settings.session_key()).decrypt(raw, ttl=settings.login_max_age_s)
-        )
+        saved = json.loads(TokenCipher(settings.session_key()).decrypt(raw, ttl=settings.login_max_age_s))
     except TokenDecryptError, ValueError:
         raise _login_failed("login-expired", "Login took too long. Try again.") from None
     if error:
@@ -129,9 +125,7 @@ async def callback(
         raise _login_failed("login-state-mismatch", "Login response did not match the request.")
 
     try:
-        result = await oidc.complete_login(
-            code=code, code_verifier=saved["verifier"], nonce=saved["nonce"]
-        )
+        result = await oidc.complete_login(code=code, code_verifier=saved["verifier"], nonce=saved["nonce"])
     except OidcError as exc:
         raise _login_failed("login-invalid", str(exc)) from exc
 
@@ -144,9 +138,7 @@ async def callback(
         tokens=result.tokens,
     )
     lifetime = int((session.tokens.expires_at - session.tokens.access_expires_at).total_seconds())
-    response = RedirectResponse(
-        f"{settings.public_url.rstrip('/')}{saved['next']}", status_code=302
-    )
+    response = RedirectResponse(f"{settings.public_url.rstrip('/')}{saved['next']}", status_code=302)
     response.set_cookie(
         settings.session_cookie_name,
         cookie,

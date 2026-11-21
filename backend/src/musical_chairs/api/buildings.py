@@ -1,5 +1,5 @@
-"""/api/v1/buildings (docs/0035, docs/0078). Reading needs a session; changes need
-musical-chairs-admin + CSRF."""
+"""/api/v1/buildings (docs/0035, docs/0078). Reading needs a session; changes need musical-chairs-admin +
+CSRF."""
 
 import uuid
 from datetime import datetime
@@ -9,14 +9,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from musical_chairs.api.common import WRITE, get_locations_repository
-from musical_chairs.api.pagination import (
-    DEFAULT_LIMIT,
-    CursorParam,
-    LimitParam,
-    Page,
-    decode_cursor,
-    page_of,
-)
+from musical_chairs.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
 from musical_chairs.auth.dependencies import CurrentPrincipal
 from musical_chairs.locations.buildings import BuildingsService
 from musical_chairs.locations.repository import LocationsRepository
@@ -95,9 +88,7 @@ async def get_building(building_id: uuid.UUID, service: Service) -> BuildingOut:
 
 
 @router.patch("/{building_id}", dependencies=WRITE)
-async def update_building(
-    building_id: uuid.UUID, body: BuildingPatch, service: Service
-) -> BuildingOut:
+async def update_building(building_id: uuid.UUID, body: BuildingPatch, service: Service) -> BuildingOut:
     return to_out(await service.update(building_id, body.model_dump(exclude_unset=True)))
 
 

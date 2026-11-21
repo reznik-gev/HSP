@@ -31,9 +31,8 @@ EXPECTED_ERRORS_TO_OMIT_TRACEBACK = (
 )
 
 #: Refused before anything was changed: a bad backups.yml, a target that can't be read, a backup
-#: that isn't there, is damaged or comes from a newer Musical Chairs. musical-chairs restore then
-#: starts Musical Chairs again (docs/0109). A PostgreSQL failure exits 1: a restore may have
-#: stopped halfway.
+#: that isn't there, is damaged or comes from a newer Musical Chairs. musical-chairs restore then starts Musical
+#: Chairs again (docs/0109). A PostgreSQL failure exits 1: a restore may have stopped halfway.
 UNCHANGED = (ConfigError, StoreError, RestoreRefused, ArchiveError)
 EXIT_FAILED = 1
 EXIT_UNCHANGED = 3
@@ -46,9 +45,7 @@ def one_line_errors[**P](command: Callable[P, None]) -> Callable[P, None]:
             command(*args, **kwargs)
         except EXPECTED_ERRORS_TO_OMIT_TRACEBACK as exc:
             typer.echo(f"musical-chairs-backup: {exc}", err=True)
-            raise typer.Exit(
-                EXIT_UNCHANGED if isinstance(exc, UNCHANGED) else EXIT_FAILED
-            ) from None
+            raise typer.Exit(EXIT_UNCHANGED if isinstance(exc, UNCHANGED) else EXIT_FAILED) from None
 
     return run
 
@@ -131,9 +128,7 @@ def what_is_kept(plan: BackupPlan) -> str:
 @app.command()
 @one_line_errors
 def now(
-    schedule: Annotated[
-        str, typer.Option(help="manual, pre-upgrade, or a schedule from backups.yml")
-    ] = MANUAL,
+    schedule: Annotated[str, typer.Option(help="manual, pre-upgrade, or a schedule from backups.yml")] = MANUAL,
 ) -> None:
     """Take a backup now, and print its name."""
     typer.echo(open_backups().take(schedule))
@@ -142,9 +137,7 @@ def now(
 @app.command("list")
 @one_line_errors
 def list_backups(
-    as_json: Annotated[
-        bool, typer.Option("--json", help="as JSON, for bin/musical-chairs")
-    ] = False,
+    as_json: Annotated[bool, typer.Option("--json", help="as JSON, for bin/musical-chairs")] = False,
 ) -> None:
     """List the backups on every target, newest first."""
     found = open_backups().list()

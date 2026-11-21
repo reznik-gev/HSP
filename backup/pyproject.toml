@@ -31,7 +31,7 @@ build-backend = "uv_build"
 # --- Tooling (docs/0062), as in backend/ ------------------------------------
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py314"
 src = ["src", "tests"]
 

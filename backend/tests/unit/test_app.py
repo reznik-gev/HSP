@@ -50,9 +50,7 @@ def test_healthz(probe_api: TestClient) -> None:
 
 def test_request_id_is_generated_and_echoed(probe_api: TestClient) -> None:
     assert probe_api.get("/healthz").headers["X-Request-ID"]
-    assert (
-        probe_api.get("/healthz", headers={"X-Request-ID": "abc"}).headers["X-Request-ID"] == "abc"
-    )
+    assert probe_api.get("/healthz", headers={"X-Request-ID": "abc"}).headers["X-Request-ID"] == "abc"
 
 
 def test_not_found_is_problem_json(probe_api: TestClient) -> None:
@@ -78,9 +76,7 @@ def test_domain_problem(probe_api: TestClient) -> None:
     assert r.status_code == 422
     body = r.json()
     assert body["type"].endswith("/changeset-invalid")
-    assert body["errors"] == [
-        {"code": "opening_exceeds_wall", "message": "too long", "op_index": 0}
-    ]
+    assert body["errors"] == [{"code": "opening_exceeds_wall", "message": "too long", "op_index": 0}]
 
 
 def test_openapi_is_versioned_and_generates() -> None:

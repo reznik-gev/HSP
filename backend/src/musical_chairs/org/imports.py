@@ -52,15 +52,11 @@ class ImportService:
             return await self._finish(run, apply)
         existing: dict[str, models.OrgUnit] = {
             u.external_id: u
-            for u in await self.db.scalars(
-                select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant)
-            )
+            for u in await self.db.scalars(select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant))
             if u.external_id  # only units with an external id can be referenced by a file
         }
         root = await self.db.scalar(
-            select(models.OrgUnit).where(
-                models.OrgUnit.tenant_id == self._tenant, models.OrgUnit.parent_id.is_(None)
-            )
+            select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant, models.OrgUnit.parent_id.is_(None))
         )
 
         wanted: dict[str, dict[str, str | None]] = {}
@@ -197,16 +193,10 @@ class ImportService:
             return await self._finish(run, apply)
         units: dict[str, models.OrgUnit] = {
             u.external_id: u
-            for u in await self.db.scalars(
-                select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant)
-            )
+            for u in await self.db.scalars(select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant))
             if u.external_id  # only units with an external id can be referenced by a file
         }
-        people = list(
-            await self.db.scalars(
-                select(models.Person).where(models.Person.tenant_id == self._tenant)
-            )
-        )
+        people = list(await self.db.scalars(select(models.Person).where(models.Person.tenant_id == self._tenant)))
         by_email = {p.email.lower(): p for p in people}
         by_ext = {p.external_id: p for p in people if p.external_id}
 
@@ -239,14 +229,10 @@ class ImportService:
                 elif key:
                     seen[key] = i
             primary = r.get("primary_unit_external_id")
-            secondary = [
-                s.strip()
-                for s in (r.get("secondary_unit_external_ids") or "").split(";")
-                if s.strip()
-            ]
-            for code, col in [
-                (c, "primary_unit_external_id") for c in ([primary] if primary else [])
-            ] + [(c, "secondary_unit_external_ids") for c in secondary]:
+            secondary = [s.strip() for s in (r.get("secondary_unit_external_ids") or "").split(";") if s.strip()]
+            for code, col in [(c, "primary_unit_external_id") for c in ([primary] if primary else [])] + [
+                (c, "secondary_unit_external_ids") for c in secondary
+            ]:
                 u = units.get(code)
                 if u is None:
                     run.error(i, "unit_not_found", f"Unknown unit {code!r}.", col, value=code)
@@ -271,16 +257,10 @@ class ImportService:
                 run.error(
                     i,
                     "identity_conflict",
-                    f"external_id matches {match_ext.email}, but the email belongs to someone "
-                    "else.",
+                    f"external_id matches {match_ext.email}, but the email belongs to someone else.",
                     email=match_ext.email,
                 )
-            elif (
-                ext
-                and match_ext is None
-                and match_email is not None
-                and match_email.external_id not in (None, ext)
-            ):
+            elif ext and match_ext is None and match_email is not None and match_email.external_id not in (None, ext):
                 # Never silently re-key a person: identities would drift (docs/0084).
                 run.error(
                     i,
@@ -312,9 +292,7 @@ class ImportService:
         now = datetime.now(UTC)
         positions = {
             (p.unit_id, p.title.lower()): p
-            for p in await self.db.scalars(
-                select(models.Position).where(models.Position.tenant_id == self._tenant)
-            )
+            for p in await self.db.scalars(select(models.Position).where(models.Position.tenant_id == self._tenant))
         }
         for _row_no, row in parsed:
             person: models.Person | None = row["match"]
@@ -397,9 +375,7 @@ class ImportService:
         target = {(uid, primary, pos) for uid, (primary, pos) in wanted.items()}
         if current == target:
             return False
-        await self.db.execute(
-            delete(models.UnitMembership).where(models.UnitMembership.person_id == person.id)
-        )
+        await self.db.execute(delete(models.UnitMembership).where(models.UnitMembership.person_id == person.id))
         await self.db.flush()
         for uid, (primary, position) in wanted.items():
             self.db.add(

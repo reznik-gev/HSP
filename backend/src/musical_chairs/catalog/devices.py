@@ -85,9 +85,9 @@ class DevicesService:
             return {}
         f, r = models.Floor, models.ObjectRev
         rows = await self.db.execute(
-            self._in_published_plans(
-                r.device_id, f.id, f.name, r.element_id, f.published_version
-            ).where(r.device_id.in_(device_ids))
+            self._in_published_plans(r.device_id, f.id, f.name, r.element_id, f.published_version).where(
+                r.device_id.in_(device_ids)
+            )
         )
         return {
             d: Placement(floor_id=fid, floor_name=name, element_id=el, version=v)
@@ -101,23 +101,17 @@ class DevicesService:
 
     async def _device(self, device_id: uuid.UUID) -> models.Device:
         d = await self.db.scalar(
-            select(models.Device).where(
-                models.Device.tenant_id == self._tenant, models.Device.id == device_id
-            )
+            select(models.Device).where(models.Device.tenant_id == self._tenant, models.Device.id == device_id)
         )
         if d is None:
-            raise ProblemException(
-                404, "not-found", "Not found", f"Device {device_id} does not exist."
-            )
+            raise ProblemException(404, "not-found", "Not found", f"Device {device_id} does not exist.")
         return d
 
     async def _validate(self, values: dict[str, Any], own: uuid.UUID | None) -> None:
         tag = values.get("asset_tag")
         if tag:
             clash = await self.db.scalar(
-                select(models.Device.id).where(
-                    models.Device.tenant_id == self._tenant, models.Device.asset_tag == tag
-                )
+                select(models.Device.id).where(models.Device.tenant_id == self._tenant, models.Device.asset_tag == tag)
             )
             if clash is not None and clash != own:
                 raise ProblemException(
@@ -129,9 +123,7 @@ class DevicesService:
         person = values.get("assigned_person_id")
         if person is not None:
             exists = await self.db.scalar(
-                select(models.Person.id).where(
-                    models.Person.tenant_id == self._tenant, models.Person.id == person
-                )
+                select(models.Person.id).where(models.Person.tenant_id == self._tenant, models.Person.id == person)
             )
             if exists is None:
                 raise ProblemException(
@@ -147,9 +139,7 @@ class DevicesService:
                     ],
                 )
 
-    def _audit(
-        self, action: str, device_id: uuid.UUID, before: Any = None, after: Any = None
-    ) -> None:
+    def _audit(self, action: str, device_id: uuid.UUID, before: Any = None, after: Any = None) -> None:
         self.db.add(
             audit_event(
                 self.principal,
@@ -188,14 +178,10 @@ class DevicesService:
             query = query.where(person.is_not(None) if issued else person.is_(None))
         if placed is not None:
             in_plans = self._in_published_plans(models.ObjectRev.device_id)
-            query = query.where(
-                models.Device.id.in_(in_plans) if placed else models.Device.id.not_in(in_plans)
-            )
+            query = query.where(models.Device.id.in_(in_plans) if placed else models.Device.id.not_in(in_plans))
         if after is not None:
             query = query.where(models.Device.id > after)
-        return await self._out(
-            list(await self.db.scalars(query.order_by(models.Device.id).limit(limit)))
-        )
+        return await self._out(list(await self.db.scalars(query.order_by(models.Device.id).limit(limit))))
 
     async def get(self, device_id: uuid.UUID) -> DeviceOut:
         return (await self._out([await self._device(device_id)]))[0]
@@ -204,9 +190,7 @@ class DevicesService:
         values = body.model_dump()
         await self._validate(values, None)
         now = datetime.now(UTC)
-        d = models.Device(
-            id=models.new_id(), tenant_id=self._tenant, created_at=now, updated_at=now, **values
-        )
+        d = models.Device(id=models.new_id(), tenant_id=self._tenant, created_at=now, updated_at=now, **values)
         self.db.add(d)
         self._audit("device.created", d.id, after=values)
         await self.db.commit()
@@ -227,9 +211,7 @@ class DevicesService:
 
     async def delete(self, device_id: uuid.UUID) -> None:
         d = await self._device(device_id)
-        used = await self.db.scalar(
-            select(models.ObjectRev.id).where(models.ObjectRev.device_id == d.id).limit(1)
-        )
+        used = await self.db.scalar(select(models.ObjectRev.id).where(models.ObjectRev.device_id == d.id).limit(1))
         if used is not None:
             raise ProblemException(
                 409,

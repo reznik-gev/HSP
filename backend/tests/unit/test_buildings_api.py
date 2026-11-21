@@ -98,9 +98,7 @@ def test_archive_cascades_to_floors_and_frees_their_seats(
     assert r.status_code == 200
     body = r.json()
     assert [a["name"] for a in body["archived"]] == ["Building A (Building A)", "L0"]
-    assert body["freed_seats"] == [
-        {"seat_id": str(SEAT), "holder_person_id": str(PERSON), "holder_unit_id": None}
-    ]
+    assert body["freed_seats"] == [{"seat_id": str(SEAT), "holder_person_id": str(PERSON), "holder_unit_id": None}]
     assert [e.action for e in locations_repo.events][-3:] == [
         "building.archived",
         "floor.archived",
@@ -108,9 +106,7 @@ def test_archive_cascades_to_floors_and_frees_their_seats(
     ]
 
 
-def test_restore_is_top_down(
-    api: TestClient, site_id: str, locations_repo: InMemoryLocationsRepository
-) -> None:
+def test_restore_is_top_down(api: TestClient, site_id: str, locations_repo: InMemoryLocationsRepository) -> None:
     b = create_building(api, site_id)
     assert api.delete(f"/api/v1/buildings/{b['id']}").status_code == 200
     assert api.delete(f"/api/v1/sites/{site_id}").status_code == 200

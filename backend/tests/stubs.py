@@ -19,18 +19,12 @@ STUB_CSRF_TOKEN = "csrf"
 STUB_CSRF_HEADER_NAME = "X-CSRF-Token"
 
 
-def stub_admin(
-    tenant: uuid.UUID = STUB_TENANT, subject: str = "alice", name: str = "Alice"
-) -> Principal:
+def stub_admin(tenant: uuid.UUID = STUB_TENANT, subject: str = "alice", name: str = "Alice") -> Principal:
     """A signed-in admin; `subject` and `name` tell several admins apart."""
-    return Principal(
-        subject, name, None, frozenset({ADMIN_ROLE}), tenant, new_id(), STUB_CSRF_TOKEN
-    )
+    return Principal(subject, name, None, frozenset({ADMIN_ROLE}), tenant, new_id(), STUB_CSRF_TOKEN)
 
 
-def stub_viewer(
-    tenant: uuid.UUID = STUB_TENANT, subject: str = "vic", name: str = "Vic"
-) -> Principal:
+def stub_viewer(tenant: uuid.UUID = STUB_TENANT, subject: str = "vic", name: str = "Vic") -> Principal:
     """A signed-in user without the admin role: read-only (docs/0027)."""
     return Principal(subject, name, None, frozenset(), tenant, new_id(), STUB_CSRF_TOKEN)
 
@@ -74,6 +68,4 @@ def stub_references(
 def stub_placed_object(rev: uuid.UUID, **over: Any) -> PlacedObject:
     """An object of catalog revision `rev` at the origin, as a stored plan holds it; `over` sets
     its id, position, label or any other field."""
-    return PlacedObject.model_validate(
-        {"id": new_id(), "catalog_item_rev_id": rev, "position": (0, 0, 0), **over}
-    )
+    return PlacedObject.model_validate({"id": new_id(), "catalog_item_rev_id": rev, "position": (0, 0, 0), **over})

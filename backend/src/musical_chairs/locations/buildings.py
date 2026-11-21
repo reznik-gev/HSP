@@ -57,16 +57,12 @@ class BuildingsService:
     async def _active_site(self, site_id: uuid.UUID) -> Site:
         site = await self.repo.get_site(self._tenant, site_id)
         if site is None:
-            raise common.invalid_field(
-                "site_not_found", f"Site {site_id} does not exist.", "/site_id"
-            )
+            raise common.invalid_field("site_not_found", f"Site {site_id} does not exist.", "/site_id")
         if site.archived_at is not None:
             raise common.parent_archived("building", "site")
         return site
 
-    async def _ensure_code_free(
-        self, site_id: uuid.UUID, code: str, own_id: uuid.UUID | None
-    ) -> None:
+    async def _ensure_code_free(self, site_id: uuid.UUID, code: str, own_id: uuid.UUID | None) -> None:
         clash = await self.repo.building_with_code(self._tenant, site_id, code)
         if clash is not None and clash.id != own_id:
             state = "an archived building" if clash.archived_at else "another building"

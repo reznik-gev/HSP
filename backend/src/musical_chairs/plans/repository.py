@@ -33,9 +33,7 @@ class PlanRepository(Protocol):
         """All versions of the floor, oldest first."""
         ...
 
-    async def load_content(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int
-    ) -> PlanContent:
+    async def load_content(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int) -> PlanContent:
         """Every element visible in `version`, plus the catalog revisions they use."""
         ...
 
@@ -61,9 +59,7 @@ class SqlPlanRepository:
 
     async def floor_exists(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> bool:
         found = await self._db.scalar(
-            select(models.Floor.id).where(
-                models.Floor.tenant_id == tenant_id, models.Floor.id == floor_id
-            )
+            select(models.Floor.id).where(models.Floor.tenant_id == tenant_id, models.Floor.id == floor_id)
         )
         return found is not None
 
@@ -90,9 +86,7 @@ class SqlPlanRepository:
             for r in rows
         ]
 
-    async def _revisions(
-        self, rev: Any, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int
-    ) -> list[Any]:
+    async def _revisions(self, rev: Any, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int) -> list[Any]:
         q = (
             select(rev)
             .join(models.FloorElement, models.FloorElement.id == rev.element_id)
@@ -105,9 +99,7 @@ class SqlPlanRepository:
         )
         return list(await self._db.scalars(q))
 
-    async def load_content(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int
-    ) -> PlanContent:
+    async def load_content(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int) -> PlanContent:
         args = (tenant_id, floor_id, version)
         walls = [
             Wall(

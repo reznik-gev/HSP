@@ -59,21 +59,15 @@ def read_table(filename: str, data: bytes) -> list[dict[str, str | None]]:
     name = filename.lower()
     if name.endswith(".xlsx"):
         sheet = load_workbook(io.BytesIO(data), read_only=True, data_only=True).worksheets[0]
-        raw = [
-            [("" if c is None else str(c)) for c in r] for r in sheet.iter_rows(values_only=True)
-        ]
+        raw = [[("" if c is None else str(c)) for c in r] for r in sheet.iter_rows(values_only=True)]
     elif name.endswith(".csv"):
         try:
             text = data.decode("utf-8-sig")
         except UnicodeDecodeError:
-            raise ProblemException(
-                422, "import-unreadable", "Unreadable file", "CSV files must be UTF-8."
-            ) from None
+            raise ProblemException(422, "import-unreadable", "Unreadable file", "CSV files must be UTF-8.") from None
         raw = list(csv.reader(io.StringIO(text)))
     else:
-        raise ProblemException(
-            415, "import-format", "Unsupported file", "Upload a .csv or .xlsx file."
-        )
+        raise ProblemException(415, "import-format", "Unsupported file", "Upload a .csv or .xlsx file.")
     if not raw:
         return []
     header = [h.strip().lower() for h in raw[0]]
@@ -83,9 +77,7 @@ def read_table(filename: str, data: bytes) -> list[dict[str, str | None]]:
             continue  # skip blank lines
         rows.append({h: (v.strip() or None) for h, v in zip(header, values, strict=False) if h})
     if len(rows) > MAX_ROWS:
-        raise ProblemException(
-            413, "import-too-large", "Too many rows", f"At most {MAX_ROWS} rows per import."
-        )
+        raise ProblemException(413, "import-too-large", "Too many rows", f"At most {MAX_ROWS} rows per import.")
     return rows
 
 
@@ -94,9 +86,7 @@ class ImportRun:
     report: ImportReport
     row_of: dict[str, int] = field(default_factory=dict)
 
-    def error(
-        self, row: int, code: str, message: str, column: str | None = None, **params: object
-    ) -> None:
+    def error(self, row: int, code: str, message: str, column: str | None = None, **params: object) -> None:
         self.report.errors.append(
             RowError(
                 row=row,
@@ -108,9 +98,7 @@ class ImportRun:
         )
 
 
-def check_columns(
-    rows: list[dict[str, Any]], known: set[str], required: set[str], run: ImportRun
-) -> bool:
+def check_columns(rows: list[dict[str, Any]], known: set[str], required: set[str], run: ImportRun) -> bool:
     present = set(rows[0]) if rows else set()
     missing = required - present
     if rows and missing:

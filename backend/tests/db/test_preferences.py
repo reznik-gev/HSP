@@ -34,9 +34,7 @@ async def test_defaults_then_saved_per_user(preferences_in_own_tenant: dict[str,
     )
     assert await noa.get() == Preferences()  # nothing chosen yet
     await noa.put(Preferences(language="he", theme="dark", display_units="m", grid_mm=100))
-    assert await noa.get() == Preferences(
-        language="he", theme="dark", display_units="m", grid_mm=100
-    )
+    assert await noa.get() == Preferences(language="he", theme="dark", display_units="m", grid_mm=100)
     assert await eli.get() == Preferences()  # each user has their own
 
     await noa.put(Preferences(language="en"))  # null clears the others

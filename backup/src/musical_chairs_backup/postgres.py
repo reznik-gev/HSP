@@ -40,21 +40,12 @@ class PgTools:
         self._run = runner
 
     def dump(self, database: str, out: Path) -> None:
-        self._run(
-            ["pg_dump", "--format=custom", "--compress=6", f"--file={out}", database], self._env
-        )
+        self._run(["pg_dump", "--format=custom", "--compress=6", f"--file={out}", database], self._env)
 
     def schema_revision(self) -> str | None:
         try:
             out = self._run(
-                [
-                    "psql",
-                    "-tA",
-                    "-d",
-                    "musical_chairs",
-                    "-c",
-                    "SELECT version_num FROM alembic_version",
-                ],
+                ["psql", "-tA", "-d", "musical_chairs", "-c", "SELECT version_num FROM alembic_version"],
                 self._env,
             )
         except PostgresError:

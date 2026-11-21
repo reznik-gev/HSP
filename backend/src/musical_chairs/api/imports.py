@@ -35,9 +35,7 @@ Service = Annotated[ImportService, Depends(get_service)]
 async def _rows(file: UploadFile) -> list[dict[str, str | None]]:
     data = await file.read(MAX_BYTES + 1)
     if len(data) > MAX_BYTES:
-        raise ProblemException(
-            413, "import-too-large", "File too large", "Imports are limited to 10 MB."
-        )
+        raise ProblemException(413, "import-too-large", "File too large", "Imports are limited to 10 MB.")
     return read_table(file.filename or "", data)
 
 

@@ -107,16 +107,12 @@ def test_a_failed_backup_leaves_nothing_and_keeps_the_old_ones(
     with pytest.raises(RuntimeError, match="connection refused"):
         backups.take("nightly")
     assert len(files_in(folder_stores_by_targets["local"])) == 3
-    assert (
-        metric(registry, "last_failure_timestamp_seconds", "nightly") == fake_clock.now.timestamp()
-    )
+    assert metric(registry, "last_failure_timestamp_seconds", "nightly") == fake_clock.now.timestamp()
 
 
 def test_success_is_measured(backups: Backups, registry: CollectorRegistry) -> None:
     name = backups.take("nightly")
-    assert metric(registry, "last_success_timestamp_seconds", "nightly") == (
-        name.created.timestamp()
-    )
+    assert metric(registry, "last_success_timestamp_seconds", "nightly") == (name.created.timestamp())
     assert (metric(registry, "size_bytes", "nightly") or 0) > 0
 
 
@@ -135,10 +131,7 @@ def test_a_restore_replaces_both_databases(backups: Backups, spy_postgres: SpyPo
     spy_postgres.content = {"musical_chairs": b"later", "keycloak": b"later"}
     manifest = backups.restore(str(name))
     assert manifest.schedule == "weekly"
-    assert spy_postgres.restored == {
-        "musical_chairs": b"musical_chairs rows v1",
-        "keycloak": b"keycloak rows v1",
-    }
+    assert spy_postgres.restored == {"musical_chairs": b"musical_chairs rows v1", "keycloak": b"keycloak rows v1"}
 
 
 @pytest.fixture
@@ -155,30 +148,22 @@ def test_a_restore_skips_a_target_it_cant_read(
 
 
 @pytest.mark.usefixtures("nas_unreadable")
-def test_a_missing_backup_names_the_targets_it_couldnt_read(
-    backups: Backups, never_taken_backup_name: str
-) -> None:
+def test_a_missing_backup_names_the_targets_it_couldnt_read(backups: Backups, never_taken_backup_name: str) -> None:
     with pytest.raises(RestoreRefused, match=r"no target holds .* \(couldn't read nas\)"):
         backups.restore(never_taken_backup_name)
 
 
-def test_a_restore_needs_a_backup_that_exists(
-    backups: Backups, never_taken_backup_name: str
-) -> None:
+def test_a_restore_needs_a_backup_that_exists(backups: Backups, never_taken_backup_name: str) -> None:
     with pytest.raises(RestoreRefused, match="no target holds"):
         backups.restore(never_taken_backup_name)
     with pytest.raises(RestoreRefused, match="isn't a backup name"):
         backups.restore("latest")
 
 
-def test_a_backup_from_a_newer_musical_chairs_is_refused(
-    backups: Backups, spy_postgres: SpyPostgres
-) -> None:
+def test_a_backup_from_a_newer_musical_chairs_is_refused(backups: Backups, spy_postgres: SpyPostgres) -> None:
     name = backups.take("nightly")
     backups.musical_chairs_version = "0.9.0"
-    with pytest.raises(
-        RestoreRefused, match=r"made by Musical Chairs 1\.0\.0, newer than the installed 0\.9\.0"
-    ):
+    with pytest.raises(RestoreRefused, match=r"made by Musical Chairs 1\.0\.0, newer than the installed 0\.9\.0"):
         backups.restore(str(name))
     assert spy_postgres.restored == {}
 
@@ -191,9 +176,7 @@ def test_the_same_or_an_older_version_is_restorable(made_by: str, installed: str
     refuse_newer("b", made_by, installed)
 
 
-@pytest.mark.parametrize(
-    ("made_by", "installed"), [("1.1.0", "1.0.0"), ("1.1.0", "1.1.0-rc.2"), ("custom", "1.0.0")]
-)
+@pytest.mark.parametrize(("made_by", "installed"), [("1.1.0", "1.0.0"), ("1.1.0", "1.1.0-rc.2"), ("custom", "1.0.0")])
 def test_a_newer_or_unknown_version_is_refused(made_by: str, installed: str) -> None:
     with pytest.raises(RestoreRefused):
         refuse_newer("b", made_by, installed)

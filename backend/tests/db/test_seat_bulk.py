@@ -24,27 +24,15 @@ async def seats_for_bulk_assignment(published_floor_with_seats: dict[str, Any]) 
         seats_for_bulk_assignment["eli"],
         seats_for_bulk_assignment["yoni"],
     ) = [await person(seats_for_bulk_assignment, n) for n in ("Maya", "Eli", "Yoni")]
-    seats_for_bulk_assignment["gone"] = await person(
-        seats_for_bulk_assignment, "Gone", active=False
-    )
+    seats_for_bulk_assignment["gone"] = await person(seats_for_bulk_assignment, "Gone", active=False)
     seats_for_bulk_assignment["vision"] = await unit(seats_for_bulk_assignment, "Vision")
     (
-        await seats_for_bulk_assignment["db"].get(
-            models.OrgUnit, seats_for_bulk_assignment["vision"]
-        )
+        await seats_for_bulk_assignment["db"].get(models.OrgUnit, seats_for_bulk_assignment["vision"])
     ).external_id = f"VIS-{new_id().hex[-6:]}"
-    await seats_for_bulk_assignment[
-        "db"
-    ].commit()  # failed batches and dry runs roll back; keep the setup
-    seats = SeatAssignmentService(
-        seats_for_bulk_assignment["db"], seats_for_bulk_assignment["admin"]
-    )
-    await seats.assign(
-        seats_for_bulk_assignment["a"], AssignmentIn(person_id=seats_for_bulk_assignment["maya"])
-    )
-    await seats.assign(
-        seats_for_bulk_assignment["b"], AssignmentIn(person_id=seats_for_bulk_assignment["eli"])
-    )
+    await seats_for_bulk_assignment["db"].commit()  # failed batches and dry runs roll back; keep the setup
+    seats = SeatAssignmentService(seats_for_bulk_assignment["db"], seats_for_bulk_assignment["admin"])
+    await seats.assign(seats_for_bulk_assignment["a"], AssignmentIn(person_id=seats_for_bulk_assignment["maya"]))
+    await seats.assign(seats_for_bulk_assignment["b"], AssignmentIn(person_id=seats_for_bulk_assignment["eli"]))
     seats_for_bulk_assignment["seats"] = seats
     return seats_for_bulk_assignment
 
@@ -167,9 +155,7 @@ async def test_import_dry_run_apply_and_idempotent(
 ) -> None:
     seat = await labels(seats_for_bulk_assignment)
     vision = (
-        await seats_for_bulk_assignment["db"].get(
-            models.OrgUnit, seats_for_bulk_assignment["vision"]
-        )
+        await seats_for_bulk_assignment["db"].get(models.OrgUnit, seats_for_bulk_assignment["vision"])
     ).external_id
     maya = await email(seats_for_bulk_assignment, seats_for_bulk_assignment["maya"])
     csv = (
@@ -186,15 +172,13 @@ async def test_import_dry_run_apply_and_idempotent(
         [],
     )
     assert (
-        await holder(seats_for_bulk_assignment, seats_for_bulk_assignment["b"])
-        == seats_for_bulk_assignment["eli"]
+        await holder(seats_for_bulk_assignment, seats_for_bulk_assignment["b"]) == seats_for_bulk_assignment["eli"]
     )  # dry run wrote nothing
 
     done = await service.import_assignments(read_table("s.csv", csv), apply=True)
     assert (done.applied, done.updated) == (True, 1)
     assert (
-        await holder(seats_for_bulk_assignment, seats_for_bulk_assignment["b"])
-        == seats_for_bulk_assignment["vision"]
+        await holder(seats_for_bulk_assignment, seats_for_bulk_assignment["b"]) == seats_for_bulk_assignment["vision"]
     )
     again = await service.import_assignments(read_table("s.csv", csv), apply=True)
     assert (again.created, again.updated, again.unchanged) == (0, 0, 2)
@@ -235,7 +219,4 @@ async def test_import_reports_every_bad_row(seats_for_bulk_assignment: dict[str,
         {"value": seat["b"], "building": "WRONG"},
     ]
     assert [w.params for w in report.warnings] == [{"columns": "shoe_size"}]
-    assert (
-        await holder(seats_for_bulk_assignment, seats_for_bulk_assignment["a"])
-        == seats_for_bulk_assignment["maya"]
-    )
+    assert await holder(seats_for_bulk_assignment, seats_for_bulk_assignment["a"]) == seats_for_bulk_assignment["maya"]

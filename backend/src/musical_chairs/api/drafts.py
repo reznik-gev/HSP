@@ -15,12 +15,7 @@ from musical_chairs.api.plans import Service as PlansServiceDep
 from musical_chairs.auth.dependencies import CurrentPrincipal
 from musical_chairs.db import get_session
 from musical_chairs.plans.changeset import ChangesetIn
-from musical_chairs.plans.drafts import (
-    ChangesetResult,
-    DraftRepository,
-    DraftsService,
-    SqlDraftRepository,
-)
+from musical_chairs.plans.drafts import ChangesetResult, DraftRepository, DraftsService, SqlDraftRepository
 from musical_chairs.plans.publishing import (
     PublishIn,
     PublishingService,
@@ -72,9 +67,7 @@ async def create_draft(floor_id: uuid.UUID, service: Service, plans: PlansServic
 
 
 @router.post("/changesets", dependencies=WRITE)
-async def apply_changeset(
-    floor_id: uuid.UUID, body: ChangesetIn, service: Service
-) -> ChangesetResult:
+async def apply_changeset(floor_id: uuid.UUID, body: ChangesetIn, service: Service) -> ChangesetResult:
     """Apply a batch of add/update/delete operations to the draft, all or nothing.
 
     409 stale-revision if `base_revision` is outdated, 409 lock-required / 423 floor-locked
@@ -85,9 +78,7 @@ async def apply_changeset(
 
 
 @router.post("/publish", dependencies=WRITE)
-async def publish_draft(
-    floor_id: uuid.UUID, body: PublishIn, publishing: Publishing
-) -> PublishResult:
+async def publish_draft(floor_id: uuid.UUID, body: PublishIn, publishing: Publishing) -> PublishResult:
     """Make the draft the published version (docs/0082). `base_revision` must be the revision
     you reviewed. 409 publish-conflicts lists every problem: the plan rules over the whole draft
     (docs/0081), duplicate seat labels and devices placed elsewhere. Assigned seats the

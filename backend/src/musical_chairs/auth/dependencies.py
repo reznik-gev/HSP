@@ -100,9 +100,7 @@ CurrentPrincipal = Annotated[Principal, Depends(get_principal)]
 async def require_admin(principal: CurrentPrincipal) -> Principal:
     """v1: only admins may change anything (docs/0027)."""
     if not principal.is_admin:
-        raise ProblemException(
-            403, "forbidden", "Forbidden", "This action requires musical-chairs-admin."
-        )
+        raise ProblemException(403, "forbidden", "Forbidden", "This action requires musical-chairs-admin.")
     return principal
 
 
@@ -111,7 +109,5 @@ async def require_csrf(request: Request, principal: CurrentPrincipal) -> Princip
     if request.method not in SAFE_METHODS:
         sent = request.headers.get(CSRF_HEADER, "")
         if not sent or not constant_time_equals(sent, principal.csrf_token):
-            raise ProblemException(
-                403, "csrf-failed", "CSRF check failed", f"Send the {CSRF_HEADER} header."
-            )
+            raise ProblemException(403, "csrf-failed", "CSRF check failed", f"Send the {CSRF_HEADER} header.")
     return principal
