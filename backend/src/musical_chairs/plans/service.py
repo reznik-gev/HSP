@@ -23,9 +23,7 @@ class PlansService:
 
     async def _require_floor(self, floor_id: uuid.UUID) -> None:
         if not await self.repo.floor_exists(self.principal.tenant_id, floor_id):
-            raise ProblemException(
-                404, "not-found", "Not found", f"Floor {floor_id} does not exist."
-            )
+            raise ProblemException(404, "not-found", "Not found", f"Floor {floor_id} does not exist.")
 
     async def versions(self, floor_id: uuid.UUID) -> list[FloorVersion]:
         await self._require_floor(floor_id)
@@ -59,9 +57,7 @@ class PlansService:
 
     async def draft(self, floor_id: uuid.UUID) -> Plan:
         if not self.principal.is_admin:
-            raise ProblemException(
-                403, "forbidden", "Forbidden", "Drafts are visible to musical-chairs-admin only."
-            )
+            raise ProblemException(403, "forbidden", "Forbidden", "Drafts are visible to musical-chairs-admin only.")
         draft = next((v for v in await self.versions(floor_id) if v.state == "draft"), None)
         if draft is None:
             raise ProblemException(404, "no-draft", "No draft", f"Floor {floor_id} has no draft.")

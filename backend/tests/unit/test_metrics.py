@@ -61,9 +61,7 @@ def test_requests_are_counted_and_timed_by_route_template(probe_api: TestClient)
     probe_api.get("/_test/items/2")
 
     assert sample("musical_chairs_http_requests_total", **labels, status="200") == before + 2
-    assert (
-        sample("musical_chairs_http_request_duration_seconds_count", **labels) == timed_before + 2
-    )
+    assert sample("musical_chairs_http_request_duration_seconds_count", **labels) == timed_before + 2
 
 
 def test_unknown_paths_share_one_route_label(probe_api: TestClient) -> None:
@@ -90,10 +88,7 @@ def test_metrics_are_served_in_the_prometheus_format(probe_api: TestClient) -> N
 
 def test_metrics_are_not_counted_as_requests(probe_api: TestClient) -> None:
     probe_api.get("/metrics")
-    assert (
-        sample("musical_chairs_http_requests_total", method="GET", route="/metrics", status="200")
-        == 0
-    )
+    assert sample("musical_chairs_http_requests_total", method="GET", route="/metrics", status="200") == 0
 
 
 def test_an_observed_operation_counts_its_outcome_and_time() -> None:
@@ -108,9 +103,7 @@ def test_an_observed_operation_counts_its_outcome_and_time() -> None:
         raise PUBLISH_REFUSED
 
     assert sample("musical_chairs_plan_operations_total", **labels, outcome="ok") == ok + 1
-    assert (
-        sample("musical_chairs_plan_operations_total", **labels, outcome="refused") == refused + 1
-    )
+    assert sample("musical_chairs_plan_operations_total", **labels, outcome="refused") == refused + 1
     assert sample("musical_chairs_plan_operation_duration_seconds_count", **labels) == timed + 2
 
 
@@ -123,8 +116,7 @@ def count_in_a_worker(metrics_dir: Path) -> None:
         [
             sys.executable,
             "-c",
-            "from musical_chairs import metrics; "
-            f"metrics.HTTP_REQUESTS.labels(**{WORKER_REQUEST!r}).inc()",
+            f"from musical_chairs import metrics; metrics.HTTP_REQUESTS.labels(**{WORKER_REQUEST!r}).inc()",
         ],
         cwd=BACKEND_DIR,
         env={**os.environ, "PROMETHEUS_MULTIPROC_DIR": str(metrics_dir)},
@@ -132,9 +124,7 @@ def count_in_a_worker(metrics_dir: Path) -> None:
     )
 
 
-def test_the_metrics_server_adds_up_every_worker(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_the_metrics_server_adds_up_every_worker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     count_in_a_worker(tmp_path)
     count_in_a_worker(tmp_path)
     monkeypatch.setenv("PROMETHEUS_MULTIPROC_DIR", str(tmp_path))
@@ -144,9 +134,7 @@ def test_the_metrics_server_adds_up_every_worker(
     assert sample("musical_chairs_http_requests_total", registry, **WORKER_REQUEST) == 2
 
 
-def test_a_restart_starts_counting_from_zero(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_a_restart_starts_counting_from_zero(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     count_in_a_worker(tmp_path)
     reset_metrics_dir(tmp_path)
     monkeypatch.setenv("PROMETHEUS_MULTIPROC_DIR", str(tmp_path))

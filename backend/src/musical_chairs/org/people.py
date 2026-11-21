@@ -48,9 +48,7 @@ class MembershipOut(BaseModel):
     unit_id: uuid.UUID
     position_id: uuid.UUID | None
     is_primary: bool
-    primary_override: bool = Field(
-        description="Primary was marked explicitly (false only for a lone membership)"
-    )
+    primary_override: bool = Field(description="Primary was marked explicitly (false only for a lone membership)")
 
 
 class PersonOut(BaseModel):
@@ -84,9 +82,7 @@ class PeopleService:
     def _tenant(self) -> uuid.UUID:
         return self.principal.tenant_id
 
-    def _audit(
-        self, action: str, person_id: uuid.UUID, before: Any = None, after: Any = None
-    ) -> None:
+    def _audit(self, action: str, person_id: uuid.UUID, before: Any = None, after: Any = None) -> None:
         self.db.add(
             audit_event(
                 self.principal,
@@ -99,9 +95,7 @@ class PeopleService:
             )
         )
 
-    async def _memberships(
-        self, person_ids: list[uuid.UUID]
-    ) -> dict[uuid.UUID, list[MembershipOut]]:
+    async def _memberships(self, person_ids: list[uuid.UUID]) -> dict[uuid.UUID, list[MembershipOut]]:
         out: dict[uuid.UUID, list[MembershipOut]] = {pid: [] for pid in person_ids}
         if person_ids:
             rows = await self.db.scalars(
@@ -140,14 +134,10 @@ class PeopleService:
 
     async def get_person(self, person_id: uuid.UUID) -> models.Person:
         p = await self.db.scalar(
-            select(models.Person).where(
-                models.Person.tenant_id == self._tenant, models.Person.id == person_id
-            )
+            select(models.Person).where(models.Person.tenant_id == self._tenant, models.Person.id == person_id)
         )
         if p is None:
-            raise ProblemException(
-                404, "not-found", "Not found", f"Person {person_id} does not exist."
-            )
+            raise ProblemException(404, "not-found", "Not found", f"Person {person_id} does not exist.")
         return p
 
     async def get(self, person_id: uuid.UUID) -> PersonOut:
@@ -166,15 +156,11 @@ class PeopleService:
         query = select(models.Person).where(models.Person.tenant_id == self._tenant)
         if q:
             pattern = f"%{q.replace('%', r'\%').replace('_', r'\_')}%"
-            query = query.where(
-                or_(models.Person.display_name.ilike(pattern), models.Person.email.ilike(pattern))
-            )
+            query = query.where(or_(models.Person.display_name.ilike(pattern), models.Person.email.ilike(pattern)))
         if unit_id is not None:
             query = query.where(
                 models.Person.id.in_(
-                    select(models.UnitMembership.person_id).where(
-                        models.UnitMembership.unit_id == unit_id
-                    )
+                    select(models.UnitMembership.person_id).where(models.UnitMembership.unit_id == unit_id)
                 )
             )
         if not include_inactive:
@@ -184,13 +170,9 @@ class PeopleService:
             query = query.where(holds if seated else ~holds)
         if after is not None:
             query = query.where(models.Person.id > after)
-        return await self._out(
-            list(await self.db.scalars(query.order_by(models.Person.id).limit(limit)))
-        )
+        return await self._out(list(await self.db.scalars(query.order_by(models.Person.id).limit(limit))))
 
-    async def _ensure_unique(
-        self, email: str | None, external_id: str | None, own: uuid.UUID | None
-    ) -> None:
+    async def _ensure_unique(self, email: str | None, external_id: str | None, own: uuid.UUID | None) -> None:
         if email:
             clash = await self.db.scalar(
                 select(models.Person.id).where(
@@ -199,9 +181,7 @@ class PeopleService:
                 )
             )
             if clash is not None and clash != own:
-                raise ProblemException(
-                    409, "email-taken", "Email already used", f"{email} belongs to someone else."
-                )
+                raise ProblemException(409, "email-taken", "Email already used", f"{email} belongs to someone else.")
         if external_id:
             clash = await self.db.scalar(
                 select(models.Person.id).where(
@@ -217,9 +197,7 @@ class PeopleService:
                     f"Another person has external id {external_id!r}.",
                 )
 
-    async def create(
-        self, body: PersonIn, source: models.RecordSource = models.RecordSource.MANUAL
-    ) -> PersonOut:
+    async def create(self, body: PersonIn, source: models.RecordSource = models.RecordSource.MANUAL) -> PersonOut:
         values = body.model_dump()
         values["email"] = values["email"].lower()  # docs/0084: case never matters
         await self._ensure_unique(values["email"], values["external_id"], None)
@@ -283,9 +261,7 @@ class PeopleService:
         if len(set(unit_ids)) != len(unit_ids):
             errors.append(ProblemError(code="duplicate_unit", message="A unit is listed twice."))
         if sum(m.is_primary for m in wanted) > 1:
-            errors.append(
-                ProblemError(code="multiple_primary", message="Only one membership can be primary.")
-            )
+            errors.append(ProblemError(code="multiple_primary", message="Only one membership can be primary."))
         elif len(wanted) > 1 and not any(m.is_primary for m in wanted):
             errors.append(
                 ProblemError(
@@ -353,9 +329,7 @@ class PeopleService:
         explicit = next((m.unit_id for m in wanted if m.is_primary), None)
         primary = explicit or (unit_ids[0] if unit_ids else None)  # a lone membership
         before = [m.model_dump(mode="json") for m in (await self._memberships([p.id]))[p.id]]
-        await self.db.execute(
-            delete(models.UnitMembership).where(models.UnitMembership.person_id == p.id)
-        )
+        await self.db.execute(delete(models.UnitMembership).where(models.UnitMembership.person_id == p.id))
         await self.db.flush()  # free the "one primary" index before inserting the new set
         for m in wanted:
             self.db.add(
@@ -371,8 +345,6 @@ class PeopleService:
         await self.db.flush()
         after = [m.model_dump(mode="json") for m in (await self._memberships([p.id]))[p.id]]
         if before != after:
-            self._audit(
-                "person.memberships_changed", p.id, {"memberships": before}, {"memberships": after}
-            )
+            self._audit("person.memberships_changed", p.id, {"memberships": before}, {"memberships": after})
         await self.db.commit()
         return (await self._out([p]))[0]

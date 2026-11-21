@@ -19,9 +19,7 @@ from musical_chairs.seats.occupancy import (
 router = APIRouter(prefix="/occupancy", tags=["seats"])
 
 
-def get_service(
-    principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]
-) -> OccupancyService:
+def get_service(principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]) -> OccupancyService:
     return OccupancyService(db, principal)
 
 

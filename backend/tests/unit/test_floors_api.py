@@ -38,9 +38,7 @@ def test_mm_fields_are_integers_and_bounded(api: TestClient, building_id: str) -
     create_floor(api, building_id, 999, expect=422)
 
 
-def test_patch_and_level_move(
-    api: TestClient, building_id: str, locations_repo: InMemoryLocationsRepository
-) -> None:
+def test_patch_and_level_move(api: TestClient, building_id: str, locations_repo: InMemoryLocationsRepository) -> None:
     create_floor(api, building_id, 0)
     f1 = create_floor(api, building_id, 1)
     url = f"/api/v1/floors/{f1['id']}"
@@ -59,9 +57,7 @@ def test_published_version_is_not_patchable(api: TestClient, building_id: str) -
     assert r.json()["published_version"] is None  # unknown fields are ignored
 
 
-def test_building_archive_cascades_and_restore_is_top_down(
-    api: TestClient, building_id: str
-) -> None:
+def test_building_archive_cascades_and_restore_is_top_down(api: TestClient, building_id: str) -> None:
     f = create_floor(api, building_id, 0)
     r = api.delete(f"/api/v1/buildings/{building_id}")
     assert [a["id"] for a in r.json()["archived"]] == [building_id, f["id"]]  # docs/0086

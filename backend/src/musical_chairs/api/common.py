@@ -9,8 +9,7 @@ from musical_chairs.auth.dependencies import require_admin, require_csrf
 from musical_chairs.db import get_session
 from musical_chairs.locations.repository import LocationsRepository, SqlLocationsRepository
 
-#: Dependencies for state-changing endpoints: CSRF token + musical-chairs-admin (docs/0027,
-#: docs/0038).
+#: Dependencies for state-changing endpoints: CSRF token + musical-chairs-admin (docs/0027, docs/0038).
 WRITE = [Depends(require_csrf), Depends(require_admin)]
 
 

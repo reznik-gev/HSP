@@ -10,9 +10,7 @@ from musical_chairs.auth.principal import Principal
 from musical_chairs.models import AuditEvent, new_id
 
 
-def changed_fields(
-    before: dict[str, Any], after: dict[str, Any]
-) -> tuple[dict[str, Any], dict[str, Any]]:
+def changed_fields(before: dict[str, Any], after: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     """Reduce full snapshots to the fields that changed (docs/0033: changed fields only)."""
     keys = sorted(k for k in before.keys() | after.keys() if before.get(k) != after.get(k))
     return {k: before.get(k) for k in keys}, {k: after.get(k) for k in keys}

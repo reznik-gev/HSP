@@ -9,14 +9,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from musical_chairs.api.common import WRITE, get_locations_repository
-from musical_chairs.api.pagination import (
-    DEFAULT_LIMIT,
-    CursorParam,
-    LimitParam,
-    Page,
-    decode_cursor,
-    page_of,
-)
+from musical_chairs.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
 from musical_chairs.auth.dependencies import CurrentPrincipal
 from musical_chairs.locations.floors import FloorsService
 from musical_chairs.locations.repository import LocationsRepository

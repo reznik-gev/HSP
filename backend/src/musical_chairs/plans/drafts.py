@@ -129,15 +129,11 @@ def revision_columns(element: Element) -> dict[str, Any]:
 
 
 class DraftRepository(Protocol):
-    async def floor_info(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID
-    ) -> tuple[bool, int | None] | None:
+    async def floor_info(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> tuple[bool, int | None] | None:
         """(archived, published_version), or None if the floor doesn't exist."""
         ...
 
-    async def lock_holder(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime
-    ) -> str | None: ...
+    async def lock_holder(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime) -> str | None: ...
 
     async def draft_for_update(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> DraftRow | None:
         """The draft row, locked against concurrent changesets until commit."""
@@ -147,9 +143,7 @@ class DraftRepository(Protocol):
         self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int, created_by: str
     ) -> DraftRow: ...
 
-    async def load_content(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int
-    ) -> PlanContent: ...
+    async def load_content(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int) -> PlanContent: ...
 
     async def load_references(
         self,
@@ -159,9 +153,7 @@ class DraftRepository(Protocol):
         device_ids: set[uuid.UUID],
     ) -> References: ...
 
-    async def element_owners(
-        self, ids: Iterable[uuid.UUID]
-    ) -> dict[uuid.UUID, tuple[uuid.UUID, models.ElementKind]]:
+    async def element_owners(self, ids: Iterable[uuid.UUID]) -> dict[uuid.UUID, tuple[uuid.UUID, models.ElementKind]]:
         """The floor and kind of each id already used by an element, including ones only present
         in old versions."""
         ...
@@ -187,9 +179,7 @@ class SqlDraftRepository:
         self._db = db
         self._plans = SqlPlanRepository(db)
 
-    async def floor_info(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID
-    ) -> tuple[bool, int | None] | None:
+    async def floor_info(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> tuple[bool, int | None] | None:
         row = (
             await self._db.execute(
                 select(models.Floor.archived_at, models.Floor.published_version).where(
@@ -199,9 +189,7 @@ class SqlDraftRepository:
         ).first()
         return None if row is None else (row[0] is not None, row[1])
 
-    async def lock_holder(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime
-    ) -> str | None:
+    async def lock_holder(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime) -> str | None:
         return await self._db.scalar(
             select(models.FloorEditLock.holder_subject).where(
                 models.FloorEditLock.tenant_id == tenant_id,
@@ -222,9 +210,7 @@ class SqlDraftRepository:
         )
         return DraftRow(row.id, row.version_no, row.revision) if row else None
 
-    async def create_draft(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int, created_by: str
-    ) -> DraftRow:
+    async def create_draft(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int, created_by: str) -> DraftRow:
         row = models.FloorVersion(
             id=models.new_id(),
             tenant_id=tenant_id,
@@ -239,9 +225,7 @@ class SqlDraftRepository:
         await self._db.flush()
         return DraftRow(row.id, version, 0)
 
-    async def load_content(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int
-    ) -> PlanContent:
+    async def load_content(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int) -> PlanContent:
         return await self._plans.load_content(tenant_id, floor_id, version)
 
     async def load_references(
@@ -300,28 +284,22 @@ class SqlDraftRepository:
                     )
                 )
             )
-        return References(
-            catalog=catalog, zone_type_ids=frozenset(zone_types), device_ids=frozenset(devices)
-        )
+        return References(catalog=catalog, zone_type_ids=frozenset(zone_types), device_ids=frozenset(devices))
 
-    async def element_owners(
-        self, ids: Iterable[uuid.UUID]
-    ) -> dict[uuid.UUID, tuple[uuid.UUID, models.ElementKind]]:
+    async def element_owners(self, ids: Iterable[uuid.UUID]) -> dict[uuid.UUID, tuple[uuid.UUID, models.ElementKind]]:
         wanted = set(ids)
         if not wanted:
             return {}
         rows = await self._db.execute(
-            select(
-                models.FloorElement.id, models.FloorElement.floor_id, models.FloorElement.kind
-            ).where(models.FloorElement.id.in_(wanted))
+            select(models.FloorElement.id, models.FloorElement.floor_id, models.FloorElement.kind).where(
+                models.FloorElement.id.in_(wanted)
+            )
         )
         return {element_id: (floor_id, kind) for element_id, floor_id, kind in rows}
 
     async def _open_revision(self, kind: Kind, element_id: uuid.UUID) -> Any:
         rev = REV_MODEL[kind]
-        return await self._db.scalar(
-            select(rev).where(rev.element_id == element_id, rev.to_version.is_(None))
-        )
+        return await self._db.scalar(select(rev).where(rev.element_id == element_id, rev.to_version.is_(None)))
 
     async def save(
         self,
@@ -346,9 +324,7 @@ class SqlDraftRepository:
 
         # 2) New elements: insert all floor_element rows before any revision references them
         #    (the models declare no ORM relationships, so flush order must be explicit).
-        new_ids = {eid for (_, eid) in upserted} - set(
-            await self.element_owners(eid for (_, eid) in upserted)
-        )
+        new_ids = {eid for (_, eid) in upserted} - set(await self.element_owners(eid for (_, eid) in upserted))
         for (kind, element_id), _ in upserted.items():
             if element_id in new_ids:
                 self._db.add(
@@ -364,9 +340,7 @@ class SqlDraftRepository:
         # 3) Revisions: update draft-started ones in place, close + reopen older ones.
         for (kind, element_id), element in upserted.items():
             columns = revision_columns(element)
-            open_rev = (
-                None if element_id in new_ids else await self._open_revision(kind, element_id)
-            )
+            open_rev = None if element_id in new_ids else await self._open_revision(kind, element_id)
             if open_rev is not None and open_rev.from_version == version:
                 for name, value in columns.items():
                     setattr(open_rev, name, value)
@@ -389,9 +363,7 @@ class SqlDraftRepository:
         # 4) Elements created and deleted within this draft leave no trace.
         for element_id in orphan_candidates:
             if not await self._has_revisions(element_id):
-                await self._db.execute(
-                    delete(models.FloorElement).where(models.FloorElement.id == element_id)
-                )
+                await self._db.execute(delete(models.FloorElement).where(models.FloorElement.id == element_id))
 
     async def _has_revisions(self, element_id: uuid.UUID) -> bool:
         for rev in REV_MODEL.values():
@@ -425,14 +397,10 @@ class DraftsService:
         """Floor exists, is active and the caller holds its edit lock. Returns published version."""
         info = await self.repo.floor_info(self._tenant, floor_id)
         if info is None:
-            raise ProblemException(
-                404, "not-found", "Not found", f"Floor {floor_id} does not exist."
-            )
+            raise ProblemException(404, "not-found", "Not found", f"Floor {floor_id} does not exist.")
         archived, published = info
         if archived:
-            raise ProblemException(
-                409, "archived", "Archived", "Restore the floor before editing it (docs/0078)."
-            )
+            raise ProblemException(409, "archived", "Archived", "Restore the floor before editing it (docs/0078).")
         holder = await self.repo.lock_holder(self._tenant, floor_id, datetime.now(UTC))
         if holder is None:
             raise ProblemException(
@@ -442,15 +410,11 @@ class DraftsService:
                 "Acquire the edit lock (POST /floors/{id}/lock) before editing (docs/0016).",
             )
         if holder != self.principal.subject:
-            raise ProblemException(
-                423, "floor-locked", "Floor is being edited", "Someone else holds the edit lock."
-            )
+            raise ProblemException(423, "floor-locked", "Floor is being edited", "Someone else holds the edit lock.")
         return published
 
     async def _start_draft(self, floor_id: uuid.UUID, published: int | None) -> DraftRow:
-        draft = await self.repo.create_draft(
-            self._tenant, floor_id, (published or 0) + 1, self.principal.subject
-        )
+        draft = await self.repo.create_draft(self._tenant, floor_id, (published or 0) + 1, self.principal.subject)
         self.repo.record(
             audit_event(
                 self.principal,
@@ -466,9 +430,7 @@ class DraftsService:
     async def create_draft(self, floor_id: uuid.UUID) -> int:
         published = await self.require_editable(floor_id)
         if await self.repo.draft_for_update(self._tenant, floor_id) is not None:
-            raise ProblemException(
-                409, "draft-exists", "Draft exists", "This floor already has a draft."
-            )
+            raise ProblemException(409, "draft-exists", "Draft exists", "This floor already has a draft.")
         draft = await self._start_draft(floor_id, published)
         await self.repo.commit()
         return draft.version
@@ -490,14 +452,11 @@ class DraftsService:
                 409,
                 "stale-revision",
                 "Stale revision",
-                f"The draft is at revision {draft.revision}, not {changeset.base_revision}; "
-                "reload it.",
+                f"The draft is at revision {draft.revision}, not {changeset.base_revision}; reload it.",
             )
 
         content = await self.repo.load_content(self._tenant, floor_id, draft.version)
-        refs = await self.repo.load_references(
-            self._tenant, *needed_references(content, changeset.ops)
-        )
+        refs = await self.repo.load_references(self._tenant, *needed_references(content, changeset.ops))
         try:
             effects = apply_changeset(content, changeset.ops, refs)
         except ChangesetRejected as rejected:
@@ -514,11 +473,7 @@ class DraftsService:
         owners = await self.repo.element_owners(eid for (_, eid) in added)
         # An element of this floor's history may come back, as undo does after a delete; an id
         # from another floor or of another kind stays taken (docs/0131).
-        reused = {
-            eid
-            for (kind, eid) in added
-            if eid in owners and owners[eid] != (floor_id, ELEMENT_KIND[kind])
-        }
+        reused = {eid for (kind, eid) in added if eid in owners and owners[eid] != (floor_id, ELEMENT_KIND[kind])}
         if reused:
             raise _invalid(
                 [
@@ -526,17 +481,13 @@ class DraftsService:
                         code="duplicate_id",
                         message=f"Element id {eid} was already used.",
                         element_id=str(eid),
-                        op_index=next(
-                            (i for i, op in enumerate(changeset.ops) if op.id == eid), None
-                        ),
+                        op_index=next((i for i, op in enumerate(changeset.ops) if op.id == eid), None),
                     )
                     for eid in sorted(reused)
                 ]
             )
 
-        await self.repo.save(
-            self._tenant, floor_id, draft.version, effects.upserted, effects.deleted
-        )
+        await self.repo.save(self._tenant, floor_id, draft.version, effects.upserted, effects.deleted)
         revision = draft.revision + 1
         await self.repo.set_revision(draft.id, revision)
         await self.repo.commit()

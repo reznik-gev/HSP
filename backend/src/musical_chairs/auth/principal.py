@@ -46,8 +46,4 @@ def realm_roles(claims: dict[str, Any]) -> frozenset[str]:
     """Keycloak puts realm roles in `realm_access.roles`."""
     access = claims.get("realm_access")
     roles = access.get("roles") if isinstance(access, dict) else None
-    return (
-        frozenset(r for r in roles if isinstance(r, str))
-        if isinstance(roles, list)
-        else frozenset()
-    )
+    return frozenset(r for r in roles if isinstance(r, str)) if isinstance(roles, list) else frozenset()

@@ -19,9 +19,7 @@ REFS = stub_references(
     [
         stub_catalog_item(DESK, "desk", "desk", is_seat=True),
         stub_catalog_item(CHAIR, "chair", "chair"),
-        stub_catalog_item(
-            MONITOR, "monitor", "monitor", mountable=True, attaches_to_categories=["desk"]
-        ),
+        stub_catalog_item(MONITOR, "monitor", "monitor", mountable=True, attaches_to_categories=["desk"]),
     ],
     zone_type_ids=frozenset({ZONE_TYPE}),
     device_ids=frozenset({DEVICE}),

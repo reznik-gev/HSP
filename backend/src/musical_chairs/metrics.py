@@ -1,9 +1,8 @@
 """Prometheus metrics (docs/0057, docs/0105).
 
 With PROMETHEUS_MULTIPROC_DIR set (the image sets it), each uvicorn worker writes its values to
-files in that folder, and `registry()` adds them up for the metrics server
-(musical_chairs/serve.py). Without it, as in development and tests, everything stays in this
-process.
+files in that folder, and `registry()` adds them up for the metrics server (musical_chairs/serve.py). Without
+it, as in development and tests, everything stays in this process.
 
 Labels hold route templates, never raw paths, so there's no personal data and no unbounded set.
 The API's CPU and memory come from the platform, such as `docker stats`, cAdvisor or Kubernetes,
@@ -31,13 +30,9 @@ from musical_chairs.problems import ProblemException
 #: The route label of a request no route matched (a 404), so random paths add no new series.
 UNMATCHED = "unmatched"
 
-HTTP_REQUESTS = Counter(
-    "musical_chairs_http_requests_total", "HTTP requests answered", ["method", "route", "status"]
-)
+HTTP_REQUESTS = Counter("musical_chairs_http_requests_total", "HTTP requests answered", ["method", "route", "status"])
 HTTP_DURATION = Histogram(
-    "musical_chairs_http_request_duration_seconds",
-    "Time to answer an HTTP request",
-    ["method", "route"],
+    "musical_chairs_http_request_duration_seconds", "Time to answer an HTTP request", ["method", "route"]
 )
 DB_CONNECTIONS = Gauge(
     "musical_chairs_db_connections_in_use",
@@ -50,9 +45,7 @@ PLAN_OPERATIONS = Counter(
     ["operation", "outcome"],
 )
 PLAN_OPERATION_DURATION = Histogram(
-    "musical_chairs_plan_operation_duration_seconds",
-    "Time to apply a changeset or publish",
-    ["operation"],
+    "musical_chairs_plan_operation_duration_seconds", "Time to apply a changeset or publish", ["operation"]
 )
 LOCK_REFUSALS = Counter(
     "musical_chairs_lock_refusals_total",
@@ -65,9 +58,8 @@ LOCK_PROBLEMS = frozenset({"lock-required", "floor-locked"})
 
 
 def count_connections(engine: AsyncEngine) -> None:
-    """Keep musical_chairs_db_connections_in_use exact: up when the pool hands a connection
-    out, down when it's returned, in every worker (musical_chairs/db.py calls this when it
-    creates the engine)."""
+    """Keep musical_chairs_db_connections_in_use exact: up when the pool hands a connection out, down when
+    it's returned, in every worker (musical_chairs/db.py calls this when it creates the engine)."""
     event.listen(engine.sync_engine, "checkout", lambda *_: DB_CONNECTIONS.inc())
     event.listen(engine.sync_engine, "checkin", lambda *_: DB_CONNECTIONS.dec())
 

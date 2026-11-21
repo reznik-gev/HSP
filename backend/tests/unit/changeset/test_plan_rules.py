@@ -48,9 +48,7 @@ WITH_LEGACY_PROBLEM = PlanContent(objects=[stub_placed_object(UNKNOWN)])
 
 def test_opening_must_fit_its_wall_including_when_the_wall_shrinks() -> None:
     with pytest.raises(ChangesetRejected) as exc:
-        apply_changeset(
-            PlanContent(), ops(add("wall", W1, **wall()), add("opening", DOOR1, **LATE_DOOR)), REFS
-        )
+        apply_changeset(PlanContent(), ops(add("wall", W1, **wall()), add("opening", DOOR1, **LATE_DOOR)), REFS)
     assert codes(exc) == ["opening_exceeds_wall"]
     assert "400 mm past the wall end" in exc.value.errors[0].message
 

@@ -40,9 +40,7 @@ def one_folder_installation_env(
 
 
 @pytest.fixture
-def target_folder_gone(
-    one_folder_installation_env: dict[str, str], tmp_path: Path
-) -> dict[str, str]:
+def target_folder_gone(one_folder_installation_env: dict[str, str], tmp_path: Path) -> dict[str, str]:
     (tmp_path / "backups").rmdir()
     return one_folder_installation_env
 
@@ -117,9 +115,7 @@ def test_now_list_and_list_json(
 def test_restore_asks_for_yes(
     musical_chairs_backup: MusicalChairsBackup, one_folder_installation_env: dict[str, str]
 ) -> None:
-    done = musical_chairs_backup(
-        one_folder_installation_env, "restore", "musical-chairs-20261021T023000Z-nightly.tar"
-    )
+    done = musical_chairs_backup(one_folder_installation_env, "restore", "musical-chairs-20261021T023000Z-nightly.tar")
     assert done.exit_code == 2
     assert "add --yes" in done.stderr
 
@@ -130,23 +126,17 @@ def test_a_refused_restore_says_nothing_changed(
     never_taken_backup_name: str,
 ) -> None:
     # musical-chairs restore starts Musical Chairs again after this exit code (docs/0109).
-    done = musical_chairs_backup(
-        one_folder_installation_env, "restore", never_taken_backup_name, "--yes"
-    )
+    done = musical_chairs_backup(one_folder_installation_env, "restore", never_taken_backup_name, "--yes")
     assert done.exit_code == 3
     assert "no target holds" in done.stderr
 
 
 def test_a_restore_that_fails_partway_exits_1(
-    musical_chairs_backup: MusicalChairsBackup,
-    one_folder_installation_env: dict[str, str],
-    spy_postgres: SpyPostgres,
+    musical_chairs_backup: MusicalChairsBackup, one_folder_installation_env: dict[str, str], spy_postgres: SpyPostgres
 ) -> None:
     name = musical_chairs_backup(one_folder_installation_env, "now").stdout.strip()
     spy_postgres.fail_restore = True
-    assert (
-        musical_chairs_backup(one_folder_installation_env, "restore", name, "--yes").exit_code == 1
-    )
+    assert musical_chairs_backup(one_folder_installation_env, "restore", name, "--yes").exit_code == 1
 
 
 def test_a_restore_says_what_it_restored(

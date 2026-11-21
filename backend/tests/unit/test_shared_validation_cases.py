@@ -55,10 +55,7 @@ def _uuid(name: str) -> uuid.UUID:
 def _ids(value: Any) -> Any:
     """`value` with every id field's name replaced by its UUID string."""
     if isinstance(value, dict):
-        return {
-            k: (str(_uuid(v)) if k in ID_FIELDS and isinstance(v, str) else _ids(v))
-            for k, v in value.items()
-        }
+        return {k: (str(_uuid(v)) if k in ID_FIELDS and isinstance(v, str) else _ids(v)) for k, v in value.items()}
     if isinstance(value, list):
         return [_ids(v) for v in value]
     return value
@@ -117,17 +114,9 @@ def expected(case: Case) -> list[Finding]:
     return sorted((e["code"], e["element_id"], e.get("severity", "error")) for e in case.expect)
 
 
-def test_case(
-    content: PlanContent, refs: References, names: dict[str, str], expected: list[Finding]
-) -> None:
+def test_case(content: PlanContent, refs: References, names: dict[str, str], expected: list[Finding]) -> None:
     found = sorted(
-        [
-            (p.code, names.get(p.element_id or "", p.element_id), "error")
-            for p in validate(content, refs)
-        ]
-        + [
-            (w.code, names.get(w.element_id or "", w.element_id), "warning")
-            for w in warnings(content, refs.catalog)
-        ]
+        [(p.code, names.get(p.element_id or "", p.element_id), "error") for p in validate(content, refs)]
+        + [(w.code, names.get(w.element_id or "", w.element_id), "warning") for w in warnings(content, refs.catalog)]
     )
     assert found == expected

@@ -49,9 +49,7 @@ def decode_cursor(cursor: str | None, filters: dict[str, Any]) -> uuid.UUID | No
     except ValueError, KeyError, TypeError:
         raise ProblemException(400, "cursor-invalid", "Invalid cursor") from None
     if not matches:
-        raise ProblemException(
-            400, "cursor-invalid", "Invalid cursor", "The cursor was issued for different filters."
-        )
+        raise ProblemException(400, "cursor-invalid", "Invalid cursor", "The cursor was issued for different filters.")
     return after
 
 

@@ -59,9 +59,7 @@ def plan_repo(app: FastAPI) -> InMemoryPlanRepository:
     return repo
 
 
-def test_admin_sees_all_versions_viewer_only_public(
-    api: TestClient, signed_in: SignedIn, viewer: Principal
-) -> None:
+def test_admin_sees_all_versions_viewer_only_public(api: TestClient, signed_in: SignedIn, viewer: Principal) -> None:
     url = f"/api/v1/floors/{FLOOR}/versions"
     page = api.get(url).json()
     assert page["next_cursor"] is None

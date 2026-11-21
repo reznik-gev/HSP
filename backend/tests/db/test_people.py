@@ -43,10 +43,7 @@ async def test_create_lowercases_email_and_enforces_uniqueness(
         await s.create(PersonIn(display_name="Other", email="DANA.COHEN@example.com"))
     assert exc.value.slug == "email-taken"
     assert [
-        p.id
-        for p in await s.list_people(
-            q="cohen", unit_id=None, include_inactive=False, after=None, limit=10
-        )
+        p.id for p in await s.list_people(q="cohen", unit_id=None, include_inactive=False, after=None, limit=10)
     ] == [dana.id]
 
 
@@ -56,14 +53,8 @@ async def test_deactivate_hides_and_reactivate_returns(
     s: PeopleService = own_tenant_with_web_team["people"]
     p = await s.create(PersonIn(display_name="Eli", email="eli@example.com"))
     assert (await s.set_active(p.id, False)).active is False
-    assert (
-        await s.list_people(q="eli", unit_id=None, include_inactive=False, after=None, limit=10)
-        == []
-    )
-    assert (
-        len(await s.list_people(q="eli", unit_id=None, include_inactive=True, after=None, limit=10))
-        == 1
-    )
+    assert await s.list_people(q="eli", unit_id=None, include_inactive=False, after=None, limit=10) == []
+    assert len(await s.list_people(q="eli", unit_id=None, include_inactive=True, after=None, limit=10)) == 1
     assert (await s.set_active(p.id, True)).active is True
 
 
@@ -81,12 +72,8 @@ async def test_primary_must_be_marked_with_several_units(
             ],
         )
     assert [e.code for e in exc.value.errors or []] == ["primary_required"]  # docs/0084
-    alone = await s.set_memberships(
-        p.id, [MembershipIn(unit_id=own_tenant_with_web_team["web"].id)]
-    )
-    assert (
-        alone.primary_unit_id == own_tenant_with_web_team["web"].id
-    )  # a lone membership is primary by itself
+    alone = await s.set_memberships(p.id, [MembershipIn(unit_id=own_tenant_with_web_team["web"].id)])
+    assert alone.primary_unit_id == own_tenant_with_web_team["web"].id  # a lone membership is primary by itself
     assert not any(m.primary_override for m in alone.memberships)
     chosen = await s.set_memberships(
         p.id,

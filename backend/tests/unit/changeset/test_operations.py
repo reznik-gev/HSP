@@ -4,12 +4,7 @@ all-or-nothing application (docs/0081)."""
 import pytest
 
 from musical_chairs.models import new_id
-from musical_chairs.plans.changeset import (
-    ChangesetRejected,
-    DeleteOp,
-    apply_changeset,
-    needed_references,
-)
+from musical_chairs.plans.changeset import ChangesetRejected, DeleteOp, apply_changeset, needed_references
 from musical_chairs.plans.schema import PlanContent, Wall, Zone
 from tests.unit.changeset.stubs import (
     DESK,
@@ -43,9 +38,7 @@ ZONE_AND_WALL = PlanContent(
 
 
 def test_add_update_delete_and_effects() -> None:
-    fx = apply_changeset(
-        PlanContent(), ops(add("wall", W1, **wall()), add("object", D1, **desk())), REFS
-    )
+    fx = apply_changeset(PlanContent(), ops(add("wall", W1, **wall()), add("object", D1, **desk())), REFS)
     assert [x.id for x in fx.content.walls] == [W1]
     assert fx.content.catalog == {str(DESK): REFS.catalog[DESK]}  # only items in use
     assert set(fx.upserted) == {("wall", W1), ("object", D1)}

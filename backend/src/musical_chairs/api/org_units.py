@@ -7,14 +7,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from musical_chairs.api.common import WRITE
-from musical_chairs.api.pagination import (
-    DEFAULT_LIMIT,
-    CursorParam,
-    LimitParam,
-    Page,
-    decode_cursor,
-    page_of,
-)
+from musical_chairs.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
 from musical_chairs.auth.dependencies import CurrentPrincipal
 from musical_chairs.db import get_session
 from musical_chairs.org.units import (
@@ -96,9 +89,7 @@ async def create_position(unit_id: uuid.UUID, body: PositionIn, service: Service
 
 
 @router.patch("/positions/{position_id}", dependencies=WRITE)
-async def rename_position(
-    position_id: uuid.UUID, body: PositionIn, service: Service
-) -> PositionOut:
+async def rename_position(position_id: uuid.UUID, body: PositionIn, service: Service) -> PositionOut:
     return await service.rename_position(position_id, body)
 
 

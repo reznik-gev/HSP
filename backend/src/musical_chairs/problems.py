@@ -53,9 +53,7 @@ class ProblemException(Exception):
 def _response(request: Request, problem: Problem) -> JSONResponse:
     problem.instance = request.url.path
     problem.request_id = getattr(request.state, "request_id", None)
-    return JSONResponse(
-        problem.model_dump(exclude_none=True), status_code=problem.status, media_type=PROBLEM_JSON
-    )
+    return JSONResponse(problem.model_dump(exclude_none=True), status_code=problem.status, media_type=PROBLEM_JSON)
 
 
 def _pointer(loc: tuple[Any, ...]) -> str:
@@ -82,8 +80,7 @@ def install_problem_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def _validation(request: Request, exc: RequestValidationError) -> JSONResponse:
         errors = [
-            ProblemError(code=str(e["type"]), message=str(e["msg"]), pointer=_pointer(e["loc"]))
-            for e in exc.errors()
+            ProblemError(code=str(e["type"]), message=str(e["msg"]), pointer=_pointer(e["loc"])) for e in exc.errors()
         ]
         return _response(
             request,

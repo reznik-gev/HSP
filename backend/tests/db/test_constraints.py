@@ -10,19 +10,14 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 
 async def _floor_with_wall_element(conn: AsyncConnection) -> tuple[uuid.UUID, uuid.UUID]:
-    tenant_id = (
-        await conn.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))
-    ).scalar_one()
+    tenant_id = (await conn.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))).scalar_one()
     site, building, floor, element = uuid7(), uuid7(), uuid7(), uuid7()
     await conn.execute(
         text("INSERT INTO site (id, tenant_id, name, time_zone) VALUES (:id, :t, 'HQ', 'UTC')"),
         {"id": site, "t": tenant_id},
     )
     await conn.execute(
-        text(
-            "INSERT INTO building (id, tenant_id, site_id, name, code) "
-            "VALUES (:id, :t, :s, 'Main', 'A')"
-        ),
+        text("INSERT INTO building (id, tenant_id, site_id, name, code) VALUES (:id, :t, :s, 'Main', 'A')"),
         {"id": building, "t": tenant_id, "s": site},
     )
     await conn.execute(
@@ -34,9 +29,7 @@ async def _floor_with_wall_element(conn: AsyncConnection) -> tuple[uuid.UUID, uu
         {"id": floor, "t": tenant_id, "b": building},
     )
     await conn.execute(
-        text(
-            "INSERT INTO floor_element (id, tenant_id, floor_id, kind) VALUES (:id, :t, :f, 'wall')"
-        ),
+        text("INSERT INTO floor_element (id, tenant_id, floor_id, kind) VALUES (:id, :t, :f, 'wall')"),
         {"id": element, "t": tenant_id, "f": floor},
     )
     return tenant_id, element

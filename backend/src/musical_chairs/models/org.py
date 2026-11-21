@@ -81,9 +81,7 @@ class UnitMembership(TenantMixin, Base):
     )
 
     person_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("person.id"), primary_key=True)
-    unit_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("org_unit.id"), primary_key=True, index=True
-    )
+    unit_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("org_unit.id"), primary_key=True, index=True)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
     position_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("position.id"))
     primary_override: Mapped[bool] = mapped_column(Boolean, default=False)

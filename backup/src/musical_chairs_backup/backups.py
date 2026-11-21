@@ -43,12 +43,8 @@ class Backups:
 
     def plan(self, schedule: str) -> BackupPlan:
         if schedule == MANUAL:
-            return BackupPlan(
-                self.config.manual_target, True, keep=self.config.manual_keep, keep_days=None
-            )
-        if (
-            schedule == PRE_UPGRADE
-        ):  # kept until `musical-chairs upgrade` succeeds, which prunes them
+            return BackupPlan(self.config.manual_target, True, keep=self.config.manual_keep, keep_days=None)
+        if schedule == PRE_UPGRADE:  # kept until `musical-chairs upgrade` succeeds, which prunes them
             return BackupPlan(self.config.manual_target, True, keep=KEEP_FOREVER, keep_days=None)
         s = self.config.schedule(schedule)
         return BackupPlan(s.target, s.include_config, keep=s.keep, keep_days=s.keep_days)
@@ -84,10 +80,7 @@ class Backups:
         store = self.stores(self.plan(schedule).target)
         try:
             found = [b for n in store.names() if (b := BackupName.parse(n))]
-            gone = [
-                str(b)
-                for b in expired(found, schedule, keep=keep, keep_days=keep_days, now=self.clock())
-            ]
+            gone = [str(b) for b in expired(found, schedule, keep=keep, keep_days=keep_days, now=self.clock())]
             for name in gone:
                 store.delete(name)
                 log.info("old backup deleted", schedule=schedule, backup=name)
@@ -107,9 +100,7 @@ class Backups:
 
     def restore(self, name: str) -> Manifest:
         if BackupName.parse(name) is None:
-            raise RestoreRefused(
-                f"{name!r} isn't a backup name; `musical-chairs backup list` shows them"
-            )
+            raise RestoreRefused(f"{name!r} isn't a backup name; `musical-chairs backup list` shows them")
         holder, unreadable = self._holder_of(name)
         if holder is None:
             unread = f" (couldn't read {', '.join(unreadable)})" if unreadable else ""
@@ -122,11 +113,7 @@ class Backups:
             refuse_newer(name, manifest.musical_chairs_version, self.musical_chairs_version)
             for db in DATABASES:
                 self.postgres.restore(db, files / dump_name(db))
-            log.info(
-                "backup restored",
-                backup=name,
-                musical_chairs_version=manifest.musical_chairs_version,
-            )
+            log.info("backup restored", backup=name, musical_chairs_version=manifest.musical_chairs_version)
         return manifest
 
     def _holder_of(self, name: str) -> tuple[str | None, tuple[str, ...]]:

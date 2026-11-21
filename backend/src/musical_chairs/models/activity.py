@@ -15,18 +15,12 @@ class SeatAssignment(IdMixin, TenantMixin, Base):
     """At most one current holder per seat; history lives in audit_event (docs/0031)."""
 
     __tablename__ = "seat_assignment"
-    __table_args__ = (
-        CheckConstraint(
-            "num_nonnulls(holder_person_id, holder_unit_id) = 1", name="exactly_one_holder"
-        ),
-    )
+    __table_args__ = (CheckConstraint("num_nonnulls(holder_person_id, holder_unit_id) = 1", name="exactly_one_holder"),)
 
     seat_element_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("floor_element.id"), unique=True)
     holder_person_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("person.id"), index=True)
     holder_unit_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("org_unit.id"), index=True)
-    assigned_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     assigned_by: Mapped[str] = mapped_column(String(255))
     note: Mapped[str | None] = mapped_column(Text)
 
@@ -45,9 +39,7 @@ class AuditEvent(IdMixin, TenantMixin, Base):
         ),
     )
 
-    occurred_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     actor_subject: Mapped[str] = mapped_column(String(255))
     # Plain UUID, deliberately not a foreign key: audit rows outlive what they reference.
     actor_person_id: Mapped[uuid.UUID | None]
@@ -75,9 +67,7 @@ class UserSession(IdMixin, TenantMixin, Base):
     id_token: Mapped[str | None] = mapped_column(Text)
     access_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    last_seen_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 
 

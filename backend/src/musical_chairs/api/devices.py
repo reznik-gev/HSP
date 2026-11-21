@@ -7,14 +7,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from musical_chairs.api.common import WRITE
-from musical_chairs.api.pagination import (
-    DEFAULT_LIMIT,
-    CursorParam,
-    LimitParam,
-    Page,
-    decode_cursor,
-    page_of,
-)
+from musical_chairs.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
 from musical_chairs.auth.dependencies import CurrentPrincipal
 from musical_chairs.catalog.devices import DeviceIn, DeviceOut, DevicePatch, DevicesService
 from musical_chairs.db import get_session
@@ -36,12 +29,8 @@ async def list_devices(
     service: Service,
     q: Annotated[str | None, Query(description="Search asset tag or serial number")] = None,
     assigned_person_id: Annotated[uuid.UUID | None, Query()] = None,
-    placed: Annotated[
-        bool | None, Query(description="Only devices placed (or not) in a published floor plan")
-    ] = None,
-    issued: Annotated[
-        bool | None, Query(description="Only devices issued (or not) to a person")
-    ] = None,
+    placed: Annotated[bool | None, Query(description="Only devices placed (or not) in a published floor plan")] = None,
+    issued: Annotated[bool | None, Query(description="Only devices issued (or not) to a person")] = None,
     limit: LimitParam = DEFAULT_LIMIT,
     cursor: CursorParam = None,
 ) -> Page[DeviceOut]:

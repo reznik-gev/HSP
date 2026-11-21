@@ -16,11 +16,7 @@ def test_a_name_says_when_and_by_which_schedule() -> None:
 
 
 def test_other_files_are_not_backups() -> None:
-    for other in (
-        "notes.txt",
-        "musical-chairs-20261021T023005Z-nightly.tar.partial",
-        "musical-chairs-latest.tar",
-    ):
+    for other in ("notes.txt", "musical-chairs-20261021T023005Z-nightly.tar.partial", "musical-chairs-latest.tar"):
         assert BackupName.parse(other) is None
 
 

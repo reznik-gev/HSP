@@ -46,9 +46,7 @@ class S3Store:
     def names(self) -> list[str]:
         found: list[str] = []
         try:
-            pages = self.client.get_paginator("list_objects_v2").paginate(
-                Bucket=self.bucket, Prefix=self.prefix
-            )
+            pages = self.client.get_paginator("list_objects_v2").paginate(Bucket=self.bucket, Prefix=self.prefix)
             for page in pages:
                 for obj in page.get("Contents", []):
                     rest = obj["Key"].removeprefix(self.prefix)

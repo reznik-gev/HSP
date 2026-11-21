@@ -7,14 +7,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from musical_chairs.api.common import WRITE
-from musical_chairs.api.pagination import (
-    DEFAULT_LIMIT,
-    CursorParam,
-    LimitParam,
-    Page,
-    decode_cursor,
-    page_of,
-)
+from musical_chairs.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
 from musical_chairs.auth.dependencies import CurrentPrincipal
 from musical_chairs.db import get_session
 from musical_chairs.release import ReleaseReport
@@ -35,9 +28,7 @@ def get_service(
 Service = Annotated[SeatAssignmentService, Depends(get_service)]
 
 
-def get_search(
-    principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]
-) -> SeatSearchService:
+def get_search(principal: CurrentPrincipal, db: Annotated[AsyncSession, Depends(get_session)]) -> SeatSearchService:
     return SeatSearchService(db, principal)
 
 
@@ -49,9 +40,7 @@ async def search_seats(
     search: Search,
     q: Annotated[
         str | None,
-        Query(
-            description="Seat label, holder name or email, holding unit or holder's primary unit"
-        ),
+        Query(description="Seat label, holder name or email, holding unit or holder's primary unit"),
     ] = None,
     site_id: Annotated[uuid.UUID | None, Query()] = None,
     building_id: Annotated[uuid.UUID | None, Query()] = None,
@@ -106,9 +95,7 @@ async def get_assignment(seat_id: uuid.UUID, service: Service) -> SeatAssignment
 
 
 @router.put("/{seat_id}/assignment", dependencies=WRITE)
-async def assign_seat(
-    seat_id: uuid.UUID, body: AssignmentIn, service: Service
-) -> SeatAssignmentOut:
+async def assign_seat(seat_id: uuid.UUID, body: AssignmentIn, service: Service) -> SeatAssignmentOut:
     """Give the seat to a person or reserve it for a unit. Only published seats in `assigned`
     mode (409 seat-not-assignable otherwise); the holder must be active (422 holder-inactive).
     A taken seat is reassigned, and `replaced` names the previous holder (docs/0086)."""
@@ -128,9 +115,7 @@ def get_batch(
 
 
 @batch_router.post("/batch", dependencies=WRITE)
-async def batch_assign(
-    body: BatchIn, service: Annotated[SeatBatchService, Depends(get_batch)]
-) -> BatchResult:
+async def batch_assign(body: BatchIn, service: Annotated[SeatBatchService, Depends(get_batch)]) -> BatchResult:
     """Assign, unassign and swap many seats at once, all or nothing (docs/0085). Steps run in
     order; 422 batch-invalid lists every failing step by `op_index` and changes nothing. The
     result shows the final state of every touched seat and who lost a seat."""

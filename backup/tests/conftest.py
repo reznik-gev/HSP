@@ -27,10 +27,7 @@ class FakeClock:
 
 class SpyPostgres:
     def __init__(self) -> None:
-        self.content = {
-            "musical_chairs": b"musical_chairs rows v1",
-            "keycloak": b"keycloak rows v1",
-        }
+        self.content = {"musical_chairs": b"musical_chairs rows v1", "keycloak": b"keycloak rows v1"}
         self.revision: str | None = "c9b2fc969b7d"
         self.restored: dict[str, bytes] = {}
         self.fail_dump = False
@@ -82,9 +79,7 @@ def spy_postgres() -> SpyPostgres:
 
 
 @pytest.fixture
-def folder_stores_by_targets(
-    tmp_path: Path, nightly_and_weekly_config: BackupConfig
-) -> dict[str, FolderStore]:
+def folder_stores_by_targets(tmp_path: Path, nightly_and_weekly_config: BackupConfig) -> dict[str, FolderStore]:
     stores = {}
     for label in nightly_and_weekly_config.targets:
         (tmp_path / label).mkdir()

@@ -105,13 +105,9 @@ async def test_archive_hides_from_listing_and_blocks_edits(
     item = await s.create_item(lamp())
     await s.archive_item(item.id)
     assert item.id not in {
-        i.id
-        for i in await s.list_items(category="decor", include_archived=False, after=None, limit=50)
+        i.id for i in await s.list_items(category="decor", include_archived=False, after=None, limit=50)
     }
-    assert item.id in {
-        i.id
-        for i in await s.list_items(category="decor", include_archived=True, after=None, limit=50)
-    }
+    assert item.id in {i.id for i in await s.list_items(category="decor", include_archived=True, after=None, limit=50)}
     with pytest.raises(ProblemException) as exc:
         await s.update_item(item.id, {"name": "x"})
     assert exc.value.slug == "archived"

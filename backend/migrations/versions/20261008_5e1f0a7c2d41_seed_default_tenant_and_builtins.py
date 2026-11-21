@@ -21,9 +21,7 @@ down_revision: str | Sequence[str] | None = "c9b2fc969b7d"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-tenant = sa.table(
-    "tenant", sa.column("id", sa.Uuid), sa.column("name", sa.String), sa.column("slug", sa.String)
-)
+tenant = sa.table("tenant", sa.column("id", sa.Uuid), sa.column("name", sa.String), sa.column("slug", sa.String))
 zone_type = sa.table(
     "zone_type",
     sa.column("id", sa.Uuid),
@@ -286,10 +284,7 @@ def upgrade() -> None:
     op.bulk_insert(tenant, [{"id": tenant_id, "name": "Default organization", "slug": "default"}])
     op.bulk_insert(
         zone_type,
-        [
-            {"id": uuid7(), "tenant_id": tenant_id, "name": n, "is_enclosed": e, "color": c}
-            for n, e, c in ZONE_TYPES
-        ],
+        [{"id": uuid7(), "tenant_id": tenant_id, "name": n, "is_enclosed": e, "color": c} for n, e, c in ZONE_TYPES],
     )
 
     items, revs = [], []
@@ -318,12 +313,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute(
-        "DELETE FROM catalog_item_rev WHERE item_id IN "
-        "(SELECT id FROM catalog_item WHERE tenant_id IS NULL)"
-    )
+    op.execute("DELETE FROM catalog_item_rev WHERE item_id IN (SELECT id FROM catalog_item WHERE tenant_id IS NULL)")
     op.execute("DELETE FROM catalog_item WHERE tenant_id IS NULL")
-    op.execute(
-        "DELETE FROM zone_type WHERE tenant_id = (SELECT id FROM tenant WHERE slug = 'default')"
-    )
+    op.execute("DELETE FROM zone_type WHERE tenant_id = (SELECT id FROM tenant WHERE slug = 'default')")
     op.execute("DELETE FROM tenant WHERE slug = 'default'")

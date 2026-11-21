@@ -64,9 +64,7 @@ def read_manifest(archive: Path) -> Manifest:
                 raise ArchiveError(f"{archive.name} has no {MANIFEST}")
             data = json.load(f)
     except (tarfile.TarError, KeyError, json.JSONDecodeError) as exc:
-        raise ArchiveError(
-            f"{archive.name} isn't a readable Musical Chairs backup ({exc})"
-        ) from None
+        raise ArchiveError(f"{archive.name} isn't a readable Musical Chairs backup ({exc})") from None
     try:
         return Manifest(**data)
     except TypeError:

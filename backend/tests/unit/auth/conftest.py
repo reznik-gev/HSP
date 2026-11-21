@@ -91,9 +91,7 @@ def probe_api(session_store: InMemorySessionStore, refresher: SpyRefresher) -> I
 
 
 @pytest.fixture
-def sign_in(
-    session_store: InMemorySessionStore, probe_api: TestClient, signed_in_subject: str
-) -> SignIn:
+def sign_in(session_store: InMemorySessionStore, probe_api: TestClient, signed_in_subject: str) -> SignIn:
     """Signs `signed_in_subject` in to `probe_api` with the given tokens and STUB_CSRF_TOKEN."""
 
     async def sign_in(tokens: SessionTokens) -> None:

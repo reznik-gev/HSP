@@ -32,9 +32,7 @@ class PublishResult(BaseModel):
 
 
 class PublishRepository(Protocol):
-    async def discard(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int, draft_id: uuid.UUID
-    ) -> None: ...
+    async def discard(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int, draft_id: uuid.UUID) -> None: ...
 
     async def publish(
         self,
@@ -46,25 +44,17 @@ class PublishRepository(Protocol):
         note: str | None,
     ) -> None: ...
 
-    async def seat_labels_elsewhere(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID
-    ) -> dict[str, str]:
+    async def seat_labels_elsewhere(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> dict[str, str]:
         """Seat label -> floor name, in published versions of the building's other active floors."""
         ...
 
-    async def devices_elsewhere(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID
-    ) -> dict[uuid.UUID, str]:
+    async def devices_elsewhere(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> dict[uuid.UUID, str]:
         """Device id -> floor name, over published versions of the tenant's other floors."""
         ...
 
-    async def assigned_seats(
-        self, tenant_id: uuid.UUID, element_ids: set[uuid.UUID]
-    ) -> set[uuid.UUID]: ...
+    async def assigned_seats(self, tenant_id: uuid.UUID, element_ids: set[uuid.UUID]) -> set[uuid.UUID]: ...
 
-    async def unassign(
-        self, tenant_id: uuid.UUID, seat_ids: set[uuid.UUID]
-    ) -> list[models.SeatAssignment]:
+    async def unassign(self, tenant_id: uuid.UUID, seat_ids: set[uuid.UUID]) -> list[models.SeatAssignment]:
         """Delete the seats' assignments; returns them for the audit log."""
         ...
 
@@ -81,30 +71,19 @@ class SqlPublishRepository:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def discard(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int, draft_id: uuid.UUID
-    ) -> None:
+    async def discard(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, version: int, draft_id: uuid.UUID) -> None:
         in_floor = select(models.FloorElement.id).where(
             models.FloorElement.tenant_id == tenant_id, models.FloorElement.floor_id == floor_id
         )
         for rev in REV_MODEL.values():
             # Delete first: the draft's revisions occupy [version, open) for their elements...
-            await self._db.execute(
-                delete(rev).where(rev.element_id.in_(in_floor), rev.from_version == version)
-            )
+            await self._db.execute(delete(rev).where(rev.element_id.in_(in_floor), rev.from_version == version))
         for rev in REV_MODEL.values():
             # ...so the revisions it closed at `version` can be reopened without overlapping.
             await self._db.execute(
-                update(rev)
-                .where(rev.element_id.in_(in_floor), rev.to_version == version)
-                .values(to_version=None)
+                update(rev).where(rev.element_id.in_(in_floor), rev.to_version == version).values(to_version=None)
             )
-        has_revision = or_(
-            *(
-                exists().where(rev.element_id == models.FloorElement.id)
-                for rev in REV_MODEL.values()
-            )
-        )
+        has_revision = or_(*(exists().where(rev.element_id == models.FloorElement.id) for rev in REV_MODEL.values()))
         await self._db.execute(
             delete(models.FloorElement).where(
                 models.FloorElement.tenant_id == tenant_id,
@@ -112,9 +91,7 @@ class SqlPublishRepository:
                 ~has_revision,
             )
         )
-        await self._db.execute(
-            delete(models.FloorVersion).where(models.FloorVersion.id == draft_id)
-        )
+        await self._db.execute(delete(models.FloorVersion).where(models.FloorVersion.id == draft_id))
 
     async def publish(
         self,
@@ -145,14 +122,10 @@ class SqlPublishRepository:
             )
         )
         await self._db.execute(
-            update(models.Floor)
-            .where(models.Floor.id == floor_id)
-            .values(published_version=version)
+            update(models.Floor).where(models.Floor.id == floor_id).values(published_version=version)
         )
 
-    async def seat_labels_elsewhere(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID
-    ) -> dict[str, str]:
+    async def seat_labels_elsewhere(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> dict[str, str]:
         f, r, e = models.Floor, models.ObjectRev, models.FloorElement
         building = select(f.building_id).where(f.id == floor_id).scalar_subquery()
         rows = await self._db.execute(
@@ -173,9 +146,7 @@ class SqlPublishRepository:
         )
         return {label: name for label, name in rows if label is not None}
 
-    async def devices_elsewhere(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID
-    ) -> dict[uuid.UUID, str]:
+    async def devices_elsewhere(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> dict[uuid.UUID, str]:
         f, r, e = models.Floor, models.ObjectRev, models.FloorElement
         rows = await self._db.execute(
             select(r.device_id, f.name)
@@ -191,9 +162,7 @@ class SqlPublishRepository:
         )
         return {device_id: name for device_id, name in rows if device_id is not None}
 
-    async def assigned_seats(
-        self, tenant_id: uuid.UUID, element_ids: set[uuid.UUID]
-    ) -> set[uuid.UUID]:
+    async def assigned_seats(self, tenant_id: uuid.UUID, element_ids: set[uuid.UUID]) -> set[uuid.UUID]:
         if not element_ids:
             return set()
         return set(
@@ -205,9 +174,7 @@ class SqlPublishRepository:
             )
         )
 
-    async def unassign(
-        self, tenant_id: uuid.UUID, seat_ids: set[uuid.UUID]
-    ) -> list[models.SeatAssignment]:
+    async def unassign(self, tenant_id: uuid.UUID, seat_ids: set[uuid.UUID]) -> list[models.SeatAssignment]:
         if not seat_ids:
             return []
         rows = list(
@@ -218,9 +185,7 @@ class SqlPublishRepository:
                 )
             )
         )
-        await self._db.execute(
-            delete(models.SeatAssignment).where(models.SeatAssignment.id.in_([r.id for r in rows]))
-        )
+        await self._db.execute(delete(models.SeatAssignment).where(models.SeatAssignment.id.in_([r.id for r in rows])))
         return rows
 
 
@@ -231,11 +196,7 @@ def _elements(content: PlanContent) -> dict[tuple[Kind, uuid.UUID], Element]:
 def seats_losing_assignment(draft: PlanContent, assigned: set[uuid.UUID]) -> set[uuid.UUID]:
     """Assigned seats the draft removes or makes non-assignable: freed on publish (docs/0086)."""
     objects = {o.id: o for o in draft.objects}
-    return {
-        seat_id
-        for seat_id in assigned
-        if (o := objects.get(seat_id)) is None or o.allocation_mode != "assigned"
-    }
+    return {seat_id for seat_id in assigned if (o := objects.get(seat_id)) is None or o.allocation_mode != "assigned"}
 
 
 def publish_conflicts(
@@ -250,11 +211,7 @@ def publish_conflicts(
     them (docs/0086).
     """
     problems: list[ProblemError] = []
-    seats = [
-        o
-        for o in draft.objects
-        if (item := draft.catalog.get(str(o.catalog_item_rev_id))) and item.is_seat
-    ]
+    seats = [o for o in draft.objects if (item := draft.catalog.get(str(o.catalog_item_rev_id))) and item.is_seat]
     seen: dict[str, uuid.UUID] = {}
     for seat in seats:
         if not seat.label:
@@ -272,8 +229,7 @@ def publish_conflicts(
             problems.append(
                 ProblemError(
                     code="seat_label_duplicate",
-                    message=f"Seat label {seat.label!r} is already used on floor "
-                    f"{labels_elsewhere[seat.label]}.",
+                    message=f"Seat label {seat.label!r} is already used on floor {labels_elsewhere[seat.label]}.",
                     element_id=str(seat.id),
                 )
             )
@@ -283,8 +239,7 @@ def publish_conflicts(
             problems.append(
                 ProblemError(
                     code="device_on_other_floor",
-                    message=f"This device is already placed on floor "
-                    f"{devices_elsewhere[o.device_id]}.",
+                    message=f"This device is already placed on floor {devices_elsewhere[o.device_id]}.",
                     element_id=str(o.id),
                 )
             )
@@ -318,11 +273,7 @@ class PublishingService:
         )
 
     async def _published_content(self, floor_id: uuid.UUID, published: int | None) -> PlanContent:
-        return (
-            await self.drafts.load_content(self._tenant, floor_id, published)
-            if published
-            else PlanContent()
-        )
+        return await self.drafts.load_content(self._tenant, floor_id, published) if published else PlanContent()
 
     async def publish(self, floor_id: uuid.UUID, body: PublishIn) -> PublishResult:
         published = await self._guard().require_editable(floor_id)
@@ -357,17 +308,11 @@ class PublishingService:
                 errors=problems,
             )
         assigned = await self.repo.assigned_seats(self._tenant, seat_ids)
-        released = await self.repo.unassign(
-            self._tenant, seats_losing_assignment(content, assigned)
-        )
+        released = await self.repo.unassign(self._tenant, seats_losing_assignment(content, assigned))
         reason = f"Seat removed or made non-assignable in floor version {draft.version}"
         for a in released:
-            self.drafts.record(
-                seat_unassigned(self.principal, a, reason=reason, request_id=self.request_id)
-            )
-        await self.repo.publish(
-            floor_id, draft.id, draft.version, published, self.principal.subject, body.note
-        )
+            self.drafts.record(seat_unassigned(self.principal, a, reason=reason, request_id=self.request_id))
+        await self.repo.publish(floor_id, draft.id, draft.version, published, self.principal.subject, body.note)
         freed_seats = sorted((freed(a) for a in released), key=lambda f: f.seat_id)
         self._audit(
             "floor.published",
@@ -420,11 +365,7 @@ class PublishingService:
         current = _elements(await self._published_content(floor_id, published))
         upserted = {key: e for key, e in target.items() if key not in current or current[key] != e}
         deleted = set(current) - set(target)
-        draft = await self.drafts.create_draft(
-            self._tenant, floor_id, published + 1, self.principal.subject
-        )
+        draft = await self.drafts.create_draft(self._tenant, floor_id, published + 1, self.principal.subject)
         await self.drafts.save(self._tenant, floor_id, draft.version, upserted, deleted)
-        self._audit(
-            "floor.draft_restored", floor_id, {"version": draft.version, "restored_from": version}
-        )
+        self._audit("floor.draft_restored", floor_id, {"version": draft.version, "restored_from": version})
         await self.drafts.commit()

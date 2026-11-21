@@ -26,9 +26,7 @@ async def test_an_invalid_changeset_saves_nothing(admin_editing_new_floor: dict[
         )
     assert (exc.value.status, exc.value.slug) == (422, "changeset-invalid")
     assert exc.value.errors is not None and exc.value.errors[0].code == "opening_exceeds_wall"
-    await admin_editing_new_floor[
-        "db"
-    ].rollback()  # what the request's session does when the handler raises
+    await admin_editing_new_floor["db"].rollback()  # what the request's session does when the handler raises
     assert await admin_editing_new_floor["db"].get(models.FloorElement, w) is None
 
 
@@ -72,9 +70,7 @@ async def test_moving_a_parent_off_its_nested_zone_is_refused(
             {"op": "update", "kind": "zone", "id": str(parent), "data": MOVED_2_M},
         )
     assert exc.value.errors is not None
-    assert [(e.code, e.element_id) for e in exc.value.errors] == [
-        ("zone_outside_parent", str(child))
-    ]
+    assert [(e.code, e.element_id) for e in exc.value.errors] == [("zone_outside_parent", str(child))]
 
 
 async def test_changesets_warn_about_what_they_touch(
@@ -86,9 +82,7 @@ async def test_changesets_warn_about_what_they_touch(
         0,
         add("object", unlabelled, **stub_desk(admin_editing_new_floor, label=None)),
     )
-    assert [(w["code"], w["element_id"]) for w in r.warnings] == [
-        ("seat_without_label", str(unlabelled))
-    ]
+    assert [(w["code"], w["element_id"]) for w in r.warnings] == [("seat_without_label", str(unlabelled))]
     # Another change doesn't repeat warnings about elements it leaves alone.
     r = await apply(
         admin_editing_new_floor,
