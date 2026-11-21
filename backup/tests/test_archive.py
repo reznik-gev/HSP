@@ -5,12 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from musical_chairs_backup.archive import (
-    ArchiveError,
-    extract_verified,
-    read_manifest,
-    write_archive,
-)
+from musical_chairs_backup.archive import ArchiveError, extract_verified, read_manifest, write_archive
 
 CREATED = datetime(2026, 10, 21, 2, 30, tzinfo=UTC)
 
@@ -19,11 +14,7 @@ CREATED = datetime(2026, 10, 21, 2, 30, tzinfo=UTC)
 def members(tmp_path: Path) -> dict[str, Path]:
     src = tmp_path / "src"
     (src / "config").mkdir(parents=True)
-    files = {
-        "musical_chairs.dump": b"musical_chairs data",
-        "keycloak.dump": b"kc data",
-        "config/.env": b"A=1\n",
-    }
+    files = {"musical_chairs.dump": b"musical_chairs data", "keycloak.dump": b"kc data", "config/.env": b"A=1\n"}
     for name, content in files.items():
         (src / name).write_bytes(content)
     return {name: src / name for name in files}

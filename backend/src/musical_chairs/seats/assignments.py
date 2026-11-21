@@ -92,11 +92,7 @@ class SeatAssignmentService:
     async def _seat(self, seat_id: uuid.UUID) -> PublishedSeat:
         r, f = models.ObjectRev, models.Floor
         query = select(r.label, f.id, r.allocation_mode).select_from(r)
-        row = (
-            await self.db.execute(
-                published_seats(query, self._tenant).where(r.element_id == seat_id)
-            )
-        ).first()
+        row = (await self.db.execute(published_seats(query, self._tenant).where(r.element_id == seat_id))).first()
         if row is None:
             raise ProblemException(
                 404,
@@ -127,9 +123,7 @@ class SeatAssignmentService:
     async def check_holder(self, body: AssignmentIn) -> None:
         if body.person_id is not None:
             p = await self.db.scalar(
-                select(models.Person).where(
-                    models.Person.tenant_id == self._tenant, models.Person.id == body.person_id
-                )
+                select(models.Person).where(models.Person.tenant_id == self._tenant, models.Person.id == body.person_id)
             )
             problem = None if p is None or p.active else f"{p.display_name} is inactive."
             pointer, missing = "/person_id", p is None
@@ -146,11 +140,7 @@ class SeatAssignmentService:
                 422,
                 "request-invalid",
                 "Holder not found",
-                errors=[
-                    ProblemError(
-                        code="holder_not_found", message="No such holder.", pointer=pointer
-                    )
-                ],
+                errors=[ProblemError(code="holder_not_found", message="No such holder.", pointer=pointer)],
             )
         if problem:
             raise ProblemException(
@@ -246,9 +236,7 @@ class SeatAssignmentService:
         if current is None:
             return None
         await self.db.delete(current)
-        self.db.add(
-            seat_unassigned(self.principal, current, reason=reason, request_id=self.request_id)
-        )
+        self.db.add(seat_unassigned(self.principal, current, reason=reason, request_id=self.request_id))
         await self.db.flush()
         return freed(current)
 
@@ -268,13 +256,7 @@ async def free_person_seats(
         )
     )
     if held:
-        await db.execute(
-            delete(models.SeatAssignment).where(models.SeatAssignment.id.in_([a.id for a in held]))
-        )
+        await db.execute(delete(models.SeatAssignment).where(models.SeatAssignment.id.in_([a.id for a in held])))
     for a in held:
-        db.add(
-            seat_unassigned(
-                principal, a, reason=f"{person.display_name} deactivated", request_id=request_id
-            )
-        )
+        db.add(seat_unassigned(principal, a, reason=f"{person.display_name} deactivated", request_id=request_id))
     return [freed(a) for a in held]

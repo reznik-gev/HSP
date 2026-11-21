@@ -27,8 +27,7 @@ class ZoneType(IdMixin, TenantMixin, TimestampMixin, Base):
 
 
 class CatalogItem(IdMixin, TimestampMixin, ArchivableMixin, Base):
-    """tenant_id NULL = built-in item shipped with Musical Chairs, seeded by migration (docs/0034
-    review E)."""
+    """tenant_id NULL = built-in item shipped with Musical Chairs, seeded by migration (docs/0034 review E)."""
 
     __tablename__ = "catalog_item"
     __table_args__ = (UniqueConstraint("tenant_id", "key", postgresql_nulls_not_distinct=True),)

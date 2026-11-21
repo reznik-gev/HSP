@@ -80,9 +80,7 @@ class InMemoryLocationsRepository:
         after: uuid.UUID | None,
         limit: int,
     ) -> list[Building]:
-        rows = sorted(
-            (b for b in self.buildings.values() if b.tenant_id == tenant_id), key=lambda b: b.id
-        )
+        rows = sorted((b for b in self.buildings.values() if b.tenant_id == tenant_id), key=lambda b: b.id)
         rows = [b for b in rows if site_id is None or b.site_id == site_id]
         rows = [b for b in rows if include_archived or b.archived_at is None]
         rows = [b for b in rows if after is None or b.id > after]
@@ -92,9 +90,7 @@ class InMemoryLocationsRepository:
         b = self.buildings.get(building_id)
         return b if b and b.tenant_id == tenant_id else None
 
-    async def building_with_code(
-        self, tenant_id: uuid.UUID, site_id: uuid.UUID, code: str
-    ) -> Building | None:
+    async def building_with_code(self, tenant_id: uuid.UUID, site_id: uuid.UUID, code: str) -> Building | None:
         return next(
             (
                 b
@@ -120,9 +116,7 @@ class InMemoryLocationsRepository:
         after: uuid.UUID | None,
         limit: int,
     ) -> list[Floor]:
-        rows = sorted(
-            (f for f in self.floors.values() if f.tenant_id == tenant_id), key=lambda f: f.id
-        )
+        rows = sorted((f for f in self.floors.values() if f.tenant_id == tenant_id), key=lambda f: f.id)
         rows = [f for f in rows if building_id is None or f.building_id == building_id]
         rows = [f for f in rows if include_archived or f.archived_at is None]
         rows = [f for f in rows if after is None or f.id > after]
@@ -132,16 +126,12 @@ class InMemoryLocationsRepository:
         f = self.floors.get(floor_id)
         return f if f and f.tenant_id == tenant_id else None
 
-    async def floor_at_level(
-        self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int
-    ) -> Floor | None:
+    async def floor_at_level(self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int) -> Floor | None:
         return next(
             (
                 f
                 for f in self.floors.values()
-                if f.tenant_id == tenant_id
-                and f.building_id == building_id
-                and f.level_index == level_index
+                if f.tenant_id == tenant_id and f.building_id == building_id and f.level_index == level_index
             ),
             None,
         )

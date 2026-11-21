@@ -25,9 +25,7 @@ def create_site(api: TestClient, name: str = "HQ", time_zone: str = "UTC") -> di
     return body
 
 
-def create_building(
-    api: TestClient, site_id: str, code: str = "A", expect: int = 201
-) -> dict[str, Any]:
+def create_building(api: TestClient, site_id: str, code: str = "A", expect: int = 201) -> dict[str, Any]:
     r = api.post(
         "/api/v1/buildings",
         json={"site_id": site_id, "name": f"Building {code}", "code": code},
@@ -37,9 +35,7 @@ def create_building(
     return body
 
 
-def create_floor(
-    api: TestClient, building_id: str, level: int, expect: int = 201, **extra: Any
-) -> dict[str, Any]:
+def create_floor(api: TestClient, building_id: str, level: int, expect: int = 201, **extra: Any) -> dict[str, Any]:
     r = api.post(
         "/api/v1/floors",
         json={"building_id": building_id, "name": f"L{level}", "level_index": level, **extra},

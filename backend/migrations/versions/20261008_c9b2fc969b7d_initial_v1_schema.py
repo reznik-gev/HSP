@@ -68,9 +68,7 @@ def upgrade() -> None:
         sa.Column("reason", sa.Text(), nullable=True),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_audit_event_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_audit_event_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_audit_event")),
     )
     op.create_index(
@@ -100,9 +98,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("archived_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_catalog_item_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_catalog_item_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_catalog_item")),
         sa.UniqueConstraint(
             "tenant_id",
@@ -147,16 +143,10 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("archived_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["parent_id"], ["org_unit.id"], name=op.f("fk_org_unit_parent_id_org_unit")
-        ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_org_unit_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["parent_id"], ["org_unit.id"], name=op.f("fk_org_unit_parent_id_org_unit")),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_org_unit_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_org_unit")),
-        sa.UniqueConstraint(
-            "tenant_id", "external_id", name=op.f("uq_org_unit_tenant_id_external_id")
-        ),
+        sa.UniqueConstraint("tenant_id", "external_id", name=op.f("uq_org_unit_tenant_id_external_id")),
     )
     op.create_index(op.f("ix_org_unit_parent_id"), "org_unit", ["parent_id"], unique=False)
     op.create_index(op.f("ix_org_unit_tenant_id"), "org_unit", ["tenant_id"], unique=False)
@@ -202,17 +192,11 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_person_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_person_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_person")),
         sa.UniqueConstraint("tenant_id", "email", name=op.f("uq_person_tenant_id_email")),
-        sa.UniqueConstraint(
-            "tenant_id", "external_id", name=op.f("uq_person_tenant_id_external_id")
-        ),
-        sa.UniqueConstraint(
-            "tenant_id", "idp_subject", name=op.f("uq_person_tenant_id_idp_subject")
-        ),
+        sa.UniqueConstraint("tenant_id", "external_id", name=op.f("uq_person_tenant_id_external_id")),
+        sa.UniqueConstraint("tenant_id", "idp_subject", name=op.f("uq_person_tenant_id_idp_subject")),
     )
     op.create_index(op.f("ix_person_tenant_id"), "person", ["tenant_id"], unique=False)
     op.create_table(
@@ -235,9 +219,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("archived_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_site_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_site_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_site")),
     )
     op.create_index(op.f("ix_site_tenant_id"), "site", ["tenant_id"], unique=False)
@@ -258,9 +240,7 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_user_profile_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_user_profile_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("subject", name=op.f("pk_user_profile")),
     )
     op.create_index(op.f("ix_user_profile_tenant_id"), "user_profile", ["tenant_id"], unique=False)
@@ -288,15 +268,11 @@ def upgrade() -> None:
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_user_session_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_user_session_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_user_session")),
         sa.UniqueConstraint("token_hash", name=op.f("uq_user_session_token_hash")),
     )
-    op.create_index(
-        op.f("ix_user_session_expires_at"), "user_session", ["expires_at"], unique=False
-    )
+    op.create_index(op.f("ix_user_session_expires_at"), "user_session", ["expires_at"], unique=False)
     op.create_index(op.f("ix_user_session_subject"), "user_session", ["subject"], unique=False)
     op.create_index(op.f("ix_user_session_tenant_id"), "user_session", ["tenant_id"], unique=False)
     op.create_table(
@@ -318,9 +294,7 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_zone_type_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_zone_type_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_zone_type")),
         sa.UniqueConstraint("tenant_id", "name", name=op.f("uq_zone_type_tenant_id_name")),
     )
@@ -346,9 +320,7 @@ def upgrade() -> None:
         ),
         sa.Column("archived_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["site_id"], ["site.id"], name=op.f("fk_building_site_id_site")),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_building_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_building_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_building")),
         sa.UniqueConstraint("site_id", "code", name=op.f("uq_building_site_id_code")),
     )
@@ -390,18 +362,12 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["item_id"], ["catalog_item.id"], name=op.f("fk_catalog_item_rev_item_id_catalog_item")
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_catalog_item_rev_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_catalog_item_rev_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_catalog_item_rev")),
         sa.UniqueConstraint("item_id", "rev_no", name=op.f("uq_catalog_item_rev_item_id_rev_no")),
     )
-    op.create_index(
-        op.f("ix_catalog_item_rev_item_id"), "catalog_item_rev", ["item_id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_catalog_item_rev_tenant_id"), "catalog_item_rev", ["tenant_id"], unique=False
-    )
+    op.create_index(op.f("ix_catalog_item_rev_item_id"), "catalog_item_rev", ["item_id"], unique=False)
+    op.create_index(op.f("ix_catalog_item_rev_tenant_id"), "catalog_item_rev", ["tenant_id"], unique=False)
     op.create_table(
         "device",
         sa.Column("asset_tag", sa.String(length=100), nullable=True),
@@ -425,9 +391,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["assigned_person_id"], ["person.id"], name=op.f("fk_device_assigned_person_id_person")
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_device_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_device_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_device")),
         sa.UniqueConstraint("tenant_id", "asset_tag", name=op.f("uq_device_tenant_id_asset_tag")),
     )
@@ -450,12 +414,8 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_position_tenant_id_tenant")
-        ),
-        sa.ForeignKeyConstraint(
-            ["unit_id"], ["org_unit.id"], name=op.f("fk_position_unit_id_org_unit")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_position_tenant_id_tenant")),
+        sa.ForeignKeyConstraint(["unit_id"], ["org_unit.id"], name=op.f("fk_position_unit_id_org_unit")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_position")),
     )
     op.create_index(op.f("ix_position_tenant_id"), "position", ["tenant_id"], unique=False)
@@ -465,15 +425,9 @@ def upgrade() -> None:
         sa.Column("unit_id", sa.Uuid(), nullable=False),
         sa.Column("person_id", sa.Uuid(), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["person_id"], ["person.id"], name=op.f("fk_unit_manager_person_id_person")
-        ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_unit_manager_tenant_id_tenant")
-        ),
-        sa.ForeignKeyConstraint(
-            ["unit_id"], ["org_unit.id"], name=op.f("fk_unit_manager_unit_id_org_unit")
-        ),
+        sa.ForeignKeyConstraint(["person_id"], ["person.id"], name=op.f("fk_unit_manager_person_id_person")),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_unit_manager_tenant_id_tenant")),
+        sa.ForeignKeyConstraint(["unit_id"], ["org_unit.id"], name=op.f("fk_unit_manager_unit_id_org_unit")),
         sa.PrimaryKeyConstraint("unit_id", "person_id", name=op.f("pk_unit_manager")),
     )
     op.create_index(op.f("ix_unit_manager_tenant_id"), "unit_manager", ["tenant_id"], unique=False)
@@ -502,16 +456,10 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("archived_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["building_id"], ["building.id"], name=op.f("fk_floor_building_id_building")
-        ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_floor_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["building_id"], ["building.id"], name=op.f("fk_floor_building_id_building")),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_floor_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_floor")),
-        sa.UniqueConstraint(
-            "building_id", "level_index", name=op.f("uq_floor_building_id_level_index")
-        ),
+        sa.UniqueConstraint("building_id", "level_index", name=op.f("uq_floor_building_id_level_index")),
     )
     op.create_index(op.f("ix_floor_building_id"), "floor", ["building_id"], unique=False)
     op.create_index(op.f("ix_floor_tenant_id"), "floor", ["tenant_id"], unique=False)
@@ -523,26 +471,14 @@ def upgrade() -> None:
         sa.Column("position_id", sa.Uuid(), nullable=True),
         sa.Column("primary_override", sa.Boolean(), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["person_id"], ["person.id"], name=op.f("fk_unit_membership_person_id_person")
-        ),
-        sa.ForeignKeyConstraint(
-            ["position_id"], ["position.id"], name=op.f("fk_unit_membership_position_id_position")
-        ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_unit_membership_tenant_id_tenant")
-        ),
-        sa.ForeignKeyConstraint(
-            ["unit_id"], ["org_unit.id"], name=op.f("fk_unit_membership_unit_id_org_unit")
-        ),
+        sa.ForeignKeyConstraint(["person_id"], ["person.id"], name=op.f("fk_unit_membership_person_id_person")),
+        sa.ForeignKeyConstraint(["position_id"], ["position.id"], name=op.f("fk_unit_membership_position_id_position")),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_unit_membership_tenant_id_tenant")),
+        sa.ForeignKeyConstraint(["unit_id"], ["org_unit.id"], name=op.f("fk_unit_membership_unit_id_org_unit")),
         sa.PrimaryKeyConstraint("person_id", "unit_id", name=op.f("pk_unit_membership")),
     )
-    op.create_index(
-        op.f("ix_unit_membership_tenant_id"), "unit_membership", ["tenant_id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_unit_membership_unit_id"), "unit_membership", ["unit_id"], unique=False
-    )
+    op.create_index(op.f("ix_unit_membership_tenant_id"), "unit_membership", ["tenant_id"], unique=False)
+    op.create_index(op.f("ix_unit_membership_unit_id"), "unit_membership", ["unit_id"], unique=False)
     op.create_index(
         "uq_unit_membership_one_primary",
         "unit_membership",
@@ -557,17 +493,11 @@ def upgrade() -> None:
         sa.Column("acquired_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["floor_id"], ["floor.id"], name=op.f("fk_floor_edit_lock_floor_id_floor")
-        ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_floor_edit_lock_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["floor_id"], ["floor.id"], name=op.f("fk_floor_edit_lock_floor_id_floor")),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_floor_edit_lock_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("floor_id", name=op.f("pk_floor_edit_lock")),
     )
-    op.create_index(
-        op.f("ix_floor_edit_lock_tenant_id"), "floor_edit_lock", ["tenant_id"], unique=False
-    )
+    op.create_index(op.f("ix_floor_edit_lock_tenant_id"), "floor_edit_lock", ["tenant_id"], unique=False)
     op.create_table(
         "floor_element",
         sa.Column("floor_id", sa.Uuid(), nullable=False),
@@ -588,18 +518,12 @@ def upgrade() -> None:
         ),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["floor_id"], ["floor.id"], name=op.f("fk_floor_element_floor_id_floor")
-        ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_floor_element_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["floor_id"], ["floor.id"], name=op.f("fk_floor_element_floor_id_floor")),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_floor_element_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_floor_element")),
     )
     op.create_index(op.f("ix_floor_element_floor_id"), "floor_element", ["floor_id"], unique=False)
-    op.create_index(
-        op.f("ix_floor_element_tenant_id"), "floor_element", ["tenant_id"], unique=False
-    )
+    op.create_index(op.f("ix_floor_element_tenant_id"), "floor_element", ["tenant_id"], unique=False)
     op.create_table(
         "floor_version",
         sa.Column("floor_id", sa.Uuid(), nullable=False),
@@ -631,21 +555,13 @@ def upgrade() -> None:
         sa.Column("note", sa.Text(), nullable=True),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["floor_id"], ["floor.id"], name=op.f("fk_floor_version_floor_id_floor")
-        ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_floor_version_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["floor_id"], ["floor.id"], name=op.f("fk_floor_version_floor_id_floor")),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_floor_version_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_floor_version")),
-        sa.UniqueConstraint(
-            "floor_id", "version_no", name=op.f("uq_floor_version_floor_id_version_no")
-        ),
+        sa.UniqueConstraint("floor_id", "version_no", name=op.f("uq_floor_version_floor_id_version_no")),
     )
     op.create_index(op.f("ix_floor_version_floor_id"), "floor_version", ["floor_id"], unique=False)
-    op.create_index(
-        op.f("ix_floor_version_tenant_id"), "floor_version", ["tenant_id"], unique=False
-    )
+    op.create_index(op.f("ix_floor_version_tenant_id"), "floor_version", ["tenant_id"], unique=False)
     op.create_index(
         "uq_floor_version_one_draft",
         "floor_version",
@@ -694,9 +610,7 @@ def upgrade() -> None:
             ["floor_element.id"],
             name=op.f("fk_column_rev_element_id_floor_element"),
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_column_rev_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_column_rev_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_column_rev")),
     )
     op.create_geospatial_index(
@@ -757,9 +671,7 @@ def upgrade() -> None:
             "ST_X(position) = round(ST_X(position)) AND ST_Y(position) = round(ST_Y(position)) AND ST_Z(position) = round(ST_Z(position))",
             name=op.f("ck_object_rev_position_on_grid"),
         ),
-        sa.CheckConstraint(
-            "rotation_ddeg >= 0 AND rotation_ddeg < 3600", name=op.f("ck_object_rev_rotation_range")
-        ),
+        sa.CheckConstraint("rotation_ddeg >= 0 AND rotation_ddeg < 3600", name=op.f("ck_object_rev_rotation_range")),
         sa.CheckConstraint(
             "to_version IS NULL OR to_version > from_version",
             name=op.f("ck_object_rev_version_range"),
@@ -774,17 +686,13 @@ def upgrade() -> None:
             ["catalog_item_rev.id"],
             name=op.f("fk_object_rev_catalog_item_rev_id_catalog_item_rev"),
         ),
-        sa.ForeignKeyConstraint(
-            ["device_id"], ["device.id"], name=op.f("fk_object_rev_device_id_device")
-        ),
+        sa.ForeignKeyConstraint(["device_id"], ["device.id"], name=op.f("fk_object_rev_device_id_device")),
         sa.ForeignKeyConstraint(
             ["element_id"],
             ["floor_element.id"],
             name=op.f("fk_object_rev_element_id_floor_element"),
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_object_rev_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_object_rev_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_object_rev")),
     )
     op.create_geospatial_index(
@@ -857,9 +765,7 @@ def upgrade() -> None:
             ["floor_element.id"],
             name=op.f("fk_opening_rev_element_id_floor_element"),
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_opening_rev_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_opening_rev_tenant_id_tenant")),
         sa.ForeignKeyConstraint(
             ["wall_element_id"],
             ["floor_element.id"],
@@ -869,9 +775,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_opening_rev_element_id"), "opening_rev", ["element_id"], unique=False)
     op.create_index(op.f("ix_opening_rev_tenant_id"), "opening_rev", ["tenant_id"], unique=False)
-    op.create_index(
-        op.f("ix_opening_rev_wall_element_id"), "opening_rev", ["wall_element_id"], unique=False
-    )
+    op.create_index(op.f("ix_opening_rev_wall_element_id"), "opening_rev", ["wall_element_id"], unique=False)
     op.create_table(
         "seat_assignment",
         sa.Column("seat_element_id", sa.Uuid(), nullable=False),
@@ -906,9 +810,7 @@ def upgrade() -> None:
             ["floor_element.id"],
             name=op.f("fk_seat_assignment_seat_element_id_floor_element"),
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_seat_assignment_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_seat_assignment_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_seat_assignment")),
         sa.UniqueConstraint("seat_element_id", name=op.f("uq_seat_assignment_seat_element_id")),
     )
@@ -924,9 +826,7 @@ def upgrade() -> None:
         ["holder_unit_id"],
         unique=False,
     )
-    op.create_index(
-        op.f("ix_seat_assignment_tenant_id"), "seat_assignment", ["tenant_id"], unique=False
-    )
+    op.create_index(op.f("ix_seat_assignment_tenant_id"), "seat_assignment", ["tenant_id"], unique=False)
     op.create_geospatial_table(
         "wall_rev",
         sa.Column(
@@ -955,16 +855,12 @@ def upgrade() -> None:
             using="gist",
             name="ex_wall_rev_version_overlap",
         ),
-        sa.CheckConstraint(
-            "ST_NPoints(centerline) = 2", name=op.f("ck_wall_rev_centerline_two_points")
-        ),
+        sa.CheckConstraint("ST_NPoints(centerline) = 2", name=op.f("ck_wall_rev_centerline_two_points")),
         sa.CheckConstraint(
             "ST_OrderingEquals(centerline, ST_SnapToGrid(centerline, 1))",
             name=op.f("ck_wall_rev_centerline_on_grid"),
         ),
-        sa.CheckConstraint(
-            "thickness_mm > 0 AND height_mm > 0", name=op.f("ck_wall_rev_positive_dims")
-        ),
+        sa.CheckConstraint("thickness_mm > 0 AND height_mm > 0", name=op.f("ck_wall_rev_positive_dims")),
         sa.CheckConstraint(
             "to_version IS NULL OR to_version > from_version",
             name=op.f("ck_wall_rev_version_range"),
@@ -972,9 +868,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["element_id"], ["floor_element.id"], name=op.f("fk_wall_rev_element_id_floor_element")
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_wall_rev_tenant_id_tenant")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_wall_rev_tenant_id_tenant")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_wall_rev")),
     )
     op.create_geospatial_index(
@@ -1016,9 +910,7 @@ def upgrade() -> None:
             using="gist",
             name="ex_zone_rev_version_overlap",
         ),
-        sa.CheckConstraint(
-            "ST_NumInteriorRings(boundary) = 0", name=op.f("ck_zone_rev_boundary_no_holes")
-        ),
+        sa.CheckConstraint("ST_NumInteriorRings(boundary) = 0", name=op.f("ck_zone_rev_boundary_no_holes")),
         sa.CheckConstraint(
             "ST_OrderingEquals(boundary, ST_SnapToGrid(boundary, 1))",
             name=op.f("ck_zone_rev_boundary_on_grid"),
@@ -1035,12 +927,8 @@ def upgrade() -> None:
             ["floor_element.id"],
             name=op.f("fk_zone_rev_parent_zone_element_id_floor_element"),
         ),
-        sa.ForeignKeyConstraint(
-            ["tenant_id"], ["tenant.id"], name=op.f("fk_zone_rev_tenant_id_tenant")
-        ),
-        sa.ForeignKeyConstraint(
-            ["zone_type_id"], ["zone_type.id"], name=op.f("fk_zone_rev_zone_type_id_zone_type")
-        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], name=op.f("fk_zone_rev_tenant_id_tenant")),
+        sa.ForeignKeyConstraint(["zone_type_id"], ["zone_type.id"], name=op.f("fk_zone_rev_zone_type_id_zone_type")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_zone_rev")),
     )
     op.create_geospatial_index(

@@ -7,14 +7,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from musical_chairs.api.common import WRITE
-from musical_chairs.api.pagination import (
-    DEFAULT_LIMIT,
-    CursorParam,
-    LimitParam,
-    Page,
-    decode_cursor,
-    page_of,
-)
+from musical_chairs.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
 from musical_chairs.auth.dependencies import CurrentPrincipal
 from musical_chairs.db import get_session
 from musical_chairs.org.people import (
@@ -44,9 +37,7 @@ async def list_people(
     q: Annotated[str | None, Query(description="Search name or email")] = None,
     unit_id: Annotated[uuid.UUID | None, Query(description="Members of this unit")] = None,
     include_inactive: Annotated[bool, Query()] = False,
-    seated: Annotated[
-        bool | None, Query(description="true: holds a seat; false: holds none (docs/0088)")
-    ] = None,
+    seated: Annotated[bool | None, Query(description="true: holds a seat; false: holds none (docs/0088)")] = None,
     limit: LimitParam = DEFAULT_LIMIT,
     cursor: CursorParam = None,
 ) -> Page[PersonOut]:
@@ -95,9 +86,7 @@ async def reactivate_person(person_id: uuid.UUID, service: Service) -> PersonOut
 
 
 @router.put("/{person_id}/memberships", dependencies=WRITE)
-async def set_memberships(
-    person_id: uuid.UUID, body: list[MembershipIn], service: Service
-) -> PersonOut:
+async def set_memberships(person_id: uuid.UUID, body: list[MembershipIn], service: Service) -> PersonOut:
     """Replace all memberships at once. With several units, exactly one must be marked primary
     (422 primary_required otherwise); a single membership is primary by itself (docs/0084)."""
     return await service.set_memberships(person_id, body)

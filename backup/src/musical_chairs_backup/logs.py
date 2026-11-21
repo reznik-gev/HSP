@@ -13,7 +13,7 @@ def configure_logging() -> None:
             structlog.processors.JSONRenderer(),
         ],
         wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
-        # stderr, so a command's own output stays clean for bin/musical-chairs to read. Looked up
-        # per line, so tests that capture it see the lines.
+        # stderr, so a command's own output stays clean for bin/musical-chairs to read. Looked up per line,
+        # so tests that capture it see the lines.
         logger_factory=lambda *_: structlog.PrintLogger(sys.stderr),
     )

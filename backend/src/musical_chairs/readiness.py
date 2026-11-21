@@ -48,8 +48,8 @@ async def schema_problem(conn: AsyncConnection) -> str | None:
     if actual == expected:
         return None
     return (
-        f"the database schema is at {actual or 'no revision'}, but this version of Musical Chairs "
-        f"needs {expected}: run the migrate job (docker compose run --rm migrate)"
+        f"the database schema is at {actual or 'no revision'}, but this version of Musical Chairs needs "
+        f"{expected}: run the migrate job (docker compose run --rm migrate)"
     )
 
 
@@ -129,6 +129,4 @@ class Readiness:
 
 
 def default_readiness(oidc_issuer_url: str) -> Readiness:
-    return Readiness(
-        {"database": check_database_and_schema, "keycloak": KeycloakProbe(oidc_issuer_url)}
-    )
+    return Readiness({"database": check_database_and_schema, "keycloak": KeycloakProbe(oidc_issuer_url)})

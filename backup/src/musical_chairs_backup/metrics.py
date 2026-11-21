@@ -20,15 +20,12 @@ class BackupMetrics:
             return Gauge(name, doc, ["schedule"], registry=registry)
 
         self.last_success = gauge(
-            "musical_chairs_backup_last_success_timestamp_seconds",
-            "When the schedule last backed up",
+            "musical_chairs_backup_last_success_timestamp_seconds", "When the schedule last backed up"
         )
         self.last_failure = gauge(
             "musical_chairs_backup_last_failure_timestamp_seconds", "When the schedule last failed"
         )
-        self.duration = gauge(
-            "musical_chairs_backup_duration_seconds", "How long the last backup took"
-        )
+        self.duration = gauge("musical_chairs_backup_duration_seconds", "How long the last backup took")
         self.size = gauge("musical_chairs_backup_size_bytes", "The size of the last backup")
         self.skipped = gauge(
             "musical_chairs_backup_last_skipped_timestamp_seconds",

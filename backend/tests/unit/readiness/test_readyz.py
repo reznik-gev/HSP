@@ -24,17 +24,13 @@ async def fake_keycloak_down_problem() -> str | None:
 @pytest.fixture
 def every_check_passes(app: FastAPI) -> None:
     """The app's /readyz checks all pass."""
-    app.state.readiness = Readiness(
-        {"database": fake_passing_check, "keycloak": fake_passing_check}
-    )
+    app.state.readiness = Readiness({"database": fake_passing_check, "keycloak": fake_passing_check})
 
 
 @pytest.fixture
 def database_and_keycloak_down(app: FastAPI) -> None:
     """The app's /readyz finds neither the database nor Keycloak."""
-    app.state.readiness = Readiness(
-        {"database": fake_database_down_problem, "keycloak": fake_keycloak_down_problem}
-    )
+    app.state.readiness = Readiness({"database": fake_database_down_problem, "keycloak": fake_keycloak_down_problem})
 
 
 @pytest.mark.usefixtures("every_check_passes")
@@ -51,6 +47,4 @@ def test_not_ready_names_each_failed_check(api: TestClient) -> None:
     assert r.headers["content-type"] == PROBLEM_JSON
     body = r.json()
     assert body["type"].endswith("/not-ready")
-    assert body["detail"] == (
-        "database: database unreachable (OSError); keycloak: Keycloak answered 503"
-    )
+    assert body["detail"] == ("database: database unreachable (OSError); keycloak: Keycloak answered 503")

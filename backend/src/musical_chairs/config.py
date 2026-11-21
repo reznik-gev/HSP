@@ -9,16 +9,14 @@ from pydantic import Field, PostgresDsn, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import make_url
 
-# Fixed, publicly known key used ONLY when MUSICAL_CHAIRS_ENVIRONMENT=development, so dev sessions
-# survive API reloads. Any other environment must set MUSICAL_CHAIRS_SESSION_ENCRYPTION_KEY
-# (docs/0077).
+# Fixed, publicly known key used ONLY when MUSICAL_CHAIRS_ENVIRONMENT=development, so dev sessions survive
+# API reloads. Any other environment must set MUSICAL_CHAIRS_SESSION_ENCRYPTION_KEY (docs/0077).
 DEV_SESSION_ENCRYPTION_KEY = base64.urlsafe_b64encode(
     b"musical-chairs-dev-only-sessions"  # exactly 32 bytes, as Fernet needs
 )
 
 #: Where Docker puts secret files by default (docs/0099). A setting can come from a file named
-#: after its variable in lower case, e.g. /run/secrets/musical_chairs_oidc_client_secret; the
-#: environment wins.
+#: after its variable in lower case, e.g. /run/secrets/musical_chairs_oidc_client_secret; the environment wins.
 DEFAULT_SECRETS_DIR = Path("/run/secrets")
 
 
@@ -32,9 +30,7 @@ class Settings(BaseSettings):
 
     environment: Literal["development", "test", "production"] = "development"
     database_url: PostgresDsn = Field(
-        default=PostgresDsn(
-            "postgresql+asyncpg://musical_chairs:musical_chairs@localhost:5432/musical_chairs"
-        ),
+        default=PostgresDsn("postgresql+asyncpg://musical_chairs:musical_chairs@localhost:5432/musical_chairs"),
     )
     # Overrides the URL's password, so the URL can be plain config and the password a secret
     # file (docs/0099).

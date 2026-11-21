@@ -1,5 +1,4 @@
-"""/api/v1/sites (docs/0035, docs/0078). Reading needs a session; changes need
-musical-chairs-admin + CSRF."""
+"""/api/v1/sites (docs/0035, docs/0078). Reading needs a session; changes need musical-chairs-admin + CSRF."""
 
 import uuid
 from datetime import datetime
@@ -9,14 +8,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from musical_chairs.api.common import WRITE, get_locations_repository
-from musical_chairs.api.pagination import (
-    DEFAULT_LIMIT,
-    CursorParam,
-    LimitParam,
-    Page,
-    decode_cursor,
-    page_of,
-)
+from musical_chairs.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
 from musical_chairs.auth.dependencies import CurrentPrincipal
 from musical_chairs.locations.repository import LocationsRepository
 from musical_chairs.locations.sites import SitesService
@@ -73,9 +65,7 @@ async def list_sites(
     cursor: CursorParam = None,
 ) -> Page[SiteOut]:
     filters = {"include_archived": include_archived}
-    rows = await service.list(
-        include_archived=include_archived, after=decode_cursor(cursor, filters), limit=limit + 1
-    )
+    rows = await service.list(include_archived=include_archived, after=decode_cursor(cursor, filters), limit=limit + 1)
     return page_of(rows, limit, filters, to_out)
 
 

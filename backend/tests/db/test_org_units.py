@@ -28,9 +28,7 @@ async def units_service_in_own_tenant(rolled_back_db_session: AsyncSession) -> U
 
 async def tree(units_service_in_own_tenant: UnitsService) -> dict[str, Any]:
     root = await units_service_in_own_tenant.create(UnitIn(name="Company", level_label="Company"))
-    eng = await units_service_in_own_tenant.create(
-        UnitIn(name="Engineering", parent_id=root.id, external_id="ENG")
-    )
+    eng = await units_service_in_own_tenant.create(UnitIn(name="Engineering", parent_id=root.id, external_id="ENG"))
     web = await units_service_in_own_tenant.create(UnitIn(name="Web", parent_id=eng.id))
     sales = await units_service_in_own_tenant.create(UnitIn(name="Sales", parent_id=root.id))
     return {"root": root, "eng": eng, "web": web, "sales": sales}
@@ -44,9 +42,7 @@ async def test_single_root_and_unique_external_ids(
         await units_service_in_own_tenant.create(UnitIn(name="Second root"))
     assert exc.value.slug == "root-exists"
     with pytest.raises(ProblemException) as exc:
-        await units_service_in_own_tenant.create(
-            UnitIn(name="Dup", parent_id=t["root"].id, external_id="ENG")
-        )
+        await units_service_in_own_tenant.create(UnitIn(name="Dup", parent_id=t["root"].id, external_id="ENG"))
     assert exc.value.slug == "external-id-taken"
 
 
@@ -66,9 +62,7 @@ async def test_move_and_cycle_protection(units_service_in_own_tenant: UnitsServi
     assert exc.value.slug == "root-cannot-move"
 
 
-async def person(
-    units_service_in_own_tenant: UnitsService, name: str, *memberships: tuple[Any, bool]
-) -> uuid.UUID:
+async def person(units_service_in_own_tenant: UnitsService, name: str, *memberships: tuple[Any, bool]) -> uuid.UUID:
     now = datetime.now(UTC)
     p = models.Person(
         id=new_id(),
@@ -96,9 +90,7 @@ async def person(
     return p.id
 
 
-async def memberships(
-    units_service_in_own_tenant: UnitsService, person_id: uuid.UUID
-) -> set[tuple[uuid.UUID, bool]]:
+async def memberships(units_service_in_own_tenant: UnitsService, person_id: uuid.UUID) -> set[tuple[uuid.UUID, bool]]:
     rows = await units_service_in_own_tenant.db.scalars(
         select(models.UnitMembership).where(models.UnitMembership.person_id == person_id)
     )
@@ -112,9 +104,7 @@ async def test_archive_cascades_moves_members_up_and_frees_unit_seats(
     root, eng, web, sales = t["root"], t["eng"], t["web"], t["sales"]
     dana = await person(units_service_in_own_tenant, "Dana", (web, True), (sales, False))
     eli = await person(units_service_in_own_tenant, "Eli", (root, True), (eng, False))
-    floor, _ = await make_floor(
-        units_service_in_own_tenant.db, units_service_in_own_tenant.principal.tenant_id
-    )
+    floor, _ = await make_floor(units_service_in_own_tenant.db, units_service_in_own_tenant.principal.tenant_id)
     seat = models.FloorElement(
         id=new_id(),
         tenant_id=units_service_in_own_tenant.principal.tenant_id,
@@ -149,10 +139,7 @@ async def test_archive_cascades_moves_members_up_and_frees_unit_seats(
     }
     assert await memberships(units_service_in_own_tenant, eli) == {(root.id, True)}
     assert {
-        u.name
-        for u in await units_service_in_own_tenant.list_units(
-            include_archived=False, after=None, limit=50
-        )
+        u.name for u in await units_service_in_own_tenant.list_units(include_archived=False, after=None, limit=50)
     } == {
         "Company",
         "Sales",
@@ -172,9 +159,7 @@ async def test_archive_cascades_moves_members_up_and_frees_unit_seats(
 
 async def test_positions(units_service_in_own_tenant: UnitsService) -> None:
     t = await tree(units_service_in_own_tenant)
-    lead = await units_service_in_own_tenant.create_position(
-        t["web"].id, PositionIn(title="Team Lead")
-    )
+    lead = await units_service_in_own_tenant.create_position(t["web"].id, PositionIn(title="Team Lead"))
     await units_service_in_own_tenant.create_position(t["web"].id, PositionIn(title="Engineer"))
     assert [p.title for p in await units_service_in_own_tenant.positions(t["web"].id)] == [
         "Engineer",
@@ -209,9 +194,7 @@ async def test_positions(units_service_in_own_tenant: UnitsService) -> None:
         },
     )
     await units_service_in_own_tenant.delete_position(lead.id)
-    assert [p.title for p in await units_service_in_own_tenant.positions(t["web"].id)] == [
-        "Engineer"
-    ]
+    assert [p.title for p in await units_service_in_own_tenant.positions(t["web"].id)] == ["Engineer"]
     membership = (
         await units_service_in_own_tenant.db.execute(
             text("SELECT unit_id, position_id FROM unit_membership WHERE person_id = :p"),

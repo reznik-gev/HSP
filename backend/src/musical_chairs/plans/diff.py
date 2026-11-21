@@ -34,8 +34,6 @@ def _kind_diff(a: list[BaseModel], b: list[BaseModel]) -> KindDiff:
     return diff
 
 
-def diff_plans(
-    floor_id: uuid.UUID, a: PlanContent, from_version: int, b: PlanContent, to_version: int
-) -> PlanDiff:
+def diff_plans(floor_id: uuid.UUID, a: PlanContent, from_version: int, b: PlanContent, to_version: int) -> PlanDiff:
     kinds: dict[str, Any] = {kind: _kind_diff(getattr(a, kind), getattr(b, kind)) for kind in KINDS}
     return PlanDiff(floor_id=floor_id, from_version=from_version, to_version=to_version, **kinds)

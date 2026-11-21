@@ -55,9 +55,7 @@ class RevisionMixin(IdMixin, TenantMixin):
     @classmethod
     def __table_args__(cls) -> tuple[object, ...]:
         return (
-            CheckConstraint(
-                "to_version IS NULL OR to_version > from_version", name="version_range"
-            ),
+            CheckConstraint("to_version IS NULL OR to_version > from_version", name="version_range"),
             # Never two revisions of one element valid in the same version.
             ExcludeConstraint(
                 (literal_column("element_id"), "="),
@@ -173,9 +171,7 @@ class ObjectRev(RevisionMixin, Base):
     attached_to_element_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("floor_element.id"))
     device_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("device.id"), index=True)
     # Required iff the catalog item is a seat; versioned with the layout (docs/0034 review C).
-    allocation_mode: Mapped[AllocationMode | None] = mapped_column(
-        str_enum(AllocationMode, "allocation_mode")
-    )
+    allocation_mode: Mapped[AllocationMode | None] = mapped_column(str_enum(AllocationMode, "allocation_mode"))
 
     @classmethod
     def _extra_table_args(cls) -> tuple[object, ...]:

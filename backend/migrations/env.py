@@ -1,7 +1,7 @@
 """Alembic environment (docs/0014, docs/0056).
 
-The database URL comes from Musical Chairs settings (MUSICAL_CHAIRS_DATABASE_URL), never from
-alembic.ini. Migrations run as a one-shot job, never from the API process.
+The database URL comes from Musical Chairs settings (MUSICAL_CHAIRS_DATABASE_URL), never from alembic.ini.
+Migrations run as a one-shot job, never from the API process.
 """
 
 import asyncio

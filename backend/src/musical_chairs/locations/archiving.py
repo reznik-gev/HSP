@@ -57,9 +57,7 @@ class LocationArchiver:
                 after={"archived_at": now},
                 reason=f"Archived with {_kind(root)} {root.id}" if cascaded else None,
             )
-            report.archived.append(
-                ArchivedItem(kind=_kind(entity), id=entity.id, name=_name(entity))
-            )
+            report.archived.append(ArchivedItem(kind=_kind(entity), id=entity.id, name=_name(entity)))
 
         tenant = self.principal.tenant_id
         for floor in floors:
@@ -91,9 +89,7 @@ class LocationArchiver:
     async def _refuse_if_being_edited(self, floors: list[Floor]) -> None:
         now = datetime.now(UTC)
         editing = [
-            (f, holder)
-            for f in floors
-            if (holder := await self.repo.lock_holder(self.principal.tenant_id, f.id, now))
+            (f, holder) for f in floors if (holder := await self.repo.lock_holder(self.principal.tenant_id, f.id, now))
         ]
         if editing:
             first, holder = editing[0]

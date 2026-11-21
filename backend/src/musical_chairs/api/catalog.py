@@ -7,14 +7,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from musical_chairs.api.common import WRITE
-from musical_chairs.api.pagination import (
-    DEFAULT_LIMIT,
-    CursorParam,
-    LimitParam,
-    Page,
-    decode_cursor,
-    page_of,
-)
+from musical_chairs.api.pagination import DEFAULT_LIMIT, CursorParam, LimitParam, Page, decode_cursor, page_of
 from musical_chairs.auth.dependencies import CurrentPrincipal
 from musical_chairs.catalog.items import (
     CatalogItemIn,
@@ -52,9 +45,7 @@ async def create_zone_type(body: ZoneTypeIn, service: Service) -> ZoneTypeOut:
 
 
 @router.patch("/zone-types/{zone_type_id}", dependencies=WRITE)
-async def update_zone_type(
-    zone_type_id: uuid.UUID, body: ZoneTypePatch, service: Service
-) -> ZoneTypeOut:
+async def update_zone_type(zone_type_id: uuid.UUID, body: ZoneTypePatch, service: Service) -> ZoneTypeOut:
     return await service.update_zone_type(zone_type_id, body.model_dump(exclude_unset=True))
 
 
@@ -101,9 +92,7 @@ async def list_catalog_item_revisions(item_id: uuid.UUID, service: Service) -> P
 
 
 @router.patch("/catalog-items/{item_id}", dependencies=WRITE)
-async def update_catalog_item(
-    item_id: uuid.UUID, body: CatalogItemPatch, service: Service
-) -> CatalogItemOut:
+async def update_catalog_item(item_id: uuid.UUID, body: CatalogItemPatch, service: Service) -> CatalogItemOut:
     """Name/category edit the item; shape, dimension and flag changes add a revision, so existing
     placements keep theirs (docs/0021). Built-ins are read-only (409)."""
     return await service.update_item(item_id, body.model_dump(exclude_unset=True))

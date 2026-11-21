@@ -30,9 +30,7 @@ EDITABLE = (
 
 
 def snapshot(f: Floor) -> dict[str, Any]:
-    return {"building_id": f.building_id, "archived_at": f.archived_at} | {
-        k: getattr(f, k) for k in EDITABLE
-    }
+    return {"building_id": f.building_id, "archived_at": f.archived_at} | {k: getattr(f, k) for k in EDITABLE}
 
 
 @dataclass
@@ -70,16 +68,12 @@ class FloorsService:
     async def _active_building(self, building_id: uuid.UUID) -> Building:
         building = await self.repo.get_building(self._tenant, building_id)
         if building is None:
-            raise common.invalid_field(
-                "building_not_found", f"Building {building_id} does not exist.", "/building_id"
-            )
+            raise common.invalid_field("building_not_found", f"Building {building_id} does not exist.", "/building_id")
         if building.archived_at is not None:
             raise common.parent_archived("floor", "building")
         return building
 
-    async def _ensure_level_free(
-        self, building_id: uuid.UUID, level_index: int, own_id: uuid.UUID | None
-    ) -> None:
+    async def _ensure_level_free(self, building_id: uuid.UUID, level_index: int, own_id: uuid.UUID | None) -> None:
         clash = await self.repo.floor_at_level(self._tenant, building_id, level_index)
         if clash is not None and clash.id != own_id:
             state = "an archived floor" if clash.archived_at else "another floor"
@@ -140,9 +134,7 @@ class FloorsService:
         before = floor.archived_at
         floor.archived_at = None
         floor.updated_at = datetime.now(UTC)
-        self._audit(
-            "floor.restored", floor, before={"archived_at": before}, after={"archived_at": None}
-        )
+        self._audit("floor.restored", floor, before={"archived_at": before}, after={"archived_at": None})
         await self.repo.commit()
         return floor
 

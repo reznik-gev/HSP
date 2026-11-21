@@ -1,5 +1,5 @@
-"""`musical-chairs-api`: the image's entry point. Serves the metrics port, then runs the uvicorn
-workers (docs/0097, docs/0105).
+"""`musical-chairs-api`: the image's entry point. Serves the metrics port, then runs the uvicorn workers
+(docs/0097, docs/0105).
 
 The metrics server runs in this, the parent process, so it outlives any one worker and reports
 the sum of all of them (musical_chairs/metrics.py).
@@ -38,9 +38,8 @@ def main() -> None:
         host="0.0.0.0",
         port=API_PORT,
         workers=int(os.environ.get("MUSICAL_CHAIRS_API_WORKERS", "4")),
-        # Only musical-chairs-web (or an ingress) reaches the API, so it may trust X-Forwarded-*
-        # from any address on the container network: FORWARDED_ALLOW_IPS="*" in the image
-        # (docs/0097).
+        # Only musical-chairs-web (or an ingress) reaches the API, so it may trust X-Forwarded-* from any
+        # address on the container network: FORWARDED_ALLOW_IPS="*" in the image (docs/0097).
         proxy_headers=True,
         # The API logs each request itself (docs/0105).
         access_log=False,

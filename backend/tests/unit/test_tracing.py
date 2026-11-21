@@ -1,6 +1,6 @@
 """OpenTelemetry tracing: off unless an OTLP endpoint is set; then each request is a span named
-by its route, from musical-chairs-api at this version, sampled at 10% unless
-OTEL_TRACES_SAMPLER says otherwise (docs/0105)."""
+by its route, from musical-chairs-api at this version, sampled at 10% unless OTEL_TRACES_SAMPLER says
+otherwise (docs/0105)."""
 
 from collections.abc import Iterator
 
@@ -54,9 +54,7 @@ def staging_service_name(otlp_endpoint_set: None, monkeypatch: pytest.MonkeyPatc
 def spans(monkeypatch: pytest.MonkeyPatch) -> InMemorySpanExporter:
     """Where spans go, instead of an OTLP endpoint."""
     exporter = InMemorySpanExporter()
-    monkeypatch.setattr(
-        "musical_chairs.tracing.span_processor", lambda: SimpleSpanProcessor(exporter)
-    )
+    monkeypatch.setattr("musical_chairs.tracing.span_processor", lambda: SimpleSpanProcessor(exporter))
     return exporter
 
 
@@ -86,16 +84,12 @@ def untraced_api(no_otel: None, spans: InMemorySpanExporter) -> Iterator[TestCli
     yield from probe_client()
 
 
-def test_tracing_is_off_without_an_endpoint(
-    untraced_api: TestClient, spans: InMemorySpanExporter
-) -> None:
+def test_tracing_is_off_without_an_endpoint(untraced_api: TestClient, spans: InMemorySpanExporter) -> None:
     untraced_api.get("/_test/items/42")
     assert spans.get_finished_spans() == ()
 
 
-def test_a_request_is_a_span_named_by_its_route(
-    traced_api: TestClient, spans: InMemorySpanExporter
-) -> None:
+def test_a_request_is_a_span_named_by_its_route(traced_api: TestClient, spans: InMemorySpanExporter) -> None:
     traced_api.get("/_test/items/42")
 
     [server] = [s for s in spans.get_finished_spans() if s.name == "GET /_test/items/{item_id}"]
@@ -104,9 +98,7 @@ def test_a_request_is_a_span_named_by_its_route(
 
 
 @pytest.mark.parametrize("path", ["/healthz", "/readyz", "/metrics"])
-def test_probes_are_not_traced(
-    traced_api: TestClient, spans: InMemorySpanExporter, path: str
-) -> None:
+def test_probes_are_not_traced(traced_api: TestClient, spans: InMemorySpanExporter, path: str) -> None:
     traced_api.get(path)
     assert spans.get_finished_spans() == ()
 

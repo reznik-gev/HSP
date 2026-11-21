@@ -77,15 +77,11 @@ class FloorVersion(IdMixin, TenantMixin, Base):
 
     floor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("floor.id"), index=True)
     version_no: Mapped[int] = mapped_column(Integer)
-    state: Mapped[FloorVersionState] = mapped_column(
-        str_enum(FloorVersionState, "floor_version_state")
-    )
+    state: Mapped[FloorVersionState] = mapped_column(str_enum(FloorVersionState, "floor_version_state"))
     # Draft revision counter, incremented per accepted changeset (docs/0036).
     revision: Mapped[int] = mapped_column(Integer, default=0)
     created_by: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()")
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
     published_by: Mapped[str | None] = mapped_column(String(255))
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     note: Mapped[str | None] = mapped_column(Text)

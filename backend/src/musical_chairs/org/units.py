@@ -113,33 +113,23 @@ class UnitsService:
 
     async def get_unit(self, unit_id: uuid.UUID) -> models.OrgUnit:
         u = await self.db.scalar(
-            select(models.OrgUnit).where(
-                models.OrgUnit.tenant_id == self._tenant, models.OrgUnit.id == unit_id
-            )
+            select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant, models.OrgUnit.id == unit_id)
         )
         if u is None:
-            raise ProblemException(
-                404, "not-found", "Not found", f"Org unit {unit_id} does not exist."
-            )
+            raise ProblemException(404, "not-found", "Not found", f"Org unit {unit_id} does not exist.")
         return u
 
-    async def list_units(
-        self, *, include_archived: bool, after: uuid.UUID | None, limit: int
-    ) -> list[UnitOut]:
+    async def list_units(self, *, include_archived: bool, after: uuid.UUID | None, limit: int) -> list[UnitOut]:
         q = select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant)
         if not include_archived:
             q = q.where(models.OrgUnit.archived_at.is_(None))
         if after is not None:
             q = q.where(models.OrgUnit.id > after)
-        return [
-            unit_out(u) for u in await self.db.scalars(q.order_by(models.OrgUnit.id).limit(limit))
-        ]
+        return [unit_out(u) for u in await self.db.scalars(q.order_by(models.OrgUnit.id).limit(limit))]
 
     async def _active_parent(self, parent_id: uuid.UUID) -> models.OrgUnit:
         parent = await self.db.scalar(
-            select(models.OrgUnit).where(
-                models.OrgUnit.tenant_id == self._tenant, models.OrgUnit.id == parent_id
-            )
+            select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant, models.OrgUnit.id == parent_id)
         )
         if parent is None:
             raise ProblemException(
@@ -163,9 +153,7 @@ class UnitsService:
             )
         return parent
 
-    async def _ensure_external_id_free(
-        self, external_id: str | None, own: uuid.UUID | None
-    ) -> None:
+    async def _ensure_external_id_free(self, external_id: str | None, own: uuid.UUID | None) -> None:
         if external_id is None:
             return
         clash = await self.db.scalar(
@@ -183,14 +171,10 @@ class UnitsService:
 
     async def _root(self) -> models.OrgUnit | None:
         return await self.db.scalar(
-            select(models.OrgUnit).where(
-                models.OrgUnit.tenant_id == self._tenant, models.OrgUnit.parent_id.is_(None)
-            )
+            select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant, models.OrgUnit.parent_id.is_(None))
         )
 
-    async def create(
-        self, body: UnitIn, source: models.RecordSource = models.RecordSource.MANUAL
-    ) -> UnitOut:
+    async def create(self, body: UnitIn, source: models.RecordSource = models.RecordSource.MANUAL) -> UnitOut:
         if body.parent_id is None:
             if await self._root() is not None:
                 raise ProblemException(
@@ -224,17 +208,13 @@ class UnitsService:
                 return False
             if cursor == unit_id:
                 return True
-            cursor = await self.db.scalar(
-                select(models.OrgUnit.parent_id).where(models.OrgUnit.id == cursor)
-            )
+            cursor = await self.db.scalar(select(models.OrgUnit.parent_id).where(models.OrgUnit.id == cursor))
         return True
 
     async def update(self, unit_id: uuid.UUID, changes: dict[str, Any]) -> UnitOut:
         u = await self.get_unit(unit_id)
         if u.archived_at is not None:
-            raise ProblemException(
-                409, "archived", "Archived", "Restore the unit before editing it (docs/0078)."
-            )
+            raise ProblemException(409, "archived", "Archived", "Restore the unit before editing it (docs/0078).")
         if "parent_id" in changes and changes["parent_id"] != u.parent_id:
             new_parent = changes["parent_id"]
             if u.parent_id is None or new_parent is None:
@@ -261,9 +241,7 @@ class UnitsService:
         b, a = changed_fields(before, _snapshot(u))
         if a:
             u.updated_at = datetime.now(UTC)
-            self._audit(
-                "org_unit.moved" if "parent_id" in a else "org_unit.updated", "org_unit", u.id, b, a
-            )
+            self._audit("org_unit.moved" if "parent_id" in a else "org_unit.updated", "org_unit", u.id, b, a)
             await self.db.commit()
         return unit_out(u)
 
@@ -326,9 +304,7 @@ class UnitsService:
         """Memberships in archived units become memberships of `target`, merging with an
         existing one. A primary stays primary, so the explicit primary survives (docs/0084)."""
         leaving = list(
-            await self.db.scalars(
-                select(models.UnitMembership).where(models.UnitMembership.unit_id.in_(unit_ids))
-            )
+            await self.db.scalars(select(models.UnitMembership).where(models.UnitMembership.unit_id.in_(unit_ids)))
         )
         if not leaving:
             return []
@@ -344,9 +320,7 @@ class UnitsService:
                 )
             )
         }
-        await self.db.execute(
-            delete(models.UnitMembership).where(models.UnitMembership.unit_id.in_(unit_ids))
-        )
+        await self.db.execute(delete(models.UnitMembership).where(models.UnitMembership.unit_id.in_(unit_ids)))
         await self.db.flush()  # free the "one primary" index before re-pointing primaries
         moved = []
         for person_id, ms in sorted(by_person.items()):
@@ -384,9 +358,7 @@ class UnitsService:
                     from_unit_ids=from_ids,
                     to_unit_id=target,
                     previous=[
-                        PreviousMembership(
-                            unit_id=m.unit_id, position_id=m.position_id, is_primary=m.is_primary
-                        )
+                        PreviousMembership(unit_id=m.unit_id, position_id=m.position_id, is_primary=m.is_primary)
                         for m in sorted(ms, key=lambda m: m.unit_id)
                     ],
                     merged=here is not None,
@@ -395,9 +367,7 @@ class UnitsService:
         await self.db.flush()
         return moved
 
-    async def _free_unit_seats(
-        self, unit_ids: list[uuid.UUID], archived_name: str
-    ) -> list[FreedSeat]:
+    async def _free_unit_seats(self, unit_ids: list[uuid.UUID], archived_name: str) -> list[FreedSeat]:
         held = list(
             await self.db.scalars(
                 select(models.SeatAssignment)
@@ -407,9 +377,7 @@ class UnitsService:
         )
         if held:
             await self.db.execute(
-                delete(models.SeatAssignment).where(
-                    models.SeatAssignment.id.in_([a.id for a in held])
-                )
+                delete(models.SeatAssignment).where(models.SeatAssignment.id.in_([a.id for a in held]))
             )
         for a in held:
             self.db.add(
@@ -431,9 +399,7 @@ class UnitsService:
         before = u.archived_at
         u.archived_at = None
         u.updated_at = datetime.now(UTC)
-        self._audit(
-            "org_unit.restored", "org_unit", u.id, {"archived_at": before}, {"archived_at": None}
-        )
+        self._audit("org_unit.restored", "org_unit", u.id, {"archived_at": before}, {"archived_at": None})
         await self.db.commit()
         return unit_out(u)
 
@@ -442,18 +408,14 @@ class UnitsService:
     async def positions(self, unit_id: uuid.UUID) -> list[PositionOut]:
         await self.get_unit(unit_id)
         rows = await self.db.scalars(
-            select(models.Position)
-            .where(models.Position.unit_id == unit_id)
-            .order_by(models.Position.title)
+            select(models.Position).where(models.Position.unit_id == unit_id).order_by(models.Position.title)
         )
         return [PositionOut(id=p.id, unit_id=p.unit_id, title=p.title) for p in rows]
 
     async def create_position(self, unit_id: uuid.UUID, body: PositionIn) -> PositionOut:
         u = await self.get_unit(unit_id)
         if u.archived_at is not None:
-            raise ProblemException(
-                409, "archived", "Archived", "Restore the unit first (docs/0078)."
-            )
+            raise ProblemException(409, "archived", "Archived", "Restore the unit first (docs/0078).")
         now = datetime.now(UTC)
         p = models.Position(
             id=models.new_id(),
@@ -464,30 +426,22 @@ class UnitsService:
             updated_at=now,
         )
         self.db.add(p)
-        self._audit(
-            "position.created", "position", p.id, after={"unit_id": unit_id, "title": body.title}
-        )
+        self._audit("position.created", "position", p.id, after={"unit_id": unit_id, "title": body.title})
         await self.db.commit()
         return PositionOut(id=p.id, unit_id=p.unit_id, title=p.title)
 
     async def _position(self, position_id: uuid.UUID) -> models.Position:
         p = await self.db.scalar(
-            select(models.Position).where(
-                models.Position.tenant_id == self._tenant, models.Position.id == position_id
-            )
+            select(models.Position).where(models.Position.tenant_id == self._tenant, models.Position.id == position_id)
         )
         if p is None:
-            raise ProblemException(
-                404, "not-found", "Not found", f"Position {position_id} does not exist."
-            )
+            raise ProblemException(404, "not-found", "Not found", f"Position {position_id} does not exist.")
         return p
 
     async def rename_position(self, position_id: uuid.UUID, body: PositionIn) -> PositionOut:
         p = await self._position(position_id)
         if p.title != body.title:
-            self._audit(
-                "position.updated", "position", p.id, {"title": p.title}, {"title": body.title}
-            )
+            self._audit("position.updated", "position", p.id, {"title": p.title}, {"title": body.title})
             p.title, p.updated_at = body.title, datetime.now(UTC)
             await self.db.commit()
         return PositionOut(id=p.id, unit_id=p.unit_id, title=p.title)

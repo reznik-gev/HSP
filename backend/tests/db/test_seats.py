@@ -22,23 +22,17 @@ async def test_assign_reassign_and_unassign(published_floor_with_seats: dict[str
     )
     assert (await seats.get(published_floor_with_seats["a"])).assignment is None
 
-    first = await seats.assign(
-        published_floor_with_seats["a"], AssignmentIn(person_id=maya, note="window")
-    )
+    first = await seats.assign(published_floor_with_seats["a"], AssignmentIn(person_id=maya, note="window"))
     assert first.assignment is not None and first.assignment.holder_person_id == maya
     assert first.replaced is None
-    again = await seats.assign(
-        published_floor_with_seats["a"], AssignmentIn(person_id=maya, note="window")
-    )
+    again = await seats.assign(published_floor_with_seats["a"], AssignmentIn(person_id=maya, note="window"))
     assert again.replaced is None  # same holder: nothing changes
 
     # docs/0086: a taken seat is reassigned, and the response names who was replaced.
     moved = await seats.assign(published_floor_with_seats["a"], AssignmentIn(person_id=yoni))
     assert moved.assignment is not None and moved.assignment.holder_person_id == yoni
     assert moved.replaced is not None and moved.replaced.holder_person_id == maya
-    await seats.assign(
-        published_floor_with_seats["b"], AssignmentIn(person_id=yoni)
-    )  # one person, several seats
+    await seats.assign(published_floor_with_seats["b"], AssignmentIn(person_id=yoni))  # one person, several seats
 
     released = await seats.unassign(published_floor_with_seats["a"])
     assert [f.holder_person_id for f in released.freed_seats] == [yoni]
@@ -98,9 +92,7 @@ async def test_deactivating_a_person_frees_their_seats(
     )
     assert (await seats.get(published_floor_with_seats["a"])).assignment is None
     assert (await people.set_active(maya, True)).active is True
-    assert (
-        await seats.get(published_floor_with_seats["a"])
-    ).assignment is None  # reactivating doesn't give seats back
+    assert (await seats.get(published_floor_with_seats["a"])).assignment is None  # reactivating doesn't give seats back
 
 
 async def test_people_can_be_filtered_by_whether_they_hold_a_seat(

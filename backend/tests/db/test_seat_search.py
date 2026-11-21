@@ -32,9 +32,7 @@ async def zone_with_free_seats(rolled_back_db_session: AsyncSession) -> dict[str
     Two zones cover outside but don't count: draft_zone is only in the draft, and
     other_floor_zone is published on another floor of the same building."""
     ctx = await context(rolled_back_db_session)
-    ctx["zone"], ctx["inside"], ctx["bookable_inside"], ctx["outside"] = (
-        new_id() for _ in range(4)
-    )
+    ctx["zone"], ctx["inside"], ctx["bookable_inside"], ctx["outside"] = (new_id() for _ in range(4))
     await apply(
         ctx,
         0,
@@ -47,17 +45,13 @@ async def zone_with_free_seats(rolled_back_db_session: AsyncSession) -> dict[str
         ),
         add("object", ctx["outside"], **stub_desk(ctx, x=6000, label="OUT")),
     )
-    publishing = PublishingService(
-        SqlDraftRepository(ctx["db"]), SqlPublishRepository(ctx["db"]), ctx["admin"]
-    )
+    publishing = PublishingService(SqlDraftRepository(ctx["db"]), SqlPublishRepository(ctx["db"]), ctx["admin"])
     await publishing.publish(ctx["floor"], PublishIn(base_revision=1))
     ctx["draft_zone"], ctx["other_floor_zone"] = new_id(), new_id()
     await apply(ctx, 0, add("zone", ctx["draft_zone"], **stub_zone(ctx, x=4500)))
     other_floor, _ = await make_floor(ctx["db"], ctx["tenant"], ctx["building"], level=1)
     await lock(ctx["db"], ctx["tenant"], other_floor)
-    await apply(
-        ctx, 0, add("zone", ctx["other_floor_zone"], **stub_zone(ctx, x=4500)), floor=other_floor
-    )
+    await apply(ctx, 0, add("zone", ctx["other_floor_zone"], **stub_zone(ctx, x=4500)), floor=other_floor)
     await publishing.publish(other_floor, PublishIn(base_revision=1))
     return ctx
 

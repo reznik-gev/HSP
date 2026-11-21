@@ -64,9 +64,7 @@ def test_writes_need_admin_and_csrf(
     assert api.get("/api/v1/sites").status_code == 200  # viewers can read (docs/0027)
 
 
-def test_patch_audits_only_changed_fields(
-    api: TestClient, locations_repo: InMemoryLocationsRepository
-) -> None:
+def test_patch_audits_only_changed_fields(api: TestClient, locations_repo: InMemoryLocationsRepository) -> None:
     site = create_site(api, "HQ")
     r = api.patch(
         f"/api/v1/sites/{site['id']}",
@@ -81,9 +79,7 @@ def test_patch_audits_only_changed_fields(
     )
 
 
-def test_noop_patch_writes_nothing(
-    api: TestClient, locations_repo: InMemoryLocationsRepository
-) -> None:
+def test_noop_patch_writes_nothing(api: TestClient, locations_repo: InMemoryLocationsRepository) -> None:
     site = create_site(api, "HQ")
     commits = locations_repo.committed
     api.patch(f"/api/v1/sites/{site['id']}", json={"name": "HQ"})
@@ -106,9 +102,7 @@ def test_archive_restore_and_listing(api: TestClient) -> None:
     assert len(api.get("/api/v1/sites").json()["items"]) == 1
 
 
-def test_archive_cascades_to_active_buildings(
-    api: TestClient, locations_repo: InMemoryLocationsRepository
-) -> None:
+def test_archive_cascades_to_active_buildings(api: TestClient, locations_repo: InMemoryLocationsRepository) -> None:
     site = create_site(api)
     building = create_building(api, site["id"])
     r = api.delete(f"/api/v1/sites/{site['id']}")

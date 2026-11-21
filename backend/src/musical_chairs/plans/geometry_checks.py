@@ -32,9 +32,7 @@ SWING_SEGMENTS = 8
 
 
 def _problem(code: str, message: str, element: uuid.UUID, related: uuid.UUID) -> ProblemError:
-    return ProblemError(
-        code=code, message=message, element_id=str(element), related_ids=[str(related)]
-    )
+    return ProblemError(code=code, message=message, element_id=str(element), related_ids=[str(related)])
 
 
 def _polygon(points: list[tuple[float, float]]) -> Polygon | None:
@@ -175,9 +173,5 @@ def warnings(plan: PlanContent, catalog: Mapping[uuid.UUID, CatalogItem]) -> lis
                 )
         for column, shape in columns:
             if shape is not None and _overlap(rect, shape) > AREA_EPS:
-                found.append(
-                    _problem(
-                        "item_over_column", f"{item.name} overlaps a column.", obj.id, column.id
-                    )
-                )
+                found.append(_problem("item_over_column", f"{item.name} overlaps a column.", obj.id, column.id))
     return found

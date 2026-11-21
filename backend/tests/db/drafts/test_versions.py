@@ -27,9 +27,7 @@ PUBLISHED_HEIGHT_MM = stub_wall()["height_mm"]
 EDITED_HEIGHT_MM = 3000
 
 
-async def revisions(
-    admin_editing_new_floor: dict[str, Any], model: Any, element_id: uuid.UUID
-) -> int:
+async def revisions(admin_editing_new_floor: dict[str, Any], model: Any, element_id: uuid.UUID) -> int:
     """How many revision rows an element has in `model`'s table."""
     return int(
         await admin_editing_new_floor["db"].scalar(
@@ -59,9 +57,7 @@ async def test_first_changeset_creates_the_draft_and_saves_everything(
     assert v1.zones[0].name == "Pod A"
     actions = (
         await admin_editing_new_floor["db"].scalars(
-            select(models.AuditEvent.action).where(
-                models.AuditEvent.entity_id == admin_editing_new_floor["floor"]
-            )
+            select(models.AuditEvent.action).where(models.AuditEvent.entity_id == admin_editing_new_floor["floor"])
         )
     ).all()
     assert "floor.draft_created" in actions
@@ -71,18 +67,14 @@ async def test_edits_within_a_draft_update_in_place(
     admin_editing_new_floor: dict[str, Any],
 ) -> None:
     desk = new_id()
-    await apply(
-        admin_editing_new_floor, 0, add("object", desk, **stub_desk(admin_editing_new_floor))
-    )
+    await apply(admin_editing_new_floor, 0, add("object", desk, **stub_desk(admin_editing_new_floor)))
     r = await apply(
         admin_editing_new_floor,
         1,
         {"op": "update", "kind": "object", "id": str(desk), "data": {"position": [2500, 1000, 0]}},
     )
     assert r.revision == 2
-    assert (
-        await revisions(admin_editing_new_floor, models.ObjectRev, desk) == 1
-    )  # same draft: no new revision row
+    assert await revisions(admin_editing_new_floor, models.ObjectRev, desk) == 1  # same draft: no new revision row
     assert (await plan(admin_editing_new_floor, 1)).objects[0].position == (2500, 1000, 0)
 
 
@@ -143,9 +135,7 @@ async def test_undo_brings_back_a_deleted_published_wall_with_its_door(
     deleted = await apply(ctx, 0, {"op": "delete", "kind": "wall", "id": str(w)})  # draft v2
     assert deleted.cascaded == [{"kind": "opening", "id": str(door)}]
 
-    undone = await apply(
-        ctx, 1, add("wall", w, **stub_wall()), add("opening", door, **stub_door(w))
-    )
+    undone = await apply(ctx, 1, add("wall", w, **stub_wall()), add("opening", door, **stub_door(w)))
     assert undone.revision == 2
 
     v1, v2 = await plan(ctx, 1), await plan(ctx, 2)

@@ -67,9 +67,7 @@ async def test_keycloak_answering_an_error_is_not_ready(
     assert await keycloak_probe() == "Keycloak answered 503"
 
 
-async def test_keycloak_unreachable_is_not_ready(
-    keycloak_probe: KeycloakProbe, spy_keycloak: SpyKeycloak
-) -> None:
+async def test_keycloak_unreachable_is_not_ready(keycloak_probe: KeycloakProbe, spy_keycloak: SpyKeycloak) -> None:
     spy_keycloak.status = None
     assert await keycloak_probe() == "Keycloak unreachable (ConnectError)"
 

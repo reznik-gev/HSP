@@ -24,9 +24,7 @@ def test_a_write_is_renamed_into_place(tmp_folder_store: FolderStore, backup_fil
     assert [p.name for p in tmp_folder_store.path.iterdir()] == [NAME]  # no .partial left
 
 
-def test_a_write_replaces_a_backup_of_the_same_name(
-    tmp_folder_store: FolderStore, backup_file: Path
-) -> None:
+def test_a_write_replaces_a_backup_of_the_same_name(tmp_folder_store: FolderStore, backup_file: Path) -> None:
     (tmp_folder_store.path / NAME).write_bytes(b"an older copy")
     tmp_folder_store.put(backup_file, NAME)
     assert (tmp_folder_store.path / NAME).read_bytes() == b"a backup"
@@ -51,9 +49,7 @@ def test_a_write_that_fails_partway_leaves_nothing(
     assert list(tmp_folder_store.path.iterdir()) == []
 
 
-def test_names_are_the_files_in_order_without_folders(
-    tmp_folder_store: FolderStore, backup_file: Path
-) -> None:
+def test_names_are_the_files_in_order_without_folders(tmp_folder_store: FolderStore, backup_file: Path) -> None:
     tmp_folder_store.put(backup_file, OTHER)
     tmp_folder_store.put(backup_file, NAME)
     (tmp_folder_store.path / "lost+found").mkdir()
