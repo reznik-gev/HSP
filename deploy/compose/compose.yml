@@ -6,7 +6,8 @@
 #   tls/              tls.crt and tls.key, when musical-chairs-web terminates TLS
 #   postgres-init/    roles and databases, run once on an empty data directory
 #   backups.yml       when and where to back up (see backups.example.yml)
-# and keeps its data under MUSICAL_CHAIRS_DATA_DIR. `musical-chairs install` (bin/musical-chairs) prepares all of it.
+# and keeps its data under MUSICAL_CHAIRS_DATA_DIR. `musical-chairs install` (bin/musical-chairs)
+# prepares all of it.
 #
 #   docker compose up -d
 name: musical_chairs
@@ -64,7 +65,8 @@ services:
   api:
     <<: *musical-chairs-api
     restart: unless-stopped
-    # Prometheus metrics (docs/0105): host-only unless MUSICAL_CHAIRS_METRICS_ADDRESS names another interface.
+    # Prometheus metrics (docs/0105): host-only unless MUSICAL_CHAIRS_METRICS_ADDRESS names another
+    # interface.
     ports:
       - "${MUSICAL_CHAIRS_METRICS_ADDRESS:-127.0.0.1}:${MUSICAL_CHAIRS_API_METRICS_PORT:-9464}:9464"
     depends_on:

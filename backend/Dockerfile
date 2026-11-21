@@ -1,6 +1,8 @@
-# Musical Chairs API image (docs/0010, docs/0065, docs/0097). The same image runs the one-shot migrate job:
+# Musical Chairs API image (docs/0010, docs/0065, docs/0097). The same image runs the one-shot
+# migrate job:
 #   docker run ... musical-chairs-api alembic upgrade head        (docs/0056)
-# Build: deploy/build-images.sh, or docker build --build-arg MUSICAL_CHAIRS_VERSION=1.2.0 -t musical-chairs-api backend
+# Build: deploy/build-images.sh, or
+#   docker build --build-arg MUSICAL_CHAIRS_VERSION=1.2.0 -t musical-chairs-api backend
 
 FROM python:3.14-slim AS build
 COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /bin/uv
@@ -26,8 +28,8 @@ LABEL org.opencontainers.image.title="musical-chairs-api" \
       org.opencontainers.image.version="${MUSICAL_CHAIRS_VERSION}" \
       org.opencontainers.image.revision="${MUSICAL_CHAIRS_REVISION}" \
       org.opencontainers.image.created="${MUSICAL_CHAIRS_CREATED}"
-# Debian's security fixes, even those the base image doesn't have yet (docs/0129). Musical Chairs never runs
-# pip (the app is in /app/.venv, built by uv), and pip's own bundled packages carry known
+# Debian's security fixes, even those the base image doesn't have yet (docs/0129). Musical Chairs
+# never runs pip (the app is in /app/.venv, built by uv), and pip's own bundled packages carry known
 # vulnerabilities, so it is removed.
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/* \
@@ -36,12 +38,13 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
 RUN useradd --system --uid 10001 --home-dir /app musical_chairs
 WORKDIR /app
 COPY --from=build --chown=musical_chairs:musical_chairs /app /app
-# musical-chairs-api (musical_chairs/serve.py) serves the metrics port, then runs the uvicorn workers. The API port is
-# never published: only musical-chairs-web (or an ingress) reaches it, so uvicorn may trust X-Forwarded-* from
-# any address on the container network (docs/0097). The API logs each request as JSON itself
-# (docs/0105), so uvicorn's own access log is off: it would repeat them as plain text, sign-in
-# codes in callback URLs included. Workers write metrics to PROMETHEUS_MULTIPROC_DIR, which exists
-# for every process (the migrate job too) and is emptied each time the API starts.
+# musical-chairs-api (musical_chairs/serve.py) serves the metrics port, then runs the uvicorn
+# workers. The API port is never published: only musical-chairs-web (or an ingress) reaches it, so
+# uvicorn may trust X-Forwarded-* from any address on the container network (docs/0097). The API
+# logs each request as JSON itself (docs/0105), so uvicorn's own access log is off: it would repeat
+# them as plain text, sign-in codes in callback URLs included. Workers write metrics to
+# PROMETHEUS_MULTIPROC_DIR, which exists for every process (the migrate job too) and is emptied each
+# time the API starts.
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 \
     MUSICAL_CHAIRS_VERSION="${MUSICAL_CHAIRS_VERSION}" MUSICAL_CHAIRS_ENVIRONMENT=production \
     MUSICAL_CHAIRS_API_WORKERS=4 FORWARDED_ALLOW_IPS="*" PROMETHEUS_MULTIPROC_DIR=/tmp/musical-chairs-metrics

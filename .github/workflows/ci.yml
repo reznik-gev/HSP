@@ -298,8 +298,9 @@ jobs:
       - name: Vulnerability scan (warns only, docs/0128)
         run: deploy/scan-images.sh
 
-  # Known vulnerabilities in the packages Musical Chairs ships (docs/0128). Warns only; fails only when a
-  # scanner can't run. Reads the lock files; only backend/'s environment, for pip-audit, is set up.
+  # Known vulnerabilities in the packages Musical Chairs ships (docs/0128). Warns only; fails only
+  # when a scanner can't run. Reads the lock files; only backend/'s environment, for pip-audit, is
+  # set up.
   packages:
     needs: changes
     if: needs.changes.outputs.packages == 'true'
