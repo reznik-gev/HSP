@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Assemble the offline release bundle musical-chairs-<version>.tar.gz (docs/0054, docs/0102) from images
-# already built by deploy/build-images.sh <version>. Third-party images (PostGIS) are pulled.
+# Assemble the offline release bundle musical-chairs-<version>.tar.gz (docs/0054, docs/0102) from
+# images already built by deploy/build-images.sh <version>. Third-party images (PostGIS) are pulled.
 #   deploy/bundle.sh <version> <notes-file> [out-dir]     # out-dir defaults to ./dist
-# Writes <out-dir>/musical-chairs-<version>.tar.gz and <out-dir>/musical-chairs-<version>.tar.gz.sha256.
+# Writes <out-dir>/musical-chairs-<version>.tar.gz and
+# <out-dir>/musical-chairs-<version>.tar.gz.sha256.
 set -euo pipefail
 
 version="${1:?usage: deploy/bundle.sh <version> <notes-file> [out-dir]}"

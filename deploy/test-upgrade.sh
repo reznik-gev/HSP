@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # The upgrade test (docs/0056, docs/0102, docs/0107): install the OLD bundle with its own
-# musical-chairs install, seed it, upgrade to the NEW bundle with the new release's musical-chairs upgrade, and check
-# the version and the seeded seat; then musical-chairs rollback, and check them again.
-#   MUSICAL_CHAIRS_TEST_DIR=<empty dir> deploy/test-upgrade.sh <old musical-chairs-x.tar.gz> <new musical-chairs-y.tar.gz>
+# musical-chairs install, seed it, upgrade to the NEW bundle with the new release's musical-chairs
+# upgrade, and check the version and the seeded seat; then musical-chairs rollback, and check them
+# again.
+#   MUSICAL_CHAIRS_TEST_DIR=<empty dir> deploy/test-upgrade.sh \
+#     <old musical-chairs-x.tar.gz> <new musical-chairs-y.tar.gz>
 # The release workflow runs it from the last published release. Needs what test-bundle.sh and
 # test-restore.sh need.
 set -euo pipefail

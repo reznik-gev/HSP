@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
-# musical-chairs: install and run Musical Chairs on this Docker host (docs/0054, docs/0056, docs/0107).
+# musical-chairs: install and run Musical Chairs on this Docker host (docs/0054, docs/0056,
+# docs/0107).
 #
-#   sudo ./musical-chairs-1.0.0/bin/musical-chairs install            # from an unpacked release bundle
+#   sudo ./musical-chairs-1.0.0/bin/musical-chairs install   # from an unpacked release bundle
 #   sudo musical-chairs install musical-chairs-1.0.0.tar.gz [--dir /opt/musical_chairs]
 #   musical-chairs status
 #   sudo musical-chairs backup now | list
 #   sudo musical-chairs restore <backup>
-#   sudo ./musical-chairs-1.1.0/bin/musical-chairs upgrade            # the new release's musical-chairs upgrades /opt/musical_chairs
+#   sudo ./musical-chairs-1.1.0/bin/musical-chairs upgrade   # upgrades /opt/musical_chairs
 #   sudo musical-chairs rollback
 #   musical-chairs help
 #
-# It ships in the release bundle, and `musical-chairs install` copies it to <installation>/bin/musical-chairs. It
-# needs only bash, Docker with the Compose plugin, openssl and the usual tools (tar, sha256sum).
-# Real work, such as backups, runs inside Musical Chairs' own images.
+# It ships in the release bundle, and `musical-chairs install` copies it to
+# <installation>/bin/musical-chairs. It needs only bash, Docker with the Compose plugin, openssl and
+# the usual tools (tar, sha256sum). Real work, such as backups, runs inside Musical Chairs' own
+# images.
 set -euo pipefail
 
 readonly DEFAULT_DIR=/opt/musical_chairs
 readonly DEFAULT_DATA_DIR=/var/lib/musical_chairs
-# The containers' users (docs/0097, docs/0106): nginx in musical-chairs-web, and postgres and backup.
+# The containers' users (docs/0097, docs/0106): nginx in musical-chairs-web, and postgres and
+# backup.
 readonly WEB_UID=101 POSTGRES_UID=999
 # One file each in secrets/ (docs/0099, docs/0106).
 readonly PASSWORDS=(db_superuser_password musical_chairs_database_password keycloak_db_password
@@ -41,9 +44,10 @@ need_docker() {
   docker info >/dev/null 2>&1 || die "can't reach Docker: is it running, and may you use it?"
 }
 
-# The installation this copy of musical-chairs works on: MUSICAL_CHAIRS_DIR; else the folder above bin/ when that is an
-# installation; else /opt/musical_chairs (when run from a bundle, as for musical-chairs upgrade). That applies to every
-# command, so musical-chairs status run from a bundle looks at /opt/musical_chairs too.
+# The installation this copy of musical-chairs works on: MUSICAL_CHAIRS_DIR; else the folder above
+# bin/ when that is an installation; else /opt/musical_chairs (when run from a bundle, as for
+# musical-chairs upgrade). That applies to every command, so musical-chairs status run from a bundle
+# looks at /opt/musical_chairs too.
 installation() {
   local here dir
   here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -143,25 +147,26 @@ wait_healthy() {
   die "the stack didn't become healthy; the logs above say why"
 }
 
-# --- musical-chairs install ---------------------------------------------------------------------------
+# --- musical-chairs install --------------------------------------------------------------------
 
 usage_install() {
   cat <<'EOF'
 musical-chairs install [bundle] [options]: install Musical Chairs from a release bundle (docs/0107).
 
-  bundle                 musical-chairs-<version>.tar.gz or its unpacked folder; default: the bundle this
-                         musical-chairs came from
+  bundle                 musical-chairs-<version>.tar.gz or its unpacked folder; default: the
+                         bundle this musical-chairs came from
   --dir DIR              the installation folder (default /opt/musical_chairs)
   --data-dir DIR         PostgreSQL's data and the backups (default /var/lib/musical_chairs)
   --public-url URL       where users reach Musical Chairs, e.g. https://musical-chairs.example.com
-  --tls on|off           on: Musical Chairs serves HTTPS with --tls-cert and --tls-key (or a self-signed
-                         certificate, for trying it out); off: a proxy in front does
+  --tls on|off           on: Musical Chairs serves HTTPS with --tls-cert and --tls-key (or a
+                         self-signed certificate, for trying it out); off: a proxy in front does
   --tls-cert FILE        the certificate, with its chain
   --tls-key FILE         its private key
   --admin-email EMAIL    the first admin's email, which is also their username
   --admin-name NAME      the first admin's name
   --no-admin             don't create a first admin
-  --set NAME=VALUE       any other .env setting (repeatable), e.g. --set MUSICAL_CHAIRS_HTTPS_PORT=8443
+  --set NAME=VALUE       any other .env setting (repeatable), e.g.
+                         --set MUSICAL_CHAIRS_HTTPS_PORT=8443
   --secrets DIR          use a saved secrets/ folder instead of new secrets, to restore a backup
                          on a new host (install.md, "Recovering on a new host")
 EOF
@@ -295,7 +300,8 @@ cmd_install() {
   echo "with '$dir/bin/musical-chairs status'."
 }
 
-# create_admin <email> <name>: a Keycloak user with the musical-chairs-admin role and a one-time password.
+# create_admin <email> <name>: a Keycloak user with the musical-chairs-admin role and a one-time
+# password.
 create_admin() {
   local email="$1" name="$2" first last password
   first="${name%% *}"
@@ -316,7 +322,7 @@ EOF
   ok "Keycloak asks for a new password at the first sign-in."
 }
 
-# --- musical-chairs status ----------------------------------------------------------------------------
+# --- musical-chairs status ---------------------------------------------------------------------
 
 cmd_status() {
   need_docker
@@ -372,10 +378,10 @@ when() {
   fi
 }
 
-# --- musical-chairs backup and musical-chairs restore ------------------------------------------------------------
+# --- musical-chairs backup and musical-chairs restore ------------------------------------------
 
-# backup_tool <musical-chairs-backup arguments>: in the running backup service, or in a one-off container
-# of it while the service is stopped (docs/0106).
+# backup_tool <musical-chairs-backup arguments>: in the running backup service, or in a one-off
+# container of it while the service is stopped (docs/0106).
 backup_tool() {
   if [[ -n "$(compose ps -q --status running backup 2>/dev/null)" ]]; then
     compose exec -T backup musical-chairs-backup "$@"
@@ -423,13 +429,15 @@ cmd_restore() {
   local status=0
   backup_tool restore "$name" --yes || status=$?
   if ((status == 3)); then
-    # Refused before touching a database (e.g. a backup from a newer Musical Chairs): nothing changed.
+    # Refused before touching a database (e.g. a backup from a newer Musical Chairs): nothing
+    # changed.
     step "Nothing was changed: start Musical Chairs again"
     compose up -d
     wait_healthy
     die "the restore was refused (see above); Musical Chairs is running as it was"
   elif ((status != 0)); then
-    # A database may be half-restored: leave Musical Chairs stopped rather than serve it (docs/0118).
+    # A database may be half-restored: leave Musical Chairs stopped rather than serve it
+    # (docs/0118).
     echo "musical-chairs: the restore failed partway; Musical Chairs is still stopped. Fix the cause above and run it again," >&2
     die "or start Musical Chairs as it is with: docker compose --project-directory $INSTALL_DIR up -d"
   fi
@@ -439,7 +447,7 @@ cmd_restore() {
   ok "every service is healthy"
 }
 
-# --- musical-chairs upgrade and musical-chairs rollback ----------------------------------------------------------
+# --- musical-chairs upgrade and musical-chairs rollback ----------------------------------------
 
 # version_cmp <a> <b>: prints -1, 0 or 1 (docs/0063). A release is newer than its own
 # pre-releases: 1.1.0 > 1.1.0-rc.2 > 1.1.0-rc.1.
@@ -512,16 +520,18 @@ missing_secrets() {
 
 usage_upgrade() {
   cat <<'EOF'
-musical-chairs upgrade [bundle] [--dir DIR] [--yes]: upgrade an installation to a release bundle (docs/0056).
+musical-chairs upgrade [bundle] [--dir DIR] [--yes]: upgrade an installation to a release bundle
+(docs/0056).
 
 Run the NEW release's musical-chairs: sudo ./musical-chairs-<new version>/bin/musical-chairs upgrade
-  bundle      musical-chairs-<version>.tar.gz or its unpacked folder; default: the bundle this musical-chairs came from
+  bundle      musical-chairs-<version>.tar.gz or its unpacked folder; default: the bundle this
+              musical-chairs came from
   --dir DIR   the installation (default /opt/musical_chairs, or MUSICAL_CHAIRS_DIR)
   --yes       don't ask
 
 It takes a backup first and aborts if that fails. Musical Chairs is down for a few minutes while the
-database is migrated. If anything goes wrong, musical-chairs rollback brings back the previous release and
-its data from that backup.
+database is migrated. If anything goes wrong, musical-chairs rollback brings back the previous
+release and its data from that backup.
 EOF
 }
 
@@ -653,13 +663,13 @@ usage() {
   cat <<'EOF'
 musical-chairs: install and run Musical Chairs on this Docker host (docs/0107).
 
-  musical-chairs install [bundle] [options]   install from a release bundle (musical-chairs install --help)
+  musical-chairs install [bundle] [options]   install from a release bundle (install --help)
   musical-chairs status                       version, services, last backups and free disk
-  musical-chairs backup now                   take a backup now (it goes where backups.yml's manual says)
+  musical-chairs backup now                   take a backup now (to where backups.yml's manual says)
   musical-chairs backup list                  every backup on every target, newest first
-  musical-chairs restore <backup> [--yes]     replace both databases with a backup; Musical Chairs is down meanwhile
-  musical-chairs upgrade [bundle]             upgrade to a release; run the new release's musical-chairs (--help)
-  musical-chairs rollback                     undo the last upgrade: the previous release and its data
+  musical-chairs restore <backup> [--yes]     replace both databases with a backup; down meanwhile
+  musical-chairs upgrade [bundle]             upgrade to a release; run the new copy (--help)
+  musical-chairs rollback                     undo the last upgrade: previous release and its data
   musical-chairs help                         this
 EOF
 }

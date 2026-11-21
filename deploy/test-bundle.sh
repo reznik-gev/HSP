@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Install a release bundle with its own musical-chairs install, as deploy/install.md describes, and check it
-# (docs/0102, docs/0107).
-# The release workflow runs it on a clean runner, then runs the Playwright tests against the stack.
-#   deploy/test-bundle.sh dist/musical-chairs-1.2.0.tar.gz          # check, then stop and remove everything
-#   KEEP=1 deploy/test-bundle.sh dist/musical-chairs-1.2.0.tar.gz   # leave the stack running for Playwright
-# MUSICAL_CHAIRS_TEST_DIR=<empty dir> puts the unpacked bundle and the installation there (default: a new
-# temporary directory); the stack's Compose project is then <dir>/install.
-# The stack listens on 127.0.0.1:8088 (HTTP) and :8443 (HTTPS, a self-signed certificate) as
-# https://localhost:8443, with test users admin/admin (musical-chairs-admin) and viewer/viewer.
-# Needs Linux, Docker with the Compose plugin, curl, openssl, and root or sudo.
+# Install a release bundle with its own musical-chairs install, as deploy/install.md describes, and
+# check it (docs/0102, docs/0107). The release workflow runs it on a clean runner, then runs the
+# Playwright tests against the stack.
+#   deploy/test-bundle.sh dist/musical-chairs-1.2.0.tar.gz          # check, then remove everything
+#   KEEP=1 deploy/test-bundle.sh dist/musical-chairs-1.2.0.tar.gz   # keep the stack for Playwright
+# MUSICAL_CHAIRS_TEST_DIR=<empty dir> puts the unpacked bundle and the installation there (default:
+# a new temporary directory); the stack's Compose project is then <dir>/install. The stack listens
+# on 127.0.0.1:8088 (HTTP) and :8443 (HTTPS, a self-signed certificate) as https://localhost:8443,
+# with test users admin/admin (musical-chairs-admin) and viewer/viewer. Needs Linux, Docker with the
+# Compose plugin, curl, openssl, and root or sudo.
 set -euo pipefail
 
 bundle="$(realpath "${1:?usage: deploy/test-bundle.sh <musical-chairs-version.tar.gz>}")"

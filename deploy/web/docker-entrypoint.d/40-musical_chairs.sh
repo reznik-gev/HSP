@@ -1,16 +1,21 @@
 #!/bin/sh
-# Writes the parts of Musical Chairs' nginx config that depend on the environment (docs/0098), then lets
-# nginx's entrypoint start the server. Fails, and so stops the container, on a bad setting.
+# Writes the parts of Musical Chairs' nginx config that depend on the environment (docs/0098), then
+# lets nginx's entrypoint start the server. Fails, and so stops the container, on a bad setting.
 #
-#   MUSICAL_CHAIRS_WEB_TLS              on (default): terminate TLS here; HTTP on 8080 redirects to HTTPS on
-#                            8443. off: something in front terminates TLS; serve HTTP on 8080.
-#   MUSICAL_CHAIRS_PUBLIC_URL           https://musical-chairs.example.com, where users reach Musical Chairs (needed when TLS is on).
+#   MUSICAL_CHAIRS_WEB_TLS              on (default): terminate TLS here; HTTP on 8080 redirects to
+#                                       HTTPS on 8443. off: something in front terminates TLS; serve
+#                                       HTTP on 8080.
+#   MUSICAL_CHAIRS_PUBLIC_URL           https://musical-chairs.example.com, where users reach
+#                                       Musical Chairs (needed when TLS is on).
 #   MUSICAL_CHAIRS_TLS_CERT, _KEY       certificate and key files (TLS on).
 #   MUSICAL_CHAIRS_HSTS                 on (default) / off. Sent only when TLS is on.
 #   MUSICAL_CHAIRS_TRUSTED_PROXIES      TLS off: addresses or CIDRs of the proxy in front, whose
-#                            X-Forwarded-For/-Proto are trusted. Comma or space separated.
-#   MUSICAL_CHAIRS_KEYCLOAK_ADMIN_FROM  CIDRs that may reach Keycloak's admin console. Empty: nobody.
-#   MUSICAL_CHAIRS_API_UPSTREAM, MUSICAL_CHAIRS_KEYCLOAK_UPSTREAM   host:port of the API and Keycloak.
+#                                       X-Forwarded-For/-Proto are trusted. Comma or space
+#                                       separated.
+#   MUSICAL_CHAIRS_KEYCLOAK_ADMIN_FROM  CIDRs that may reach Keycloak's admin console. Empty:
+#                                       nobody.
+#   MUSICAL_CHAIRS_API_UPSTREAM, MUSICAL_CHAIRS_KEYCLOAK_UPSTREAM
+#                                       host:port of the API and Keycloak.
 set -eu
 
 fail() {

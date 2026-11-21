@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# List known vulnerabilities in every image the stack runs (docs/0128), with Trivy: musical-chairs-api,
-# musical-chairs-web, musical-chairs-keycloak and musical-chairs-backup as built by deploy/build-images.sh, and PostGIS as
-# published (pulled if missing). Covers the system libraries and the packages inside them.
+# List known vulnerabilities in every image the stack runs (docs/0128), with Trivy:
+# musical-chairs-api, musical-chairs-web, musical-chairs-keycloak and musical-chairs-backup as built
+# by deploy/build-images.sh, and PostGIS as published (pulled if missing). Covers the system
+# libraries and the packages inside them.
 #   deploy/scan-images.sh [version]      # default 0.0.0-dev
 # Findings only warn: the script prints a count per image and the High and Critical ones, adds
 # them to the GitHub job summary when there is one, and exits 0. It fails only when Trivy itself
