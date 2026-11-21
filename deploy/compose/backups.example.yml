@@ -1,15 +1,16 @@
-# Musical Chairs' backups (docs/0106). `musical-chairs install` copies this file to backups.yml; change it there.
-# `docker compose exec backup musical-chairs-backup check` says whether it's right, and `docker compose
-# restart backup` applies a change.
+# Musical Chairs' backups (docs/0106). `musical-chairs install` copies this file to backups.yml;
+# change it there. `docker compose exec backup musical-chairs-backup check` says whether it's right,
+# and `docker compose restart backup` applies a change.
 #
-# Each backup is one file, musical-chairs-<UTC time>-<schedule>.tar, holding Musical Chairs' and Keycloak's databases.
-# It holds people's names, emails and seats: keep the target encrypted and access to it limited.
+# Each backup is one file, musical-chairs-<UTC time>-<schedule>.tar, holding Musical Chairs' and
+# Keycloak's databases. It holds people's names, emails and seats: keep the target encrypted and
+# access to it limited.
 
 # The time zone cron times are in.
 timezone: UTC
 
-# Where backups go. A folder is mounted from MUSICAL_CHAIRS_DATA_DIR/backups at /backups; another folder
-# (NFS, SMB) can be mounted there instead. An S3 target signs in with the secret files
+# Where backups go. A folder is mounted from MUSICAL_CHAIRS_DATA_DIR/backups at /backups; another
+# folder (NFS, SMB) can be mounted there instead. An S3 target signs in with the secret files
 # secrets/backup_s3_access_key and secrets/backup_s3_secret_key.
 targets:
   local:

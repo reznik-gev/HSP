@@ -21,8 +21,8 @@ LABEL org.opencontainers.image.title="musical-chairs-keycloak" \
       org.opencontainers.image.revision="${MUSICAL_CHAIRS_REVISION}" \
       org.opencontainers.image.created="${MUSICAL_CHAIRS_CREATED}"
 COPY --from=build /opt/keycloak/ /opt/keycloak/
-# Imported on first start only (an existing realm is left alone). ${MUSICAL_CHAIRS_*} placeholders in it are
-# filled from the environment.
+# Imported on first start only (an existing realm is left alone). ${MUSICAL_CHAIRS_*} placeholders
+# in it are filled from the environment.
 COPY --chown=keycloak:keycloak musical-chairs-realm.json /opt/keycloak/data/import/musical-chairs-realm.json
 # Reads *_FILE variables (secret files) into the environment, then runs kc.sh.
 COPY --chmod=755 entrypoint.sh /opt/keycloak/bin/musical-chairs-entrypoint.sh

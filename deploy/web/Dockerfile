@@ -1,7 +1,8 @@
-# Musical Chairs web image: nginx with the built frontend inside, and Musical Chairs' one entry point (docs/0060,
-# docs/0097, docs/0098). The frontend comes in as a second build context:
+# Musical Chairs web image: nginx with the built frontend inside, and Musical Chairs' one entry
+# point (docs/0060, docs/0097, docs/0098). The frontend comes in as a second build context:
 #   docker build --build-context frontend=frontend -t musical-chairs-web deploy/web
-# or deploy/build-images.sh. Settings come from the environment: see docker-entrypoint.d/40-musical-chairs.sh.
+# or deploy/build-images.sh. Settings come from the environment: see
+# docker-entrypoint.d/40-musical-chairs.sh.
 
 FROM node:24-slim AS build
 WORKDIR /src
