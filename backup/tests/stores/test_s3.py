@@ -32,9 +32,7 @@ def test_a_backup_is_written_under_the_prefix(fake_s3_store: S3Store, backup_fil
     assert keys(fake_s3_store) == [f"prod/{NAME}"]
 
 
-def test_names_are_only_those_directly_under_the_prefix(
-    fake_s3_store: S3Store, backup_file: Path
-) -> None:
+def test_names_are_only_those_directly_under_the_prefix(fake_s3_store: S3Store, backup_file: Path) -> None:
     fake_s3_store.client.put_object(Bucket=BUCKET, Key="other/x.tar", Body=b"x")
     fake_s3_store.client.put_object(Bucket=BUCKET, Key="prod/old/y.tar", Body=b"y")
     fake_s3_store.put(backup_file, OTHER)
@@ -42,28 +40,20 @@ def test_names_are_only_those_directly_under_the_prefix(
     assert fake_s3_store.names() == [NAME, OTHER]
 
 
-def test_without_a_prefix_names_are_the_top_of_the_bucket(
-    fake_s3_store: S3Store, backup_file: Path
-) -> None:
-    whole_bucket = S3Store(
-        "offsite", OFFSITE.model_copy(update={"prefix": ""}), fake_s3_store.client
-    )
+def test_without_a_prefix_names_are_the_top_of_the_bucket(fake_s3_store: S3Store, backup_file: Path) -> None:
+    whole_bucket = S3Store("offsite", OFFSITE.model_copy(update={"prefix": ""}), fake_s3_store.client)
     fake_s3_store.put(backup_file, NAME)
     whole_bucket.put(backup_file, OTHER)
     assert whole_bucket.names() == [OTHER]
 
 
-def test_names_go_past_the_first_page_of_a_listing(
-    fake_s3_store: S3Store, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_names_go_past_the_first_page_of_a_listing(fake_s3_store: S3Store, monkeypatch: pytest.MonkeyPatch) -> None:
     many = [f"musical-chairs-20261021T0{i}0000Z-nightly.tar" for i in range(5)]
     for name in many:
         fake_s3_store.client.put_object(Bucket=BUCKET, Key=f"prod/{name}", Body=b"")
     paginator = fake_s3_store.client.get_paginator("list_objects_v2")
     paginate = paginator.paginate
-    monkeypatch.setattr(
-        paginator, "paginate", lambda **kw: paginate(**kw, PaginationConfig={"PageSize": 2})
-    )
+    monkeypatch.setattr(paginator, "paginate", lambda **kw: paginate(**kw, PaginationConfig={"PageSize": 2}))
     monkeypatch.setattr(fake_s3_store.client, "get_paginator", lambda _: paginator)
     assert fake_s3_store.names() == many
 
@@ -88,22 +78,16 @@ def test_an_upload_that_fails_partway_is_removed(
         raise ClientError({"Error": {"Code": "RequestTimeout"}}, "UploadPart")
 
     monkeypatch.setattr(fake_s3_store.client, "upload_file", broken_upload)
-    with pytest.raises(
-        StoreError, match=r"can't write to offsite \(s3://musical-chairs-backups/prod/\)"
-    ):
+    with pytest.raises(StoreError, match=r"can't write to offsite \(s3://musical-chairs-backups/prod/\)"):
         fake_s3_store.put(backup_file, NAME)
     assert keys(fake_s3_store) == []
 
 
 def test_a_missing_bucket_is_named(fake_s3: None, secrets: Path, backup_file: Path) -> None:
     store = S3Store("offsite", OFFSITE, s3_client(OFFSITE, secrets))
-    with pytest.raises(
-        StoreError, match=r"can't write to offsite \(s3://musical-chairs-backups/prod/\)"
-    ):
+    with pytest.raises(StoreError, match=r"can't write to offsite \(s3://musical-chairs-backups/prod/\)"):
         store.put(backup_file, NAME)
-    with pytest.raises(
-        StoreError, match=r"can't read offsite \(s3://musical-chairs-backups/prod/\)"
-    ):
+    with pytest.raises(StoreError, match=r"can't read offsite \(s3://musical-chairs-backups/prod/\)"):
         store.names()
 
 

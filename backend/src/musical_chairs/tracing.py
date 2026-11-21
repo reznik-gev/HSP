@@ -35,10 +35,7 @@ def span_processor() -> SpanProcessor:
 
 def tracer_provider() -> TracerProvider | None:
     """A provider for this process's spans, or None when tracing is off."""
-    if not (
-        os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
-        or os.environ.get("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
-    ):
+    if not (os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT") or os.environ.get("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")):
         return None
     attributes = {"service.version": __version__}
     if not os.environ.get("OTEL_SERVICE_NAME"):
@@ -63,11 +60,8 @@ def configure_tracing(app: FastAPI, untraced_paths: Iterable[str]) -> None:
 
 
 def instrument_engine(engine: AsyncEngine) -> None:
-    """Trace the engine's queries, if tracing is on (musical_chairs/db.py calls it when it creates
-    one)."""
+    """Trace the engine's queries, if tracing is on (musical_chairs/db.py calls it when it creates one)."""
     if _provider is not None:
         # The instrumentation declares support only below SQLAlchemy 2.1, and would silently do
         # nothing on ours; it works on 2.1, which tests/db/test_tracing.py checks.
-        SQLAlchemyInstrumentor().instrument(
-            engine=engine.sync_engine, tracer_provider=_provider, skip_dep_check=True
-        )
+        SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine, tracer_provider=_provider, skip_dep_check=True)

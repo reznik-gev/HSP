@@ -87,9 +87,7 @@ class SqlLockRepository:
 
     async def get(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> Lock | None:
         row = await self._db.scalar(
-            select(FloorEditLock).where(
-                FloorEditLock.tenant_id == tenant_id, FloorEditLock.floor_id == floor_id
-            )
+            select(FloorEditLock).where(FloorEditLock.tenant_id == tenant_id, FloorEditLock.floor_id == floor_id)
         )
         return _to_lock(row) if row else None
 
@@ -139,9 +137,7 @@ class SqlLockRepository:
 
     async def delete(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> None:
         await self._db.execute(
-            delete(FloorEditLock).where(
-                FloorEditLock.tenant_id == tenant_id, FloorEditLock.floor_id == floor_id
-            )
+            delete(FloorEditLock).where(FloorEditLock.tenant_id == tenant_id, FloorEditLock.floor_id == floor_id)
         )
 
     def record(self, event: AuditEvent) -> None:
@@ -178,13 +174,9 @@ class LocksService:
     async def _require_floor(self, floor_id: uuid.UUID, *, active: bool = False) -> None:
         state = await self.repo.floor_state(self.principal.tenant_id, floor_id)
         if state is None:
-            raise ProblemException(
-                404, "not-found", "Not found", f"Floor {floor_id} does not exist."
-            )
+            raise ProblemException(404, "not-found", "Not found", f"Floor {floor_id} does not exist.")
         if active and state == "archived":
-            raise ProblemException(
-                409, "archived", "Archived", "Restore the floor before editing it (docs/0078)."
-            )
+            raise ProblemException(409, "archived", "Archived", "Restore the floor before editing it (docs/0078).")
 
     async def status(self, floor_id: uuid.UUID) -> LockStatus:
         await self._require_floor(floor_id)
@@ -208,19 +200,11 @@ class LocksService:
             holder = await self.repo.get(tenant, floor_id)
             who = (holder.holder_name or holder.holder_subject) if holder else "someone else"
             since = f" since {holder.acquired_at:%H:%M} UTC" if holder else ""
-            raise ProblemException(
-                423, "floor-locked", "Floor is being edited", f"Being edited by {who}{since}."
-            )
-        was_mine = (
-            before is not None
-            and before.expires_at > now
-            and before.holder_subject == self.principal.subject
-        )
+            raise ProblemException(423, "floor-locked", "Floor is being edited", f"Being edited by {who}{since}.")
+        was_mine = before is not None and before.expires_at > now and before.holder_subject == self.principal.subject
         if not was_mine:  # a new acquisition, not a heartbeat (heartbeats aren't audited)
             expired_holder = (
-                before.holder_subject
-                if before and before.holder_subject != self.principal.subject
-                else None
+                before.holder_subject if before and before.holder_subject != self.principal.subject else None
             )
             self._audit(
                 "floor.lock_acquired",

@@ -2,13 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from musical_chairs_backup.config import (
-    ConfigError,
-    FolderTarget,
-    S3Target,
-    load_config,
-    parse_config,
-)
+from musical_chairs_backup.config import ConfigError, FolderTarget, S3Target, load_config, parse_config
 
 FULL = """
 timezone: Asia/Jerusalem
@@ -50,20 +44,14 @@ REFUSED = [
         ("schedules.0.cron", "not a cron expression: 'at 2'"),
         id="bad-cron",
     ),
-    pytest.param(
-        ONE_TARGET + "schedules:\n" + schedule(keep=0), ("schedules.0.keep",), id="keep-zero"
-    ),
+    pytest.param(ONE_TARGET + "schedules:\n" + schedule(keep=0), ("schedules.0.keep",), id="keep-zero"),
     pytest.param(
         ONE_TARGET + 'schedules:\n  - { name: n, cron: "0 2 * * *", target: local }\n',
         ("schedules.0.keep: Field required",),
         id="keep-missing",
     ),
-    pytest.param(
-        ONE_TARGET + "schedules:\n" + schedule(name="Night ly"), ("lower-case",), id="name-spaces"
-    ),
-    pytest.param(
-        ONE_TARGET + "schedules:\n" + schedule(name="manual"), ("reserved",), id="reserved-name"
-    ),
+    pytest.param(ONE_TARGET + "schedules:\n" + schedule(name="Night ly"), ("lower-case",), id="name-spaces"),
+    pytest.param(ONE_TARGET + "schedules:\n" + schedule(name="manual"), ("reserved",), id="reserved-name"),
     pytest.param(
         ONE_TARGET + "schedules:\n" + schedule() + schedule(),
         ("schedule names must be unique: n",),
@@ -75,9 +63,7 @@ REFUSED = [
         id="misspelt-setting",
     ),
     pytest.param("targets:\n  local: { type: ftp, path: /b }", ("targets.local",), id="ftp"),
-    pytest.param(
-        "timezone: Mars/Base\n" + ONE_TARGET, ("unknown time zone: 'Mars/Base'",), id="time-zone"
-    ),
+    pytest.param("timezone: Mars/Base\n" + ONE_TARGET, ("unknown time zone: 'Mars/Base'",), id="time-zone"),
     pytest.param("targets: {}", ("name at least one target",), id="no-targets"),
     pytest.param("targets: [", ("isn't valid YAML",), id="not-yaml"),
 ]
@@ -95,11 +81,7 @@ def test_a_full_file_is_read() -> None:
     assert config.targets["local"] == FolderTarget(type="folder", path=Path("/backups"))
     offsite = config.targets["offsite"]
     assert isinstance(offsite, S3Target)
-    assert (offsite.bucket, offsite.prefix, offsite.path_style) == (
-        "musical-chairs-backups",
-        "prod/",
-        True,
-    )
+    assert (offsite.bucket, offsite.prefix, offsite.path_style) == ("musical-chairs-backups", "prod/", True)
     assert offsite.region == "us-east-1"
     assert [s.name for s in config.schedules] == ["nightly", "weekly"]
     weekly = config.schedule("weekly")

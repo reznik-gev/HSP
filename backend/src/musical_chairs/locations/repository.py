@@ -40,19 +40,13 @@ class LocationsRepository(Protocol):
         limit: int,
     ) -> list[Building]: ...
 
-    async def get_building(
-        self, tenant_id: uuid.UUID, building_id: uuid.UUID
-    ) -> Building | None: ...
+    async def get_building(self, tenant_id: uuid.UUID, building_id: uuid.UUID) -> Building | None: ...
 
-    async def building_with_code(
-        self, tenant_id: uuid.UUID, site_id: uuid.UUID, code: str
-    ) -> Building | None:
+    async def building_with_code(self, tenant_id: uuid.UUID, site_id: uuid.UUID, code: str) -> Building | None:
         """Any building (archived included) using `code` in the site: codes are unique per site."""
         ...
 
-    async def active_buildings(
-        self, tenant_id: uuid.UUID, site_id: uuid.UUID
-    ) -> list[Building]: ...
+    async def active_buildings(self, tenant_id: uuid.UUID, site_id: uuid.UUID) -> list[Building]: ...
 
     async def active_floors(self, tenant_id: uuid.UUID, building_id: uuid.UUID) -> list[Floor]: ...
 
@@ -68,15 +62,11 @@ class LocationsRepository(Protocol):
 
     async def get_floor(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> Floor | None: ...
 
-    async def floor_at_level(
-        self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int
-    ) -> Floor | None:
+    async def floor_at_level(self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int) -> Floor | None:
         """Any floor (archived included) at `level_index`: levels are unique per building."""
         ...
 
-    async def lock_holder(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime
-    ) -> str | None:
+    async def lock_holder(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime) -> str | None:
         """Display name (or subject) of whoever holds a valid edit lock, if anyone."""
         ...
 
@@ -106,9 +96,7 @@ class SqlLocationsRepository:
         return list(await self._db.scalars(q.order_by(Site.id).limit(limit)))
 
     async def get_site(self, tenant_id: uuid.UUID, site_id: uuid.UUID) -> Site | None:
-        return await self._db.scalar(
-            select(Site).where(Site.tenant_id == tenant_id, Site.id == site_id)
-        )
+        return await self._db.scalar(select(Site).where(Site.tenant_id == tenant_id, Site.id == site_id))
 
     async def list_buildings(
         self,
@@ -133,13 +121,9 @@ class SqlLocationsRepository:
             select(Building).where(Building.tenant_id == tenant_id, Building.id == building_id)
         )
 
-    async def building_with_code(
-        self, tenant_id: uuid.UUID, site_id: uuid.UUID, code: str
-    ) -> Building | None:
+    async def building_with_code(self, tenant_id: uuid.UUID, site_id: uuid.UUID, code: str) -> Building | None:
         return await self._db.scalar(
-            select(Building).where(
-                Building.tenant_id == tenant_id, Building.site_id == site_id, Building.code == code
-            )
+            select(Building).where(Building.tenant_id == tenant_id, Building.site_id == site_id, Building.code == code)
         )
 
     async def active_buildings(self, tenant_id: uuid.UUID, site_id: uuid.UUID) -> list[Building]:
@@ -177,13 +161,9 @@ class SqlLocationsRepository:
         return list(await self._db.scalars(q.order_by(Floor.id).limit(limit)))
 
     async def get_floor(self, tenant_id: uuid.UUID, floor_id: uuid.UUID) -> Floor | None:
-        return await self._db.scalar(
-            select(Floor).where(Floor.tenant_id == tenant_id, Floor.id == floor_id)
-        )
+        return await self._db.scalar(select(Floor).where(Floor.tenant_id == tenant_id, Floor.id == floor_id))
 
-    async def floor_at_level(
-        self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int
-    ) -> Floor | None:
+    async def floor_at_level(self, tenant_id: uuid.UUID, building_id: uuid.UUID, level_index: int) -> Floor | None:
         return await self._db.scalar(
             select(Floor).where(
                 Floor.tenant_id == tenant_id,
@@ -192,9 +172,7 @@ class SqlLocationsRepository:
             )
         )
 
-    async def lock_holder(
-        self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime
-    ) -> str | None:
+    async def lock_holder(self, tenant_id: uuid.UUID, floor_id: uuid.UUID, now: datetime) -> str | None:
         lock = await self._db.scalar(
             select(FloorEditLock).where(
                 FloorEditLock.tenant_id == tenant_id,
@@ -214,9 +192,7 @@ class SqlLocationsRepository:
             )
         )
         if rows:
-            await self._db.execute(
-                delete(SeatAssignment).where(SeatAssignment.id.in_([r.id for r in rows]))
-            )
+            await self._db.execute(delete(SeatAssignment).where(SeatAssignment.id.in_([r.id for r in rows])))
         return rows
 
     def add(self, entity: Entity) -> None:

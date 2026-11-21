@@ -2,8 +2,8 @@
 
 Authlib drives the OAuth 2.0 protocol over httpx2 (the successor of httpx, which Authlib
 now prefers): authorization URL with PKCE S256, code exchange and refresh.
-joserfc validates ID tokens against the provider's JWKS. Musical Chairs speaks plain OIDC: nothing
-here is Keycloak-specific except reading Keycloak's optional `refresh_expires_in` (docs/0008).
+joserfc validates ID tokens against the provider's JWKS. Musical Chairs speaks plain OIDC: nothing here is
+Keycloak-specific except reading Keycloak's optional `refresh_expires_in` (docs/0008).
 """
 
 import secrets
@@ -51,9 +51,7 @@ class LoginResult:
     tokens: SessionTokens
 
 
-def tokens_from_response(
-    token: dict[str, Any], previous: SessionTokens | None = None
-) -> SessionTokens:
+def tokens_from_response(token: dict[str, Any], previous: SessionTokens | None = None) -> SessionTokens:
     """Map a token-endpoint response to session tokens.
 
     The session ends when the refresh token does (Keycloak's `refresh_expires_in`), so login
@@ -80,9 +78,7 @@ def discovery_url(issuer_url: str) -> str:
 class OidcClient:
     """One instance per app; caches provider metadata and keys."""
 
-    def __init__(
-        self, settings: Settings, transport: httpx2.AsyncBaseTransport | None = None
-    ) -> None:
+    def __init__(self, settings: Settings, transport: httpx2.AsyncBaseTransport | None = None) -> None:
         """`transport` lets tests substitute a fake identity provider (httpx2.MockTransport)."""
         self._settings = settings
         self._transport = transport
@@ -142,9 +138,7 @@ class OidcClient:
         meta = await self.metadata()
         try:
             async with self._oauth() as client:
-                token = await client.fetch_token(
-                    meta.token_endpoint, code=code, code_verifier=code_verifier
-                )
+                token = await client.fetch_token(meta.token_endpoint, code=code, code_verifier=code_verifier)
         except OAuthError as exc:
             raise OidcError(f"token exchange failed: {exc.error}") from exc
         id_token = token.get("id_token")
@@ -185,9 +179,7 @@ class OidcClient:
         meta = await self.metadata()
         try:
             async with self._oauth() as client:
-                token = await client.refresh_token(
-                    meta.token_endpoint, refresh_token=session.tokens.refresh_token
-                )
+                token = await client.refresh_token(meta.token_endpoint, refresh_token=session.tokens.refresh_token)
         except OAuthError:
             return None
         return with_tokens(session, tokens_from_response(dict(token), previous=session.tokens))

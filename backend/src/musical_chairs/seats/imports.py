@@ -47,9 +47,7 @@ class SeatImportService:
     def _tenant(self) -> uuid.UUID:
         return self.principal.tenant_id
 
-    async def import_assignments(
-        self, rows: list[dict[str, str | None]], apply: bool
-    ) -> ImportReport:
+    async def import_assignments(self, rows: list[dict[str, str | None]], apply: bool) -> ImportReport:
         run = ImportRun(ImportReport(kind="seat_assignments", applied=False, rows=len(rows)))
         if check_columns(rows, COLUMNS, {"seat_label"}, run):
             wanted = await self._resolve(rows, run)
@@ -61,15 +59,11 @@ class SeatImportService:
         seats = await self._seats_by_label()
         people = {
             p.email.lower(): p
-            for p in await self.db.scalars(
-                select(models.Person).where(models.Person.tenant_id == self._tenant)
-            )
+            for p in await self.db.scalars(select(models.Person).where(models.Person.tenant_id == self._tenant))
         }
         units = {
             u.external_id: u
-            for u in await self.db.scalars(
-                select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant)
-            )
+            for u in await self.db.scalars(select(models.OrgUnit).where(models.OrgUnit.tenant_id == self._tenant))
             if u.external_id
         }
         out: list[_Row] = []

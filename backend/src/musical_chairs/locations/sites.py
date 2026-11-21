@@ -21,9 +21,7 @@ def validate_time_zone(tz: str) -> str:
     try:
         zoneinfo.ZoneInfo(tz)
     except zoneinfo.ZoneInfoNotFoundError, ValueError:
-        raise common.invalid_field(
-            "time_zone_unknown", f"Unknown IANA time zone: {tz}", "/time_zone"
-        ) from None
+        raise common.invalid_field("time_zone_unknown", f"Unknown IANA time zone: {tz}", "/time_zone") from None
     return tz
 
 
@@ -37,9 +35,7 @@ class SitesService:
     principal: Principal
     request_id: str | None = None
 
-    async def list(
-        self, *, include_archived: bool, after: uuid.UUID | None, limit: int
-    ) -> list[Site]:
+    async def list(self, *, include_archived: bool, after: uuid.UUID | None, limit: int) -> list[Site]:
         return await self.repo.list_sites(
             self.principal.tenant_id, include_archived=include_archived, after=after, limit=limit
         )
@@ -96,9 +92,7 @@ class SitesService:
         before = site.archived_at
         site.archived_at = None
         site.updated_at = datetime.now(UTC)
-        self._audit(
-            "site.restored", site, before={"archived_at": before}, after={"archived_at": None}
-        )
+        self._audit("site.restored", site, before={"archived_at": before}, after={"archived_at": None})
         await self.repo.commit()
         return site
 

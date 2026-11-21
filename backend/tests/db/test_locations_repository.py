@@ -13,11 +13,7 @@ from musical_chairs.models import Building, Site, Tenant, new_id
 
 async def _tenant(rolled_back_db_session: AsyncSession, slug: str) -> uuid.UUID:
     if slug == "default":
-        return (
-            await rolled_back_db_session.execute(
-                text("SELECT id FROM tenant WHERE slug = 'default'")
-            )
-        ).scalar_one()
+        return (await rolled_back_db_session.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))).scalar_one()
     t = Tenant(id=new_id(), name=slug, slug=slug)
     rolled_back_db_session.add(t)
     await rolled_back_db_session.flush()
@@ -105,13 +101,9 @@ async def test_buildings_filter_and_code_lookup(rolled_back_db_session: AsyncSes
         )
     await repo.commit()
 
-    in_s1 = await repo.list_buildings(
-        tenant, site_id=s1.id, include_archived=False, after=None, limit=10
-    )
+    in_s1 = await repo.list_buildings(tenant, site_id=s1.id, include_archived=False, after=None, limit=10)
     assert [b.code for b in in_s1] == ["A"]
-    everything = await repo.list_buildings(
-        tenant, site_id=None, include_archived=True, after=None, limit=10
-    )
+    everything = await repo.list_buildings(tenant, site_id=None, include_archived=True, after=None, limit=10)
     assert len(everything) == 3
     archived_b = await repo.building_with_code(tenant, s1.id, "B")
     assert archived_b is not None and archived_b.archived_at is not None  # archived still owns code
@@ -159,9 +151,7 @@ async def test_floors_filter_and_level_lookup(rolled_back_db_session: AsyncSessi
         )
     await repo.commit()
 
-    active = await repo.list_floors(
-        tenant, building_id=b.id, include_archived=False, after=None, limit=10
-    )
+    active = await repo.list_floors(tenant, building_id=b.id, include_archived=False, after=None, limit=10)
     assert sorted(f.level_index for f in active) == [-1, 0]
     assert [f.level_index for f in await repo.active_floors(tenant, b.id)] == [-1, 0]
     archived = await repo.floor_at_level(tenant, b.id, 1)

@@ -93,9 +93,7 @@ async def test_publish_supersedes_and_the_next_edit_starts_a_new_draft(
     assert (
         await admin_editing_new_floor["db"].get(models.Floor, admin_editing_new_floor["floor"])
     ).published_version == 1
-    await apply(
-        admin_editing_new_floor, 0, add("wall", new_id(), **stub_wall())
-    )  # lock kept: next save starts v2
+    await apply(admin_editing_new_floor, 0, add("wall", new_id(), **stub_wall()))  # lock kept: next save starts v2
     r2 = await publish(admin_editing_new_floor, 1)
     assert (r2.published_version, r2.superseded_version) == (2, 1)
     assert await states(admin_editing_new_floor) == [(1, "superseded"), (2, "published")]
@@ -133,17 +131,13 @@ async def test_discard_restores_the_published_state_and_reuses_the_number(
         add("object", new_desk, **stub_desk(admin_editing_new_floor, x=5000, label="D2")),
     )
     await publishing(admin_editing_new_floor).discard(admin_editing_new_floor["floor"])
-    await publishing(admin_editing_new_floor).discard(
-        admin_editing_new_floor["floor"]
-    )  # idempotent
+    await publishing(admin_editing_new_floor).discard(admin_editing_new_floor["floor"])  # idempotent
 
     assert await states(admin_editing_new_floor) == [(1, "published")]
     latest = await plan(admin_editing_new_floor, 2)  # what a new draft v2 would start from
     assert [x.id for x in latest.walls] == [w]  # the closed wall revision is open again
     assert {o.id: o.position for o in latest.objects} == {desk: (1000, 1000, 0)}
-    assert (
-        await admin_editing_new_floor["db"].get(models.FloorElement, new_desk) is None
-    )  # created in the draft: gone
+    assert await admin_editing_new_floor["db"].get(models.FloorElement, new_desk) is None  # created in the draft: gone
     again = await apply(admin_editing_new_floor, 0, add("wall", new_id(), **stub_wall()))
     assert again.version == 2  # no gap in numbering (docs/0081)
 
@@ -182,9 +176,7 @@ async def test_publish_checks_the_whole_draft_not_only_what_saves_touched(
     with pytest.raises(ProblemException) as exc:
         await publish(draft_with_zone_outside_its_parent, 1)
     assert exc.value.slug == "publish-conflicts"
-    assert [(e.code, e.element_id) for e in exc.value.errors or []] == [
-        ("zone_outside_parent", str(child_zone_id))
-    ]
+    assert [(e.code, e.element_id) for e in exc.value.errors or []] == [("zone_outside_parent", str(child_zone_id))]
 
 
 async def test_publish_conflicts_labels_devices_and_assignments(
@@ -195,9 +187,7 @@ async def test_publish_conflicts_labels_devices_and_assignments(
         admin_editing_new_floor["tenant"],
     )
     # Another floor in the same building already publishes seat "A-01" and a device.
-    other, _ = await make_floor(
-        rolled_back_db_session, tenant, admin_editing_new_floor["building"], level=1
-    )
+    other, _ = await make_floor(rolled_back_db_session, tenant, admin_editing_new_floor["building"], level=1)
     await lock(rolled_back_db_session, tenant, other)
     device = models.Device(id=new_id(), tenant_id=tenant, asset_tag=f"MON-{new_id().hex[:5]}")
     rolled_back_db_session.add(device)
@@ -238,9 +228,7 @@ async def test_publishing_frees_assigned_seats_it_removes(
     admin_editing_new_floor: dict[str, Any],
 ) -> None:
     seat = new_id()
-    await apply(
-        admin_editing_new_floor, 0, add("object", seat, **stub_desk(admin_editing_new_floor))
-    )
+    await apply(admin_editing_new_floor, 0, add("object", seat, **stub_desk(admin_editing_new_floor)))
     await publish(admin_editing_new_floor, 1)
     person = (
         await admin_editing_new_floor["db"].execute(

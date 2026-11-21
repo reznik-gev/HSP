@@ -24,8 +24,8 @@ async def healthz() -> Health:
 
 @router.get("/metrics", include_in_schema=False)
 async def metrics_endpoint() -> Response:
-    """Prometheus metrics (docs/0105). The image serves them on their own port too
-    (musical_chairs/serve.py); nginx never routes here (docs/0060)."""
+    """Prometheus metrics (docs/0105). The image serves them on their own port too (musical_chairs/serve.py);
+    nginx never routes here (docs/0060)."""
     return Response(generate_latest(metrics.registry()), media_type=CONTENT_TYPE_LATEST)
 
 

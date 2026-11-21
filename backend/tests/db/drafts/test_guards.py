@@ -14,9 +14,7 @@ from tests.db.plan_helpers import add, apply, stub_wall
 async def test_a_stale_revision_is_refused(admin_editing_new_floor: dict[str, Any]) -> None:
     await apply(admin_editing_new_floor, 0, add("wall", new_id(), **stub_wall()))
     with pytest.raises(ProblemException) as exc:
-        await apply(
-            admin_editing_new_floor, 0, add("wall", new_id(), **stub_wall())
-        )  # the draft is at revision 1
+        await apply(admin_editing_new_floor, 0, add("wall", new_id(), **stub_wall()))  # the draft is at revision 1
     assert (exc.value.status, exc.value.slug) == (409, "stale-revision")
 
 
@@ -24,9 +22,7 @@ async def test_someone_else_holding_the_lock_is_refused(
     admin_editing_new_floor: dict[str, Any], other_admin: Principal
 ) -> None:
     with pytest.raises(ProblemException) as exc:
-        await apply(
-            admin_editing_new_floor, 0, add("wall", new_id(), **stub_wall()), who=other_admin
-        )
+        await apply(admin_editing_new_floor, 0, add("wall", new_id(), **stub_wall()), who=other_admin)
     assert (exc.value.status, exc.value.slug) == (423, "floor-locked")
 
 

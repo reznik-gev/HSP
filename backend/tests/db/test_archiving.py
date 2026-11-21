@@ -34,9 +34,7 @@ async def test_building_archive_frees_seats_on_all_its_floors(
     floor_in_own_tenant: dict[str, Any],
 ) -> None:
     rolled_back_db_session, tenant = floor_in_own_tenant["db"], floor_in_own_tenant["tenant"]
-    second, _ = await make_floor(
-        rolled_back_db_session, tenant, floor_in_own_tenant["building"], level=1
-    )
+    second, _ = await make_floor(rolled_back_db_session, tenant, floor_in_own_tenant["building"], level=1)
     seats = []
     for floor in (floor_in_own_tenant["floor"], second):
         seat = models.FloorElement(id=new_id(), tenant_id=tenant, floor_id=floor, kind="object")
@@ -55,9 +53,7 @@ async def test_building_archive_frees_seats_on_all_its_floors(
         seats.append(seat.id)
     await rolled_back_db_session.flush()
 
-    service = BuildingsService(
-        SqlLocationsRepository(rolled_back_db_session), floor_in_own_tenant["admin"]
-    )
+    service = BuildingsService(SqlLocationsRepository(rolled_back_db_session), floor_in_own_tenant["admin"])
     report = await service.archive(floor_in_own_tenant["building"])
     assert [a.kind for a in report.archived] == ["building", "floor", "floor"]
     assert sorted(f.seat_id for f in report.freed_seats) == sorted(seats)

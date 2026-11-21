@@ -44,12 +44,8 @@ class BatchIn(BaseModel):
 
 
 class BatchResult(BaseModel):
-    seats: list[SeatAssignmentOut] = Field(
-        description="Final state of every seat the batch touched"
-    )
-    released: list[FreedSeat] = Field(
-        description="Holders who held a touched seat before the batch and no longer do"
-    )
+    seats: list[SeatAssignmentOut] = Field(description="Final state of every seat the batch touched")
+    released: list[FreedSeat] = Field(description="Holders who held a touched seat before the batch and no longer do")
 
 
 @dataclass(frozen=True)
@@ -105,9 +101,7 @@ class SeatBatchService:
         await self.db.commit()
         return result
 
-    async def _step(
-        self, seats: SeatAssignmentService, step: AssignStep | UnassignStep | SwapStep
-    ) -> None:
+    async def _step(self, seats: SeatAssignmentService, step: AssignStep | UnassignStep | SwapStep) -> None:
         if isinstance(step, AssignStep):
             seat = await seats.assignable_seat(step.seat_id)
             await seats.check_holder(step)
@@ -138,9 +132,7 @@ class SeatBatchService:
             )
         }
         return {
-            seat_id: Held(a.holder_person_id, a.holder_unit_id, a.note)
-            if (a := rows.get(seat_id))
-            else None
+            seat_id: Held(a.holder_person_id, a.holder_unit_id, a.note) if (a := rows.get(seat_id)) else None
             for seat_id in seat_ids
         }
 
@@ -149,9 +141,7 @@ def _seat_ids(step: AssignStep | UnassignStep | SwapStep) -> list[uuid.UUID]:
     return [step.seat_id, step.other_seat_id] if isinstance(step, SwapStep) else [step.seat_id]
 
 
-def _step_error(
-    index: int, step: AssignStep | UnassignStep | SwapStep, exc: ProblemException
-) -> ProblemError:
+def _step_error(index: int, step: AssignStep | UnassignStep | SwapStep, exc: ProblemException) -> ProblemError:
     inner = exc.errors[0] if exc.errors else None
     return ProblemError(
         code=inner.code if inner else exc.slug.replace("-", "_"),

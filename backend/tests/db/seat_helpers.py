@@ -32,9 +32,7 @@ async def published_seats(db: AsyncSession) -> dict[str, Any]:
             **stub_desk(ctx, x=5000, label=f"C-{tag}", allocation_mode="bookable"),
         ),
     )
-    publishing = PublishingService(
-        SqlDraftRepository(ctx["db"]), SqlPublishRepository(ctx["db"]), ctx["admin"]
-    )
+    publishing = PublishingService(SqlDraftRepository(ctx["db"]), SqlPublishRepository(ctx["db"]), ctx["admin"])
     await publishing.publish(ctx["floor"], PublishIn(base_revision=1))
     await apply(ctx, 0, add("object", ctx["draft_only"], **stub_desk(ctx, x=7000, label=None)))
     ctx["seats"] = SeatAssignmentService(ctx["db"], ctx["admin"])
@@ -61,9 +59,7 @@ async def person(ctx: dict[str, Any], name: str, active: bool = True) -> uuid.UU
 async def unit(ctx: dict[str, Any], name: str, archived: bool = False) -> uuid.UUID:
     db, now = ctx["db"], datetime.now(UTC)
     root = await db.scalar(
-        select(models.OrgUnit.id).where(
-            models.OrgUnit.tenant_id == ctx["tenant"], models.OrgUnit.parent_id.is_(None)
-        )
+        select(models.OrgUnit.id).where(models.OrgUnit.tenant_id == ctx["tenant"], models.OrgUnit.parent_id.is_(None))
     )
     if root is None:
         root = new_id()

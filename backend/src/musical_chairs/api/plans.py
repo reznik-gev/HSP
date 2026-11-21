@@ -50,9 +50,7 @@ async def get_version(floor_id: uuid.UUID, version: VersionNo, service: Service)
 
 
 @router.get("/versions/{a}/diff/{b}")
-async def diff_versions(
-    floor_id: uuid.UUID, a: VersionNo, b: VersionNo, service: Service
-) -> PlanDiff:
+async def diff_versions(floor_id: uuid.UUID, a: VersionNo, b: VersionNo, service: Service) -> PlanDiff:
     """What changed from version a to version b: added, removed, and changed fields."""
     return await service.diff(floor_id, a, b)
 

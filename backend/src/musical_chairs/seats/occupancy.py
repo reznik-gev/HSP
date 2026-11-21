@@ -80,9 +80,7 @@ class OccupancyService:
         return self.principal.tenant_id
 
     async def _get(self, model: Any, entity_id: uuid.UUID, kind: str) -> Any:
-        found = await self.db.scalar(
-            select(model).where(model.tenant_id == self._tenant, model.id == entity_id)
-        )
+        found = await self.db.scalar(select(model).where(model.tenant_id == self._tenant, model.id == entity_id))
         if found is None:
             raise ProblemException(404, "not-found", "Not found", f"{kind} {entity_id} not found.")
         return found
@@ -92,9 +90,7 @@ class OccupancyService:
     async def floor(self, floor_id: uuid.UUID) -> FloorOccupancy:
         floor: models.Floor = await self._get(models.Floor, floor_id, "Floor")
         counts = (await self._floor_counts([floor.id]))[floor.id]
-        return FloorOccupancy(
-            id=floor.id, name=floor.name, level_index=floor.level_index, counts=counts
-        )
+        return FloorOccupancy(id=floor.id, name=floor.name, level_index=floor.level_index, counts=counts)
 
     async def building(self, building_id: uuid.UUID) -> BuildingOccupancy:
         building: models.Building = await self._get(models.Building, building_id, "Building")
@@ -114,9 +110,7 @@ class OccupancyService:
             )
         )
         per_building = await self._buildings(buildings)
-        return SiteOccupancy(
-            id=site.id, name=site.name, counts=_total(per_building), buildings=per_building
-        )
+        return SiteOccupancy(id=site.id, name=site.name, counts=_total(per_building), buildings=per_building)
 
     async def _buildings(self, buildings: list[models.Building]) -> list[BuildingOccupancy]:
         floors = list(
@@ -138,11 +132,7 @@ class OccupancyService:
                 for f in floors
                 if f.building_id == b.id
             ]
-            out.append(
-                BuildingOccupancy(
-                    id=b.id, name=b.name, code=b.code, counts=_total(mine), floors=mine
-                )
-            )
+            out.append(BuildingOccupancy(id=b.id, name=b.name, code=b.code, counts=_total(mine), floors=mine))
         return out
 
     async def _floor_counts(self, floor_ids: list[uuid.UUID]) -> dict[uuid.UUID, Counts]:
@@ -194,16 +184,10 @@ class OccupancyService:
             .distinct()
         )
         live = sa.seat_element_id.in_(seat_ids)
-        unit_held = await self.db.scalar(
-            select(func.count()).where(sa.holder_unit_id.in_(unit_ids), live)
-        )
-        member_held = await self.db.scalar(
-            select(func.count()).where(sa.holder_person_id.in_(members), live)
-        )
+        unit_held = await self.db.scalar(select(func.count()).where(sa.holder_unit_id.in_(unit_ids), live))
+        member_held = await self.db.scalar(select(func.count()).where(sa.holder_person_id.in_(members), live))
         seated = await self.db.scalar(
-            select(func.count(func.distinct(sa.holder_person_id))).where(
-                sa.holder_person_id.in_(members), live
-            )
+            select(func.count(func.distinct(sa.holder_person_id))).where(sa.holder_person_id.in_(members), live)
         )
         member_count = await self.db.scalar(select(func.count()).select_from(members.subquery()))
         return UnitOccupancy(

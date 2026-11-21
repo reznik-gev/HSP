@@ -19,11 +19,7 @@ def test_a_folder_target_opens_a_folder_store_without_keys(tmp_path: Path) -> No
 def test_an_s3_target_opens_an_s3_store(fake_s3: None, secrets: Path) -> None:
     store = open_store("offsite", OFFSITE, secrets)
     assert isinstance(store, S3Store)
-    assert (store.label, store.bucket, store.prefix) == (
-        "offsite",
-        "musical-chairs-backups",
-        "prod/",
-    )
+    assert (store.label, store.bucket, store.prefix) == ("offsite", "musical-chairs-backups", "prod/")
 
 
 def test_an_s3_target_without_its_keys_is_refused(tmp_path: Path) -> None:

@@ -37,9 +37,7 @@ class BackupScheduler:
 
     def run_due(self) -> None:
         started = self._clock()
-        for name in sorted(
-            (n for n, t in self.due.items() if t <= started), key=self.due.__getitem__
-        ):
+        for name in sorted((n for n, t in self.due.items() if t <= started), key=self.due.__getitem__):
             try:
                 self._take(name)
             except Exception as exc:  # measured by the backup itself; the next one runs as usual

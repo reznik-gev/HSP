@@ -26,13 +26,9 @@ async def test_create_unique_tag_search_and_unknown_person(
     with pytest.raises(ProblemException) as exc:
         await s.create(DeviceIn(asset_tag=tag))
     assert exc.value.slug == "asset-tag-taken"
-    found = await s.list(
-        q=tag.lower()[:7], assigned_person_id=None, after=None, limit=10
-    )  # case-insensitive
+    found = await s.list(q=tag.lower()[:7], assigned_person_id=None, after=None, limit=10)  # case-insensitive
     assert d.id in {x.id for x in found}
-    assert d.id in {
-        x.id for x in await s.list(q="sn-1", assigned_person_id=None, after=None, limit=10)
-    }
+    assert d.id in {x.id for x in await s.list(q="sn-1", assigned_person_id=None, after=None, limit=10)}
     with pytest.raises(ProblemException) as exc:
         await s.update(d.id, {"assigned_person_id": new_id()})
     assert exc.value.errors is not None and exc.value.errors[0].pointer == "/assigned_person_id"

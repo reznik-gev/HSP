@@ -53,12 +53,8 @@ def test_full_login_creates_session_and_me_works(
     assert me["csrf_token"]
 
 
-@pytest.mark.parametrize(
-    "evil", ["//evil.example/x", "https://evil.example", "/\\evil.example", "x"]
-)
-def test_next_cannot_redirect_off_site(
-    api_with_fake_idp: TestClient, idp: FakeIdP, evil: str
-) -> None:
+@pytest.mark.parametrize("evil", ["//evil.example/x", "https://evil.example", "/\\evil.example", "x"])
+def test_next_cannot_redirect_off_site(api_with_fake_idp: TestClient, idp: FakeIdP, evil: str) -> None:
     assert full_login(api_with_fake_idp, idp, evil).headers["location"] == f"{PUBLIC}/"
 
 
@@ -85,9 +81,7 @@ def test_provider_error_is_reported(api_with_fake_idp: TestClient) -> None:
     assert r.json()["detail"] == "User cancelled"
 
 
-def test_wrong_pkce_verifier_fails_token_exchange(
-    api_with_fake_idp: TestClient, idp: FakeIdP
-) -> None:
+def test_wrong_pkce_verifier_fails_token_exchange(api_with_fake_idp: TestClient, idp: FakeIdP) -> None:
     code, state = idp.issue_code(start_login(api_with_fake_idp))
     idp.codes[code]["challenge"] = "something-else"
     r = api_with_fake_idp.get("/api/v1/auth/callback", params={"code": code, "state": state})
@@ -105,9 +99,7 @@ def test_id_token_with_wrong_nonce_is_rejected(
     assert session_store.by_hash == {}
 
 
-def test_id_token_signed_by_unknown_key_is_rejected(
-    api_with_fake_idp: TestClient, idp: FakeIdP
-) -> None:
+def test_id_token_signed_by_unknown_key_is_rejected(api_with_fake_idp: TestClient, idp: FakeIdP) -> None:
     code, state = idp.issue_code(start_login(api_with_fake_idp))
     idp.key = ATTACKER_KEY  # the provider's JWKS still publishes only its real key
     r = api_with_fake_idp.get("/api/v1/auth/callback", params={"code": code, "state": state})

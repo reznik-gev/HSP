@@ -63,9 +63,7 @@ def test_schedules_due_together_run_one_after_another(fake_clock: FakeClock) -> 
     assert s.due["nightly"] == datetime(2026, 10, 22, 3, tzinfo=UTC)
 
 
-def test_a_schedule_due_during_a_long_backup_is_skipped(
-    fake_clock: FakeClock, registry: CollectorRegistry
-) -> None:
+def test_a_schedule_due_during_a_long_backup_is_skipped(fake_clock: FakeClock, registry: CollectorRegistry) -> None:
     take = SpyTake(fake_clock)
     s = scheduler_for(TWO_SCHEDULES, fake_clock, take, registry)
     fake_clock.now = utc(3)
@@ -74,9 +72,7 @@ def test_a_schedule_due_during_a_long_backup_is_skipped(
     assert [name for name, _ in take.taken] == ["nightly", "hourly"]
     # hourly then ran 04:30-06:00, so 04:00, 05:00 and 06:00 passed during backups: skipped
     assert s.due["hourly"] == utc(7)
-    skipped = registry.get_sample_value(
-        "musical_chairs_backup_last_skipped_timestamp_seconds", {"schedule": "hourly"}
-    )
+    skipped = registry.get_sample_value("musical_chairs_backup_last_skipped_timestamp_seconds", {"schedule": "hourly"})
     assert skipped == utc(6).timestamp()
     assert s.due["nightly"] == datetime(2026, 10, 22, 3, tzinfo=UTC)  # not skipped
 
@@ -89,9 +85,7 @@ def test_a_failure_is_logged_and_doesnt_stop_the_next_backup(fake_clock: FakeClo
     with capture_logs() as logs:
         s.run_due()
     assert [name for name, _ in take.taken] == ["nightly", "hourly"]
-    assert {"event": "backup failed", "schedule": "nightly", "error": "disk full"}.items() <= (
-        logs[0].items()
-    )
+    assert {"event": "backup failed", "schedule": "nightly", "error": "disk full"}.items() <= (logs[0].items())
 
 
 def test_it_sleeps_until_the_next_time_but_at_most_a_minute(fake_clock: FakeClock) -> None:

@@ -17,13 +17,9 @@ from musical_chairs.plans.locks import SqlLockRepository
 
 
 async def _floor(rolled_back_db_session: AsyncSession) -> tuple[uuid.UUID, uuid.UUID]:
-    tenant = (
-        await rolled_back_db_session.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))
-    ).scalar_one()
+    tenant = (await rolled_back_db_session.execute(text("SELECT id FROM tenant WHERE slug = 'default'"))).scalar_one()
     now = datetime.now(UTC)
-    site = models.Site(
-        id=new_id(), tenant_id=tenant, name="HQ", time_zone="UTC", created_at=now, updated_at=now
-    )
+    site = models.Site(id=new_id(), tenant_id=tenant, name="HQ", time_zone="UTC", created_at=now, updated_at=now)
     building = models.Building(
         id=new_id(),
         tenant_id=tenant,
@@ -58,43 +54,27 @@ async def test_acquire_heartbeat_block_takeover(rolled_back_db_session: AsyncSes
     t0 = datetime.now(UTC)
     ttl = timedelta(minutes=15)
 
-    a = await repo.try_acquire(
-        tenant, floor, subject="alice", name="Alice", now=t0, expires_at=t0 + ttl
-    )
+    a = await repo.try_acquire(tenant, floor, subject="alice", name="Alice", now=t0, expires_at=t0 + ttl)
     assert a is not None and a.holder_subject == "alice"
 
     t1 = t0 + timedelta(minutes=1)  # heartbeat: extended, original start kept
-    a2 = await repo.try_acquire(
-        tenant, floor, subject="alice", name="Alice", now=t1, expires_at=t1 + ttl
-    )
+    a2 = await repo.try_acquire(tenant, floor, subject="alice", name="Alice", now=t1, expires_at=t1 + ttl)
     assert a2 is not None and a2.acquired_at == a.acquired_at and a2.expires_at == t1 + ttl
 
-    blocked = await repo.try_acquire(
-        tenant, floor, subject="bob", name="Bob", now=t1, expires_at=t1 + ttl
-    )
+    blocked = await repo.try_acquire(tenant, floor, subject="bob", name="Bob", now=t1, expires_at=t1 + ttl)
     assert blocked is None
     assert (await repo.get(tenant, floor)).holder_subject == "alice"  # type: ignore[union-attr]
-    assert (
-        await SqlLocationsRepository(rolled_back_db_session).lock_holder(tenant, floor, t1)
-        == "Alice"
-    )
+    assert await SqlLocationsRepository(rolled_back_db_session).lock_holder(tenant, floor, t1) == "Alice"
 
     t_late = t1 + ttl + timedelta(seconds=1)  # Alice's lock expired: Bob takes over
-    b = await repo.try_acquire(
-        tenant, floor, subject="bob", name="Bob", now=t_late, expires_at=t_late + ttl
-    )
+    b = await repo.try_acquire(tenant, floor, subject="bob", name="Bob", now=t_late, expires_at=t_late + ttl)
     assert b is not None and (b.holder_subject, b.acquired_at) == ("bob", t_late)
     assert (
-        await SqlLocationsRepository(rolled_back_db_session).lock_holder(
-            tenant, floor, t_late + ttl
-        )
-        is None
+        await SqlLocationsRepository(rolled_back_db_session).lock_holder(tenant, floor, t_late + ttl) is None
     )  # expired = free
 
     t_back = t_late + ttl + timedelta(seconds=1)  # same holder after expiry: a NEW session
-    b2 = await repo.try_acquire(
-        tenant, floor, subject="bob", name="Bob", now=t_back, expires_at=t_back + ttl
-    )
+    b2 = await repo.try_acquire(tenant, floor, subject="bob", name="Bob", now=t_back, expires_at=t_back + ttl)
     assert b2 is not None and b2.acquired_at == t_back
 
     await repo.delete(tenant, floor)

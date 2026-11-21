@@ -14,9 +14,7 @@ def main() -> None:
     out = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("openapi.json")
     schema = create_app().openapi()
     # newline="\n" keeps LF on Windows too (docs/0026).
-    out.write_text(
-        json.dumps(schema, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
-    )
+    out.write_text(json.dumps(schema, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     print(f"wrote {out}")
 
 

@@ -160,13 +160,9 @@ def _field_errors(exc: ValidationError, op_index: int, element_id: uuid.UUID) ->
     ]
 
 
-def apply_changeset(
-    content: PlanContent, ops: list[AddOp | UpdateOp | DeleteOp], refs: References
-) -> ChangesetEffects:
+def apply_changeset(content: PlanContent, ops: list[AddOp | UpdateOp | DeleteOp], refs: References) -> ChangesetEffects:
     """Apply `ops` in order; raise ChangesetRejected with every problem found, or return effects."""
-    state: dict[Kind, dict[uuid.UUID, Element]] = {
-        k: {e.id: e for e in getattr(content, ATTR[k])} for k in KINDS
-    }
+    state: dict[Kind, dict[uuid.UUID, Element]] = {k: {e.id: e for e in getattr(content, ATTR[k])} for k in KINDS}
     effects = ChangesetEffects(content=content)
     touched: dict[uuid.UUID, int] = {}  # element id -> op index that last touched it
     deleted_by: dict[uuid.UUID, int] = {}  # element id -> op index that deleted it
@@ -299,9 +295,7 @@ def _polygon_ok(points: list[Point2]) -> bool:
     return bool(poly.is_valid and poly.area > 0)
 
 
-def validate(
-    plan: PlanContent, refs: References, *, deleted: Set[uuid.UUID] = frozenset()
-) -> list[ProblemError]:
+def validate(plan: PlanContent, refs: References, *, deleted: Set[uuid.UUID] = frozenset()) -> list[ProblemError]:
     """Every core rule of docs/0081 over a whole plan. Returns problems (op_index unset)."""
     problems: list[ProblemError] = []
     walls = {w.id: w for w in plan.walls}
@@ -310,9 +304,7 @@ def validate(
 
     for w in plan.walls:
         if w.a == w.b:
-            problems.append(
-                _err("wall_degenerate", "A wall needs two different endpoints.", element_id=w.id)
-            )
+            problems.append(_err("wall_degenerate", "A wall needs two different endpoints.", element_id=w.id))
 
     for opening in plan.openings:
         wall = walls.get(opening.wall_id)
@@ -340,15 +332,11 @@ def validate(
 
     for c in plan.columns:
         if not _polygon_ok(c.footprint):
-            problems.append(
-                _err("polygon_invalid", "Column footprint is not a valid polygon.", element_id=c.id)
-            )
+            problems.append(_err("polygon_invalid", "Column footprint is not a valid polygon.", element_id=c.id))
 
     for z in plan.zones:
         if not _polygon_ok(z.boundary):
-            problems.append(
-                _err("polygon_invalid", "Zone boundary is not a valid polygon.", element_id=z.id)
-            )
+            problems.append(_err("polygon_invalid", "Zone boundary is not a valid polygon.", element_id=z.id))
         if z.zone_type_id not in refs.zone_type_ids:
             problems.append(
                 _err(
@@ -417,15 +405,9 @@ def validate(
                 )
             )
         if item.is_seat and obj.allocation_mode is None:
-            problems.append(
-                _err(
-                    "allocation_mode_required", "Seats need an allocation mode.", element_id=obj.id
-                )
-            )
+            problems.append(_err("allocation_mode_required", "Seats need an allocation mode.", element_id=obj.id))
         if not item.is_seat and obj.allocation_mode is not None:
-            problems.append(
-                _err("allocation_mode_not_seat", f"{item.name} is not a seat.", element_id=obj.id)
-            )
+            problems.append(_err("allocation_mode_not_seat", f"{item.name} is not a seat.", element_id=obj.id))
         if obj.attached_to is not None:
             host = objects.get(obj.attached_to)
             if host is None:
@@ -439,16 +421,11 @@ def validate(
                 )
             else:
                 host_item = refs.catalog.get(host.catalog_item_rev_id)
-                if (
-                    host.id == obj.id
-                    or host_item is None
-                    or host_item.category not in item.attaches_to_categories
-                ):
+                if host.id == obj.id or host_item is None or host_item.category not in item.attaches_to_categories:
                     problems.append(
                         _err(
                             "attach_not_allowed",
-                            f"{item.name} can't be attached to "
-                            f"{host_item.name if host_item else 'that object'}.",
+                            f"{item.name} can't be attached to {host_item.name if host_item else 'that object'}.",
                             element_id=obj.id,
                             related=[host.id],
                         )

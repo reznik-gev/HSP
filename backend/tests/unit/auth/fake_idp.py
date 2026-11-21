@@ -113,11 +113,7 @@ class FakeIdP:
         if form["grant_type"] == "authorization_code":
             saved = self.codes.pop(form["code"], None)
             verifier = form.get("code_verifier", "")
-            challenge = (
-                base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
-                .rstrip(b"=")
-                .decode()
-            )
+            challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
             if saved is None or challenge != saved["challenge"]:
                 return httpx2.Response(400, json={"error": "invalid_grant"})
             return httpx2.Response(200, json=self._tokens(saved["nonce"]))

@@ -121,20 +121,14 @@ class SeatSearchService:
         elif status == "reserved":
             query = query.where(sa.holder_unit_id.is_not(None))
         elif status == "free":
-            query = query.where(
-                sa.id.is_(None), r.allocation_mode == models.AllocationMode.ASSIGNED
-            )
+            query = query.where(sa.id.is_(None), r.allocation_mode == models.AllocationMode.ASSIGNED)
         elif status == "bookable":
-            query = query.where(
-                sa.id.is_(None), r.allocation_mode == models.AllocationMode.BOOKABLE
-            )
+            query = query.where(sa.id.is_(None), r.allocation_mode == models.AllocationMode.BOOKABLE)
         elif status == "available":
             # Free to assign or to book: the free seats list (docs/0108).
             query = query.where(
                 sa.id.is_(None),
-                r.allocation_mode.in_(
-                    [models.AllocationMode.ASSIGNED, models.AllocationMode.BOOKABLE]
-                ),
+                r.allocation_mode.in_([models.AllocationMode.ASSIGNED, models.AllocationMode.BOOKABLE]),
             )
         if zone_id is not None:
             # Seats whose position lies in that zone of the same floor's published plan.

@@ -37,9 +37,7 @@ def test_duplicate_label_on_the_floor_and_in_the_building() -> None:
 
 
 def test_device_already_on_another_floor() -> None:
-    problems = publish_conflicts(
-        plan(seat("A-01", device_id=DEVICE)), plan(), {}, {DEVICE: "Level 2"}
-    )
+    problems = publish_conflicts(plan(seat("A-01", device_id=DEVICE)), plan(), {}, {DEVICE: "Level 2"})
     assert [p.code for p in problems] == ["device_on_other_floor"]
 
 
