@@ -29,12 +29,12 @@ In a stack, "merge #N" covers #N and every PR below it, never a PR above #N ([01
 
 **Then, a PR opened as the App** (each approved on GitHub, step 1; in a stack, check every PR up to #N, and ask the owner if one isn't):
 - **`ci-ok` passed on every PR it covers:** merge with a rebase. A PR on its own: `gh pr merge N --rebase`. In a stack: `gh stack merge N --rebase`, which merges every unmerged PR below N too.
-- **`ci-ok` still running on any of them:** turn on auto-merge instead of waiting, on the PR alone, or on the bottom PR of a stack ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)).
-  - First bind the session to that PR, so its merge wakes you: `get_status`, then `bind_pr` if it reports another PR.
-  - `gh pr merge M --rebase --auto`. If GitHub refuses the App, use the app's `set_auto_merge` tool on the bound PR, with `merge_method: "rebase"` (its default is squash), or ask the owner to turn it on.
-  - Check `gh pr view M --json state,autoMergeRequest`. If `ci-ok` had just passed, GitHub merged it at once: go to step 3. Otherwise tell the owner auto-merge is on, then wait. Once you're woken by the merge, or told, go to step 3.
-  - In a stack, after step 3, start step 2 again for the next PR, up to and including #N. Clean up and report once #N has merged.
-- **While auto-merge is on:** before any push to the PR, a CI fix included, turn auto-merge off (`gh pr merge M --disable-auto`) and ask the owner for the go-ahead again: GitHub would merge the push unseen. A restack with no conflict is the one exception, since it replays the same commits. A restack that needed a conflict fixed is a push like any other. The same goes for a new comment you hear of: turn auto-merge off, handle it, and ask again. A new review thread stops GitHub merging on its own; a plain PR comment doesn't.
+- **A PR on its own, `ci-ok` still running:** turn on auto-merge instead of waiting ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)).
+  - First bind the session to the PR, so its merge wakes you: `get_status`, then `bind_pr` if it reports another PR.
+  - `gh pr merge N --rebase --auto`. If GitHub refuses the App, use the app's `set_auto_merge` tool on the bound PR, with `merge_method: "rebase"` (its default is squash), or ask the owner to turn it on.
+  - Check `gh pr view N --json state,autoMergeRequest`. If `ci-ok` had just passed, GitHub merged it at once: go to step 3. Otherwise tell the owner auto-merge is on, then wait. Once you're woken by the merge, or told, go to step 3.
+- **A stack, `ci-ok` still running on any PR up to #N:** no auto-merge. Wait for `ci-ok` on each (`gh pr checks <PR> --watch --required`), then merge them as above ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)).
+- **While auto-merge is on:** before any push to the PR, a CI fix included, turn auto-merge off (`gh pr merge N --disable-auto`) and ask the owner for the go-ahead again: GitHub would merge the push unseen. A rebase onto `main` with no conflict is the one exception, since it replays the same commits. One that needed a conflict fixed is a push like any other. The same goes for a new comment you hear of: turn auto-merge off, handle it, and ask again. A new review thread stops GitHub merging on its own; a plain PR comment doesn't.
 - **`ci-ok` failed:** say so, and wait for the owner.
 - Never turn on auto-merge without the owner's go-ahead in the session.
 
