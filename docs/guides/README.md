@@ -8,4 +8,5 @@ How-tos for working on Musical Chairs. Part of the [Musical Chairs documentation
 | [Working with Git and pull requests](git.md) | Branches, commits, review fixes as new commits, catching up, and merging |
 | [Writing tests](testing.md) | The kinds of tests, test-double names, shared stubs and fixtures, and a review checklist |
 | [Working with stacked pull requests](stacked-prs.md) | Why stacks need restacking under rebase-only merges, GitHub stacks with `gh stack`, and resolving conflicts |
+| [Line widths](line-widths.md) | How long a line may be in each kind of file, and which tool checks it |
 | [Releasing Musical Chairs](releasing.md) | Keeping the changelog, cutting a release or a candidate, hotfixes, and what to do when the release workflow fails |
