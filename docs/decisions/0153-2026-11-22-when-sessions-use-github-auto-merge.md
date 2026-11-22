@@ -2,7 +2,7 @@
 
 - **Date:** 2026-11-22
 - **Status:** Accepted
-- **Refines:** [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (the "to consider later" GitHub auto-merge; setup step 6: approval of the most recent push), [0139](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) (the "to consider later" GitHub auto-merge), [0142](0142-2026-11-11-no-auto-fix.md) (point 6: the go-ahead to merge, and the session merging itself)
+- **Refines:** [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (the "to consider later" GitHub auto-merge; setup step 6: conversation resolution instead of approval of the most recent push), [0139](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) (the "to consider later" GitHub auto-merge), [0142](0142-2026-11-11-no-auto-fix.md) (point 6: the go-ahead to merge, and the session merging itself)
 
 ## Context
 [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) and [0139](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) left GitHub auto-merge to consider later. Auto-merge is GitHub's switch on a PR: once its required checks pass, GitHub merges it on its own. 0137 set it aside because it skips [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md)'s last look at new comments, and because `ci-ok` wasn't a required check yet. `ci-ok` is required again on `main` today.
@@ -42,6 +42,6 @@ Whether `main-approvals` still requires approval of the most recent push ([0137]
 ## Consequences
 - [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md) step 2, the [git guide](../guides/git.md#merging) and [How a change is made](../guides/making-a-change.md) step 9 change to match. [`open-pr`](../../.claude/skills/open-pr/SKILL.md) step 5 says so, and keeps leaving auto-merge to `merge-pr`.
 - With conversation resolution required, every open review thread must be resolved before a merge. The owner resolves their own threads ([0142](0142-2026-11-11-no-auto-fix.md) point 4), and a disagreement thread of the bot's is resolved once the owner has answered it.
-- [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) setup step 6 no longer ticks "Require approval of the most recent reviewable push", for this or a future project.
+- [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) setup step 6 no longer ticks "Require approval of the most recent reviewable push", and ticks "Require conversation resolution before merging" instead, for this or a future project. 0137 already says a future project gets the same rulesets.
 - **The owner's step:** tick "Require conversation resolution before merging" in the `main-approvals` ruleset. Done on 2026-11-22, before this record merged; checked in the ruleset the same day.
 - Not yet checked: whether the App's token may turn on auto-merge. On #190 the owner's account turned it on. If GitHub refuses the App, the session uses the app's `set_auto_merge` tool, or asks the owner to turn it on.
