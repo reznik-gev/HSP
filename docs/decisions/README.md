@@ -104,7 +104,7 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0090 | 2026-10-15 | [The editor's Problems panel and refused changes](0090-2026-10-15-problems-panel.md) | Accepted |
 | 0091 | 2026-10-15 | [Move the backend to Python 3.14](0091-2026-10-15-python-3-14.md) | Accepted |
 | 0092 | 2026-10-15 | [Editor speed tools (frontend phase 3b)](0092-2026-10-15-editor-speed-tools.md) | Accepted |
-| 0093 | 2026-10-16 | [Stacked PRs with GitHub's own stacks (`gh stack`)](0093-2026-10-16-github-stacked-prs.md) | Accepted |
+| 0093 | 2026-10-16 | [Stacked PRs with GitHub's own stacks (`gh stack`)](0093-2026-10-16-github-stacked-prs.md) | Accepted (stays until after 1.3, by 0154) |
 | 0094 | 2026-10-16 | [Move the 3D view past v1; show heights in 2D instead](0094-2026-10-16-3d-view-after-v1.md) | Accepted |
 | 0095 | 2026-10-16 | [Heights on the plan, Catalog and Devices screens (frontend phase 3c)](0095-2026-10-16-heights-catalog-and-devices.md) | Accepted |
 | 0096 | 2026-10-16 | [Test data and test-double conventions](0096-2026-10-16-test-conventions.md) | Accepted |
@@ -165,3 +165,4 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0151 | 2026-11-21 | [Python lines may be 120 characters long](0151-2026-11-21-python-lines-may-be-120-characters-long.md) | Accepted |
 | 0152 | 2026-11-22 | [The Keycloak realm is `musical-chairs`, and no file name mixes `-` and `_`](0152-2026-11-22-keycloak-realm-name-and-file-names.md) | Accepted |
 | 0153 | 2026-11-22 | [A session turns on auto-merge when the owner's go-ahead comes before CI has passed](0153-2026-11-22-when-sessions-use-github-auto-merge.md) | Accepted |
+| 0154 | 2026-11-22 | [Stacked PRs stay as they are until after 1.3, and then the workflow is simplified](0154-2026-11-22-stacks-stay-until-after-1-3.md) | Accepted |

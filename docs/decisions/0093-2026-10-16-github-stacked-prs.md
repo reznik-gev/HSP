@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-16
 - **Status:** Accepted
+- **Refined by:** [0154](0154-2026-11-22-stacks-stay-until-after-1-3.md) (stacks stay as they are until after 1.3; then the workflow is simplified)
 - **Supersedes:** [0079](0079-2026-10-08-stacked-pr-workflow.md) (its restack script; parent-based PRs and auto-retargeting stand)
 - **Refines:** [0064](0064-2026-10-08-branching-workflow.md), [0069](0069-2026-10-08-rebase-merges.md)
 
