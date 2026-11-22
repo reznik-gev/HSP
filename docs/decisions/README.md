@@ -148,12 +148,12 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0134 | 2026-11-09 | [How a change goes from a request to `main`](0134-2026-11-09-from-request-to-main.md) | Accepted (the demo for checking PRs in 0136) |
 | 0135 | 2026-11-09 | [Turning furniture while dragging it](0135-2026-11-09-turning-while-dragging.md) | Accepted |
 | 0136 | 2026-11-10 | [The demo for checking PRs runs from one worktree, and switches only after asking](0136-2026-11-10-the-demo-for-checking-prs.md) | Accepted |
-| 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted |
+| 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted (auto-merge refined by 0153) |
 | 0138 | 2026-11-10 | [A restore can bring back Musical Chairs' data alone, or Keycloak's alone](0138-2026-11-10-restoring-one-database.md) | Accepted |
 | 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted |
 | 0140 | 2026-11-10 | [The token helper moves to GevTools, and renews only before `gh`](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) | Accepted |
 | 0141 | 2026-11-11 | [No merge commits in a PR, and CI checks it](0141-2026-11-11-no-merge-commits-in-a-pr.md) | Accepted |
-| 0142 | 2026-11-11 | [No Auto-fix: the owner starts each review round and says when to merge](0142-2026-11-11-no-auto-fix.md) | Accepted |
+| 0142 | 2026-11-11 | [No Auto-fix: the owner starts each review round and says when to merge](0142-2026-11-11-no-auto-fix.md) | Accepted (auto-merge refined by 0153) |
 | 0143 | 2026-11-11 | [The owner merges PRs opened from their own account, on GitHub](0143-2026-11-11-the-owner-merges-their-own-prs.md) | Accepted |
 | 0144 | 2026-11-11 | [An in-app user guide ships in 1.0.0](0144-2026-11-11-an-in-app-user-guide-in-1-0-0.md) | Accepted (how it's written and shown in 0146) |
 | 0145 | 2026-11-11 | [Office moves: a move planner in 1.3, then future layouts, and no detection](0145-2026-11-11-office-moves.md) | Accepted |
@@ -164,3 +164,4 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0150 | 2026-11-21 | [Rename the product from HSP to Musical Chairs](0150-2026-11-21-rename-hsp-to-musical-chairs.md) | Accepted (realm name, file names and tab title refined by 0152) |
 | 0151 | 2026-11-21 | [Python lines may be 120 characters long](0151-2026-11-21-python-lines-may-be-120-characters-long.md) | Accepted |
 | 0152 | 2026-11-22 | [The Keycloak realm is `musical-chairs`, and no file name mixes `-` and `_`](0152-2026-11-22-keycloak-realm-name-and-file-names.md) | Accepted |
+| 0153 | 2026-11-22 | [A session turns on auto-merge when the owner's go-ahead comes before CI has passed](0153-2026-11-22-when-sessions-use-github-auto-merge.md) | Accepted |

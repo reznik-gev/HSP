@@ -61,7 +61,7 @@ If users or operators notice the change, add a line under `## [Unreleased]` in `
 ## 5. Watch it
 - Call `get_status` from the app's PR tools. If it doesn't report this PR, bind it with `bind_pr`.
 - **Don't turn on Auto-fix**, for any PR, and don't ask the owner to. The owner starts each review round by saying "prepare #N" ([0142](../../../docs/decisions/0142-2026-11-11-no-auto-fix.md)).
-- Don't turn on auto-merge or auto-archive: those are [`merge-pr`](../merge-pr/SKILL.md)'s.
+- Don't turn on auto-merge or auto-archive: those are [`merge-pr`](../merge-pr/SKILL.md)'s. It turns on auto-merge only on the owner's go-ahead to merge ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)).
 
 ## 6. Report
 - The PR's link, whether it's a draft, and whether CI is running.
