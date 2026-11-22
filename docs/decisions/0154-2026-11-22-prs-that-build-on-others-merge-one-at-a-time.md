@@ -28,9 +28,8 @@ No stack is open today: every open PR targets `main`.
    - its base isn't `main`;
    - it holds the head commit of another open PR that isn't on `main`. The failure names those PRs. When two PRs have the same head commit, the newer one is the one built on the other;
    - it holds copies of commits already on `main` (`git cherry`). That's Y after X merged, before Y was rebased: without this, re-running Y's CI after X merges would pass while Y still holds X's old commits. *(Claude's choice.)*
-   - it couldn't fetch an open PR's head, so it can't tell. *(Claude's choice: a gate fails when it doesn't know.)*
 
-   It runs on PRs only, not on pushes to `main`. It reads the list of open PRs (`pull-requests: read`) and fetches every PR's head, forks' too.
+   It runs on PRs only, not on pushes to `main`. It reads the list of open PRs (`pull-requests: read`), and looks for their head commits in this PR's history. It fetches nothing else: a head that's in this PR's history is in the checkout already, so a PR from a fork, or one GitHub hasn't finished setting up, needs nothing more. *(Claude's choice: fetching every PR's head failed this PR's first run, when a PR opened at the same moment wasn't fetchable yet.)*
 3. **Y stays a draft while X is open.** The review bot skips drafts, so it reviews Y once, on its own commits, after the rebase, and not X's commits again. *(The owner's choice.)*
 4. **When X merges, the session rebases Y onto `main`, pushes with `--force-with-lease` and marks it ready.** Nothing re-runs Y's CI when X merges; the rebase push does. Y then goes through its review rounds and merges like any PR, on the owner's word. *(The owner's choice.)*
 5. **`gh stack` leaves the workflow**: `gh stack merge`, `submit`, `sync` and the rest. Building Y on X's branch and rebasing it later is plain Git, and the [stacked PRs guide](../guides/stacked-prs.md) shows how. *(Claude's choice: with one PR rebased at a time, the extension saves nothing, and it was a public preview.)*

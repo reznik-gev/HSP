@@ -115,18 +115,14 @@ jobs:
             failed=1
           fi
 
-          # Another open PR's head commit inside this one. PR heads from forks are fetched too.
+          # Another open PR's head commit inside this one. Nothing more is fetched: a head inside this
+          # PR's history is in the checkout already, so a head the checkout lacks isn't below this PR.
           open=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 500 \
             --json number,headRefOid --jq '.[] | "\(.number) \(.headRefOid)"')
-          git fetch -q --no-tags origin '+refs/pull/*/head:refs/remotes/pull/*'
           below=""
           while read -r n sha; do
             [ -n "$n" ] && [ "$n" != "$PR" ] || continue
-            if ! git cat-file -e "$sha^{commit}" 2>/dev/null; then
-              echo "::error::Couldn't fetch the head of #$n ($sha), so can't tell whether this PR builds on it. Re-run this job."
-              failed=1
-              continue
-            fi
+            git cat-file -e "$sha^{commit}" 2>/dev/null || continue
             git merge-base --is-ancestor "$sha" "$HEAD_SHA" || continue
             git merge-base --is-ancestor "$sha" "$base" && continue
             # Two PRs with the same head: the newer one is the one built on the other.
