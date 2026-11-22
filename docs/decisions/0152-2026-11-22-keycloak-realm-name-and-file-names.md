@@ -35,3 +35,6 @@ While the owner reviewed the rename PR (#182), three things came up that 0150 ei
 - **Dev stacks and the demo** are recreated once for the rename anyway. That also imports the new realm.
 - **The follow-up PR** changes `frontend/` only. It needs a small test that the title changes with the language.
 - **0150** gets a `Refined by:` line, and its dated note points here instead of deciding these points itself.
+
+## Updates
+- *Update, 2026-11-22:* The follow-up is done in [#190](https://github.com/reznik-gev/HSP/pull/190). The browser tab title is "Musical Chairs" in English and "כיסאות מוזיקליים" alone in Hebrew, at startup and after each language change.
