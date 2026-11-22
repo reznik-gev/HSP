@@ -148,7 +148,7 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0134 | 2026-11-09 | [How a change goes from a request to `main`](0134-2026-11-09-from-request-to-main.md) | Accepted (the demo for checking PRs in 0136) |
 | 0135 | 2026-11-09 | [Turning furniture while dragging it](0135-2026-11-09-turning-while-dragging.md) | Accepted |
 | 0136 | 2026-11-10 | [The demo for checking PRs runs from one worktree, and switches only after asking](0136-2026-11-10-the-demo-for-checking-prs.md) | Accepted |
-| 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted (auto-merge refined by 0153) |
+| 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted (auto-merge and most-recent-push approval refined by 0153) |
 | 0138 | 2026-11-10 | [A restore can bring back Musical Chairs' data alone, or Keycloak's alone](0138-2026-11-10-restoring-one-database.md) | Accepted |
 | 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted (auto-merge refined by 0153) |
 | 0140 | 2026-11-10 | [The token helper moves to GevTools, and renews only before `gh`](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) | Accepted |
