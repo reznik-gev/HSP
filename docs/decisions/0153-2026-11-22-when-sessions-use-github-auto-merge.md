@@ -2,7 +2,7 @@
 
 - **Date:** 2026-11-22
 - **Status:** Accepted
-- **Refines:** [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (the "to consider later" GitHub auto-merge), [0142](0142-2026-11-11-no-auto-fix.md) (point 6: the go-ahead to merge, and the session merging itself)
+- **Refines:** [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (the "to consider later" GitHub auto-merge), [0139](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) (the "to consider later" GitHub auto-merge), [0142](0142-2026-11-11-no-auto-fix.md) (point 6: the go-ahead to merge, and the session merging itself)
 
 ## Context
 [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) and [0139](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) left GitHub auto-merge to consider later. Auto-merge is GitHub's switch on a PR: once its required checks pass, GitHub merges it on its own. 0137 set it aside because it skips [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md)'s last look at new comments, and because `ci-ok` wasn't a required check yet. `ci-ok` is required again on `main` today.

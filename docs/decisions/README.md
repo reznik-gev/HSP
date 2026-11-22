@@ -150,7 +150,7 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0136 | 2026-11-10 | [The demo for checking PRs runs from one worktree, and switches only after asking](0136-2026-11-10-the-demo-for-checking-prs.md) | Accepted |
 | 0137 | 2026-11-10 | [Claude Code sessions push as a GitHub App, and the owner's approval merges](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) | Accepted (auto-merge refined by 0153) |
 | 0138 | 2026-11-10 | [A restore can bring back Musical Chairs' data alone, or Keycloak's alone](0138-2026-11-10-restoring-one-database.md) | Accepted |
-| 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted |
+| 0139 | 2026-11-10 | [How Claude Code sessions get the GitHub App's tokens](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) | Accepted (auto-merge refined by 0153) |
 | 0140 | 2026-11-10 | [The token helper moves to GevTools, and renews only before `gh`](0140-2026-11-10-the-token-helper-moves-to-gevtools.md) | Accepted |
 | 0141 | 2026-11-11 | [No merge commits in a PR, and CI checks it](0141-2026-11-11-no-merge-commits-in-a-pr.md) | Accepted |
 | 0142 | 2026-11-11 | [No Auto-fix: the owner starts each review round and says when to merge](0142-2026-11-11-no-auto-fix.md) | Accepted (auto-merge refined by 0153) |
