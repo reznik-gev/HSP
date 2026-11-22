@@ -1,61 +1,59 @@
-# Working with stacked pull requests
+# Working with PRs that build on other PRs
 
-A **stack** is a chain of PRs where each one builds on the one before it (for example login → sites → buildings → floors). Stacks keep PRs small and reviewable ([0076](../decisions/0076-2026-10-08-backend-delivery-plan.md)), but with **rebase-only merges** ([0069](../decisions/0069-2026-10-08-rebase-merges.md)) they need one extra step after each merge. We use GitHub's own stacks and the `gh stack` command for it ([0093](../decisions/0093-2026-10-16-github-stacked-prs.md)). For branches, commits and reviews in general, see [Working with Git and pull requests](git.md).
+Sometimes a change needs another that isn't merged yet: PR Y builds on PR X. Small PRs that build on each other keep review easy ([0076](../decisions/0076-2026-10-08-backend-delivery-plan.md)), but **each one is a single PR into `main`**, reviewed and merged on its own, and **Y can't merge until X has** ([0154](../decisions/0154-2026-11-22-prs-that-build-on-others-merge-one-at-a-time.md)). CI enforces it. For branches, commits and reviews in general, see [Working with Git and pull requests](git.md).
 
-## Why stacks need restacking
-```
-before:   main ── X                          after merging PR 1 (rebase):
-                   └── A  (PR 1)              main ── X ── A'        <- same change, NEW commit id
-                        └── B  (PR 2)                  └── A ── B    <- PR 2 still carries the OLD A
-```
-A rebase-merge copies `A` onto `main` as a **new commit `A'`**. PR 2 still contains the old `A`, so GitHub sees the same change twice and reports the PR as out of date or conflicting. The fix is to **replay PR 2's own commits onto the new `main`**. Git notices that `A` is already there as `A'`, skips it, and no code has to be resolved by hand.
+## The rules
+- **Every PR's base is `main`.** Never another PR's branch: a PR merges into its base, and only `main` is protected by the rulesets.
+- **Y is cut from X's branch,** so it holds X's commits too. Until X merges, Y's diff on GitHub shows X's changes as well. To see Y's own, compare the two branches: `https://github.com/reznik-gev/HSP/compare/<X's branch>...<Y's branch>`.
+- **Y stays a draft while X is open.** The review bot skips drafts, so it reviews Y once, after the rebase, on Y's own commits.
+- **CI refuses Y while X is open.** The `builds-on-open-pr` job, which `ci-ok` needs, fails a PR that holds another open PR's head commit, and names that PR. `ci-ok` is required on `main`, so GitHub refuses the merge, whether it's a click, auto-merge or `gh`.
+- **When X merges, rebase Y onto `main`,** push with `--force-with-lease` and mark it ready. Nothing re-runs Y's CI when X merges; the rebase push does.
+- A chain works the same way: W on Y on X stays a draft until both have merged. Rebase each PR once the one right below it has merged.
 
 ## Setting up (once per machine)
 ```bash
-gh extension install github/gh-stack
 git config --global rerere.enabled true       # remember conflict resolutions and reapply them
-git config --global rebase.updateRefs true    # make --update-refs the default for manual rebases
 ```
-`gh` is the [GitHub CLI](https://cli.github.com/). On Windows it installs to `C:\Program Files\GitHub CLI`; if Git Bash says `gh: command not found`, add `export PATH="$PATH:/c/Program Files/GitHub CLI"` to `~/.bashrc`.
+`gh` is the [GitHub CLI](https://cli.github.com/). On Windows it installs to `C:\Program Files\GitHub CLI`; if Git Bash says `gh: command not found`, add `export PATH="$PATH:/c/Program Files/GitHub CLI"` to `~/.bashrc`. The `gh stack` extension isn't used any more.
 
-## How PRs are set up
-- PR 1 targets `main`. **PR 2 targets PR 1's branch**, PR 3 targets PR 2's branch, and so on. Each PR's diff therefore shows only its own changes.
-- GitHub groups them as one stack, shown on every PR page in it.
-- With **"Automatically delete head branches"** on (enabled for this repo), merging PR 1 deletes its branch, and **GitHub retargets PR 2 to `main` automatically**.
-
-## Starting a stack
+## Building Y on X
 ```bash
-gh stack init api/sites        # first branch, based on main
+git fetch origin
+git switch -c api/buildings origin/api/sites   # Y's branch, from X's
 # ...commit...
-gh stack add api/buildings     # next branch, on top of the current one
-# ...commit...
-gh stack submit                # push every branch, open the PRs, group them on GitHub
-gh stack view                  # see the stack
+git push -u origin api/buildings
+gh pr create --draft --base main --title "..." --body-file <file>
 ```
-Branches that already have open PRs can be adopted, bottom to top, then synced:
+Say in Y's description that it builds on X (`Builds on #X`), so a reader knows why it's a draft.
+
+If X gets review fixes while Y is open, Y can stay as it is until X merges. Rebase it then, as below.
+
+## When X merges: rebase Y
+A rebase-merge copies X's commits onto `main` as **new commits**. Y still holds the old ones:
+```
+before:   main ── M                       after X merges (rebase):
+                  └── x1  (X)              main ── M ── x1'        <- same change, NEW commit id
+                       └── y1  (Y)                  └── x1 ── y1   <- Y still holds the OLD x1
+```
+Until Y is rebased, `builds-on-open-pr` fails it for holding copies of commits already on `main`. Replay Y's own commits onto the new `main`:
 ```bash
-gh stack init api/sites api/buildings api/floors
-gh stack sync
+git fetch origin
+git switch api/buildings
+git rebase origin/main        # old copies of X's commits are skipped
+git push --force-with-lease
+gh pr ready <Y>
 ```
-`gh stack init` only recognises **open** PRs. Don't include a branch whose PR is already merged; set the stack up before anything in it merges.
+`--force-with-lease` refuses to overwrite anything someone else pushed in the meantime.
 
-## Merging: bottom up, then sync
-1. Check the PR has no unanswered review comments and `ci-ok` passes.
-2. Merge it with **Rebase and merge** on github.com, or from the command line:
-   ```bash
-   gh stack merge 65 --rebase
-   ```
-   This merges that PR **and every unmerged PR below it** in one step: either all merge or none do. The number is read as a stack number first, then as a PR; stacks and PRs share GitHub's numbering, so they don't collide. It takes numbers only, not URLs.
-3. Restack the rest:
-   ```bash
-   gh stack sync --prune
-   ```
-   It fetches, skips the merged branches, rebases the rest of the stack onto `main`, pushes with `--force-with-lease` (which refuses to overwrite anything someone else pushed in the meantime), updates the stack on GitHub and deletes the merged local branches.
-
-CI checks every pushed branch; there's no local test run during a sync.
+Git skips the old copies only when they match what landed on `main`. They don't when X changed after Y was cut, for example with review fixes. The rebase then stops at a conflict in one of X's commits, not Y's. Abort it, and replay only Y's own commits:
+```bash
+git rebase --abort
+git rebase --onto origin/main <the commit just below Y's first commit>
+```
+`gh pr view <Y> --json commits` lists the branch's commits, oldest first: X's old commits come first, then Y's own.
 
 ## When there is a real conflict
-Sometimes `main` and a stacked PR **changed the same lines**. `gh stack sync` then puts every branch back as it was and asks you to run `gh stack rebase`, which stops at the conflict:
+Sometimes `main` and Y **changed the same lines**. The rebase stops:
 ```
 CONFLICT (content): Merge conflict in backend/src/musical_chairs/config.py
 ```
@@ -69,24 +67,10 @@ CONFLICT (content): Merge conflict in backend/src/musical_chairs/config.py
    ```
    Edit it into the correct final version and delete the markers.
 2. `git add <file>` for each resolved file.
-3. `gh stack rebase --continue`. Repeat if it stops at another commit.
-4. `gh stack push` to push the rebased branches.
+3. `git rebase --continue`. Repeat if it stops at another commit.
+4. Run the checks, then `git push --force-with-lease`.
 
-To back out at any point, `gh stack rebase --abort` restores every branch to how it was before.
+To back out at any point, `git rebase --abort` puts the branch back as it was.
 
-## Doing it by hand
-If `gh stack` isn't available, the same restack for a single PR in plain Git:
-```bash
-git fetch origin
-git switch <branch>
-git rebase origin/main        # old copies of merged commits are skipped
-git push --force-with-lease
-```
-For a whole stack, run `git rebase --update-refs origin/main` on the top branch, then push each branch.
-
-Git skips the old copies of merged commits only when they match what landed on `main`. They don't match when the PR below changed after this branch was cut, for example when it was restacked with a conflict before it merged. The rebase then stops at a conflict in a commit that isn't this PR's own. Abort it, and replay only this PR's own commits:
-```bash
-git rebase --abort
-git rebase --onto origin/main <the commit just below this PR's first commit>
-```
-`gh pr view <N> --json commits` lists the branch's commits, oldest first: the old copies of the PR below come first, then this PR's own.
+## If X closes without merging
+Y still holds X's commits, and CI no longer stops it. Drop X's commits (`git rebase --onto origin/main <the commit just below Y's first commit>`) if Y works without them, or ask the owner.

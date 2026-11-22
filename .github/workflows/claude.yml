@@ -36,7 +36,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # Full history, so it can diff a PR against the one below it in a stack
+          fetch-depth: 0 # Full history, so it can diff a PR against main and read past commits
           # Don't leave the token in the checkout's git config; the bot has no use for it.
           persist-credentials: false
 
