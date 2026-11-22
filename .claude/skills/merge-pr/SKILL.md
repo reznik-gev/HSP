@@ -30,7 +30,7 @@ In a stack, "merge #N" covers #N and every PR below it, never a PR above #N ([01
 **Then, a PR opened as the App** (each approved on GitHub, step 1; in a stack, check every PR up to #N, and ask the owner if one isn't):
 - **`ci-ok` passed on every PR it covers:** merge with a rebase. A PR on its own: `gh pr merge N --rebase`. In a stack: `gh stack merge N --rebase`, which merges every unmerged PR below N too.
 - **A PR on its own, `ci-ok` still running:** turn on auto-merge instead of waiting ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)).
-  - First bind the session to the PR, so its merge wakes you: `get_status`, then `bind_pr` if it reports another PR.
+  - First bind the session to the PR, so its merge wakes you: `get_status`, then `bind_pr` if it doesn't report this PR.
   - `gh pr merge N --rebase --auto`. If GitHub refuses the App, use the app's `set_auto_merge` tool on the bound PR, with `merge_method: "rebase"` (its default is squash), or ask the owner to turn it on.
   - Check `gh pr view N --json state,autoMergeRequest`. If `ci-ok` had just passed, GitHub merged it at once: go to step 3. Otherwise tell the owner auto-merge is on, then wait. Once you're woken by the merge, or told, go to step 3.
 - **A stack, `ci-ok` still running on any PR up to #N:** no auto-merge. Wait for `ci-ok` on each (`gh pr checks <PR> --watch --required`). Then run the checks above again, since comments may have come in during the wait, and merge them as above ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)).
