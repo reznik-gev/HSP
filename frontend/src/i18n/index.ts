@@ -4,6 +4,9 @@
  *
  * The page direction follows the language (Hebrew is right-to-left). The floor-plan drawing
  * itself never mirrors (docs/0087 choice 6).
+ *
+ * The browser tab title is the app's full name in the reader's language, and in Hebrew the Hebrew
+ * name alone (docs/0150, docs/0152). index.html keeps "Musical Chairs" until this runs.
  */
 import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
@@ -21,6 +24,7 @@ export const resources = { en: { translation: en }, he: { translation: he } } as
 function applyToDocument(language: string): void {
   document.documentElement.lang = language;
   document.documentElement.dir = directionOf(language);
+  document.title = i18n.t("app.fullName", { lng: language });
 }
 
 void i18n
