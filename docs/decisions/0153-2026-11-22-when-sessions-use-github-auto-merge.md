@@ -37,5 +37,5 @@ How the last look at comments still holds:
 ## Consequences
 - [`merge-pr`](../../.claude/skills/merge-pr/SKILL.md) step 2, the [git guide](../guides/git.md#merging) and [How a change is made](../guides/making-a-change.md) step 9 change to match. [`open-pr`](../../.claude/skills/open-pr/SKILL.md) step 5 says so, and keeps leaving auto-merge to `merge-pr`.
 - With conversation resolution required, every open review thread must be resolved before a merge. The owner resolves their own threads ([0142](0142-2026-11-11-no-auto-fix.md) point 4), and a disagreement thread of the bot's is resolved once the owner has answered it.
-- **The owner's step:** tick "Require conversation resolution before merging" in the `main-approvals` ruleset. Until then, point 5 doesn't hold, and a thread that comes in during the wait doesn't stop the merge.
+- **The owner's step:** tick "Require conversation resolution before merging" in the `main-approvals` ruleset. Done on 2026-11-22, before this record merged; checked in the ruleset the same day.
 - Not yet checked: whether the App's token may turn on auto-merge. On #190 the owner's account turned it on. If GitHub refuses the App, the session uses the app's `set_auto_merge` tool, or asks the owner to turn it on.
