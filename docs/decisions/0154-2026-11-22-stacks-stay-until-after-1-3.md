@@ -5,11 +5,11 @@
 - **Refines:** [0093](0093-2026-10-16-github-stacked-prs.md) (GitHub stacks with `gh stack` stay for now), [0153](0153-2026-11-22-when-sessions-use-github-auto-merge.md) (point 7 left how stacks work to their own decision)
 
 ## Context
-While reviewing [#192](https://github.com/reznik-gev/HSP/pull/192) (decision [0153](0153-2026-11-22-when-sessions-use-github-auto-merge.md), auto-merge), the owner found that stacks made the skills too complex. `merge-pr` needs loops to merge up to a PR, a restack between merges, and a new go-ahead for each. 0153 point 7 kept auto-merge for single PRs only, and left how stacks work to a decision of their own.
+While reviewing [#192](https://github.com/reznik-gev/MusicalChairs/pull/192) (decision [0153](0153-2026-11-22-when-sessions-use-github-auto-merge.md), auto-merge), the owner found that stacks made the skills too complex. `merge-pr` needs loops to merge up to a PR, a restack between merges, and a new go-ahead for each. 0153 point 7 kept auto-merge for single PRs only, and left how stacks work to a decision of their own.
 
 The owner's goal, in their words: "single PRs, that CAN stack upon each other, but are reviewed and rebased in turn and as singular PRs. If PR Y is based on PR X, it CAN'T be merged, and every skill or click should refuse merging it, until X is merged itself."
 
-Three ways to get there were tried in [#193](https://github.com/reznik-gev/HSP/pull/193). Each was set aside:
+Three ways to get there were tried in [#193](https://github.com/reznik-gev/MusicalChairs/pull/193). Each was set aside:
 - **Every PR's base is `main`, and a CI job fails a PR that holds another open PR's commits.** It was built and tested on GitHub with a throwaway PR. The review bot found it could be got around: once X gets a review fix or a rebase, Y no longer holds X's head commit, and Y passes. Reading a "Builds on #X" line in the description would close that gap. The owner turned both down: **Git matters should be solved by Git itself, not by a CI job or a comment on the PR.**
 - **Y stays a pushed branch with no PR until X merges.** Nothing can merge it, and it's plain Git. The owner turned it down: **it holds up CI and reviews, one PR at a time.**
 - **Y's PR targets X's branch, with a ruleset that stops merges into feature branches.** Y could then reach `main` only through X. But GitHub's rulesets can't do it: no rule limits which branch a PR may target. "Restrict updates" and "Require a pull request" block pushes too, and no bypass mode allows pushing but not merging. A required status check that nothing ever reports might work, but GitHub's docs don't say whether it also blocks pushes. The owner turned this down too.
