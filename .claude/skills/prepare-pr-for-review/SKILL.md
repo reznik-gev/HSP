@@ -58,7 +58,7 @@ The review bot's login is `github-actions`. A thread is the bot's only if every 
 
 ## 6. Ask the bot to look again
 - If this round changed code or docs, comment `@claude review` yourself, without asking, and read it back. There's no limit on rounds: the owner decides when to stop.
-- Reply to nitpicks you didn't fix, saying why.
+- Reply to nitpicks you didn't fix, saying why. Then resolve each such thread of the bot's: an open thread blocks the merge ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)).
 - Then report (step 7), with CI's state on this round's push, and **stop**. Don't poll, and don't wait for the bot. Go back to step 2 when the owner starts the next round.
 
 ## 7. Report to the owner
@@ -67,4 +67,4 @@ One message. If the owner may be away, also send a short push notification:
 - **What changed:** each comment, the bot's and the owner's, and what you did about it. Whether you asked the bot to look again.
 - **Checks:** which ran and passed, which you skipped and why, and what you couldn't check.
 - **Questions:** each disagreement or choice, with your recommendation, one at a time. If there are none, say so.
-- **What's next:** the owner says when there are new comments to address. When it's done, the owner tells the session it's approved and ready to merge ([0142](../../../docs/decisions/0142-2026-11-11-no-auto-fix.md)). A PR opened as the App needs the owner's approval on GitHub first ([0137](../../../docs/decisions/0137-2026-11-10-a-github-app-for-claude-code-sessions.md)). For one opened with the owner's account, the session does its last checks. If this session acts as the App, the owner then merges it on GitHub: "Merge without waiting for requirements to be met", then "Rebase and merge". A session acting as the owner merges it itself ([0143](../../../docs/decisions/0143-2026-11-11-the-owner-merges-their-own-prs.md)).
+- **What's next:** the owner says when there are new comments to address. Name any review thread still open: it blocks the merge until it's resolved. When it's done, the owner tells the session it's approved and ready to merge ([0142](../../../docs/decisions/0142-2026-11-11-no-auto-fix.md)). A PR opened as the App needs the owner's approval on GitHub first ([0137](../../../docs/decisions/0137-2026-11-10-a-github-app-for-claude-code-sessions.md)). For one opened with the owner's account, the session does its last checks. If this session acts as the App, the owner then merges it on GitHub: "Merge without waiting for requirements to be met", then "Rebase and merge". A session acting as the owner merges it itself ([0143](../../../docs/decisions/0143-2026-11-11-the-owner-merges-their-own-prs.md)).
