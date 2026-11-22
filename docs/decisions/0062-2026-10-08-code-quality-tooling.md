@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-08
 - **Status:** Accepted
-- **Refined by:** [0148](0148-2026-11-18-every-commit-message-has-a-body.md) (the `pre-commit` checks run from `.githooks`), [0151](0151-2026-11-21-python-lines-may-be-120-characters-long.md) (Ruff's line length is 120)
+- **Refined by:** [0148](0148-2026-11-18-every-commit-message-has-a-body.md) (the `pre-commit` checks run from `.githooks`), [0151](0151-2026-11-21-python-lines-may-be-120-characters-long.md) (Ruff's line length is 120), [0155](0155-2026-11-22-line-widths.md) (comments in scripts and config files wrap at 100)
 
 ## Options considered
 - **Ruff + mypy / ESLint + Prettier** ✅

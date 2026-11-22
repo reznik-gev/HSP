@@ -9,6 +9,7 @@ Musical Chairs manages office space: sites, buildings and floors drawn as plans,
 - [docs/guides/making-a-change.md](docs/guides/making-a-change.md): the usual path of a change, and the skill for each step: [record-decision](.claude/skills/record-decision/SKILL.md), [open-pr](.claude/skills/open-pr/SKILL.md), [prepare-pr-for-review](.claude/skills/prepare-pr-for-review/SKILL.md) and [merge-pr](.claude/skills/merge-pr/SKILL.md).
 - [docs/guides/releasing.md](docs/guides/releasing.md): the changelog, and how a release is built, tested and published.
 - [docs/guides/testing.md](docs/guides/testing.md): how tests are written, with a review checklist.
+- [docs/guides/line-widths.md](docs/guides/line-widths.md): how long a line may be in each kind of file. Comments in scripts and config files wrap at 100, and nothing checks it.
 - [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md): commands, layout and conventions for each side.
 - [shared/validation-cases/](shared/validation-cases/README.md): plan rules as data, run by both sides.
 
