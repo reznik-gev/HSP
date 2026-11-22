@@ -32,9 +32,10 @@ Don't ask the owner before opening it. Do these steps in order, and say which on
 If users or operators notice the change, add a line under `## [Unreleased]` in `CHANGELOG.md` ([how](../../../docs/guides/releasing.md#between-releases-keep-the-changelog)).
 
 ## 4. Push and open
-- Bring the branch up to date with `origin/main` (or the PR below it, in a stack).
+- Bring the branch up to date with `origin/main`. **A PR built on another open PR** is cut from that PR's branch and holds its commits: don't rebase it onto `main` until that one merges ([0154](../../../docs/decisions/0154-2026-11-22-prs-that-build-on-others-merge-one-at-a-time.md), [the guide](../../../docs/guides/stacked-prs.md)).
 - **Ready or draft?** A **draft** if the owner must check something first: how it looks or feels, or a choice you couldn't settle. The bot doesn't review drafts, so no round is spent on what the owner may change. Otherwise, ready.
-- Open it with `gh pr create` (`--draft` for a draft), or `gh stack submit` in a stack. The description:
+- **A PR built on another open PR is always a draft**, and its description starts with `Builds on #X.` CI's `builds-on-open-pr` job fails it until #X merges. Then it's rebased onto `main` and marked ready ([`merge-pr`](../merge-pr/SKILL.md) step 3).
+- Open it with `gh pr create --base main` (`--draft` for a draft). The base is always `main`, also for a PR built on another. The description:
   ```markdown
   ## What changes
   For the user or operator, in plain words.
@@ -66,5 +67,6 @@ If users or operators notice the change, add a line under `## [Unreleased]` in `
 ## 6. Report
 - The PR's link, whether it's a draft, and whether CI is running.
 - For a draft: what the owner should check, with the screenshots (`SendUserFile`). When the owner OKs it, `gh pr ready N`.
+- For a draft built on another open PR: which PR it waits for. It's marked ready once that one merges and it's rebased.
 - For a ready PR: the bot is reviewing it. Handle its comments with [`prepare-pr-for-review`](../prepare-pr-for-review/SKILL.md).
 - Auto-fix is off, so neither the bot's review nor a CI failure wakes the session. The owner says "prepare #N" when the review is in, and tells the session if CI fails.

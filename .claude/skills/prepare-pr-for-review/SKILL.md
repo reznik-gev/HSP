@@ -1,6 +1,6 @@
 ---
 name: prepare-pr-for-review
-description: Get a Musical Chairs pull request ready for the owner's review. Restack it, fix the review bot's and the owner's comments, reply and resolve, ask the bot to look again, bring the owner what needs their choice, then say it's ready and stop. Each round starts on the owner's word. Use when the owner says the bot or they left comments on #N, "prepare #N for review", or "#N merged, get #M ready".
+description: Get a Musical Chairs pull request ready for the owner's review. Rebase it onto main, fix the review bot's and the owner's comments, reply and resolve, ask the bot to look again, bring the owner what needs their choice, then say it's ready and stop. Each round starts on the owner's word. Use when the owner says the bot or they left comments on #N, "prepare #N for review", or "#N merged, get #M ready".
 ---
 
 # Prepare a PR for the owner's review
@@ -9,12 +9,12 @@ Each round starts when the owner says so: the bot or the owner left comments, or
 
 Do these steps in order, and say which one you're on.
 
-## 1. Restack
+## 1. Catch up with `main`
 Bring the PR up to date with `main`. Usually the PR below it just merged.
 - Work in a separate worktree, not the main checkout: it may be serving a demo.
-- Fetch first. In a GitHub stack, run `gh stack sync --prune`. Otherwise follow "Doing it by hand" in [the stacked PRs guide](../../../docs/guides/stacked-prs.md).
+- Fetch first, then rebase onto `origin/main` as in "When X merges: rebase Y" in [the guide](../../../docs/guides/stacked-prs.md#when-x-merges-rebase-y). If the PR still builds on another open PR, it stays a draft and can't merge until that one has: say so to the owner ([0154](../../../docs/decisions/0154-2026-11-22-prs-that-build-on-others-merge-one-at-a-time.md)).
 - Resolve a conflict when the right answer is clear ("When there is a real conflict" in the same guide). If it isn't, stop and ask the owner.
-- Force-push with `--force-with-lease` to restack, without asking. Never force-push for any other reason.
+- Force-push with `--force-with-lease` after the rebase, without asking. Never force-push for any other reason.
 - Fast-forward the main checkout's `main` to `origin/main`, if it has no local changes.
 
 ## 2. Read the review comments
