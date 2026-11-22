@@ -19,7 +19,7 @@ gh pr view N --json state,mergedAt,isDraft,mergeable,reviewDecision,author
 - Otherwise, wait for the owner's word.
 
 ## 2. Merge
-In a stack, "merge #N" covers #N and every PR below it, never a PR above #N ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)).
+In a stack, "merge #N" covers #N and every PR below it, never a PR above #N ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)). `gh stack merge N --rebase` merges **every unmerged PR below N**: if any of them wasn't meant to merge now, stop and ask the owner.
 
 **First, the checks, on every PR it covers:**
 - **The bot's review is done.** If a Claude Code Review run on the PR is still going, wait for it to finish ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)). Look at the runs not yet `completed` in `gh run list --workflow claude-code-review.yml --json databaseId,status,event,headBranch,displayTitle`. A run from opening the PR shows the PR's head branch. A run from "@claude review" shows `main`, with the PR's title as `displayTitle`. `gh run watch <databaseId>` waits for one.
@@ -42,7 +42,6 @@ In a stack, "merge #N" covers #N and every PR below it, never a PR above #N ([01
 - **While this session acts as the App:** don't merge it. The owner can't approve their own PR, and the App has no bypass, so GitHub refuses it, `--admin` too. Tell the owner it's ready: the link, and to merge it on GitHub with "Merge without waiting for requirements to be met", then "Rebase and merge". Then wait: once you're woken by the merge, or told, go to step 3 ([0143](../../../docs/decisions/0143-2026-11-11-the-owner-merges-their-own-prs.md)).
   - **In a stack,** ask for the bottom PR only, and say which PRs follow, in order, up to #N. After it merges, the PR above is out of date until it's restacked, and the restack makes `ci-ok` run again ([why](../../../docs/guides/stacked-prs.md#why-stacks-need-restacking)). So after each merge: do step 3, wait for `ci-ok` on the next PR, then start step 2 again for it, up to and including #N. Clean up and report once #N has merged.
 - **While this session acts as the owner** (`gh auth status` shows `reznik-gev`): merge with a rebase, as for an App PR above. Add `--admin` only when GitHub refuses the merge for want of an approval: it uses the owner's bypass of the `main-approvals` ruleset, and the `main` ruleset still requires `ci-ok` ([0139](../../../docs/decisions/0139-2026-11-10-how-sessions-get-the-apps-tokens.md)). **Never `--admin` while acting as the App.**
-- In a stack, `gh stack merge N --rebase` merges **every unmerged PR below N**. If any of them wasn't meant to merge now, stop and ask the owner.
 
 ## 3. Restack and update `main`
 - Restack any PRs stacked on this one: `gh stack sync --prune`, or by hand ([the stacked PRs guide](../../../docs/guides/stacked-prs.md)). If a conflict's answer isn't clear, stop and ask the owner.
