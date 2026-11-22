@@ -2,6 +2,7 @@
 
 - **Date:** 2026-11-22
 - **Status:** Accepted
+- **Refined by:** [0154](0154-2026-11-22-stacks-stay-until-after-1-3.md) (stacks stay as they are until after 1.3; then the workflow is simplified)
 - **Refines:** [0137](0137-2026-11-10-a-github-app-for-claude-code-sessions.md) (the "to consider later" GitHub auto-merge; point 3 and setup step 6: conversation resolution instead of approval of the most recent push), [0139](0139-2026-11-10-how-sessions-get-the-apps-tokens.md) (the "to consider later" GitHub auto-merge), [0142](0142-2026-11-11-no-auto-fix.md) (point 6: the go-ahead to merge, and the session merging itself)
 
 ## Context
