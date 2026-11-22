@@ -74,6 +74,71 @@ jobs:
           done
           exit $failed
 
+  # A PR that builds on another open PR can't merge until that one has (docs/0154). Every PR's base
+  # is main; a PR built on another holds that PR's commits too. Fails while this PR holds another
+  # open PR's head commit, or copies of commits already on main (the PR below merged, and this one
+  # wasn't rebased yet). Nothing re-runs it when the PR below merges: the rebase push does.
+  builds-on-open-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: No commits of another open PR, and none already on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$BASE_REF" != "$DEFAULT_BRANCH" ]; then
+            echo "::error::This PR's base is $BASE_REF. Every PR's base is $DEFAULT_BRANCH, also one that builds on another PR (docs/0154): gh pr edit $PR --base $DEFAULT_BRANCH."
+            exit 1
+          fi
+          # The base as it is now, not as it was when the PR was opened.
+          git fetch -q --no-tags origin "+refs/heads/$DEFAULT_BRANCH:refs/remotes/origin/$DEFAULT_BRANCH"
+          base=$(git rev-parse "origin/$DEFAULT_BRANCH")
+          failed=0
+
+          # A copy of a commit already on main: the PR below merged, and this one needs a rebase.
+          copies=$(git cherry "$base" "$HEAD_SHA" | sed -n 's/^- //p')
+          if [ -n "$copies" ]; then
+            git log --oneline --no-walk $copies
+            echo "::error::This PR holds copies of commits already on $DEFAULT_BRANCH, so the PR below it has merged. Rebase onto $DEFAULT_BRANCH (git rebase origin/$DEFAULT_BRANCH) and push with --force-with-lease (docs/0154)."
+            failed=1
+          fi
+
+          # Another open PR's head commit inside this one. PR heads from forks are fetched too.
+          open=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 500 \
+            --json number,headRefOid --jq '.[] | "\(.number) \(.headRefOid)"')
+          git fetch -q --no-tags origin '+refs/pull/*/head:refs/remotes/pull/*'
+          below=""
+          while read -r n sha; do
+            [ -n "$n" ] && [ "$n" != "$PR" ] || continue
+            if ! git cat-file -e "$sha^{commit}" 2>/dev/null; then
+              echo "::error::Couldn't fetch the head of #$n ($sha), so can't tell whether this PR builds on it. Re-run this job."
+              failed=1
+              continue
+            fi
+            git merge-base --is-ancestor "$sha" "$HEAD_SHA" || continue
+            git merge-base --is-ancestor "$sha" "$base" && continue
+            # Two PRs with the same head: the newer one is the one built on the other.
+            if [ "$sha" = "$HEAD_SHA" ] && [ "$n" -gt "$PR" ]; then continue; fi
+            below="$below #$n"
+          done <<< "$open"
+          if [ -n "$below" ]; then
+            echo "::error::This PR builds on open PR(s)$below, and holds their commits. It can't merge until they have. Keep it a draft; once they merge, rebase onto $DEFAULT_BRANCH, push with --force-with-lease and mark it ready (docs/0154)."
+            failed=1
+          fi
+          exit $failed
+
   changes:
     runs-on: ubuntu-latest
     permissions:
@@ -321,7 +386,7 @@ jobs:
 
   ci-ok:
     if: always()
-    needs: [changes, linear-history, commit-messages, backend, backup, scripts, frontend, images, packages]
+    needs: [changes, linear-history, commit-messages, builds-on-open-pr, backend, backup, scripts, frontend, images, packages]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped
