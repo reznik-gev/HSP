@@ -1,7 +1,7 @@
 # 0093 — Stacked PRs with GitHub's own stacks (`gh stack`)
 
 - **Date:** 2026-10-16
-- **Status:** Accepted
+- **Status:** Superseded by [0154](0154-2026-11-22-prs-that-build-on-others-merge-one-at-a-time.md)
 - **Supersedes:** [0079](0079-2026-10-08-stacked-pr-workflow.md) (its restack script; parent-based PRs and auto-retargeting stand)
 - **Refines:** [0064](0064-2026-10-08-branching-workflow.md), [0069](0069-2026-10-08-rebase-merges.md)
 
