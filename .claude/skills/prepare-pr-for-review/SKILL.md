@@ -58,7 +58,7 @@ The review bot's login is `github-actions`. A thread is the bot's only if every 
 
 ## 6. Ask the bot to look again
 - If this round changed code or docs, comment `@claude review` yourself, without asking, and read it back. There's no limit on rounds: the owner decides when to stop.
-- Reply to nitpicks you didn't fix, saying why. Then resolve each such thread of the bot's: an open thread blocks the merge ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md)).
+- Reply to nitpicks you didn't fix, saying why. A nitpick is a small point the bot marks as optional, not a disagreement or a choice. Then resolve each such thread of the bot's: an open thread blocks the merge. Disagreements and choices stay open until the owner answers, as in step 5 ([0153](../../../docs/decisions/0153-2026-11-22-when-sessions-use-github-auto-merge.md) point 10).
 - Then report (step 7), with CI's state on this round's push, and **stop**. Don't poll, and don't wait for the bot. Go back to step 2 when the owner starts the next round.
 
 ## 7. Report to the owner
