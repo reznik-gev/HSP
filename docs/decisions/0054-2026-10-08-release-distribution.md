@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-08
 - **Status:** Accepted
+- **Refined by:** [0158](0158-2026-11-27-a-readme-at-the-top-of-the-release-bundle.md) (a README at the bundle's top)
 
 ## Options considered
 - Registry + offline bundle
