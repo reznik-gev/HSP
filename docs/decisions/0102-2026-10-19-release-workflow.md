@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-19
 - **Status:** Accepted
+- **Refined by:** [0157](0157-2026-11-27-what-to-do-about-1-0-0s-scan-findings.md) (a session reads each run before the owner approves publishing)
 - **Builds on:** [0054](0054-2026-10-08-release-distribution.md) (the bundle), [0063](0063-2026-10-08-release-versioning.md) (versions), [0064](0064-2026-10-08-branching-workflow.md) (tags and `release/X.Y`), [0097](0097-2026-10-18-production-images.md) (images), [0099](0099-2026-10-18-production-compose.md) (the stack, tested only when a release is built)
 
 ## Context

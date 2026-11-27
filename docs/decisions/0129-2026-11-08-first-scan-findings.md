@@ -2,6 +2,7 @@
 
 - **Date:** 2026-11-08
 - **Status:** Accepted
+- **Refined by:** [0157](0157-2026-11-27-what-to-do-about-1-0-0s-scan-findings.md) (1.0.0's findings: dnspython and PostGIS 18-3.7 fixed, the rest accepted)
 - **Refines:** [0097](0097-2026-10-18-production-images.md) (the images)
 - **Relates to:** [0128](0128-2026-11-08-vulnerability-scanning.md) (the scan)
 
