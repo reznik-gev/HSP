@@ -158,7 +158,7 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0144 | 2026-11-11 | [An in-app user guide ships in 1.0.0](0144-2026-11-11-an-in-app-user-guide-in-1-0-0.md) | Accepted (how it's written and shown in 0146) |
 | 0145 | 2026-11-11 | [Office moves: a move planner in 1.3, then future layouts, and no detection](0145-2026-11-11-office-moves.md) | Accepted |
 | 0146 | 2026-11-11 | [How the user guide is written and shown](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) | Accepted (the GIFs are recorded again before each release, by 0147) |
-| 0147 | 2026-11-17 | [The guide's GIFs are recorded again before each release](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) | Accepted |
+| 0147 | 2026-11-17 | [The guide's GIFs are recorded again before each release](0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md) | Accepted (refined by 0156) |
 | 0148 | 2026-11-18 | [Every commit message has a body, checked by a git hook and by CI](0148-2026-11-18-every-commit-message-has-a-body.md) | Accepted |
 | 0149 | 2026-11-21 | [Search finds more than people and seats, after 1.0.0](0149-2026-11-21-search-finds-more-than-people-after-1-0-0.md) | Accepted |
 | 0150 | 2026-11-21 | [Rename the product from HSP to Musical Chairs](0150-2026-11-21-rename-hsp-to-musical-chairs.md) | Accepted (realm name, file names and tab title refined by 0152) |
@@ -167,3 +167,4 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0153 | 2026-11-22 | [A session turns on auto-merge when the owner's go-ahead comes before CI has passed](0153-2026-11-22-when-sessions-use-github-auto-merge.md) | Accepted |
 | 0154 | 2026-11-22 | [Stacked PRs stay as they are until after 1.3, and then the workflow is simplified](0154-2026-11-22-stacks-stay-until-after-1-3.md) | Accepted |
 | 0155 | 2026-11-22 | [Comments in scripts and config files wrap at 100 characters, written down but not checked](0155-2026-11-22-line-widths.md) | Accepted |
+| 0156 | 2026-11-27 | [The guide's GIFs show the version being released](0156-2026-11-27-the-guides-gifs-show-the-version-being-released.md) | Accepted |

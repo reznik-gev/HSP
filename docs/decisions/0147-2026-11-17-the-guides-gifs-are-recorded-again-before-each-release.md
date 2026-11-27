@@ -2,6 +2,7 @@
 
 - **Date:** 2026-11-17
 - **Status:** Accepted
+- **Refined by:** [0156](0156-2026-11-27-the-guides-gifs-show-the-version-being-released.md) (the GIFs show the version being released)
 - **Refines:** [0146](0146-2026-11-11-how-the-user-guide-is-written-and-shown.md) (a PR that changes a screen makes the GIFs again)
 
 ## Context
@@ -27,4 +28,6 @@
 - [Releasing Musical Chairs](../guides/releasing.md) gains the step. [How a change is made](../guides/making-a-change.md) and the [review checklist](../guides/testing.md#review-checklist) ask only for the guide's text to be updated.
 - Between releases, a GIF on `main` may show an older screen than the app.
 - A check that the GIFs are newer than the last UI change is left for later.
-- *Update, 2026-11-27:* the GIFs show the version being released. The sidebar's footer reads "Musical Chairs 1.0.0", not "0.0.0-dev", so the demo they're recorded from runs with `MUSICAL_CHAIRS_VERSION` set to it. *(The owner's choice, in [#200](https://github.com/reznik-gev/MusicalChairs/pull/200).)* The [releasing guide](../guides/releasing.md) says how.
+
+## Updates
+- *Update, 2026-11-27:* [0156](0156-2026-11-27-the-guides-gifs-show-the-version-being-released.md) has the GIFs show the version being released: the demo they're recorded from runs with `MUSICAL_CHAIRS_VERSION` set to it.
