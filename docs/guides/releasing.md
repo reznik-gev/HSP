@@ -20,10 +20,19 @@ A PR that changes something users or operators notice adds a line under `## [Unr
    ```
    Only admins can create `v*` tags (a tag ruleset).
 4. **Watch the release workflow** (Actions → release). It checks the tag and the changelog, builds the images, assembles `musical-chairs-X.Y.Z.tar.gz`, and lists the known vulnerabilities in its images and packages ([0128](../decisions/0128-2026-11-08-vulnerability-scanning.md)). Then it installs it on a clean runner. There it runs the scripted check and the Playwright browser tests. In parallel, the **upgrade test** installs the last published release (not a pre-release), upgrades it to this one with `musical-chairs upgrade`, checks it, rolls back with `musical-chairs rollback` and checks again ([0107](../decisions/0107-2026-10-21-operator-cli.md)). Until a release exists, it's skipped with a notice. This takes about 20–30 minutes.
-5. **Approve the publish step.** The workflow then waits at the `release` environment. Open the run and read the summary. Read the vulnerability findings too: they only warn, so nothing stops a release that has them. Then choose **Review deployments → Approve**. Only then does the GitHub Release appear, with the bundle, its `.sha256` file and the changelog entry as its notes.
+5. **Check the run together, before approving** ([0157](../decisions/0157-2026-11-27-what-to-do-about-1-0-0s-scan-findings.md)). The workflow waits at the `release` environment. A Claude Code session reads the run and reports:
+   - each job's result, and which checks and browser tests actually ran;
+   - the version, whether it's a pre-release, and the notes;
+   - every vulnerability finding, compared with the accepted ones in [0129](../decisions/0129-2026-11-08-first-scan-findings.md) and 0157. The findings only warn, so nothing stops a release that has them. The session brings only what's new or newly fixable, each with a recommendation.
+
+   The owner decides to fix or accept each of those. Accepted ones are written into a record. A fix goes in a PR, and then a new release candidate.
+6. **Approve the publish step** (the owner): **Review deployments → Approve**. The repository is public, so the release is public from then on. Only then does the GitHub Release appear, with the bundle, its `.sha256` file and the changelog entry as its notes. The session checks the Release page: title, pre-release mark, notes and both files.
+7. **Try the bundle by hand** (the owner), for the first release candidate of a release that changes how Musical Chairs is installed, 1.0.0 included: on a clean Linux host, check the `.sha256`, then follow the bundle's `docs/install.md` as an operator would. Sign in, look at the version in the sidebar, open the user guide, take a backup and restore it. Try Active Directory sign-in if you can: the runner can't.
+
+**Who does what:** a session prepares the release PR, reads each run and checks the published release. Only the owner approves the release PR and says when it merges, pushes the tags, decides on findings and approves the publish step.
 
 ### Release candidates
-Tag `vX.Y.Z-rc.N` to try a version before releasing it. It goes through the same steps, and is published as a **pre-release** with the notes of `## [X.Y.Z]`. So the release PR comes first, as for a final release. When the candidate is good, tag the same commit `vX.Y.Z`.
+Tag `vX.Y.Z-rc.N` to try a version before releasing it. It goes through the same steps, and is published as a **pre-release** with the notes of `## [X.Y.Z]`. So the release PR comes first, as for a final release. If a candidate needs a fix, merge it in a PR and tag the new commit `vX.Y.Z-rc.N+1`. When a candidate is good, tag its commit `vX.Y.Z`. Pre-releases never count as "the last published release" for the upgrade test.
 
 ### Hotfixes for an older version
 Create `release/X.Y` from the `vX.Y.Z` tag, if it doesn't exist yet. Cherry-pick the fix from `main`, add its `## [X.Y.Z+1]` entry to that branch's `CHANGELOG.md`, and tag `vX.Y.Z+1` there. The workflow accepts tags on `release/X.Y` branches whose `X.Y` matches the tag.

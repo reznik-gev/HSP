@@ -113,7 +113,7 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0099 | 2026-10-18 | [The production Compose stack: secrets, data and how it's wired](0099-2026-10-18-production-compose.md) | Accepted |
 | 0100 | 2026-10-19 | [The @claude bot runs the checks and searches the web](0100-2026-10-19-claude-bot-tools.md) | Superseded by 0101 |
 | 0101 | 2026-10-19 | [Claude on GitHub reviews; it doesn't write code](0101-2026-10-19-claude-reviews-only.md) | Accepted (who asks for re-reviews in 0134) |
-| 0102 | 2026-10-19 | [The release workflow: build, test and publish the bundle](0102-2026-10-19-release-workflow.md) | Accepted (upgrade test refined by 0107) |
+| 0102 | 2026-10-19 | [The release workflow: build, test and publish the bundle](0102-2026-10-19-release-workflow.md) | Accepted (upgrade test refined by 0107; checking a run before publishing by 0157) |
 | 0103 | 2026-10-19 | [A live demo with a made-up company, and a script](0103-2026-10-19-demo.md) | Accepted (used to check PRs in 0136) |
 | 0104 | 2026-10-21 | [What 1.0.0 includes, which versions get fixes, and what comes right after](0104-2026-10-21-v1-release-scope-and-support.md) | Accepted (AD sync in 1.1 and Kubernetes in 1.2 by 0108; the move planner in 1.3 by 0145) |
 | 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted (the schema check at startup refined by 0109, CPU and memory by 0111, Keycloak's readiness by 0116) |
@@ -140,7 +140,7 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0126 | 2026-11-08 | [What may change in an accepted decision record](0126-2026-11-08-what-may-change-in-an-accepted-record.md) | Accepted |
 | 0127 | 2026-11-08 | [Python 3.15 waits until after 1.0.0](0127-2026-11-08-python-3-15-after-1-0.md) | Accepted |
 | 0128 | 2026-11-08 | [Vulnerability scanning before 1.0.0, warnings only](0128-2026-11-08-vulnerability-scanning.md) | Accepted |
-| 0129 | 2026-11-08 | [What to do about the first scan's findings](0129-2026-11-08-first-scan-findings.md) | Accepted |
+| 0129 | 2026-11-08 | [What to do about the first scan's findings](0129-2026-11-08-first-scan-findings.md) | Accepted (refined by 0157) |
 | 0130 | 2026-11-08 | [How a new user learns the floor editor](0130-2026-11-08-learning-the-editor.md) | Accepted (the user guide moved into 1.0.0, in the app, by 0144) |
 | 0131 | 2026-11-09 | [A deleted element may come back with its own id](0131-2026-11-09-deleted-elements-may-come-back.md) | Accepted |
 | 0132 | 2026-11-09 | [Ctrl+V pastes at the pointer, Ctrl+Shift+V next to the original](0132-2026-11-09-paste-keys.md) | Accepted |
@@ -168,3 +168,4 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0154 | 2026-11-22 | [Stacked PRs stay as they are until after 1.3, and then the workflow is simplified](0154-2026-11-22-stacks-stay-until-after-1-3.md) | Accepted |
 | 0155 | 2026-11-22 | [Comments in scripts and config files wrap at 100 characters, written down but not checked](0155-2026-11-22-line-widths.md) | Accepted |
 | 0156 | 2026-11-27 | [The guide's GIFs show the version being released](0156-2026-11-27-the-guides-gifs-show-the-version-being-released.md) | Accepted |
+| 0157 | 2026-11-27 | [What to do about 1.0.0's scan findings](0157-2026-11-27-what-to-do-about-1-0-0s-scan-findings.md) | Accepted |
