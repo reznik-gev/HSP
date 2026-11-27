@@ -113,7 +113,7 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0099 | 2026-10-18 | [The production Compose stack: secrets, data and how it's wired](0099-2026-10-18-production-compose.md) | Accepted |
 | 0100 | 2026-10-19 | [The @claude bot runs the checks and searches the web](0100-2026-10-19-claude-bot-tools.md) | Superseded by 0101 |
 | 0101 | 2026-10-19 | [Claude on GitHub reviews; it doesn't write code](0101-2026-10-19-claude-reviews-only.md) | Accepted (who asks for re-reviews in 0134) |
-| 0102 | 2026-10-19 | [The release workflow: build, test and publish the bundle](0102-2026-10-19-release-workflow.md) | Accepted (upgrade test refined by 0107; checking a run before publishing by 0157) |
+| 0102 | 2026-10-19 | [The release workflow: build, test and publish the bundle](0102-2026-10-19-release-workflow.md) | Accepted (upgrade test refined by 0107; checking a run before publishing, and the hand test, by 0157) |
 | 0103 | 2026-10-19 | [A live demo with a made-up company, and a script](0103-2026-10-19-demo.md) | Accepted (used to check PRs in 0136) |
 | 0104 | 2026-10-21 | [What 1.0.0 includes, which versions get fixes, and what comes right after](0104-2026-10-21-v1-release-scope-and-support.md) | Accepted (AD sync in 1.1 and Kubernetes in 1.2 by 0108; the move planner in 1.3 by 0145) |
 | 0105 | 2026-10-21 | [Request logs, readiness, metrics and tracing](0105-2026-10-21-metrics-and-tracing.md) | Accepted (the schema check at startup refined by 0109, CPU and memory by 0111, Keycloak's readiness by 0116) |
