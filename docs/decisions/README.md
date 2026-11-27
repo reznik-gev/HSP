@@ -168,4 +168,4 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0154 | 2026-11-22 | [Stacked PRs stay as they are until after 1.3, and then the workflow is simplified](0154-2026-11-22-stacks-stay-until-after-1-3.md) | Accepted |
 | 0155 | 2026-11-22 | [Comments in scripts and config files wrap at 100 characters, written down but not checked](0155-2026-11-22-line-widths.md) | Accepted |
 | 0156 | 2026-11-27 | [The guide's GIFs show the version being released](0156-2026-11-27-the-guides-gifs-show-the-version-being-released.md) | Accepted |
-| 0157 | 2026-11-27 | [What to do about 1.0.0's scan findings](0157-2026-11-27-what-to-do-about-1-0-0s-scan-findings.md) | Accepted |
+| 0157 | 2026-11-27 | [What to do about 1.0.0's scan findings](0157-2026-11-27-what-to-do-about-1-0-0s-scan-findings.md) | Accepted (also who checks a release before and after it's published) |
