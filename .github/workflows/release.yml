@@ -49,7 +49,7 @@ jobs:
             [[ "$GITHUB_REF_NAME" =~ ^v(([0-9]+)\.([0-9]+)\.[0-9]+)(-rc\.[0-9]+)?$ ]] ||
               fail "$GITHUB_REF_NAME isn't a release tag: vX.Y.Z or vX.Y.Z-rc.N (docs/0063)"
             version="${GITHUB_REF_NAME#v}"
-            notes="${BASH_REMATCH[1]}" # an rc gets the notes of the version it's a candidate for
+            notes=("${BASH_REMATCH[1]}") # an rc gets the notes of the version it's a candidate for
             branch="release/${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
             # Releases are tagged on main, hotfixes on their release/X.Y branch (docs/0064).
             git fetch --quiet origin main
@@ -62,18 +62,12 @@ jobs:
             prerelease=$([[ "$version" == *-rc.* ]] && echo true || echo false)
           else
             version="0.0.0-dryrun.$GITHUB_RUN_NUMBER"
-            notes=Unreleased
+            notes=(--not-a-release Unreleased) # a dry run publishes nothing (docs/0102)
             publish=false
             prerelease=false
           fi
           mkdir dist
-          if [[ "$publish" == true ]]; then
-            deploy/release-notes.sh "$notes" > dist/release-notes.md
-          elif ! deploy/release-notes.sh "$notes" > dist/release-notes.md; then
-            # A dry run publishes nothing, so it still runs right after a release PR, while
-            # Unreleased is empty (docs/0102).
-            echo "No Unreleased notes yet: a dry run." > dist/release-notes.md
-          fi
+          deploy/release-notes.sh "${notes[@]}" > dist/release-notes.md
           {
             echo "version=$version"
             echo "publish=$publish"
