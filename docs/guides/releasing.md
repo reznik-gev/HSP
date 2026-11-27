@@ -11,7 +11,7 @@ A PR that changes something users or operators notice adds a line under `## [Unr
 ## Cutting a release
 1. **Pick the version** with 0063's rules: MAJOR for breaking changes, MINOR for features, PATCH for fixes only.
 2. **Open a release PR** that renames `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`, and adds a new empty `## [Unreleased]` above it. Merge it once CI passes. The version number itself comes from the tag at build time (0063), so no file needs it.
-   - **In the same PR, record the user guide's GIFs again** ([0147](../decisions/0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md)): bring up the Northwind demo, freshly seeded, and run `pnpm guide:gifs` in `frontend/` (it needs ffmpeg). Look at each of the twelve GIFs, in English and in Hebrew, and commit them. Nothing checks this step yet, so don't skip it.
+   - **In the same PR, record the user guide's GIFs again** ([0147](../decisions/0147-2026-11-17-the-guides-gifs-are-recorded-again-before-each-release.md)): bring up the Northwind demo, freshly seeded and showing the new version (`MUSICAL_CHAIRS_VERSION=X.Y.Z uv run python ../deploy/demo/demo.py switch --main`, from `backend/`), and run `pnpm guide:gifs` in `frontend/` (it needs ffmpeg). Look at each of the twelve GIFs, in English and in Hebrew, and commit them. Nothing checks this step yet, so don't skip it.
 3. **Tag the merged commit and push the tag:**
    ```bash
    git switch main && git pull
