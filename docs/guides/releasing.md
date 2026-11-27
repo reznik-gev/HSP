@@ -42,7 +42,7 @@ Create `release/X.Y` from the `vX.Y.Z` tag, if it doesn't exist yet. Cherry-pick
 - **"no '## [X.Y.Z]' section"**: the release PR is missing or was named differently. Fix `CHANGELOG.md` in a PR, then move the tag to the new commit.
 - **The upgrade test fails:** the new release can't upgrade an installation of the last one, or roll it back. Its job shows where, with the stack's logs. Nothing was published.
 - **The bundle test fails:** the run shows the failing check, the stack's logs and the Playwright traces (the `playwright-traces` artifact). Nothing was published. Fix it, then release a new commit.
-- **A dry run** builds and tests without publishing: Actions → release → **Run workflow**, on any branch. It uses the `## [Unreleased]` notes. PRs that change the release workflow or its scripts run one on their own.
+- **A dry run** builds and tests without publishing: Actions → release → **Run workflow**, on any branch. It uses the `## [Unreleased]` notes, or a placeholder line while that section is empty, as it is right after a release PR ([0157](../decisions/0157-2026-11-27-what-to-do-about-1-0-0s-scan-findings.md)). PRs that change the release workflow or its scripts run one on their own.
 
 ## Trying a bundle by hand
 ```bash
