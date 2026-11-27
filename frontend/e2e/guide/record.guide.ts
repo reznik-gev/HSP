@@ -215,8 +215,14 @@ for (const lang of LANGS) {
     /** Leave the editor, giving up the edit lock, so the next scene can take it. */
     async function exitEditor(page: Page) {
       await expect(page.getByText(t("editor.save.saved")).first()).toBeVisible();
+      // The editor releases its lock without waiting for the answer. Wait for it here, or it can
+      // reach the API after the next lock request and undo it.
+      const released = page.waitForResponse(
+        (r) => r.request().method() === "DELETE" && /\/floors\/[^/]+\/lock$/.test(r.url()),
+      );
       await page.getByRole("button", { name: t("editor.exit") }).click();
       await page.waitForURL(/\/floors\/[^/]+$/);
+      await released;
     }
 
     const tool = (page: Page, key: string) =>
