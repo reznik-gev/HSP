@@ -5,6 +5,8 @@ What changes for people using and running Musical Chairs, release by release ([0
 Versions follow MAJOR.MINOR.PATCH ([0063](docs/decisions/0063-2026-10-08-release-versioning.md)).
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-11-27
 The first release.
 
 ### For everyone
