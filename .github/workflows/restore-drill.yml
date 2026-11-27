@@ -43,7 +43,7 @@ jobs:
       - name: Assemble and install the bundle
         run: |
           mkdir dist
-          deploy/release-notes.sh Unreleased > dist/release-notes.md
+          deploy/release-notes.sh --not-a-release Unreleased > dist/release-notes.md
           deploy/bundle.sh "$VERSION" dist/release-notes.md dist
           KEEP=1 deploy/test-bundle.sh "dist/musical-chairs-$VERSION.tar.gz"
 
