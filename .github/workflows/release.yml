@@ -67,7 +67,13 @@ jobs:
             prerelease=false
           fi
           mkdir dist
-          deploy/release-notes.sh "$notes" > dist/release-notes.md
+          if [[ "$publish" == true ]]; then
+            deploy/release-notes.sh "$notes" > dist/release-notes.md
+          elif ! deploy/release-notes.sh "$notes" > dist/release-notes.md; then
+            # A dry run publishes nothing, so it still runs right after a release PR, while
+            # Unreleased is empty (docs/0102).
+            echo "No Unreleased notes yet: a dry run." > dist/release-notes.md
+          fi
           {
             echo "version=$version"
             echo "publish=$publish"
