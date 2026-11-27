@@ -53,7 +53,7 @@ docker network create "$net" >/dev/null
 # One PostgreSQL for the API and Keycloak, each with its own database.
 docker run -d --name "$run-db" --network "$net" \
   -e POSTGRES_USER=keycloak -e POSTGRES_PASSWORD=keycloak -e POSTGRES_DB=keycloak \
-  postgis/postgis:18-3.6 >/dev/null
+  postgis/postgis:18-3.7 >/dev/null
 # The image's init scripts run a temporary server on a socket only, then restart it listening on
 # TCP: wait until TCP answers, and retry in case the restart is still settling.
 for _ in $(seq 60); do

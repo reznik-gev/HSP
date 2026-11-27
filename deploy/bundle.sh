@@ -36,7 +36,7 @@ for image in "${images[@]}"; do
   else
     docker pull --quiet --platform linux/amd64 "$image"
   fi
-  # postgis/postgis:18-3.6 -> postgis_postgis_18-3.6.tar
+  # postgis/postgis:18-3.7 -> postgis_postgis_18-3.7.tar
   docker save -o "$dir/images/${image//[\/:]/_}.tar" "$image"
 done
 
