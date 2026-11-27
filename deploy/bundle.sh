@@ -45,6 +45,8 @@ cp -r "$root/deploy/compose/postgres-init" "$dir/compose/"
 cp "$root/deploy/compose/backups.example.yml" "$dir/compose/"
 sed "s/^MUSICAL_CHAIRS_VERSION=.*/MUSICAL_CHAIRS_VERSION=$version/" "$root/deploy/compose/.env.example" \
   > "$dir/compose/.env.example"
+# The README greets whoever unpacks the bundle and points to the guide (docs/0158).
+sed "s/@VERSION@/$version/g" "$root/deploy/bundle-readme.md" > "$dir/README.md"
 cp "$root/deploy/install.md" "$dir/docs/install.md"
 cp "$notes" "$dir/docs/release-notes.md"
 cp "$root/CHANGELOG.md" "$dir/docs/CHANGELOG.md"

@@ -65,7 +65,7 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0051 | 2026-10-08 | [Validation: instant client preview, server authoritative](0051-2026-10-08-validation-feedback.md) | Accepted |
 | 0052 | 2026-10-08 | [SVG commitment: renderer-agnostic core + performance gate](0052-2026-10-08-svg-commitment-and-performance-gate.md) | Accepted (v1 bounds lowered by 0074) |
 | 0053 | 2026-10-08 | [Code hosting & CI: GitHub + Actions](0053-2026-10-08-code-hosting-and-ci.md) | Accepted (partially superseded by 0068; refined by 0070) |
-| 0054 | 2026-10-08 | [Release distribution: offline bundle only](0054-2026-10-08-release-distribution.md) | Accepted (`bin/musical-chairs` refined by 0107) |
+| 0054 | 2026-10-08 | [Release distribution: offline bundle only](0054-2026-10-08-release-distribution.md) | Accepted (`bin/musical-chairs` refined by 0107; a README at the top by 0158) |
 | 0055 | 2026-10-08 | [Deployment target: Docker Compose, single host](0055-2026-10-08-deployment-target.md) | Accepted (images refined by 0097, the stack by 0099, the sizing by 0120; Kubernetes after 1.0 in 0104) |
 | 0056 | 2026-10-08 | [Upgrades: maintenance window + migrate job](0056-2026-10-08-upgrades-and-migrations.md) | Accepted (`musical-chairs upgrade` refined by 0107, the schema check by 0105 and 0109) |
 | 0057 | 2026-10-08 | [Observability: standard outputs + optional stack](0057-2026-10-08-observability.md) | Accepted (refined by 0105; the monitoring profile moved past 1.0 by 0104) |
@@ -169,3 +169,4 @@ Musical Chairs design decisions, one document per decision. Part of the [Musical
 | 0155 | 2026-11-22 | [Comments in scripts and config files wrap at 100 characters, written down but not checked](0155-2026-11-22-line-widths.md) | Accepted |
 | 0156 | 2026-11-27 | [The guide's GIFs show the version being released](0156-2026-11-27-the-guides-gifs-show-the-version-being-released.md) | Accepted |
 | 0157 | 2026-11-27 | [What to do about 1.0.0's scan findings](0157-2026-11-27-what-to-do-about-1-0-0s-scan-findings.md) | Accepted (also who checks a release before and after it's published) |
+| 0158 | 2026-11-27 | [A README at the top of the release bundle](0158-2026-11-27-a-readme-at-the-top-of-the-release-bundle.md) | Accepted |

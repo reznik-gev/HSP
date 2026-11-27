@@ -1,6 +1,6 @@
 # Installing and running Musical Chairs
 
-This guide is for the person who installs Musical Chairs and keeps it running. It ships in every release bundle as `docs/install.md`. Musical Chairs runs as a Docker Compose stack on one Linux host ([0055](https://github.com/reznik-gev/MusicalChairs/blob/main/docs/decisions/0055-2026-10-08-deployment-target.md)). One command, `musical_chairs`, installs, upgrades, backs it up and restores it ([0107](https://github.com/reznik-gev/MusicalChairs/blob/main/docs/decisions/0107-2026-10-21-operator-cli.md)).
+This guide is for the person who installs Musical Chairs and keeps it running. It ships in every release bundle as `docs/install.md`, and the bundle's `README.md` points here. Musical Chairs runs as a Docker Compose stack on one Linux host ([0055](https://github.com/reznik-gev/MusicalChairs/blob/main/docs/decisions/0055-2026-10-08-deployment-target.md)). One command, `musical_chairs`, installs, upgrades, backs it up and restores it ([0107](https://github.com/reznik-gev/MusicalChairs/blob/main/docs/decisions/0107-2026-10-21-operator-cli.md)).
 
 ## What you need
 

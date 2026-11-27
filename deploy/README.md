@@ -48,6 +48,7 @@ Each release is one file, `musical-chairs-<version>.tar.gz`, on the repository's
 
 | Path | What |
 |---|---|
+| `README.md` | What the bundle is, and where to start: `docs/install.md` ([0158](../docs/decisions/0158-2026-11-27-a-readme-at-the-top-of-the-release-bundle.md)). Made from [`bundle-readme.md`](bundle-readme.md), with the version filled in |
 | `images/` | One `docker save` file per image the stack runs: `musical-chairs-api`, `musical-chairs-web`, `musical-chairs-keycloak`, `musical-chairs-backup` and PostGIS |
 | `compose/` | `compose.yml`, `postgres-init/`, `.env.example` (with `MUSICAL_CHAIRS_VERSION` already set) and `backups.example.yml` |
 | `docs/` | The operator guide, [`install.md`](install.md); this release's notes and the full changelog |

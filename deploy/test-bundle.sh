@@ -54,6 +54,8 @@ tar -C "$tmp" -xzf "$bundle"
 dir="$(find "$tmp" -mindepth 1 -maxdepth 1 -type d -name 'musical-chairs-*')"
 (cd "$dir" && sha256sum --quiet -c SHA256SUMS) && echo "ok: SHA256SUMS"
 version="$(cat "$dir/VERSION")"
+expect "README.md names this release" "$(head -1 "$dir/README.md")" "# Musical Chairs $version"
+expect "README.md links docs/install.md" "$(cat "$dir/README.md")" "(docs/install.md)"
 
 echo "== Install $version with musical-chairs install (docs/0107)"
 openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj /CN=localhost \
