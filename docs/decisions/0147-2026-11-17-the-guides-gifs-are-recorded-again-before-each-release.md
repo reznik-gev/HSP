@@ -27,3 +27,4 @@
 - [Releasing Musical Chairs](../guides/releasing.md) gains the step. [How a change is made](../guides/making-a-change.md) and the [review checklist](../guides/testing.md#review-checklist) ask only for the guide's text to be updated.
 - Between releases, a GIF on `main` may show an older screen than the app.
 - A check that the GIFs are newer than the last UI change is left for later.
+- *Update, 2026-11-27:* the GIFs show the version being released. The sidebar's footer reads "Musical Chairs 1.0.0", not "0.0.0-dev", so the demo they're recorded from runs with `MUSICAL_CHAIRS_VERSION` set to it. *(The owner's choice, in [#200](https://github.com/reznik-gev/MusicalChairs/pull/200).)* The [releasing guide](../guides/releasing.md) says how.
