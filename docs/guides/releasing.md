@@ -47,7 +47,7 @@ Create `release/X.Y` from the `vX.Y.Z` tag, if it doesn't exist yet. Cherry-pick
 ## Trying a bundle by hand
 ```bash
 deploy/build-images.sh 1.2.0-rc.0
-deploy/release-notes.sh Unreleased > /tmp/notes.md
+deploy/release-notes.sh --not-a-release Unreleased > /tmp/notes.md
 deploy/bundle.sh 1.2.0-rc.0 /tmp/notes.md dist
 deploy/test-bundle.sh dist/musical-chairs-1.2.0-rc.0.tar.gz     # Linux only; KEEP=1 leaves it running
 ```
